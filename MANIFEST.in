@@ -1,0 +1,9 @@
+recursive-include dask_gateway *.py
+graft configurable-tls-proxy
+exclude configurable-tls-proxy/configurable-tls-proxy
+
+include versioneer.py
+include setup.py
+include README.rst
+include LICENSE
+include MANIFEST.in

@@ -1,0 +1,106 @@
+import glob
+import os
+import subprocess
+import sys
+from distutils.command.build import build as _build
+from distutils.command.clean import clean as _clean
+
+from setuptools import setup, Command
+from setuptools.command.develop import develop as _develop
+from setuptools.command.install import install as _install
+
+import versioneer
+
+ROOT_DIR = os.path.abspath(os.path.dirname(os.path.relpath(__file__)))
+PROXY_SRC_DIR = os.path.join(ROOT_DIR, 'configurable-tls-proxy')
+PROXY_TGT_DIR = os.path.join(ROOT_DIR, 'dask_gateway', 'proxy')
+PROXY_TGT_EXE = os.path.join(PROXY_TGT_DIR, 'configurable-tls-proxy')
+
+
+class build_go(Command):
+    description = "build go artifacts"
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    finalize_options = initialize_options
+
+    def run(self):
+        # Compile the go code and copy the executable to dask_gateway/proxy/
+        # This will be picked up as package_data later
+        self.mkpath(PROXY_TGT_DIR)
+        src_glob = os.path.join(os.path.relpath(PROXY_SRC_DIR), '*.go')
+        src_files = glob.glob(src_glob)
+        code = subprocess.call(['go', 'build', '-o', PROXY_TGT_EXE] + src_files)
+        if code:
+            sys.exit(code)
+
+
+def _ensure_go(command):
+    if not getattr(command, 'no_go', False) and not os.path.exists(PROXY_TGT_EXE):
+        command.run_command('build_go')
+
+
+class build(_build):
+    def run(self):
+        _ensure_go(self)
+        _build.run(self)
+
+
+class install(_install):
+    def run(self):
+        _ensure_go(self)
+        _install.run(self)
+
+
+class develop(_develop):
+    user_options = list(_develop.user_options)
+    user_options.append(('no-go', None, "Don't build the go source"))
+
+    def initialize_options(self):
+        self.no_go = False
+        _develop.initialize_options(self)
+
+    def run(self):
+        if not self.uninstall:
+            _ensure_go(self)
+        _develop.run(self)
+
+
+class clean(_clean):
+    def run(self):
+        if self.all:
+            for f in [PROXY_TGT_EXE]:
+                if os.path.exists(f):
+                    os.unlink(f)
+        _clean.run(self)
+
+
+# Due to quirks in setuptools/distutils dependency ordering, to get the go
+# source to build automatically in most cases, we need to check in multiple
+# locations. This is unfortunate, but seems necessary.
+cmdclass = versioneer.get_cmdclass()
+cmdclass.update({'build_go': build_go,      # directly build the go source
+                 'build': build,            # bdist_wheel or pip install .
+                 'install': install,        # python setup.py install
+                 'develop': develop,        # python setup.py develop
+                 'clean': clean})           # extra cleanup
+
+
+setup(name='dask-gateway',
+      version=versioneer.get_version(),
+      cmdclass=cmdclass,
+      maintainer='Jim Crist',
+      maintainer_email='jiminy.crist@gmail.com',
+      license='BSD',
+      description=('A gateway for serving Dask clusters securely through a '
+                   'firewall'),
+      long_description=(open('README.rst').read()
+                        if os.path.exists('README.rst') else ''),
+      url='http://github.com/jcrist/dask-gateway/',
+      packages=['dask_gateway', 'dask_gateway.proxy'],
+      package_data={'dask_gateway': ['proxy/configurable-tls-proxy']},
+      install_requires=[],
+      zip_safe=False)
