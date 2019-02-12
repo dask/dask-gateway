@@ -1,3 +1,13 @@
 configurable-tls-proxy/configurable-tls-proxy
 dask_gateway/proxy/configurable-tls-proxy
+build/
+dist/
+docs/build/
+.coverage
+htmlcov/
+*.pyc
+.eggs/
+*.egg-info
+.cache/
+.pytest_cache/
 .DS_Store
