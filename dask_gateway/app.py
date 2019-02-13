@@ -39,6 +39,7 @@ class GenerateConfig(Application):
     force = Bool(
         False,
         help="If true, will overwrite file if it exists.",
+        config=True,
     )
 
     aliases = {
