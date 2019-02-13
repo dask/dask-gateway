@@ -66,7 +66,7 @@ func (l Logger) logMsg(level LogLevel, msg string) {
 		l.Lock()
 		defer l.Unlock()
 		l.buf = l.buf[:0]
-		l.buf = append(l.buf, "[configurable-tls-proxy] "...)
+		l.buf = append(l.buf, "[dask-gateway-proxy] "...)
 		l.buf = now.AppendFormat(l.buf, "2006-01-02 15:04:05")
 		l.buf = append(l.buf, ' ')
 		l.buf = append(l.buf, level.String()...)

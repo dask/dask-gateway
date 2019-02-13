@@ -1,6 +1,6 @@
 recursive-include dask_gateway *.py
-graft configurable-tls-proxy
-exclude configurable-tls-proxy/configurable-tls-proxy
+graft dask-gateway-proxy
+exclude dask-gateway-proxy/dask-gateway-proxy
 
 include versioneer.py
 include setup.py

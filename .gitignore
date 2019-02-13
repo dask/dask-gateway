@@ -1,5 +1,5 @@
-configurable-tls-proxy/configurable-tls-proxy
-dask_gateway/proxy/configurable-tls-proxy
+dask-gateway-proxy/dask-gateway-proxy
+dask_gateway/proxy/dask-gateway-proxy
 build/
 dist/
 docs/build/

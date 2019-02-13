@@ -12,7 +12,7 @@ from ..utils import random_port
 
 _PROXY_EXE = os.path.join(
     os.path.abspath(os.path.dirname(os.path.relpath(__file__))),
-    'configurable-tls-proxy')
+    'dask-gateway-proxy')
 
 
 class Proxy(LoggingConfigurable):
@@ -51,7 +51,7 @@ class Proxy(LoggingConfigurable):
         help="""
         The Proxy auth token
 
-        Loaded from the CONFIG_TLS_PROXY_TOKEN env variable by default.
+        Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.
         """,
         config=True
     )
@@ -62,9 +62,9 @@ class Proxy(LoggingConfigurable):
 
     @default('auth_token')
     def _auth_token_default(self):
-        token = os.environ.get('CONFIG_TLS_PROXY_TOKEN', '')
+        token = os.environ.get('DASK_GATEWAY_PROXY_TOKEN', '')
         if not token:
-            self.log.info("Generating new CONFIG_TLS_PROXY_TOKEN")
+            self.log.info("Generating new DASK_GATEWAY_PROXY_TOKEN")
             token = uuid.uuid4().hex
         return token
 
@@ -79,7 +79,7 @@ class Proxy(LoggingConfigurable):
                    '-is-child-process']
 
         env = os.environ.copy()
-        env['CONFIG_TLS_PROXY_TOKEN'] = self.auth_token
+        env['DASK_GATEWAY_PROXY_TOKEN'] = self.auth_token
         self.log.info("Starting the Dask Gateway Proxy...")
         proc = subprocess.Popen(command,
                                 env=env,

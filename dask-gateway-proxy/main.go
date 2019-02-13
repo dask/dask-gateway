@@ -253,9 +253,9 @@ func init() {
 
 func main() {
 	flag.Parse()
-	token := os.Getenv("CONFIG_TLS_PROXY_TOKEN")
+	token := os.Getenv("DASK_GATEWAY_PROXY_TOKEN")
 	if token == "" {
-		panic("CONFIG_TLS_PROXY_TOKEN environment variable not set")
+		panic("DASK_GATEWAY_PROXY_TOKEN environment variable not set")
 	}
 	logLevel := ParseLevel(logLevelString)
 	p := NewProxy(address, apiAddress, token, timeout, logLevel)

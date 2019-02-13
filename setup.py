@@ -12,9 +12,9 @@ from setuptools.command.install import install as _install
 import versioneer
 
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.relpath(__file__)))
-PROXY_SRC_DIR = os.path.join(ROOT_DIR, 'configurable-tls-proxy')
+PROXY_SRC_DIR = os.path.join(ROOT_DIR, 'dask-gateway-proxy')
 PROXY_TGT_DIR = os.path.join(ROOT_DIR, 'dask_gateway', 'proxy')
-PROXY_TGT_EXE = os.path.join(PROXY_TGT_DIR, 'configurable-tls-proxy')
+PROXY_TGT_EXE = os.path.join(PROXY_TGT_DIR, 'dask-gateway-proxy')
 
 
 class build_go(Command):
@@ -107,7 +107,7 @@ setup(name='dask-gateway',
                         if os.path.exists('README.rst') else ''),
       url='http://github.com/jcrist/dask-gateway/',
       packages=['dask_gateway', 'dask_gateway.proxy'],
-      package_data={'dask_gateway': ['proxy/configurable-tls-proxy']},
+      package_data={'dask_gateway': ['proxy/dask-gateway-proxy']},
       install_requires=install_requires,
       entry_points={
           'console_scripts': [

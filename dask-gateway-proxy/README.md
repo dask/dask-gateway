@@ -1,4 +1,4 @@
-## configurable-tls-proxy
+## dask-gateway-proxy
 
 A configurable TLS proxy, that dispatches to different routes based on the
 connection's [Server Name
