@@ -25,7 +25,7 @@ func ParseLevel(s string) LogLevel {
 	switch s {
 	case "ERROR", "error":
 		return ERROR
-	case "WARN", "warning":
+	case "WARN", "warn":
 		return WARN
 	case "INFO", "info":
 		return INFO

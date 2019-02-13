@@ -18,6 +18,7 @@ var (
 	apiAddress     string
 	timeout        time.Duration
 	logLevelString string
+	isChildProcess bool
 )
 
 type Proxy struct {
@@ -133,7 +134,17 @@ func (p *Proxy) serveAPI() {
 	server.ListenAndServe()
 }
 
-func (p *Proxy) Run() {
+func (p *Proxy) awaitShutdown() {
+	buf := make([]byte, 10)
+	for {
+		_, err := os.Stdin.Read(buf)
+		if err == io.EOF {
+			os.Exit(0)
+		}
+	}
+}
+
+func (p *Proxy) Run(isChildProcess bool) {
 	l, err := net.Listen("tcp", p.address)
 	if err != nil {
 		p.logger.Errorf("Failed to connect: %s", err)
@@ -142,6 +153,9 @@ func (p *Proxy) Run() {
 	p.logger.Infof("Proxy serving at %s", p.address)
 	p.logger.Infof("API serving at %s", p.apiAddress)
 	go p.serveAPI()
+	if isChildProcess {
+		go p.awaitShutdown()
+	}
 	for {
 		c, err := l.Accept()
 		if err != nil {
@@ -233,15 +247,17 @@ func init() {
 	flag.StringVar(&apiAddress, "api-address", ":8787", "API listening address")
 	flag.DurationVar(&timeout, "timeout", 3*time.Second, "Timeout for TLS Handshake initialization")
 	flag.StringVar(&logLevelString, "log-level", "INFO", "The log level. One of {DEBUG, INFO, WARN, ERROR}")
+	flag.BoolVar(&isChildProcess, "is-child-process", false,
+		"If set, will exit when stdin EOFs. Useful when running as a child process.")
 }
 
 func main() {
 	flag.Parse()
-	token := os.Getenv("CONFIG_SNI_PROXY_TOKEN")
+	token := os.Getenv("CONFIG_TLS_PROXY_TOKEN")
 	if token == "" {
-		panic("CONFIG_SNI_PROXY_TOKEN environment variable not set")
+		panic("CONFIG_TLS_PROXY_TOKEN environment variable not set")
 	}
 	logLevel := ParseLevel(logLevelString)
 	p := NewProxy(address, apiAddress, token, timeout, logLevel)
-	p.Run()
+	p.Run(isChildProcess)
 }
