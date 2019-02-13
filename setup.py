@@ -109,4 +109,9 @@ setup(name='dask-gateway',
       packages=['dask_gateway', 'dask_gateway.proxy'],
       package_data={'dask_gateway': ['proxy/configurable-tls-proxy']},
       install_requires=install_requires,
+      entry_points={
+          'console_scripts': [
+              'dask-gateway = dask_gateway.app:main',
+          ]
+      },
       zip_safe=False)

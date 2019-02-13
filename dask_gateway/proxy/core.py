@@ -88,6 +88,7 @@ class Proxy(LoggingConfigurable):
                                 stderr=None,
                                 start_new_session=True)
         self.proxy_process = proc
+        self.log.info("Dask Gateway Proxy running at %r", self.public_url)
 
     def stop(self):
         """Stop the proxy."""
