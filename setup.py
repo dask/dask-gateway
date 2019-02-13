@@ -78,6 +78,12 @@ class clean(_clean):
         _clean.run(self)
 
 
+install_requires = [
+    'traitlets',
+    'tornado',
+]
+
+
 # Due to quirks in setuptools/distutils dependency ordering, to get the go
 # source to build automatically in most cases, we need to check in multiple
 # locations. This is unfortunate, but seems necessary.
@@ -102,5 +108,5 @@ setup(name='dask-gateway',
       url='http://github.com/jcrist/dask-gateway/',
       packages=['dask_gateway', 'dask_gateway.proxy'],
       package_data={'dask_gateway': ['proxy/configurable-tls-proxy']},
-      install_requires=[],
+      install_requires=install_requires,
       zip_safe=False)
