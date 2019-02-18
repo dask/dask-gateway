@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -11,23 +10,14 @@ import (
 	"time"
 )
 
-const (
-	routeLength       = 32
-	routePrefix       = "/dashboard/"
-	routePrefixLength = len(routePrefix)
-	hubPrefix         = "/hub/"
-	hubPrefixLength   = len(hubPrefix)
-)
-
 type HttpProxy struct {
-	routes map[string]*url.URL
-	hub    *url.URL
+	router *Router
 	proxy  *httputil.ReverseProxy
 }
 
 func NewWebProxy() *HttpProxy {
 	out := HttpProxy{
-		routes: make(map[string]*url.URL),
+		router: NewRouter(),
 	}
 	out.proxy = &httputil.ReverseProxy{
 		Director:      out.director,
@@ -36,47 +26,22 @@ func NewWebProxy() *HttpProxy {
 	return &out
 }
 
-func (p *HttpProxy) SetHubAddress(address string) {
-	hub, err := url.Parse(address)
-	if err != nil {
-		panic(err)
-	}
-	p.hub = hub
-}
-
-func (p *HttpProxy) ClearHubAddress() {
-	p.hub = nil
-}
-
 func (p *HttpProxy) AddRoute(route string, target string) {
-	if len(route) != routeLength {
-		panic(fmt.Sprintf("len(route) must be %d, got %d",
-			routeLength, len(route)))
-	}
 	targetUrl, err := url.Parse(target)
 	if err != nil {
 		panic(err)
 	}
-	p.routes[route] = targetUrl
+	p.router.Put(route, targetUrl)
 }
 
 func (p *HttpProxy) RemoveRoute(route string) {
-	delete(p.routes, route)
+	p.router.Delete(route)
 }
 
 func (p *HttpProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if strings.HasPrefix(r.URL.Path, "/hub/") {
+	if addr, _ := p.router.Get(r.URL.Path); addr != nil {
 		p.proxy.ServeHTTP(w, r)
 		return
-	}
-
-	if strings.HasPrefix(r.URL.Path, routePrefix) && len(r.URL.Path) > (routePrefixLength+routeLength) {
-		key := r.URL.Path[routePrefixLength : routePrefixLength+routeLength]
-		log.Printf("Key = %s", key)
-		if _, ok := p.routes[key]; ok {
-			p.proxy.ServeHTTP(w, r)
-			return
-		}
 	}
 	http.Error(w, "Not Found", http.StatusNotFound)
 }
@@ -96,14 +61,8 @@ func singleJoiningSlash(a, b string) string {
 func (p *HttpProxy) director(req *http.Request) {
 	var target *url.URL
 	var path string
-	if strings.HasPrefix(req.URL.Path, hubPrefix) {
-		target = p.hub
-		path = req.URL.Path[hubPrefixLength:]
-	} else {
-		key := req.URL.Path[routePrefixLength : routePrefixLength+routeLength]
-		target = p.routes[key]
-		path = req.URL.Path[routePrefixLength+routeLength:]
-	}
+	target, n := p.router.Get(req.URL.Path)
+	path = req.URL.Path[n:]
 	targetQuery := target.RawQuery
 
 	req.URL.Scheme = target.Scheme
@@ -139,6 +98,9 @@ func webProxyMain(args []string) {
 	command.Parse(args)
 
 	proxy := NewWebProxy()
+
+	proxy.AddRoute("/foo/biz", "http://localhost:8888")
+	proxy.AddRoute("/foo/baz", "http://localhost:8889")
 
 	server := &http.Server{
 		Addr:    address,
