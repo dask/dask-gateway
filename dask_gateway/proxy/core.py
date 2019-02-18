@@ -73,6 +73,7 @@ class Proxy(LoggingConfigurable):
         address = urlparse(self.public_url).netloc
         api_address = urlparse(self.api_url).netloc
         command = [_PROXY_EXE,
+                   'scheduler',
                    '-address', address,
                    '-api-address', api_address,
                    '-log-level', self.log_level,
