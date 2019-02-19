@@ -68,7 +68,7 @@ class ProxyBase(LoggingConfigurable):
     def _auth_token_default(self):
         token = os.environ.get('DASK_GATEWAY_PROXY_TOKEN', '')
         if not token:
-            self.log.info("Generating new DASK_GATEWAY_PROXY_TOKEN")
+            self.log.info("Generating new auth token for %s proxy", self._subcommand)
             token = uuid.uuid4().hex
         return token
 

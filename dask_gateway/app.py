@@ -100,9 +100,14 @@ class DaskGateway(Application):
         config=True
     )
 
-    proxy_class = Type(
-        'dask_gateway.proxy.Proxy',
-        help="The gateway proxy class to use"
+    scheduler_proxy_class = Type(
+        'dask_gateway.proxy.SchedulerProxy',
+        help="The gateway scheduler proxy class to use"
+    )
+
+    web_proxy_class = Type(
+        'dask_gateway.proxy.WebProxy',
+        help="The gateway web proxy class to use"
     )
 
     _log_formatter_cls = LogFormatter
@@ -114,7 +119,8 @@ class DaskGateway(Application):
             return
         self.load_config_file(self.config_file)
         self.init_logging()
-        self.init_proxy()
+        self.init_scheduler_proxy()
+        self.init_web_proxy()
 
     def init_logging(self):
         # Prevent double log messages from tornado
@@ -129,17 +135,28 @@ class DaskGateway(Application):
         logger.parent = self.log
         logger.setLevel(self.log.level)
 
-    def init_proxy(self):
-        self.proxy = self.proxy_class(log=self.log)
+    def init_scheduler_proxy(self):
+        self.scheduler_proxy = self.scheduler_proxy_class(log=self.log)
+
+    def init_web_proxy(self):
+        self.web_proxy = self.web_proxy_class(log=self.log)
 
     async def start_async(self):
-        self.start_proxy()
+        self.start_scheduler_proxy()
+        self.start_web_proxy()
 
-    def start_proxy(self):
+    def start_scheduler_proxy(self):
         try:
-            self.proxy.start()
+            self.scheduler_proxy.start()
         except Exception:
-            self.log.critical("Failed to start proxy", exc_info=True)
+            self.log.critical("Failed to start scheduler proxy", exc_info=True)
+            self.exit(1)
+
+    def start_web_proxy(self):
+        try:
+            self.web_proxy.start()
+        except Exception:
+            self.log.critical("Failed to start web proxy", exc_info=True)
             self.exit(1)
 
     def start(self):
