@@ -110,7 +110,7 @@ func (router *Router) Put(path string, url *url.URL) {
 	node.url = url
 }
 
-func (router *Router) Delete(path string) bool {
+func (router *Router) Delete(path string) {
 	path, _ = normalizePath(path)
 	type record struct {
 		node *Router
@@ -123,7 +123,7 @@ func (router *Router) Delete(path string) bool {
 		paths = append(paths, record{part: part, node: node})
 		node = node.branches[part]
 		if node == nil {
-			return false
+			return
 		}
 		if i == -1 {
 			break
@@ -135,10 +135,13 @@ func (router *Router) Delete(path string) bool {
 			parent := paths[i].node
 			part := paths[i].part
 			delete(parent.branches, part)
+			// If completely empty, deallocate whole map
+			if len(parent.branches) == 0 {
+				parent.branches = nil
+			}
 			if parent.url != nil || !parent.isLeaf() {
 				break
 			}
 		}
 	}
-	return true
 }
