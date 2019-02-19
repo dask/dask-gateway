@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -32,10 +31,6 @@ type Conn struct {
 	tlsMinor int
 }
 
-type RouteMsg struct {
-	Target string `json:"target"`
-}
-
 type tlsAlert int8
 
 const (
@@ -55,23 +50,7 @@ func NewSchedulerProxy(address string, apiAddress string, token string,
 	}
 }
 
-func (p *Proxy) isAuthorized(r *http.Request) bool {
-	auth := r.Header.Get("Authorization")
-	if auth == "" {
-		return false
-	}
-	parts := strings.SplitN(auth, " ", 2)
-	if len(parts) != 2 || parts[0] != "token" || parts[1] != p.token {
-		return false
-	}
-	return true
-}
-
 func (p *Proxy) routesHandler(w http.ResponseWriter, r *http.Request) {
-	if !p.isAuthorized(r) {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
 	route := r.URL.Path[len("/api/routes/"):]
 	if route == "" {
 		switch r.Method {
@@ -116,27 +95,6 @@ func (p *Proxy) routesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (p *Proxy) serveAPI() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api/routes/", p.routesHandler)
-
-	server := &http.Server{
-		Addr:    p.apiAddress,
-		Handler: mux,
-	}
-	server.ListenAndServe()
-}
-
-func (p *Proxy) awaitShutdown() {
-	buf := make([]byte, 10)
-	for {
-		_, err := os.Stdin.Read(buf)
-		if err == io.EOF {
-			os.Exit(0)
-		}
-	}
-}
-
 func (p *Proxy) Run(isChildProcess bool) {
 	l, err := net.Listen("tcp", p.address)
 	if err != nil {
@@ -145,9 +103,9 @@ func (p *Proxy) Run(isChildProcess bool) {
 	}
 	p.logger.Infof("Proxy serving at %s", p.address)
 	p.logger.Infof("API serving at %s", p.apiAddress)
-	go p.serveAPI()
+	go serveAPI(p.routesHandler, p.apiAddress, p.token)
 	if isChildProcess {
-		go p.awaitShutdown()
+		go awaitShutdown()
 	}
 	for {
 		c, err := l.Accept()

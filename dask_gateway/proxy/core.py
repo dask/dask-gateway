@@ -10,13 +10,17 @@ from traitlets import default, Unicode, CaselessStrEnum
 
 from ..utils import random_port
 
+
+__all__ = ('SchedulerProxy', 'WebProxy')
+
+
 _PROXY_EXE = os.path.join(
     os.path.abspath(os.path.dirname(os.path.relpath(__file__))),
     'dask-gateway-proxy')
 
 
-class Proxy(LoggingConfigurable):
-    """A proxy for connecting Dask clients to schedulers behind a firewall."""
+class ProxyBase(LoggingConfigurable):
+    """Base class for dask proxies"""
 
     log_level = CaselessStrEnum(
         ["error", "warn", "info", "debug"],
@@ -26,7 +30,7 @@ class Proxy(LoggingConfigurable):
     )
 
     public_url = Unicode(
-        "tls://0.0.0.0:8080",
+        "0.0.0.0:8080",
         help="""
         The public facing URL of the Proxy.
 
@@ -73,7 +77,7 @@ class Proxy(LoggingConfigurable):
         address = urlparse(self.public_url).netloc
         api_address = urlparse(self.api_url).netloc
         command = [_PROXY_EXE,
-                   'scheduler',
+                   self._subcommand,
                    '-address', address,
                    '-api-address', api_address,
                    '-log-level', self.log_level,
@@ -81,7 +85,7 @@ class Proxy(LoggingConfigurable):
 
         env = os.environ.copy()
         env['DASK_GATEWAY_PROXY_TOKEN'] = self.auth_token
-        self.log.info("Starting the Dask Gateway Proxy...")
+        self.log.info("Starting the Dask gateway %s proxy...", self._subcommand)
         proc = subprocess.Popen(command,
                                 env=env,
                                 stdin=subprocess.PIPE,
@@ -89,10 +93,12 @@ class Proxy(LoggingConfigurable):
                                 stderr=None,
                                 start_new_session=True)
         self.proxy_process = proc
-        self.log.info("Dask Gateway Proxy running at %r", self.public_url)
+        self.log.info("Dask gateway %s proxy running at %r", self._subcommand,
+                      self.public_url)
 
     def stop(self):
         """Stop the proxy."""
+        self.log.info("Stopping the Dask gateway %s proxy", self._subcommand)
         self.proxy_process.terminate()
 
     async def _api_request(self, url, method='GET', body=None):
@@ -111,13 +117,13 @@ class Proxy(LoggingConfigurable):
         Parameters
         ----------
         route : string
-            The SNI route to add.
+            The route to add.
         target : string
-            The ip:port to map this SNI route to.
+            The ip:port to map this route to.
         """
-        self.log.debug("Adding route %s -> %s", route, target)
+        self.log.debug("Adding route %r -> %r", route, target)
         await self._api_request(
-            url='%s/api/routes/%s' % (self.api_url, route),
+            url='%s/api/routes%s' % (self.api_url, route),
             method='PUT',
             body={'target': target}
         )
@@ -130,11 +136,11 @@ class Proxy(LoggingConfigurable):
         Parameters
         ----------
         route : string
-            The SNI route to delete.
+            The route to delete.
         """
-        self.log.debug("Removing route %s", route)
+        self.log.debug("Removing route %r", route)
         await self._api_request(
-            url='%s/api/routes/%s' % (self.api_url, route),
+            url='%s/api/routes%s' % (self.api_url, route),
             method='DELETE'
         )
 
@@ -147,7 +153,37 @@ class Proxy(LoggingConfigurable):
             A dict of route -> target for all routes in the proxy.
         """
         resp = await self._api_request(
-            url='%s/api/routes/' % self.api_url,
+            url='%s/api/routes' % self.api_url,
             method='GET'
         )
         return json.loads(resp.body.decode('utf8', 'replace'))
+
+
+class SchedulerProxy(ProxyBase):
+    """A proxy for connecting Dask clients to schedulers behind a firewall."""
+    _subcommand = "scheduler"
+
+    public_url = Unicode(
+        "tls://0.0.0.0:8080",
+        help="""
+        The public facing URL of the Proxy.
+
+        This is the address that dask clients will connect to.
+        """,
+        config=True
+    )
+
+
+class WebProxy(ProxyBase):
+    """A proxy for proxying out the dashboards from behind a firewall"""
+    _subcommand = "web"
+
+    public_url = Unicode(
+        "http://0.0.0.0:8081",
+        help="""
+        The public facing URL of the Proxy.
+
+        This is the address that the Hub will be served at.
+        """,
+        config=True
+    )

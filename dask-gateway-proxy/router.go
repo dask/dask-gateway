@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/url"
 	"strings"
 )
@@ -144,4 +145,26 @@ func (router *Router) Delete(path string) {
 			}
 		}
 	}
+}
+
+func (r *Router) traverse(prefix string, f func(prefix string, value *url.URL)) {
+	if r.url != nil {
+		f(prefix, r.url)
+	}
+	prefix = prefix + "/"
+	for path, node := range r.branches {
+		node.traverse(prefix+path, f)
+	}
+}
+
+func (r *Router) MarshalJSON() ([]byte, error) {
+	out := make(map[string]string)
+	r.traverse("", func(prefix string, value *url.URL) {
+		out[prefix] = value.String()
+	})
+	b, err := json.Marshal(out)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
