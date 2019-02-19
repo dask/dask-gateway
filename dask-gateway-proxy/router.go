@@ -1,70 +1,106 @@
 package main
 
 import (
-	"log"
 	"net/url"
 	"strings"
 )
 
-func getSegment(path string, start int) (segment string, next int) {
-	if len(path) == 0 || start < 0 || start > len(path)-1 {
-		return "", -1
+func normalizePath(path string) (string, int) {
+	offset := 0
+	if path == "/" {
+		return "", offset
 	}
-	end := strings.IndexRune(path[start+1:], '/')
+	if path[0] == '/' {
+		path = path[1:]
+		offset = 1
+	}
+	if path[len(path)-1] == '/' {
+		path = path[:len(path)-1]
+	}
+	return path, offset
+}
+
+func getSegment(path string, start int) (segment string, next int) {
+	if len(path) == 0 {
+		return path, -1
+	}
+	end := strings.IndexRune(path[start:], '/')
 	if end == -1 {
 		return path[start:], -1
 	}
-	return path[start : start+end+1], start + end + 1
+	return path[start : start+end], start + end + 1
 }
 
 type Router struct {
 	url      *url.URL
-	children map[string]*Router
+	branches map[string]*Router
 }
 
 func (r *Router) isLeaf() bool {
-	return len(r.children) == 0
+	return len(r.branches) == 0
 }
 
 func NewRouter() *Router {
-	return &Router{
-		children: make(map[string]*Router),
-	}
+	return &Router{}
 }
 
-func (router *Router) Get(key string) (*url.URL, int) {
+func (router *Router) HasMatch(path string) bool {
+	if router.url != nil {
+		return true
+	}
+	path, _ = normalizePath(path)
+	for part, i := getSegment(path, 0); ; part, i = getSegment(path, i) {
+		router = router.branches[part]
+		if router == nil {
+			break
+		}
+		if router.url != nil {
+			return true
+		}
+		if i == -1 {
+			break
+		}
+	}
+	return false
+}
+
+func (router *Router) Match(path string) (*url.URL, string) {
+	path2, offset := normalizePath(path)
 	node := router
 	out := node.url
 	n := 0
-	log.Printf("Routing on %s", key)
-	for part, i := getSegment(key, 0); ; part, i = getSegment(key, i) {
-		log.Printf("part -> %s, i -> %d", part, i)
-		node = node.children[part]
+	for {
+		part, i := getSegment(path2, n)
+		node = node.branches[part]
 		if node == nil {
-			log.Printf("Breaking out")
 			break
 		}
 		if node.url != nil {
-			log.Printf("Updating url: %s", node.url)
 			out = node.url
 		}
 		if i == -1 {
-			log.Printf("Breaking out")
+			n = len(path2)
 			break
 		}
 		n = i
 	}
-	log.Printf("Returning %s, %d", out, n)
-	return out, n
+	if out == nil {
+		return nil, ""
+	}
+	return out, path[n+offset:]
 }
 
-func (router *Router) Put(key string, url *url.URL) {
+func (router *Router) Put(path string, url *url.URL) {
+	path, _ = normalizePath(path)
 	node := router
-	for part, i := getSegment(key, 0); ; part, i = getSegment(key, i) {
-		child, _ := node.children[part]
+	for part, i := getSegment(path, 0); ; part, i = getSegment(path, i) {
+		child, _ := node.branches[part]
 		if child == nil {
 			child = NewRouter()
-			node.children[part] = child
+			if node.branches == nil {
+				node.branches = make(map[string]*Router)
+			}
+			node.branches[part] = child
 		}
 		node = child
 		if i == -1 {
@@ -74,17 +110,18 @@ func (router *Router) Put(key string, url *url.URL) {
 	node.url = url
 }
 
-func (router *Router) Delete(key string) bool {
+func (router *Router) Delete(path string) bool {
+	path, _ = normalizePath(path)
 	type record struct {
 		node *Router
 		part string
 	}
 
-	var path []record
+	var paths []record
 	node := router
-	for part, i := getSegment(key, 0); ; part, i = getSegment(key, i) {
-		path = append(path, record{part: part, node: node})
-		node = node.children[part]
+	for part, i := getSegment(path, 0); ; part, i = getSegment(path, i) {
+		paths = append(paths, record{part: part, node: node})
+		node = node.branches[part]
 		if node == nil {
 			return false
 		}
@@ -94,10 +131,10 @@ func (router *Router) Delete(key string) bool {
 	}
 	node.url = nil
 	if node.isLeaf() {
-		for i := len(path) - 1; i >= 0; i-- {
-			parent := path[i].node
-			part := path[i].part
-			delete(parent.children, part)
+		for i := len(paths) - 1; i >= 0; i-- {
+			parent := paths[i].node
+			part := paths[i].part
+			delete(parent.branches, part)
 			if parent.url != nil || !parent.isLeaf() {
 				break
 			}

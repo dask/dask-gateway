@@ -39,7 +39,7 @@ func (p *HttpProxy) RemoveRoute(route string) {
 }
 
 func (p *HttpProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if addr, _ := p.router.Get(r.URL.Path); addr != nil {
+	if p.router.HasMatch(r.URL.Path) {
 		p.proxy.ServeHTTP(w, r)
 		return
 	}
@@ -59,10 +59,7 @@ func singleJoiningSlash(a, b string) string {
 }
 
 func (p *HttpProxy) director(req *http.Request) {
-	var target *url.URL
-	var path string
-	target, n := p.router.Get(req.URL.Path)
-	path = req.URL.Path[n:]
+	target, path := p.router.Match(req.URL.Path)
 	targetQuery := target.RawQuery
 
 	req.URL.Scheme = target.Scheme

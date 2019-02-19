@@ -215,7 +215,7 @@ func (p *Proxy) proxy(c *Conn) {
 	defer c.outConn.Close()
 
 	if _, err = io.Copy(c.outConn, &handshakeBuf); err != nil {
-		p.sendAlert(c, internalError, "Failed to replay handshake to %q: %s", c.outConn, err)
+		p.sendAlert(c, internalError, "Failed to replay handshake to %q: %s", c.outAddr, err)
 		return
 	}
 
@@ -229,7 +229,7 @@ func (p *Proxy) proxy(c *Conn) {
 func (p *Proxy) proxyConnections(wg *sync.WaitGroup, in, out *net.TCPConn) {
 	defer wg.Done()
 	if _, err := io.Copy(in, out); err != nil {
-		p.logger.Errorf("Error proxying %s -> %s: %s", in.RemoteAddr(), out.RemoteAddr(), err)
+		p.logger.Errorf("Error proxying %q -> %q: %s", in.RemoteAddr(), out.RemoteAddr(), err)
 	}
 	in.CloseRead()
 	out.CloseWrite()
