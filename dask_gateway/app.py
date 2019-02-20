@@ -1,6 +1,8 @@
 import os
 import logging
+from urllib.parse import urlparse
 
+from tornado import web
 from tornado.log import LogFormatter
 from tornado.gen import IOLoop
 from tornado.platform.asyncio import AsyncIOMainLoop
@@ -8,6 +10,7 @@ from traitlets import Unicode, Bool, Type
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
+from . import handlers
 
 
 # Override default values for logging
@@ -110,6 +113,24 @@ class DaskGateway(Application):
         help="The gateway web proxy class to use"
     )
 
+    public_url = Unicode(
+        "http://:8000",
+        help="The public facing URL of the whole Dask Gateway application",
+        config=True
+    )
+
+    gateway_url = Unicode(
+        "tls://:8786",
+        help="The URL that Dask clients will connect to",
+        config=True
+    )
+
+    private_url = Unicode(
+        "http://127.0.0.1:8081",
+        help="The gateway's private URL used for internal communication",
+        config=True
+    )
+
     _log_formatter_cls = LogFormatter
 
     @catch_config_error
@@ -121,6 +142,7 @@ class DaskGateway(Application):
         self.init_logging()
         self.init_scheduler_proxy()
         self.init_web_proxy()
+        self.init_tornado_application()
 
     def init_logging(self):
         # Prevent double log messages from tornado
@@ -136,14 +158,23 @@ class DaskGateway(Application):
         logger.setLevel(self.log.level)
 
     def init_scheduler_proxy(self):
-        self.scheduler_proxy = self.scheduler_proxy_class(log=self.log)
+        self.scheduler_proxy = self.scheduler_proxy_class(
+            log=self.log, public_url=self.gateway_url
+        )
 
     def init_web_proxy(self):
-        self.web_proxy = self.web_proxy_class(log=self.log)
+        self.web_proxy = self.web_proxy_class(
+            log=self.log, public_url=self.public_url
+        )
+
+    def init_tornado_application(self):
+        self.handlers = list(handlers.default_handlers)
+        self.tornado_application = web.Application(self.handlers)
 
     async def start_async(self):
         self.start_scheduler_proxy()
         self.start_web_proxy()
+        await self.start_tornado_application()
 
     def start_scheduler_proxy(self):
         try:
@@ -158,6 +189,14 @@ class DaskGateway(Application):
         except Exception:
             self.log.critical("Failed to start web proxy", exc_info=True)
             self.exit(1)
+
+    async def start_tornado_application(self):
+        private_url = urlparse(self.private_url)
+        self.http_server = self.tornado_application.listen(
+            private_url.port, address=private_url.hostname
+        )
+        self.log.info("Gateway API listening on %s", self.private_url)
+        await self.web_proxy.add_route("/gateway/", self.private_url)
 
     def start(self):
         if self.subapp is not None:

@@ -29,15 +29,8 @@ class ProxyBase(LoggingConfigurable):
         config=True
     )
 
-    public_url = Unicode(
-        "0.0.0.0:8080",
-        help="""
-        The public facing URL of the Proxy.
-
-        This is the address that dask clients will connect to.
-        """,
-        config=True
-    )
+    # Forwarded by the main application on initialization
+    public_url = Unicode()
 
     api_url = Unicode(
         help="""
@@ -46,7 +39,7 @@ class ProxyBase(LoggingConfigurable):
         This is the address that the Dask Gateway will connect to when
         adding/removing routes. This must be reachable from the Dask Gateway
         server, but shouldn't be publicly accessible (if possible). Default's
-        to ``localhost:{random-port}``.
+        to ``127.0.0.1:{random-port}``.
         """,
         config=True
     )
@@ -62,7 +55,7 @@ class ProxyBase(LoggingConfigurable):
 
     @default('api_url')
     def _default_api_url(self):
-        return "http://localhost:%d" % random_port()
+        return "http://127.0.0.1:%d" % random_port()
 
     @default('auth_token')
     def _auth_token_default(self):
@@ -163,27 +156,7 @@ class SchedulerProxy(ProxyBase):
     """A proxy for connecting Dask clients to schedulers behind a firewall."""
     _subcommand = "scheduler"
 
-    public_url = Unicode(
-        "tls://0.0.0.0:8080",
-        help="""
-        The public facing URL of the Proxy.
-
-        This is the address that dask clients will connect to.
-        """,
-        config=True
-    )
-
 
 class WebProxy(ProxyBase):
     """A proxy for proxying out the dashboards from behind a firewall"""
     _subcommand = "web"
-
-    public_url = Unicode(
-        "http://0.0.0.0:8081",
-        help="""
-        The public facing URL of the Proxy.
-
-        This is the address that the Hub will be served at.
-        """,
-        config=True
-    )
