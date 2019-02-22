@@ -116,7 +116,8 @@ class DaskGateway(Application):
     authenticator_class = Type(
         'dask_gateway.auth.KerberosAuthenticator',
         klass='dask_gateway.auth.Authenticator',
-        help="The gateway authenticator class to use"
+        help="The gateway authenticator class to use",
+        config=True
     )
 
     public_url = Unicode(
