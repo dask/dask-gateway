@@ -1,8 +1,9 @@
-import uuid
 import functools
 
 from tornado import web
 from tornado.log import app_log
+
+from .database import get_or_create_user, username_from_cookie
 
 
 DASK_GATEWAY_COOKIE = 'dask-gateway'
@@ -19,26 +20,7 @@ def authenticated(method):
     return inner
 
 
-class CookieStore(object):
-    """TODO: replace with database later."""
-    def __init__(self):
-        self.db = {}
-
-    def lookup_cookie(self, cookie):
-        return self.db.get(cookie, None)
-
-    def new_cookie(self, user):
-        cookie = uuid.uuid4().hex
-        self.db[cookie] = user
-        return cookie
-
-    def delete_cookie(self, cookie):
-        return self.db.pop(cookie, None) is not None
-
-
 class BaseHandler(web.RequestHandler):
-    cookie_store = CookieStore()
-
     @property
     def authenticator(self):
         return self.settings.get('authenticator')
@@ -51,6 +33,17 @@ class BaseHandler(web.RequestHandler):
     def log(self):
         return self.settings.get('log', app_log)
 
+    @property
+    def db(self):
+        if not hasattr(self, '_db'):
+            self._db = self.settings.get('engine').connect()
+        return self._db
+
+    def on_finish(self):
+        if hasattr(self, '_db'):
+            self._db.close()
+        super().on_finish()
+
     def get_current_user(self):
         cookie = self.get_secure_cookie(
             DASK_GATEWAY_COOKIE,
@@ -58,22 +51,21 @@ class BaseHandler(web.RequestHandler):
         )
         if cookie is not None:
             cookie = cookie.decode('utf-8', 'replace')
-            user = self.cookie_store.lookup_cookie(cookie)
-            if user is not None:
-                return user
-            else:
+            try:
+                return username_from_cookie(self.db, cookie)
+            except KeyError:
                 self.clear_cookie(DASK_GATEWAY_COOKIE)
         elif self.get_cookie(DASK_GATEWAY_COOKIE):
             self.clear_cookie(DASK_GATEWAY_COOKIE)
 
-        user = self.authenticator.authenticate(self)
-        cookie = self.cookie_store.new_cookie(user)
+        username = self.authenticator.authenticate(self)
+        user = get_or_create_user(self.db, username)
         self.set_secure_cookie(
             DASK_GATEWAY_COOKIE,
-            cookie,
+            user.cookie,
             expires_days=self.cookie_max_age_days
         )
-        return user
+        return user.name
 
 
 class RootHandler(BaseHandler):

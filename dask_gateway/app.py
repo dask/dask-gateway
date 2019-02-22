@@ -10,7 +10,7 @@ from traitlets import Unicode, Bool, Type, Bytes, Float, default, validate
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
-from . import handlers
+from . import handlers, database
 
 
 # Override default values for logging
@@ -155,6 +155,18 @@ class DaskGateway(Application):
         config=True
     )
 
+    db_url = Unicode(
+        'sqlite:///dask_gateway.sqlite',
+        help="The URL for the database.",
+        config=True
+    )
+
+    db_debug = Bool(
+        False,
+        help="If True, all database operations will be logged",
+        config=True
+    )
+
     @default('cookie_secret')
     def _cookie_secret_default(self):
         secret = os.environb.get(b'DASK_GATEWAY_COOKIE_SECRET', b'')
@@ -179,6 +191,7 @@ class DaskGateway(Application):
             return
         self.load_config_file(self.config_file)
         self.init_logging()
+        self.init_db()
         self.init_scheduler_proxy()
         self.init_web_proxy()
         self.init_authenticator()
@@ -196,6 +209,11 @@ class DaskGateway(Application):
         logger.propagate = True
         logger.parent = self.log
         logger.setLevel(self.log.level)
+
+    def init_db(self):
+        self.engine = database.make_engine(
+            self.db_url, echo=self.db_debug
+        )
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
@@ -222,6 +240,7 @@ class DaskGateway(Application):
         self.tornado_application = web.Application(
             self.handlers,
             log=self.log,
+            engine=self.engine,
             authenticator=self.authenticator,
             cookie_secret=self.cookie_secret,
             cookie_max_age_days=self.cookie_max_age_days
