@@ -6,7 +6,7 @@ from tornado import web
 from tornado.log import LogFormatter
 from tornado.gen import IOLoop
 from tornado.platform.asyncio import AsyncIOMainLoop
-from traitlets import Unicode, Bool, Type
+from traitlets import Unicode, Bool, Type, Bytes, Float, default, validate
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
@@ -113,6 +113,12 @@ class DaskGateway(Application):
         help="The gateway web proxy class to use"
     )
 
+    authenticator_class = Type(
+        'dask_gateway.auth.KerberosAuthenticator',
+        klass='dask_gateway.auth.Authenticator',
+        help="The gateway authenticator class to use"
+    )
+
     public_url = Unicode(
         "http://:8000",
         help="The public facing URL of the whole Dask Gateway application",
@@ -131,6 +137,38 @@ class DaskGateway(Application):
         config=True
     )
 
+    cookie_secret = Bytes(
+        help="""The cookie secret to use to encrypt cookies.
+
+        Loaded from the DASK_GATEWAY_COOKIE_SECRET environment variable by
+        default.
+        """,
+        config=True
+    )
+
+    cookie_max_age_days = Float(
+        7,
+        help="""Number of days for a login cookie to be valid.
+        Default is one week.
+        """,
+        config=True
+    )
+
+    @default('cookie_secret')
+    def _cookie_secret_default(self):
+        secret = os.environb.get(b'DASK_GATEWAY_COOKIE_SECRET', b'')
+        if not secret:
+            self.log.info("Generating new cookie secret")
+            secret = os.urandom(32)
+        return secret
+
+    @validate('cookie_secret')
+    def _cookie_secret_validate(self, proposal):
+        if len(proposal['value']) != 32:
+            raise ValueError("Cookie secret is %d bytes, it must be "
+                             "32 bytes" % len(proposal['value']))
+        return proposal['value']
+
     _log_formatter_cls = LogFormatter
 
     @catch_config_error
@@ -142,6 +180,7 @@ class DaskGateway(Application):
         self.init_logging()
         self.init_scheduler_proxy()
         self.init_web_proxy()
+        self.init_authenticator()
         self.init_tornado_application()
 
     def init_logging(self):
@@ -159,17 +198,33 @@ class DaskGateway(Application):
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
-            log=self.log, public_url=self.gateway_url
+            parent=self,
+            log=self.log,
+            public_url=self.gateway_url
         )
 
     def init_web_proxy(self):
         self.web_proxy = self.web_proxy_class(
-            log=self.log, public_url=self.public_url
+            parent=self,
+            log=self.log,
+            public_url=self.public_url
+        )
+
+    def init_authenticator(self):
+        self.authenticator = self.authenticator_class(
+            parent=self,
+            log=self.log
         )
 
     def init_tornado_application(self):
         self.handlers = list(handlers.default_handlers)
-        self.tornado_application = web.Application(self.handlers)
+        self.tornado_application = web.Application(
+            self.handlers,
+            log=self.log,
+            authenticator=self.authenticator,
+            cookie_secret=self.cookie_secret,
+            cookie_max_age_days=self.cookie_max_age_days
+        )
 
     async def start_async(self):
         self.start_scheduler_proxy()
