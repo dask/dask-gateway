@@ -79,8 +79,9 @@ class clean(_clean):
 
 
 install_requires = [
-    'traitlets',
+    'cryptography',
     'tornado',
+    'traitlets',
 ]
 
 
