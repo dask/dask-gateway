@@ -256,20 +256,20 @@ class DaskGateway(Application):
         )
 
     async def start_async(self):
-        self.start_scheduler_proxy()
-        self.start_web_proxy()
+        await self.start_scheduler_proxy()
+        await self.start_web_proxy()
         await self.start_tornado_application()
 
-    def start_scheduler_proxy(self):
+    async def start_scheduler_proxy(self):
         try:
-            self.scheduler_proxy.start()
+            await self.scheduler_proxy.start()
         except Exception:
             self.log.critical("Failed to start scheduler proxy", exc_info=True)
             self.exit(1)
 
-    def start_web_proxy(self):
+    async def start_web_proxy(self):
         try:
-            self.web_proxy.start()
+            await self.web_proxy.start()
         except Exception:
             self.log.critical("Failed to start web proxy", exc_info=True)
             self.exit(1)

@@ -1,10 +1,12 @@
 import os
 import json
+import socket
 import subprocess
 import uuid
 from urllib.parse import urlparse
 
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+from tornado import gen
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 from traitlets.config import LoggingConfigurable
 from traitlets import default, Unicode, CaselessStrEnum
 
@@ -65,7 +67,7 @@ class ProxyBase(LoggingConfigurable):
             token = uuid.uuid4().hex
         return token
 
-    def start(self):
+    async def start(self):
         """Start the proxy."""
         address = urlparse(self.public_url).netloc
         api_address = urlparse(self.api_url).netloc
@@ -88,6 +90,35 @@ class ProxyBase(LoggingConfigurable):
         self.proxy_process = proc
         self.log.info("Dask gateway %s proxy running at %r", self._subcommand,
                       self.public_url)
+
+        await self.wait_until_up()
+
+    async def wait_until_up(self, timeout=10):
+        client = AsyncHTTPClient()
+        loop = gen.IOLoop.current()
+        deadline = loop.time() + timeout
+        dt = 0.1
+        while True:
+            try:
+                await client.fetch(self.api_url, follow_redirects=False)
+                return
+            except HTTPError as e:
+                if e.code < 500:
+                    return True
+            except (OSError, socket.error):
+                # Failed to connect, see if the process erred out
+                exitcode = self.proxy_process.poll()
+                if exitcode is not None:
+                    raise RuntimeError("Failed to start %s proxy, exit code %i"
+                                       % (self._subcommand, exitcode))
+            remaining = deadline - loop.time()
+            if remaining < 0:
+                break
+            # Exponential backoff
+            dt = min(dt * 2, 5, remaining)
+            await gen.sleep(dt)
+        raise RuntimeError("Failed to connect to %s proxy at %s in %d secs"
+                           % (self._subcommand, self.api_url, timeout))
 
     def stop(self):
         """Stop the proxy."""
