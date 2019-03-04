@@ -10,7 +10,8 @@ from traitlets import Unicode, Bool, Type, Bytes, Float, default, validate
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
-from . import handlers, database
+from . import handlers
+from .objects import StateManager
 
 
 # Override default values for logging
@@ -120,6 +121,13 @@ class DaskGateway(Application):
         config=True
     )
 
+    cluster_class = Type(
+        'dask_gateway.cluster.ClusterSpawner',
+        klass='dask_gateway.cluster.ClusterSpawner',
+        help="The gateway cluster class to use",
+        config=True
+    )
+
     public_url = Unicode(
         "http://:8000",
         help="The public facing URL of the whole Dask Gateway application",
@@ -191,7 +199,7 @@ class DaskGateway(Application):
             return
         self.load_config_file(self.config_file)
         self.init_logging()
-        self.init_db()
+        self.init_state()
         self.init_scheduler_proxy()
         self.init_web_proxy()
         self.init_authenticator()
@@ -210,9 +218,9 @@ class DaskGateway(Application):
         logger.parent = self.log
         logger.setLevel(self.log.level)
 
-    def init_db(self):
-        self.engine = database.make_engine(
-            self.db_url, echo=self.db_debug
+    def init_state(self):
+        self.state = StateManager(
+            db_url=self.db_url, db_debug=self.db_debug
         )
 
     def init_scheduler_proxy(self):
@@ -240,7 +248,8 @@ class DaskGateway(Application):
         self.tornado_application = web.Application(
             self.handlers,
             log=self.log,
-            engine=self.engine,
+            app_state=self.state,
+            cluster_class=self.cluster_class,
             authenticator=self.authenticator,
             cookie_secret=self.cookie_secret,
             cookie_max_age_days=self.cookie_max_age_days

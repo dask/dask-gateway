@@ -1,9 +1,8 @@
 import functools
+import json
 
 from tornado import web
 from tornado.log import app_log
-
-from .database import get_or_create_user, username_from_cookie
 
 
 DASK_GATEWAY_COOKIE = 'dask-gateway'
@@ -26,6 +25,10 @@ class BaseHandler(web.RequestHandler):
         return self.settings.get('authenticator')
 
     @property
+    def cluster_class(self):
+        return self.settings.get('cluster_class')
+
+    @property
     def cookie_max_age_days(self):
         return self.settings.get('cookie_max_age_days')
 
@@ -34,15 +37,8 @@ class BaseHandler(web.RequestHandler):
         return self.settings.get('log', app_log)
 
     @property
-    def db(self):
-        if not hasattr(self, '_db'):
-            self._db = self.settings.get('engine').connect()
-        return self._db
-
-    def on_finish(self):
-        if hasattr(self, '_db'):
-            self._db.close()
-        super().on_finish()
+    def app_state(self):
+        return self.settings.get('app_state')
 
     def get_current_user(self):
         cookie = self.get_secure_cookie(
@@ -51,20 +47,22 @@ class BaseHandler(web.RequestHandler):
         )
         if cookie is not None:
             cookie = cookie.decode('utf-8', 'replace')
-            try:
-                return username_from_cookie(self.db, cookie)
-            except KeyError:
-                self.clear_cookie(DASK_GATEWAY_COOKIE)
+            user = self.app_state.user_from_cookie(cookie)
+            if user is not None:
+                return user.name
+            self.clear_cookie(DASK_GATEWAY_COOKIE)
         elif self.get_cookie(DASK_GATEWAY_COOKIE):
             self.clear_cookie(DASK_GATEWAY_COOKIE)
 
         username = self.authenticator.authenticate(self)
-        user = get_or_create_user(self.db, username)
+        user = self.app_state.get_or_create_user(username)
         self.set_secure_cookie(
             DASK_GATEWAY_COOKIE,
             user.cookie,
             expires_days=self.cookie_max_age_days
         )
+        # cache user object for use in response
+        self.dask_gateway_user = user
         return user.name
 
 
@@ -74,6 +72,19 @@ class RootHandler(BaseHandler):
         self.write("Hello %s!" % self.current_user)
 
 
+class ClustersHandler(BaseHandler):
+    def prepare(self):
+        if self.request.headers.get("Content-Type", "").startswith("application/json"):
+            self.json = json.loads(self.request.body)
+        else:
+            self.json = None
+
+    @authenticated
+    async def post(self):
+        self.write("Hello %s!" % self.dask_gateway_user.name)
+
+
 default_handlers = [
-    ("/", RootHandler)
+    ("/", RootHandler),
+    ("/api/clusters", ClustersHandler)
 ]
