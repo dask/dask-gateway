@@ -1,5 +1,7 @@
-import os
+import asyncio
+import json
 import logging
+import os
 import uuid
 from urllib.parse import urlparse
 
@@ -122,9 +124,9 @@ class DaskGateway(Application):
     )
 
     cluster_class = Type(
-        'dask_gateway.cluster.ClusterSpawner',
-        klass='dask_gateway.cluster.ClusterSpawner',
-        help="The gateway cluster class to use",
+        'dask_gateway.cluster.ClusterManager',
+        klass='dask_gateway.cluster.ClusterManager',
+        help="The gateway cluster manager class to use",
         config=True
     )
 
@@ -225,12 +227,32 @@ class DaskGateway(Application):
     def init_state(self):
         self.username_to_user = {}
         self.cookie_to_user = {}
+        self.clusters = {}
+
+        # Temporary hashtable for loading
+        id_to_user = {}
 
         # Load all existing users into memory
-        for dbuser in self.db.execute(objects.users.select()):
-            user = objects.User(name=dbuser.name, cookie=dbuser.cookie)
+        for u in self.db.execute(objects.users.select()):
+            user = objects.User(id=u.id, name=u.name, cookie=u.cookie)
             self.username_to_user[user.name] = user
             self.cookie_to_user[user.cookie] = user
+            id_to_user[user.id] = user
+
+        # Next load all existing clusters into memory
+        for c in self.db.execute(objects.clusters.select()):
+            user = id_to_user[c.user_id]
+            state = json.loads(c.state)
+            manager = self.cluster_class()
+            manager.load_state(state)
+            cluster = objects.Cluster(
+                id=c.id,
+                cluster_id=c.cluster_id,
+                user=user,
+                manager=manager
+            )
+            self.clusters[cluster.cluster_id] = cluster
+            user.clusters[cluster.cluster_id] = cluster
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
@@ -258,7 +280,6 @@ class DaskGateway(Application):
             self.handlers,
             log=self.log,
             gateway=self,
-            cluster_class=self.cluster_class,
             authenticator=self.authenticator,
             cookie_secret=self.cookie_secret,
             cookie_max_age_days=self.cookie_max_age_days
@@ -309,11 +330,71 @@ class DaskGateway(Application):
         user = self.username_to_user.get(username)
         if user is None:
             cookie = uuid.uuid4().hex
-            self.db.execute(objects.users.insert().values(name=username, cookie=cookie))
-            user = objects.User(name=username, cookie=cookie)
+            res = self.db.execute(
+                objects.users.insert().values(name=username, cookie=cookie)
+            )
+            user = objects.User(
+                id=res.inserted_primary_key[0],
+                name=username,
+                cookie=cookie
+            )
             self.cookie_to_user[cookie] = user
             self.username_to_user[username] = user
         return user
+
+    def create_cluster(self, user):
+        cluster_id = uuid.uuid4().hex
+        manager = self.cluster_class()
+        state = json.dumps(manager.get_state()).encode('utf-8')
+
+        res = self.db.execute(
+            objects.clusters.insert().values(
+                cluster_id=cluster_id,
+                user_id=user.id,
+                state=state
+            )
+        )
+        cluster = objects.Cluster(
+            id=res.inserted_primary_key[0],
+            cluster_id=cluster_id,
+            user=user,
+            manager=manager
+        )
+        user.clusters[cluster_id] = cluster
+        self.clusters[cluster_id] = cluster
+        return cluster
+
+    def start_cluster(self, cluster):
+        async def start_cluster():
+            self.log.debug("Starting cluster %s", cluster.cluster_id)
+            await cluster.manager.start()
+            self.log.debug("Cluster %s started", cluster.cluster_id)
+
+            # Cluster has started, update state
+            state = json.dumps(cluster.manager.get_state()).encode('utf-8')
+            self.db.execute(
+                objects.clusters
+                .update()
+                .where(objects.clusters.c.id == cluster.id)
+                .values(state=state)
+            )
+        asyncio.ensure_future(start_cluster())
+
+    def stop_cluster(self, cluster):
+        async def stop_cluster():
+            self.log.debug("Stopping cluster %s", cluster.cluster_id)
+            await cluster.manager.stop()
+            self.log.debug("Cluster %s stopped", cluster.cluster_id)
+
+            # Cluster has stopped, delete record
+            self.db.execute(
+                objects.clusters
+                .delete()
+                .where(objects.clusters.c.id == cluster.id)
+            )
+            del self.clusters[cluster.cluster_id]
+            del cluster.user.clusters[cluster.cluster_id]
+        asyncio.ensure_future(stop_cluster())
 
 
 main = DaskGateway.launch_instance
