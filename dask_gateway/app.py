@@ -1,5 +1,6 @@
 import os
 import logging
+import uuid
 from urllib.parse import urlparse
 
 from tornado import web
@@ -10,8 +11,7 @@ from traitlets import Unicode, Bool, Type, Bytes, Float, default, validate
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
-from . import handlers
-from .objects import StateManager
+from . import handlers, objects
 
 
 # Override default values for logging
@@ -199,11 +199,12 @@ class DaskGateway(Application):
             return
         self.load_config_file(self.config_file)
         self.init_logging()
-        self.init_state()
+        self.init_database()
         self.init_scheduler_proxy()
         self.init_web_proxy()
         self.init_authenticator()
         self.init_tornado_application()
+        self.init_state()
 
     def init_logging(self):
         # Prevent double log messages from tornado
@@ -218,10 +219,18 @@ class DaskGateway(Application):
         logger.parent = self.log
         logger.setLevel(self.log.level)
 
+    def init_database(self):
+        self.db = objects.make_engine(url=self.db_url, echo=self.db_debug)
+
     def init_state(self):
-        self.state = StateManager(
-            db_url=self.db_url, db_debug=self.db_debug
-        )
+        self.username_to_user = {}
+        self.cookie_to_user = {}
+
+        # Load all existing users into memory
+        for dbuser in self.db.execute(objects.users.select()):
+            user = objects.User(name=dbuser.name, cookie=dbuser.cookie)
+            self.username_to_user[user.name] = user
+            self.cookie_to_user[user.cookie] = user
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
@@ -248,7 +257,7 @@ class DaskGateway(Application):
         self.tornado_application = web.Application(
             self.handlers,
             log=self.log,
-            app_state=self.state,
+            gateway=self,
             cluster_class=self.cluster_class,
             authenticator=self.authenticator,
             cookie_secret=self.cookie_secret,
@@ -292,6 +301,19 @@ class DaskGateway(Application):
             loop.start()
         except KeyboardInterrupt:
             print("\nInterrupted")
+
+    def user_from_cookie(self, cookie):
+        return self.cookie_to_user.get(cookie)
+
+    def get_or_create_user(self, username):
+        user = self.username_to_user.get(username)
+        if user is None:
+            cookie = uuid.uuid4().hex
+            self.db.execute(objects.users.insert().values(name=username, cookie=cookie))
+            user = objects.User(name=username, cookie=cookie)
+            self.cookie_to_user[cookie] = user
+            self.username_to_user[username] = user
+        return user
 
 
 main = DaskGateway.launch_instance

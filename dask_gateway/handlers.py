@@ -37,8 +37,8 @@ class BaseHandler(web.RequestHandler):
         return self.settings.get('log', app_log)
 
     @property
-    def app_state(self):
-        return self.settings.get('app_state')
+    def gateway(self):
+        return self.settings.get('gateway')
 
     def get_current_user(self):
         cookie = self.get_secure_cookie(
@@ -47,7 +47,7 @@ class BaseHandler(web.RequestHandler):
         )
         if cookie is not None:
             cookie = cookie.decode('utf-8', 'replace')
-            user = self.app_state.user_from_cookie(cookie)
+            user = self.gateway.user_from_cookie(cookie)
             if user is not None:
                 return user.name
             self.clear_cookie(DASK_GATEWAY_COOKIE)
@@ -55,7 +55,7 @@ class BaseHandler(web.RequestHandler):
             self.clear_cookie(DASK_GATEWAY_COOKIE)
 
         username = self.authenticator.authenticate(self)
-        user = self.app_state.get_or_create_user(username)
+        user = self.gateway.get_or_create_user(username)
         self.set_secure_cookie(
             DASK_GATEWAY_COOKIE,
             user.cookie,
