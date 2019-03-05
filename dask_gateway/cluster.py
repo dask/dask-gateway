@@ -1,4 +1,4 @@
-from traitlets import Unicode, Integer
+from traitlets import Unicode, Integer, Dict
 from traitlets.config import LoggingConfigurable
 
 
@@ -29,6 +29,13 @@ class ClusterManager(LoggingConfigurable):
         config=True
     )
 
+    environment = Dict(
+        help="""
+        Environment variables to set for both the worker and scheduler processes.
+        """,
+        config=True
+    )
+
     start_timeout = Integer(
         60,
         help="""
@@ -39,7 +46,7 @@ class ClusterManager(LoggingConfigurable):
     def get_state(self):
         """Return all state that is needed to reconnect to this cluster-manager
         instance after a gateway restart."""
-        return getattr(self, 'state', {})
+        return {}
 
     def load_state(self, state):
         """Restore cluster manager from stored state.
@@ -71,7 +78,7 @@ class ClusterManager(LoggingConfigurable):
 
     async def start(self):
         """Start a new cluster"""
-        self.state = {'foo': 'bar'}
+        pass
 
     async def is_running(self):
         """Check if the cluster is running"""
