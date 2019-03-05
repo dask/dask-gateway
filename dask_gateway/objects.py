@@ -48,6 +48,15 @@ class StateManager(object):
         self.username_to_user = {}
         self.cookie_to_user = {}
 
+        self.load_from_database()
+
+    def load_from_database(self):
+        # Load all existing users into memory
+        for dbuser in self.db.execute(users.select()):
+            user = User(name=dbuser.name, cookie=dbuser.cookie)
+            self.username_to_user[user.name] = user
+            self.cookie_to_user[user.cookie] = user
+
     def user_from_cookie(self, cookie):
         return self.cookie_to_user.get(cookie)
 
