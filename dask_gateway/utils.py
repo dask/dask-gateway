@@ -1,3 +1,4 @@
+import shutil
 import socket
 
 from traitlets import Integer, TraitError
@@ -8,6 +9,14 @@ def random_port():
     with socket.socket() as sock:
         sock.bind(('', 0))
         return sock.getsockname()[1]
+
+
+def cleanup_tmpdir(log, path):
+    try:
+        log.debug("Removing temporary directory %r", path)
+        shutil.rmtree(path)
+    except Exception as exc:
+        log.error("Failed to remove temporary directory %r.", path, exc_info=exc)
 
 
 # Adapted from JupyterHub

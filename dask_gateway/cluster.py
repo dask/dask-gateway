@@ -1,4 +1,4 @@
-from traitlets import Unicode, Integer, Dict
+from traitlets import Unicode, Integer, Dict, Bytes
 from traitlets.config import LoggingConfigurable
 
 
@@ -47,6 +47,9 @@ class ClusterManager(LoggingConfigurable):
     api_url = Unicode()
     api_token = Unicode()
     cluster_id = Unicode()
+    temp_dir = Unicode()
+    tls_cert = Bytes()
+    tls_key = Bytes()
 
     def get_env(self):
         """Get a dict of environment variables to set for the process"""

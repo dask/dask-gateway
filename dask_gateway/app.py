@@ -2,7 +2,10 @@ import asyncio
 import json
 import logging
 import os
+import stat
+import tempfile
 import uuid
+import weakref
 from urllib.parse import urlparse
 
 from tornado import web
@@ -14,6 +17,8 @@ from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
 from . import handlers, objects
+from .tls import new_keypair
+from .utils import cleanup_tmpdir
 
 
 # Override default values for logging
@@ -177,6 +182,24 @@ class DaskGateway(Application):
         config=True
     )
 
+    temp_dir = Unicode(
+        help="""
+        Path to a directory to use to store temporary runtime files.
+
+        The permissions on this directory must be restricted to ``0o700``. If
+        the directory doesn't already exist, it will be created on startup and
+        removed on shutdown.
+
+        The default is to create a temporary directory ``"dask-gateway"`` in
+        the system tmpdir default location.
+        """,
+        config=True
+    )
+
+    @default('temp_dir')
+    def _temp_dir_default(self):
+        return os.path.join(tempfile.gettempdir(), "dask-gateway")
+
     @default('cookie_secret')
     def _cookie_secret_default(self):
         secret = os.environb.get(b'DASK_GATEWAY_COOKIE_SECRET', b'')
@@ -206,6 +229,7 @@ class DaskGateway(Application):
         self.load_config_file(self.config_file)
         self.init_logging()
         self.init_database()
+        self.init_tempdir()
         self.init_scheduler_proxy()
         self.init_web_proxy()
         self.init_authenticator()
@@ -228,6 +252,17 @@ class DaskGateway(Application):
     def init_database(self):
         self.db = objects.make_engine(url=self.db_url, echo=self.db_debug)
 
+    def init_tempdir(self):
+        if os.path.exists(self.temp_dir):
+            perm = stat.S_IMODE(os.stat(self.temp_dir).st_mode)
+            if perm & (stat.S_IRWXO | stat.S_IRWXG):
+                raise ValueError("Temporary directory %s has excessive permissions "
+                                 "%r, should be at '0o700'" % (self.temp_dir, oct(perm)))
+        else:
+            self.log.debug("Creating temporary directory %r", self.temp_dir)
+            os.mkdir(self.temp_dir, mode=0o700)
+            weakref.finalize(self, cleanup_tmpdir, self.log, self.temp_dir)
+
     def init_state(self):
         self.username_to_user = {}
         self.cookie_to_user = {}
@@ -248,7 +283,9 @@ class DaskGateway(Application):
         for c in self.db.execute(objects.clusters.select()):
             user = id_to_user[c.user_id]
             state = json.loads(c.state)
-            manager = self.cluster_class()
+            manager = self._new_cluster_manager(
+                c.cluster_id, c.token, c.tls_cert, c.tls_key
+            )
             manager.load_state(state)
             cluster = objects.Cluster(
                 id=c.id,
@@ -257,7 +294,9 @@ class DaskGateway(Application):
                 token=c.token,
                 manager=manager,
                 scheduler_address=c.scheduler_address,
-                dashboard_address=c.dashboard_address
+                dashboard_address=c.dashboard_address,
+                tls_cert=c.tls_cert,
+                tls_key=c.tls_key
             )
             self.clusters[cluster.cluster_id] = cluster
             user.clusters[cluster.cluster_id] = cluster
@@ -354,14 +393,21 @@ class DaskGateway(Application):
     def cluster_from_token(self, token):
         return self.token_to_cluster.get(token)
 
+    def _new_cluster_manager(self, cluster_id, token, tls_cert, tls_key):
+        return self.cluster_class(
+            cluster_id=cluster_id,
+            api_token=token,
+            api_url=self.api_url,
+            temp_dir=self.temp_dir,
+            tls_cert=tls_cert,
+            tls_key=tls_key
+        )
+
     def create_cluster(self, user):
         cluster_id = uuid.uuid4().hex
         token = uuid.uuid4().hex
-        manager = self.cluster_class(
-            cluster_id=cluster_id,
-            api_token=token,
-            api_url=self.api_url
-        )
+        tls_cert, tls_key = new_keypair(cluster_id)
+        manager = self._new_cluster_manager(cluster_id, token, tls_cert, tls_key)
         state = json.dumps(manager.get_state()).encode('utf-8')
 
         res = self.db.execute(
@@ -371,7 +417,9 @@ class DaskGateway(Application):
                 token=token,
                 state=state,
                 scheduler_address='',
-                dashboard_address=''
+                dashboard_address='',
+                tls_cert=tls_cert,
+                tls_key=tls_key
             )
         )
         cluster = objects.Cluster(
@@ -381,7 +429,9 @@ class DaskGateway(Application):
             token=token,
             manager=manager,
             scheduler_address='',
-            dashboard_address=''
+            dashboard_address='',
+            tls_cert=tls_cert,
+            tls_key=tls_key
         )
         user.clusters[cluster_id] = cluster
         self.clusters[cluster_id] = cluster

@@ -1,5 +1,7 @@
-import skein
+import os
+from contextlib import contextmanager
 
+import skein
 from tornado import gen
 from traitlets import Unicode, Integer, Dict
 
@@ -145,6 +147,32 @@ class YarnClusterManager(ClusterManager):
             type(self).clients[key] = client
         return client
 
+    @contextmanager
+    def temp_write_credentials(self):
+        """Write credentials to disk in secure temporary files.
+
+        The files will be cleaned up upon exiting this context.
+
+        Returns
+        -------
+        cert_path, key_path
+        """
+        prefix = os.path.join(self.temp_dir, self.cluster_id)
+        cert_path = prefix + ".crt"
+        key_path = prefix + ".pem"
+
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+        try:
+            for path, data in [(cert_path, self.tls_cert), (key_path, self.tls_key)]:
+                with os.fdopen(os.open(path, flags, 0o600), 'wb') as fil:
+                    fil.write(data)
+
+            yield cert_path, key_path
+        finally:
+            for path in [cert_path, key_path]:
+                if os.path.exists(path):
+                    os.unlink(path)
+
     @property
     def worker_command(self):
         """The full command (with args) to launch a dask worker"""
@@ -155,14 +183,12 @@ class YarnClusterManager(ClusterManager):
         """The full command (with args) to launch a dask scheduler"""
         return ' '.join(self.scheduler_cmd + self.get_scheduler_args())
 
-    def _build_specification(self):
+    def _build_specification(self, cert_path, key_path):
         files = {k: skein.File.from_dict(v) if isinstance(v, dict) else v
                  for k, v in self.localize_files.items()}
 
-        # TODO: handle credentials
-        credentials = self.get_credentials()
-        files['dask.crt'] = credentials['dask.crt']
-        files['dask.pem'] = credentials['dask.pem']
+        files['dask.crt'] = cert_path
+        files['dask.pem'] = key_path
 
         scheduler_script = '\n'.join([self.scheduler_setup, self.scheduler_command])
         worker_script = '\n'.join([self.worker_setup, self.worker_command])
@@ -213,24 +239,22 @@ class YarnClusterManager(ClusterManager):
     async def start(self):
         loop = gen.IOLoop.current()
 
-        spec = self._build_specification()
-        # Set app_id == 'PENDING' to signal `poll` that we're starting
-        self.app_id = 'PENDING'
-
         client = await self._get_client()
-        app_id = await loop.run_in_executor(None, client.submit, spec)
-        self.app_id = app_id
+
+        with self.temp_write_credentials() as (cert_path, key_path):
+            spec = self._build_specification(cert_path, key_path)
+            self.app_id = await loop.run_in_executor(None, client.submit, spec)
 
         # Wait for application to start
         while True:
             report = await loop.run_in_executor(
-                None, client.application_report, app_id
+                None, client.application_report, self.app_id
             )
             state = str(report.state)
             if state in {'FAILED', 'KILLED', 'FINISHED'}:
                 raise Exception("Application %s failed to start, check "
                                 "application logs for more information"
-                                % app_id)
+                                % self.app_id)
             elif state == 'RUNNING':
                 break
             else:
@@ -241,17 +265,17 @@ class YarnClusterManager(ClusterManager):
             await gen.sleep(0.5)
 
             report = await loop.run_in_executor(
-                None, client.application_report, app_id
+                None, client.application_report, self.app_id
             )
             if str(report.state) in {'FAILED', 'KILLED', 'FINISHED'}:
                 raise Exception("Application %s failed to start, check "
                                 "application logs for more information"
-                                % app_id)
+                                % self.app_id)
 
         return self.scheduler_address, self.dashboard_address
 
     async def is_running(self):
-        if self.app_id in {'', 'PENDING'}:
+        if self.app_id == '':
             return False
 
         client = await self._get_client()
