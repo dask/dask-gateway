@@ -194,6 +194,10 @@ class DaskGateway(Application):
 
     _log_formatter_cls = LogFormatter
 
+    @property
+    def api_url(self):
+        return self.public_url + "/gateway/api"
+
     @catch_config_error
     def initialize(self, argv=None):
         super().initialize(argv)
@@ -228,6 +232,7 @@ class DaskGateway(Application):
         self.username_to_user = {}
         self.cookie_to_user = {}
         self.clusters = {}
+        self.token_to_cluster = {}
 
         # Temporary hashtable for loading
         id_to_user = {}
@@ -249,10 +254,14 @@ class DaskGateway(Application):
                 id=c.id,
                 cluster_id=c.cluster_id,
                 user=user,
-                manager=manager
+                token=c.token,
+                manager=manager,
+                scheduler_address=c.scheduler_address,
+                dashboard_address=c.dashboard_address
             )
             self.clusters[cluster.cluster_id] = cluster
             user.clusters[cluster.cluster_id] = cluster
+            self.token_to_cluster[cluster.token] = cluster
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
@@ -342,26 +351,41 @@ class DaskGateway(Application):
             self.username_to_user[username] = user
         return user
 
+    def cluster_from_token(self, token):
+        return self.token_to_cluster.get(token)
+
     def create_cluster(self, user):
         cluster_id = uuid.uuid4().hex
-        manager = self.cluster_class()
+        token = uuid.uuid4().hex
+        manager = self.cluster_class(
+            cluster_id=cluster_id,
+            api_token=token,
+            api_url=self.api_url
+        )
         state = json.dumps(manager.get_state()).encode('utf-8')
 
         res = self.db.execute(
             objects.clusters.insert().values(
                 cluster_id=cluster_id,
                 user_id=user.id,
-                state=state
+                token=token,
+                state=state,
+                scheduler_address='',
+                dashboard_address=''
             )
         )
         cluster = objects.Cluster(
             id=res.inserted_primary_key[0],
             cluster_id=cluster_id,
             user=user,
-            manager=manager
+            token=token,
+            manager=manager,
+            scheduler_address='',
+            dashboard_address=''
         )
         user.clusters[cluster_id] = cluster
         self.clusters[cluster_id] = cluster
+        self.token_to_cluster[token] = cluster
         return cluster
 
     def start_cluster(self, cluster):
@@ -383,6 +407,15 @@ class DaskGateway(Application):
     def stop_cluster(self, cluster):
         async def stop_cluster():
             self.log.debug("Stopping cluster %s", cluster.cluster_id)
+            # Remove routes from proxies if already set
+            if cluster.scheduler_address:
+                await self.web_proxy.delete_route(
+                    "/gateway/clusters/" + cluster.cluster_id
+                )
+                await self.scheduler_proxy.delete_route(
+                    "/" + cluster.cluster_id,
+                )
+            # Stop the cluster
             await cluster.manager.stop()
             self.log.debug("Cluster %s stopped", cluster.cluster_id)
 
@@ -393,8 +426,29 @@ class DaskGateway(Application):
                 .where(objects.clusters.c.id == cluster.id)
             )
             del self.clusters[cluster.cluster_id]
+            del self.token_to_cluster[cluster.token]
             del cluster.user.clusters[cluster.cluster_id]
         asyncio.ensure_future(stop_cluster())
+
+    async def register_cluster(self, cluster, scheduler_address, dashboard_address):
+        self.log.debug("Registering cluster %s", cluster.cluster_id)
+        cluster.scheduler_address = scheduler_address
+        cluster.dashboard_address = dashboard_address
+        self.db.execute(
+            objects.clusters
+            .update()
+            .where(objects.clusters.c.id == cluster.id)
+            .values(scheduler_address=scheduler_address,
+                    dashboard_address=dashboard_address)
+        )
+        await self.web_proxy.add_route(
+            "/gateway/clusters/" + cluster.cluster_id,
+            dashboard_address
+        )
+        await self.scheduler_proxy.add_route(
+            "/" + cluster.cluster_id,
+            scheduler_address
+        )
 
 
 main = DaskGateway.launch_instance

@@ -90,7 +90,7 @@ class YarnClusterManager(ClusterManager):
     )
 
     worker_cmd = Unicode(
-        'dask-gateway worker',
+        'dask-gateway-worker',
         help='Shell command to start a dask-gateway worker.',
         config=True
     )
@@ -125,7 +125,7 @@ class YarnClusterManager(ClusterManager):
     )
 
     scheduler_cmd = Unicode(
-        'dask-gateway scheduler',
+        'dask-gateway-scheduler',
         help='Shell command to start a dask-gateway scheduler.',
         config=True
     )
@@ -154,10 +154,6 @@ class YarnClusterManager(ClusterManager):
     def scheduler_command(self):
         """The full command (with args) to launch a dask scheduler"""
         return ' '.join(self.scheduler_cmd + self.get_scheduler_args())
-
-    def get_env(self):
-        # TODO: add API Token
-        return self.environment
 
     def _build_specification(self):
         files = {k: skein.File.from_dict(v) if isinstance(v, dict) else v

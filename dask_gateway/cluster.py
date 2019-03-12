@@ -43,6 +43,20 @@ class ClusterManager(LoggingConfigurable):
         """
     )
 
+    # Parameters forwarded by gateway application
+    api_url = Unicode()
+    api_token = Unicode()
+    cluster_id = Unicode()
+
+    def get_env(self):
+        """Get a dict of environment variables to set for the process"""
+        out = dict(self.environment)
+        # Set values that dask-gateway needs to run
+        out.update({'DASK_GATEWAY_API_URL': self.api_url,
+                    'DASK_GATEWAY_CLUSTER_ID': self.cluster_id,
+                    'DASK_GATEWAY_API_TOKEN': self.token})
+        return out
+
     def get_state(self):
         """Return all state that is needed to reconnect to this cluster-manager
         instance after a gateway restart."""

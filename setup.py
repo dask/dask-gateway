@@ -113,6 +113,8 @@ setup(name='dask-gateway',
       entry_points={
           'console_scripts': [
               'dask-gateway = dask_gateway.app:main',
+              'dask-gateway-scheduler = dask_gateway.dask_cli:scheduler',
+              'dask-gateway-worker = dask_gateway.dask_cli:worker',
           ]
       },
       zip_safe=False)

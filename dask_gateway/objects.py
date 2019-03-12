@@ -19,7 +19,10 @@ clusters = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('cluster_id', Unicode(255), nullable=False, unique=True),
     Column('user_id', Integer, ForeignKey("users.id"), nullable=False),
-    Column('state', LargeBinary, nullable=False)
+    Column('state', LargeBinary, nullable=False),
+    Column('token', Unicode(32), nullable=False, unique=True),
+    Column('scheduler_address', Unicode(255), nullable=False),
+    Column('dashboard_address', Unicode(255), nullable=False)
 )
 
 
@@ -46,8 +49,12 @@ class User(object):
 
 
 class Cluster(object):
-    def __init__(self, id=None, cluster_id=None, user=None, manager=None):
+    def __init__(self, id=None, cluster_id=None, user=None, token=None,
+                 manager=None, scheduler_address='', dashboard_address=''):
         self.id = id
         self.cluster_id = cluster_id
         self.user = user
+        self.token = token
         self.manager = manager
+        self.scheduler_address = scheduler_address
+        self.dashboard_address = dashboard_address
