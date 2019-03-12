@@ -190,6 +190,8 @@ class YarnClusterManager(ClusterManager):
         files['dask.crt'] = cert_path
         files['dask.pem'] = key_path
 
+        env = self.get_env()
+
         scheduler_script = '\n'.join([self.scheduler_setup, self.scheduler_command])
         worker_script = '\n'.join([self.worker_setup, self.worker_command])
 
@@ -200,7 +202,7 @@ class YarnClusterManager(ClusterManager):
                 vcores=self.scheduler_cores
             ),
             files=files,
-            env=self.get_env(),
+            env=env,
             script=scheduler_script
         )
 
@@ -213,7 +215,7 @@ class YarnClusterManager(ClusterManager):
                 ),
                 max_restarts=-1,
                 files=files,
-                env=self.get_env(),
+                env=env,
                 script=worker_script
             )
         }

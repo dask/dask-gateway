@@ -51,13 +51,20 @@ class ClusterManager(LoggingConfigurable):
     tls_cert = Bytes()
     tls_key = Bytes()
 
+    def get_tls_paths():
+        """Get the absolute paths to the tls cert and key files."""
+        return "dask.crt", "dask.pem"
+
     def get_env(self):
         """Get a dict of environment variables to set for the process"""
         out = dict(self.environment)
+        tls_cert_path, tls_key_path = self.get_tls_paths()
         # Set values that dask-gateway needs to run
         out.update({'DASK_GATEWAY_API_URL': self.api_url,
                     'DASK_GATEWAY_CLUSTER_ID': self.cluster_id,
-                    'DASK_GATEWAY_API_TOKEN': self.token})
+                    'DASK_GATEWAY_API_TOKEN': self.token,
+                    'DASK_GATEWAY_TLS_CERT': tls_cert_path,
+                    'DASK_GATEWAY_TLS_KEY': tls_key_path})
         return out
 
     def get_state(self):

@@ -10,6 +10,7 @@ from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.ioloop import IOLoop, TimeoutError
 from distributed import Scheduler, Nanny
+from distributed.security import Security
 from distributed.utils import ignoring
 from distributed.cli.utils import install_signal_handlers, uri_from_host_port
 from distributed.proctitle import (enable_proctitle_on_children,
@@ -26,6 +27,16 @@ def get_url():
 
 def get_token():
     return os.environ.get('DASK_GATEWAY_API_TOKEN', '')
+
+
+def get_security():
+    tls_cert = os.environ.get('DASK_GATEWAY_TLS_CERT', '')
+    tls_key = os.environ.get('DASK_GATEWAY_TLS_KEY', '')
+    return Security(tls_ca_file=tls_cert,
+                    tls_scheduler_cert=tls_cert,
+                    tls_scheduler_key=tls_key,
+                    tls_worker_cert=tls_cert,
+                    tls_worker_key=tls_key)
 
 
 async def send_addresses(scheduler, dashboard):
@@ -69,10 +80,6 @@ def scheduler():
         limit = max(soft, hard // 2)
         resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
 
-    addr = uri_from_host_port('', None, 0)
-
-    loop = IOLoop.current()
-
     services = {}
     bokeh = False
     with ignoring(ImportError):
@@ -80,7 +87,11 @@ def scheduler():
         services[('bokeh', 0)] = (BokehScheduler, {})
         bokeh = True
 
-    scheduler = Scheduler(loop=loop, services=services)
+    loop = IOLoop.current()
+    addr = uri_from_host_port('', None, 0)
+    security = get_security()
+
+    scheduler = Scheduler(loop=loop, services=services, security=security)
     scheduler.start(addr)
 
     install_signal_handlers(loop)
@@ -126,8 +137,11 @@ def worker():
 
     scheduler = loop.run_sync(get_scheduler_address)
 
+    security = get_security()
+
     worker = Nanny(scheduler, ncores=nthreads, loop=loop,
-                   memory_limit=memory_limit, worker_port=0)
+                   memory_limit=memory_limit, worker_port=0,
+                   security=security)
 
     @gen.coroutine
     def close(signalnum):
