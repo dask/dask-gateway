@@ -1,9 +1,10 @@
 import getpass
+import json
 import re
 from base64 import b64encode
 from urllib.parse import urlparse
 
-from tornado.httpclient import AsyncHTTPClient
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
 from .cookiejar import CookieJar
 
@@ -83,3 +84,27 @@ class Gateway(object):
         if raise_error:
             resp.rethrow()
         return resp
+
+    async def _clusters(self):
+        url = "%s/gateway/api/clusters/" % self.address
+        req = HTTPRequest(url=url)
+        resp = await self._fetch(req)
+        return json.loads(resp.body)
+
+    async def _start_cluster(self):
+        url = "%s/gateway/api/clusters/" % self.address
+        req = HTTPRequest(url=url, method="POST", body='{}')
+        resp = await self._fetch(req)
+        data = json.loads(resp.body)
+        return data['cluster_id']
+
+    async def _stop_cluster(self, cluster_id):
+        url = "%s/gateway/api/clusters/%s" % (self.address, cluster_id)
+        req = HTTPRequest(url=url, method="DELETE")
+        await self._fetch(req)
+
+    async def _get_cluster(self, cluster_id):
+        url = "%s/gateway/api/clusters/%s" % (self.address, cluster_id)
+        req = HTTPRequest(url=url)
+        resp = await self._fetch(req)
+        return json.loads(resp.body)
