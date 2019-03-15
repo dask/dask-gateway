@@ -82,6 +82,7 @@ install_requires = [
     'cryptography',
     'tornado',
     'traitlets',
+    'sqlalchemy'
 ]
 
 
