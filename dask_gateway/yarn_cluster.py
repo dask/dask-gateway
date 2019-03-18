@@ -173,15 +173,19 @@ class YarnClusterManager(ClusterManager):
                 if os.path.exists(path):
                     os.unlink(path)
 
+    def get_worker_args(self):
+        return ['--nthreads', '$SKEIN_RESOURCE_VCORES',
+                '--memory-limit', '$(SKEIN_RESOURCE_MEMORY)MiB']
+
     @property
     def worker_command(self):
         """The full command (with args) to launch a dask worker"""
-        return ' '.join(self.worker_cmd + self.get_worker_args())
+        return ' '.join([self.worker_cmd] + self.get_worker_args())
 
     @property
     def scheduler_command(self):
         """The full command (with args) to launch a dask scheduler"""
-        return ' '.join(self.scheduler_cmd + self.get_scheduler_args())
+        return self.scheduler_cmd
 
     def _build_specification(self, cert_path, key_path):
         files = {k: skein.File.from_dict(v) if isinstance(v, dict) else v
@@ -223,7 +227,7 @@ class YarnClusterManager(ClusterManager):
         return skein.ApplicationSpec(
             name='dask-gateway',
             queue=self.queue,
-            user=self.user.name,
+            user=self.username,
             master=master,
             services=services
         )

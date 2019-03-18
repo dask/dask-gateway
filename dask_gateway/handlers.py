@@ -1,5 +1,6 @@
 import functools
 import json
+from urllib.parse import urlparse
 
 from tornado import web
 from tornado.log import app_log
@@ -95,11 +96,20 @@ class BaseHandler(web.RequestHandler):
         return user.name
 
 
-def cluster_model(cluster):
-    return {'cluster_id': cluster.cluster_id,
-            'user': cluster.user.name,
-            'scheduler_address': cluster.scheduler_address,
-            'dashboard_address': cluster.dashboard_address}
+def cluster_model(gateway, cluster, full=True):
+    if cluster.scheduler_address:
+        scheduler = 'gateway://%s/%s' % (urlparse(gateway.gateway_url).netloc,
+                                         cluster.cluster_id)
+        dashboard = ('%s/gateway/clusters/%s' % (gateway.public_url, cluster.cluster_id))
+    else:
+        scheduler = dashboard = ''
+    out = {'cluster_id': cluster.cluster_id,
+           'scheduler_address': scheduler,
+           'dashboard_address': dashboard}
+    if full:
+        out['tls_cert'] = cluster.tls_cert.decode()
+        out['tls_key'] = cluster.tls_key.decode()
+    return out
 
 
 class ClustersHandler(BaseHandler):
@@ -129,7 +139,8 @@ class ClustersHandler(BaseHandler):
     @user_authenticated
     async def get(self, cluster_id):
         if not cluster_id:
-            out = {k: cluster_model(v) for k, v in self.dask_user.clusters.items()}
+            out = {k: cluster_model(self.gateway, v, full=False)
+                   for k, v in self.dask_user.clusters.items()}
             self.write(out)
             return
 
@@ -137,7 +148,7 @@ class ClustersHandler(BaseHandler):
         if cluster is None:
             raise web.HTTPError(404, reason="Cluster %s does not exist" % cluster_id)
 
-        self.write(cluster_model(cluster))
+        self.write(cluster_model(self.gateway, cluster, full=True))
 
     @user_authenticated
     async def delete(self, cluster_id):

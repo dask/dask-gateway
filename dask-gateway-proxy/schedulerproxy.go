@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"sync"
 	"time"
@@ -80,8 +81,12 @@ func (p *Proxy) routesHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				http.Error(w, "Bad Request", http.StatusBadRequest)
 			}
+			target, err := url.Parse(msg.Target)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+			}
 			p.routesLock.Lock()
-			p.routes[route] = msg.Target
+			p.routes[route] = target.Host
 			p.routesLock.Unlock()
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodDelete:

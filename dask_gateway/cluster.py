@@ -44,6 +44,7 @@ class ClusterManager(LoggingConfigurable):
     )
 
     # Parameters forwarded by gateway application
+    username = Unicode()
     api_url = Unicode()
     api_token = Unicode()
     cluster_id = Unicode()
@@ -51,7 +52,7 @@ class ClusterManager(LoggingConfigurable):
     tls_cert = Bytes()
     tls_key = Bytes()
 
-    def get_tls_paths():
+    def get_tls_paths(self):
         """Get the absolute paths to the tls cert and key files."""
         return "dask.crt", "dask.pem"
 
@@ -62,7 +63,7 @@ class ClusterManager(LoggingConfigurable):
         # Set values that dask-gateway needs to run
         out.update({'DASK_GATEWAY_API_URL': self.api_url,
                     'DASK_GATEWAY_CLUSTER_ID': self.cluster_id,
-                    'DASK_GATEWAY_API_TOKEN': self.token,
+                    'DASK_GATEWAY_API_TOKEN': self.api_token,
                     'DASK_GATEWAY_TLS_CERT': tls_cert_path,
                     'DASK_GATEWAY_TLS_KEY': tls_key_path})
         return out

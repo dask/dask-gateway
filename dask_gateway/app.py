@@ -2,11 +2,12 @@ import asyncio
 import json
 import logging
 import os
+import socket
 import stat
 import tempfile
 import uuid
 import weakref
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from tornado import web
 from tornado.log import LogFormatter
@@ -153,6 +154,16 @@ class DaskGateway(Application):
         config=True
     )
 
+    @validate('public_url', 'gateway_url', 'private_url')
+    def _resolve_hostname(self, proposal):
+        url = proposal.value
+        parsed = urlparse(url)
+        if parsed.hostname in {'', '0.0.0.0'}:
+            host = socket.gethostname()
+            parsed = parsed._replace(netloc='%s:%i' % (host, parsed.port))
+            url = urlunparse(parsed)
+        return url
+
     cookie_secret = Bytes(
         help="""The cookie secret to use to encrypt cookies.
 
@@ -284,7 +295,7 @@ class DaskGateway(Application):
             user = id_to_user[c.user_id]
             state = json.loads(c.state)
             manager = self._new_cluster_manager(
-                c.cluster_id, c.token, c.tls_cert, c.tls_key
+                user.name, c.cluster_id, c.token, c.tls_cert, c.tls_key
             )
             manager.load_state(state)
             cluster = objects.Cluster(
@@ -393,8 +404,11 @@ class DaskGateway(Application):
     def cluster_from_token(self, token):
         return self.token_to_cluster.get(token)
 
-    def _new_cluster_manager(self, cluster_id, token, tls_cert, tls_key):
+    def _new_cluster_manager(self, username, cluster_id, token, tls_cert, tls_key):
         return self.cluster_class(
+            parent=self,
+            log=self.log,
+            username=username,
             cluster_id=cluster_id,
             api_token=token,
             api_url=self.api_url,
@@ -407,7 +421,9 @@ class DaskGateway(Application):
         cluster_id = uuid.uuid4().hex
         token = uuid.uuid4().hex
         tls_cert, tls_key = new_keypair(cluster_id)
-        manager = self._new_cluster_manager(cluster_id, token, tls_cert, tls_key)
+        manager = self._new_cluster_manager(user.name, cluster_id, token,
+                                            tls_cert, tls_key)
+        manager.load_state({})
         state = json.dumps(manager.get_state()).encode('utf-8')
 
         res = self.db.execute(

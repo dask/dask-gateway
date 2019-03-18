@@ -88,7 +88,7 @@ def scheduler():
         bokeh = True
 
     loop = IOLoop.current()
-    addr = uri_from_host_port('', None, 0)
+    addr = uri_from_host_port('tls://', None, 0)
     security = get_security()
 
     scheduler = Scheduler(loop=loop, services=services, security=security)
@@ -103,7 +103,7 @@ def scheduler():
     else:
         bokeh_address = ''
 
-    scheduler = loop.run_sync(lambda: send_addresses(scheduler.address, bokeh_address))
+    loop.run_sync(lambda: send_addresses(scheduler.address, bokeh_address))
 
     try:
         loop.start()
@@ -120,7 +120,7 @@ worker_parser = argparse.ArgumentParser(
 worker_parser.add_argument("--version", action="version", version=VERSION)
 worker_parser.add_argument("--nthreads", type=int, default=1,
                            help="The number of threads to use")
-worker_parser.add_argument("--memory_limit", default=None,
+worker_parser.add_argument("--memory-limit", default=None,
                            help="The maximum amount of memory to allow")
 
 

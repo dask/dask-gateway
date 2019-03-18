@@ -8,6 +8,10 @@ from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
 from .cookiejar import CookieJar
 
+# Register gateway protocol
+from . import comm
+del comm
+
 
 class AuthBase(object):
     def pre_request(self, req, resp):
