@@ -1,9 +1,18 @@
 import getpass
 import json
+import os
 import re
+import ssl
+import tempfile
 from base64 import b64encode
+from datetime import timedelta
+from threading import get_ident
 from urllib.parse import urlparse
 
+from distributed import Client
+from distributed.security import Security
+from distributed.utils import LoopRunner, sync, thread_state
+from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
 from .cookiejar import CookieJar
@@ -70,12 +79,103 @@ class KerberosAuth(AuthBase):
         kerberos.authGSSClientStep(context, token)
 
 
+class GatewaySecurity(Security):
+    """A security implementation that temporarily stores credentials on disk.
+
+    The normal ``Security`` class assumes credentials already exist on disk,
+    but we our credentials exist only in memory. Since Python's SSLContext
+    doesn't support directly loading credentials from memory, we write them
+    temporarily to disk when creating the context, then delete them
+    immediately.
+    """
+    def __init__(self, tls_key, tls_cert):
+        self.tls_key = tls_key
+        self.tls_cert = tls_cert
+
+    def __repr__(self):
+        return 'GatewaySecurity<...>'
+
+    def get_connection_args(self, role):
+        with tempfile.TemporaryDirectory() as tempdir:
+            key_path = os.path.join(tempdir, 'dask.pem')
+            cert_path = os.path.join(tempdir, 'dask.crt')
+            with open(key_path, 'w') as f:
+                f.write(self.tls_key)
+            with open(cert_path, 'w') as f:
+                f.write(self.tls_cert)
+            ctx = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
+                                             cafile=cert_path)
+            ctx.verify_mode = ssl.CERT_REQUIRED
+            ctx.check_hostname = False
+            ctx.load_cert_chain(cert_path, key_path)
+        return {'ssl_context': ctx}
+
+
 class Gateway(object):
-    def __init__(self, address=None, auth=None):
+    def __init__(self, address=None, auth=None, asynchronous=False, loop=None):
         self.address = address
-        self._http_client = AsyncHTTPClient()
         self._auth = auth or BasicAuth()
         self._cookie_jar = CookieJar()
+
+        self._asynchronous = asynchronous
+        self._loop_runner = LoopRunner(loop=loop, asynchronous=asynchronous)
+        self.loop = self._loop_runner.loop
+
+        self._loop_runner.start()
+        if self._asynchronous:
+            self._started = self._start()
+        else:
+            self.sync(self._start)
+
+    async def _start(self):
+        self._http_client = AsyncHTTPClient()
+
+    def close(self):
+        """Close this gateway client"""
+        if not self.asynchronous:
+            self._loop_runner.stop()
+
+    def __del__(self):
+        self.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
+    def __await__(self):
+        return self._started.__await__()
+
+    async def __aenter__(self):
+        await self._started
+        return self
+
+    async def __aexit__(self, typ, value, traceback):
+        await self._close()
+
+    def __repr__(self):
+        return 'Gateway<%s>' % self.address
+
+    @property
+    def asynchronous(self):
+        return (
+            self._asynchronous or
+            getattr(thread_state, 'asynchronous', False) or
+            (hasattr(self.loop, '_thread_identity') and
+                self.loop._thread_identity == get_ident())
+        )
+
+    def sync(self, func, *args, **kwargs):
+        if kwargs.pop('asynchronous', None) or self.asynchronous:
+            callback_timeout = kwargs.pop('callback_timeout', None)
+            future = func(*args, **kwargs)
+            if callback_timeout is not None:
+                future = gen.with_timeout(timedelta(seconds=callback_timeout),
+                                          future)
+            return future
+        else:
+            return sync(self.loop, func, *args, **kwargs)
 
     async def _fetch(self, req, raise_error=True):
         self._cookie_jar.pre_request(req)
@@ -95,6 +195,9 @@ class Gateway(object):
         resp = await self._fetch(req)
         return json.loads(resp.body)
 
+    def clusters(self, **kwargs):
+        return self.sync(self._clusters, **kwargs)
+
     async def _start_cluster(self):
         url = "%s/gateway/api/clusters/" % self.address
         req = HTTPRequest(url=url, method="POST", body='{}')
@@ -102,13 +205,37 @@ class Gateway(object):
         data = json.loads(resp.body)
         return data['cluster_id']
 
+    def start_cluster(self, **kwargs):
+        return self.sync(self._start_cluster, **kwargs)
+
     async def _stop_cluster(self, cluster_id):
         url = "%s/gateway/api/clusters/%s" % (self.address, cluster_id)
         req = HTTPRequest(url=url, method="DELETE")
         await self._fetch(req)
+
+    def stop_cluster(self, cluster_id, **kwargs):
+        return self.sync(self._stop_cluster, cluster_id, **kwargs)
 
     async def _get_cluster(self, cluster_id):
         url = "%s/gateway/api/clusters/%s" % (self.address, cluster_id)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
         return json.loads(resp.body)
+
+    def get_cluster(self, cluster_id, **kwargs):
+        return self.sync(self._get_cluster, cluster_id, **kwargs)
+
+
+class Cluster(object):
+    def __init__(self, gateway, cluster_info):
+        self._gateway = gateway
+        self.scheduler_address = cluster_info['scheduler_address']
+        self.dashboard_address = cluster_info['dashboard_address']
+        self.security = GatewaySecurity(tls_key=cluster_info['tls_key'],
+                                        tls_cert=cluster_info['tls_cert'])
+
+    def connect(self, asynchronous=False, loop=None):
+        return Client(self.scheduler_address,
+                      security=self.security,
+                      asynchronous=asynchronous,
+                      loop=(loop or self._gateway.loop))

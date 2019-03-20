@@ -62,6 +62,12 @@ class YarnClusterManager(ClusterManager):
         config=True,
     )
 
+    worker_count = Integer(
+        0,
+        help="The number of workers to start initially",
+        config=True
+    )
+
     worker_memory = MemoryLimit(
         '2 G',
         help="""
@@ -175,7 +181,7 @@ class YarnClusterManager(ClusterManager):
 
     def get_worker_args(self):
         return ['--nthreads', '$SKEIN_RESOURCE_VCORES',
-                '--memory-limit', '$(SKEIN_RESOURCE_MEMORY)MiB']
+                '--memory-limit', '${SKEIN_RESOURCE_MEMORY}MiB']
 
     @property
     def worker_command(self):
@@ -212,7 +218,7 @@ class YarnClusterManager(ClusterManager):
 
         services = {
             'dask.worker': skein.Service(
-                instances=0,
+                instances=self.worker_count,
                 resources=skein.Resources(
                     memory='%d b' % self.worker_memory,
                     vcores=self.worker_cores
