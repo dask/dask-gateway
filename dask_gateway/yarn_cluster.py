@@ -163,7 +163,7 @@ class YarnClusterManager(ClusterManager):
         -------
         cert_path, key_path
         """
-        prefix = os.path.join(self.temp_dir, self.cluster_id)
+        prefix = os.path.join(self.temp_dir, self.cluster_name)
         cert_path = prefix + ".crt"
         key_path = prefix + ".pem"
 
@@ -271,20 +271,6 @@ class YarnClusterManager(ClusterManager):
                 break
             else:
                 await gen.sleep(0.5)
-
-        # Wait for address to be set
-        while not getattr(self, 'scheduler_address', ''):
-            await gen.sleep(0.5)
-
-            report = await loop.run_in_executor(
-                None, client.application_report, self.app_id
-            )
-            if str(report.state) in {'FAILED', 'KILLED', 'FINISHED'}:
-                raise Exception("Application %s failed to start, check "
-                                "application logs for more information"
-                                % self.app_id)
-
-        return self.scheduler_address, self.dashboard_address
 
     async def is_running(self):
         if self.app_id == '':

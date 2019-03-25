@@ -203,27 +203,27 @@ class Gateway(object):
         req = HTTPRequest(url=url, method="POST", body='{}')
         resp = await self._fetch(req)
         data = json.loads(resp.body)
-        return data['cluster_id']
+        return data['cluster_name']
 
     def start_cluster(self, **kwargs):
         return self.sync(self._start_cluster, **kwargs)
 
-    async def _stop_cluster(self, cluster_id):
-        url = "%s/gateway/api/clusters/%s" % (self.address, cluster_id)
+    async def _stop_cluster(self, cluster_name):
+        url = "%s/gateway/api/clusters/%s" % (self.address, cluster_name)
         req = HTTPRequest(url=url, method="DELETE")
         await self._fetch(req)
 
-    def stop_cluster(self, cluster_id, **kwargs):
-        return self.sync(self._stop_cluster, cluster_id, **kwargs)
+    def stop_cluster(self, cluster_name, **kwargs):
+        return self.sync(self._stop_cluster, cluster_name, **kwargs)
 
-    async def _get_cluster(self, cluster_id):
-        url = "%s/gateway/api/clusters/%s" % (self.address, cluster_id)
+    async def _get_cluster(self, cluster_name):
+        url = "%s/gateway/api/clusters/%s" % (self.address, cluster_name)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
         return json.loads(resp.body)
 
-    def get_cluster(self, cluster_id, **kwargs):
-        return self.sync(self._get_cluster, cluster_id, **kwargs)
+    def get_cluster(self, cluster_name, **kwargs):
+        return self.sync(self._get_cluster, cluster_name, **kwargs)
 
 
 class Cluster(object):

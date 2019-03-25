@@ -1,5 +1,5 @@
 from sqlalchemy import (MetaData, Table, Column, Integer, Unicode, ForeignKey,
-                        LargeBinary, create_engine)
+                        LargeBinary, Enum, create_engine)
 from sqlalchemy.pool import StaticPool
 
 
@@ -17,7 +17,7 @@ clusters = Table(
     'clusters',
     metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('cluster_id', Unicode(255), nullable=False, unique=True),
+    Column('name', Unicode(255), nullable=False, unique=True),
     Column('user_id', Integer, ForeignKey("users.id"), nullable=False),
     Column('state', LargeBinary, nullable=False),
     Column('token', Unicode(32), nullable=False, unique=True),
@@ -25,6 +25,15 @@ clusters = Table(
     Column('dashboard_address', Unicode(255), nullable=False),
     Column('tls_cert', LargeBinary, nullable=False),
     Column('tls_key', LargeBinary, nullable=False)
+)
+
+workers = Table(
+    'workers',
+    metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('name', Unicode(255), nullable=False, unique=True),
+    Column('cluster_id', ForeignKey('clusters.id'), nullable=False),
+    Column('status', Enum('PENDING', 'RUNNING', 'FINISHED'), nullable=False)
 )
 
 
@@ -51,11 +60,11 @@ class User(object):
 
 
 class Cluster(object):
-    def __init__(self, id=None, cluster_id=None, user=None, token=None,
+    def __init__(self, id=None, name=None, user=None, token=None,
                  manager=None, scheduler_address='', dashboard_address='',
                  tls_cert=None, tls_key=None):
         self.id = id
-        self.cluster_id = cluster_id
+        self.name = name
         self.user = user
         self.token = token
         self.manager = manager
@@ -63,3 +72,11 @@ class Cluster(object):
         self.dashboard_address = dashboard_address
         self.tls_cert = tls_cert
         self.tls_key = tls_key
+
+
+class Worker(object):
+    def __init__(self, id=None, name=None, cluster=None, status=None):
+        self.id = id
+        self.name = name
+        self.cluster = cluster
+        self.status = status

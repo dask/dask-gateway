@@ -277,7 +277,6 @@ class DaskGateway(Application):
     def init_state(self):
         self.username_to_user = {}
         self.cookie_to_user = {}
-        self.clusters = {}
         self.token_to_cluster = {}
 
         # Temporary hashtable for loading
@@ -295,12 +294,12 @@ class DaskGateway(Application):
             user = id_to_user[c.user_id]
             state = json.loads(c.state)
             manager = self._new_cluster_manager(
-                user.name, c.cluster_id, c.token, c.tls_cert, c.tls_key
+                user.name, c.name, c.token, c.tls_cert, c.tls_key
             )
             manager.load_state(state)
             cluster = objects.Cluster(
                 id=c.id,
-                cluster_id=c.cluster_id,
+                name=c.name,
                 user=user,
                 token=c.token,
                 manager=manager,
@@ -309,8 +308,7 @@ class DaskGateway(Application):
                 tls_cert=c.tls_cert,
                 tls_key=c.tls_key
             )
-            self.clusters[cluster.cluster_id] = cluster
-            user.clusters[cluster.cluster_id] = cluster
+            user.clusters[cluster.name] = cluster
             self.token_to_cluster[cluster.token] = cluster
 
     def init_scheduler_proxy(self):
@@ -404,12 +402,12 @@ class DaskGateway(Application):
     def cluster_from_token(self, token):
         return self.token_to_cluster.get(token)
 
-    def _new_cluster_manager(self, username, cluster_id, token, tls_cert, tls_key):
+    def _new_cluster_manager(self, username, cluster_name, token, tls_cert, tls_key):
         return self.cluster_class(
             parent=self,
             log=self.log,
             username=username,
-            cluster_id=cluster_id,
+            cluster_name=cluster_name,
             api_token=token,
             api_url=self.api_url,
             temp_dir=self.temp_dir,
@@ -418,17 +416,17 @@ class DaskGateway(Application):
         )
 
     def create_cluster(self, user):
-        cluster_id = uuid.uuid4().hex
+        cluster_name = uuid.uuid4().hex
         token = uuid.uuid4().hex
-        tls_cert, tls_key = new_keypair(cluster_id)
-        manager = self._new_cluster_manager(user.name, cluster_id, token,
+        tls_cert, tls_key = new_keypair(cluster_name)
+        manager = self._new_cluster_manager(user.name, cluster_name, token,
                                             tls_cert, tls_key)
         manager.load_state({})
         state = json.dumps(manager.get_state()).encode('utf-8')
 
         res = self.db.execute(
             objects.clusters.insert().values(
-                cluster_id=cluster_id,
+                name=cluster_name,
                 user_id=user.id,
                 token=token,
                 state=state,
@@ -440,7 +438,7 @@ class DaskGateway(Application):
         )
         cluster = objects.Cluster(
             id=res.inserted_primary_key[0],
-            cluster_id=cluster_id,
+            name=cluster_name,
             user=user,
             token=token,
             manager=manager,
@@ -449,16 +447,15 @@ class DaskGateway(Application):
             tls_cert=tls_cert,
             tls_key=tls_key
         )
-        user.clusters[cluster_id] = cluster
-        self.clusters[cluster_id] = cluster
+        user.clusters[cluster_name] = cluster
         self.token_to_cluster[token] = cluster
         return cluster
 
     def start_cluster(self, cluster):
         async def start_cluster():
-            self.log.debug("Starting cluster %s", cluster.cluster_id)
+            self.log.debug("Starting cluster %s", cluster.name)
             await cluster.manager.start()
-            self.log.debug("Cluster %s started", cluster.cluster_id)
+            self.log.debug("Cluster %s started", cluster.name)
 
             # Cluster has started, update state
             state = json.dumps(cluster.manager.get_state()).encode('utf-8')
@@ -472,18 +469,18 @@ class DaskGateway(Application):
 
     def stop_cluster(self, cluster):
         async def stop_cluster():
-            self.log.debug("Stopping cluster %s", cluster.cluster_id)
+            self.log.debug("Stopping cluster %s", cluster.name)
             # Remove routes from proxies if already set
             if cluster.scheduler_address:
                 await self.web_proxy.delete_route(
-                    "/gateway/clusters/" + cluster.cluster_id
+                    "/gateway/clusters/" + cluster.name
                 )
                 await self.scheduler_proxy.delete_route(
-                    "/" + cluster.cluster_id,
+                    "/" + cluster.name,
                 )
             # Stop the cluster
             await cluster.manager.stop()
-            self.log.debug("Cluster %s stopped", cluster.cluster_id)
+            self.log.debug("Cluster %s stopped", cluster.name)
 
             # Cluster has stopped, delete record
             self.db.execute(
@@ -491,13 +488,12 @@ class DaskGateway(Application):
                 .delete()
                 .where(objects.clusters.c.id == cluster.id)
             )
-            del self.clusters[cluster.cluster_id]
             del self.token_to_cluster[cluster.token]
-            del cluster.user.clusters[cluster.cluster_id]
+            del cluster.user.clusters[cluster.name]
         asyncio.ensure_future(stop_cluster())
 
     async def register_cluster(self, cluster, scheduler_address, dashboard_address):
-        self.log.debug("Registering cluster %s", cluster.cluster_id)
+        self.log.debug("Registering cluster %s", cluster.name)
         cluster.scheduler_address = scheduler_address
         cluster.dashboard_address = dashboard_address
         self.db.execute(
@@ -508,11 +504,11 @@ class DaskGateway(Application):
                     dashboard_address=dashboard_address)
         )
         await self.web_proxy.add_route(
-            "/gateway/clusters/" + cluster.cluster_id,
+            "/gateway/clusters/" + cluster.name,
             dashboard_address
         )
         await self.scheduler_proxy.add_route(
-            "/" + cluster.cluster_id,
+            "/" + cluster.name,
             scheduler_address
         )
 

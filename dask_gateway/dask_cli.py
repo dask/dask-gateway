@@ -21,8 +21,8 @@ from . import __version__ as VERSION
 
 def get_url():
     api_url = os.environ.get('DASK_GATEWAY_API_URL', '')
-    cluster_id = os.environ.get('DASK_GATEWAY_CLUSTER_ID', '')
-    return '%s/clusters/%s/addresses' % (api_url, cluster_id)
+    cluster_name = os.environ.get('DASK_GATEWAY_CLUSTER_NAME', '')
+    return '%s/clusters/%s/addresses' % (api_url, cluster_name)
 
 
 def get_token():

@@ -99,11 +99,11 @@ class BaseHandler(web.RequestHandler):
 def cluster_model(gateway, cluster, full=True):
     if cluster.scheduler_address:
         scheduler = 'gateway://%s/%s' % (urlparse(gateway.gateway_url).netloc,
-                                         cluster.cluster_id)
-        dashboard = ('%s/gateway/clusters/%s' % (gateway.public_url, cluster.cluster_id))
+                                         cluster.name)
+        dashboard = ('%s/gateway/clusters/%s' % (gateway.public_url, cluster.name))
     else:
         scheduler = dashboard = ''
-    out = {'cluster_id': cluster.cluster_id,
+    out = {'cluster_name': cluster.name,
            'scheduler_address': scheduler,
            'dashboard_address': dashboard}
     if full:
@@ -114,9 +114,9 @@ def cluster_model(gateway, cluster, full=True):
 
 class ClustersHandler(BaseHandler):
     @user_authenticated
-    async def post(self, cluster_id):
+    async def post(self, cluster_name):
         # Only accept urls of the form /api/clusters/
-        if cluster_id:
+        if cluster_name:
             raise web.HTTPError(405)
 
         cluster = self.gateway.create_cluster(self.dask_user)
@@ -133,44 +133,44 @@ class ClustersHandler(BaseHandler):
         self.gateway.start_cluster(cluster)
 
         # Return the cluster id, to be used in future requests
-        self.write({'cluster_id': cluster.cluster_id})
+        self.write({'cluster_name': cluster.name})
         self.set_status(201)
 
     @user_authenticated
-    async def get(self, cluster_id):
-        if not cluster_id:
+    async def get(self, cluster_name):
+        if not cluster_name:
             out = {k: cluster_model(self.gateway, v, full=False)
                    for k, v in self.dask_user.clusters.items()}
             self.write(out)
             return
 
-        cluster = self.dask_user.clusters.get(cluster_id)
+        cluster = self.dask_user.clusters.get(cluster_name)
         if cluster is None:
-            raise web.HTTPError(404, reason="Cluster %s does not exist" % cluster_id)
+            raise web.HTTPError(404, reason="Cluster %s does not exist" % cluster_name)
 
         self.write(cluster_model(self.gateway, cluster, full=True))
 
     @user_authenticated
-    async def delete(self, cluster_id):
-        # Only accept urls of the form /api/clusters/{cluster_id}
-        if not cluster_id:
+    async def delete(self, cluster_name):
+        # Only accept urls of the form /api/clusters/{cluster_name}
+        if not cluster_name:
             raise web.HTTPError(405)
 
-        if cluster_id in self.dask_user.clusters:
-            cluster = self.dask_user.clusters[cluster_id]
+        if cluster_name in self.dask_user.clusters:
+            cluster = self.dask_user.clusters[cluster_name]
             self.gateway.stop_cluster(cluster)
         self.set_status(204)
 
 
 class ClusterRegistrationHandler(BaseHandler):
-    def check_cluster(self, cluster_id):
+    def check_cluster(self, cluster_name):
         # only authorize access to the cluster the token is associated with
-        if self.dask_cluster.cluster_id != cluster_id:
+        if self.dask_cluster.name != cluster_name:
             raise web.HTTPError(403)
 
     @token_authenticated
-    async def put(self, cluster_id):
-        self.check_cluster(cluster_id)
+    async def put(self, cluster_name):
+        self.check_cluster(cluster_name)
         try:
             scheduler = self.json_data['scheduler_address']
             dashboard = self.json_data['dashboard_address']
@@ -181,8 +181,8 @@ class ClusterRegistrationHandler(BaseHandler):
         )
 
     @token_authenticated
-    async def get(self, cluster_id):
-        self.check_cluster(cluster_id)
+    async def get(self, cluster_name):
+        self.check_cluster(cluster_name)
         msg = {'scheduler_address': self.dask_cluster.scheduler_address,
                'dashboard_address': self.dask_cluster.dashboard_address}
         self.write(msg)
