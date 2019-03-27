@@ -32,14 +32,17 @@ def new_keypair(sni):
     dask_internal = x509.Name(
         [x509.NameAttribute(NameOID.COMMON_NAME, 'dask-internal')]
     )
-    altname = x509.SubjectAlternativeName(
-        [x509.DNSName(sni)]
+    altnames = x509.SubjectAlternativeName(
+        [x509.DNSName(sni),
+         x509.DNSName('dask-internal'),
+         # allow skein appmaster and dask to share credentials
+         x509.DNSName('skein-internal')]
     )
     now = datetime.utcnow()
     cert = (x509.CertificateBuilder()
                 .subject_name(dask_internal)
                 .issuer_name(dask_internal)
-                .add_extension(altname, critical=False)
+                .add_extension(altnames, critical=False)
                 .public_key(key.public_key())
                 .serial_number(x509.random_serial_number())
                 .not_valid_before(now)

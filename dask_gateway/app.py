@@ -279,10 +279,8 @@ class DaskGateway(Application):
         self.cookie_to_user = {}
         self.token_to_cluster = {}
 
-        # Temporary hashtable for loading
-        id_to_user = {}
-
         # Load all existing users into memory
+        id_to_user = {}
         for u in self.db.execute(objects.users.select()):
             user = objects.User(id=u.id, name=u.name, cookie=u.cookie)
             self.username_to_user[user.name] = user
@@ -290,6 +288,7 @@ class DaskGateway(Application):
             id_to_user[user.id] = user
 
         # Next load all existing clusters into memory
+        id_to_cluster = {}
         for c in self.db.execute(objects.clusters.select()):
             user = id_to_user[c.user_id]
             state = json.loads(c.state)
@@ -310,6 +309,18 @@ class DaskGateway(Application):
             )
             user.clusters[cluster.name] = cluster
             self.token_to_cluster[cluster.token] = cluster
+            id_to_cluster[cluster.id] = cluster
+
+        # Next load all existing workers into memory
+        for w in self.db.execute(objects.workers.select()):
+            cluster = id_to_cluster[w.cluster_id]
+            worker = objects.Worker(
+                id=w.id,
+                name=w.name,
+                status=w.status,
+                cluster=cluster
+            )
+            cluster.workers[worker.name] = worker
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
@@ -511,6 +522,66 @@ class DaskGateway(Application):
             "/" + cluster.name,
             scheduler_address
         )
+
+    async def scale(self, cluster, total):
+        """Scale cluster to total workers"""
+        async with cluster.lock:
+            delta = total - len(cluster.workers)
+            if delta == 0:
+                return
+            self.log.debug("Scaling cluster %s to %d workers, a delta of %d",
+                           cluster.name, total, delta)
+            if delta > 0:
+                await self.scale_up(cluster, total, delta)
+            else:
+                await self.scale_down(cluster, total, delta)
+
+    async def scale_up(self, cluster, total, delta):
+        worker_names = await cluster.manager.scale_up(total, delta)
+        for name in worker_names:
+            res = self.db.execute(
+                objects.workers
+                .insert()
+                .values(name=name,
+                        status='PENDING',
+                        cluster_id=cluster.id)
+            )
+            worker = objects.Worker(
+                id=res.inserted_primary_key[0],
+                name=name,
+                status='PENDING',
+                cluster=cluster
+            )
+            cluster.workers[worker.name] = worker
+
+    async def scale_down(self, cluster, total, delta):
+        # TODO:
+        # - ask cluster to remove delta workers
+        # - get back worker names removed
+        # - mark workers as pending shutdown
+        pass
+
+    async def register_worker(self, cluster, worker):
+        self.log.debug("Registering worker %s for cluster %s",
+                       worker.name, cluster.name)
+        worker.status = 'RUNNING'
+        self.db.execute(
+            objects.workers
+            .update()
+            .where(objects.workers.c.id == worker.id)
+            .values(status='RUNNING')
+        )
+
+    async def unregister_worker(self, cluster, worker):
+        self.log.debug("Unregistering worker %s for cluster %s",
+                       worker.name, cluster.name)
+        self.db.execute(
+            objects.workers
+            .delete()
+            .where(objects.workers.c.id == worker.id)
+        )
+        await cluster.manager.cleanup_worker(worker.name)
+        del cluster.workers[worker.name]
 
 
 main = DaskGateway.launch_instance

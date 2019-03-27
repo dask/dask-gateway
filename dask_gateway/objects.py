@@ -1,3 +1,4 @@
+import asyncio
 from sqlalchemy import (MetaData, Table, Column, Integer, Unicode, ForeignKey,
                         LargeBinary, Enum, create_engine)
 from sqlalchemy.pool import StaticPool
@@ -72,6 +73,8 @@ class Cluster(object):
         self.dashboard_address = dashboard_address
         self.tls_cert = tls_cert
         self.tls_key = tls_key
+        self.workers = {}
+        self.lock = asyncio.Lock()
 
 
 class Worker(object):

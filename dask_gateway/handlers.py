@@ -1,6 +1,6 @@
 import functools
 import json
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 from tornado import web
 from tornado.log import app_log
@@ -54,6 +54,10 @@ class BaseHandler(web.RequestHandler):
     @property
     def gateway(self):
         return self.settings.get('gateway')
+
+    def check_cluster(self, cluster_name):
+        if self.dask_cluster.name != cluster_name:
+            raise web.HTTPError(403)
 
     def get_current_user_from_token(self):
         auth_header = self.request.headers.get('Authorization')
@@ -163,11 +167,6 @@ class ClustersHandler(BaseHandler):
 
 
 class ClusterRegistrationHandler(BaseHandler):
-    def check_cluster(self, cluster_name):
-        # only authorize access to the cluster the token is associated with
-        if self.dask_cluster.name != cluster_name:
-            raise web.HTTPError(403)
-
     @token_authenticated
     async def put(self, cluster_name):
         self.check_cluster(cluster_name)
@@ -188,7 +187,45 @@ class ClusterRegistrationHandler(BaseHandler):
         self.write(msg)
 
 
+class ClusterScaleHandler(BaseHandler):
+    @user_authenticated
+    async def put(self, cluster_name):
+        cluster = self.dask_user.clusters.get(cluster_name)
+        if cluster is None:
+            raise web.HTTPError(404, reason="Cluster %s does not exist" % cluster_name)
+        try:
+            total = self.json_data['worker_count']
+        except (TypeError, KeyError):
+            raise web.HTTPError(405)
+        await self.gateway.scale(cluster, total)
+
+
+class ClusterWorkersHandler(BaseHandler):
+    def get_cluster_and_worker(self, cluster_name, worker_name):
+        self.check_cluster(cluster_name)
+        worker_name = unquote(worker_name)
+        worker = self.dask_cluster.workers.get(worker_name)
+        if worker is None:
+            raise web.HTTPError(404, reason=("Cluster %r has no worker %r"
+                                             % (cluster_name, worker_name)))
+        return self.dask_cluster, worker
+
+    @token_authenticated
+    async def put(self, cluster_name, worker_name):
+        """Register worker added to cluster"""
+        cluster, worker = self.get_cluster_and_worker(cluster_name, worker_name)
+        await self.gateway.register_worker(cluster, worker)
+
+    @token_authenticated
+    async def delete(self, cluster_name, worker_name):
+        """Register worker removed from cluster"""
+        cluster, worker = self.get_cluster_and_worker(cluster_name, worker_name)
+        await self.gateway.unregister_worker(cluster, worker)
+
+
 default_handlers = [
-    ("/api/clusters/([a-zA-Z0-9]*)", ClustersHandler),
-    ("/api/clusters/([a-zA-Z0-9]*)/addresses", ClusterRegistrationHandler)
+    ("/api/clusters/([a-zA-Z0-9-_.]*)/workers/([a-zA-Z0-9-_.]*)", ClusterWorkersHandler),
+    ("/api/clusters/([a-zA-Z0-9-_.]*)/workers", ClusterScaleHandler),
+    ("/api/clusters/([a-zA-Z0-9-_.]*)/addresses", ClusterRegistrationHandler),
+    ("/api/clusters/([a-zA-Z0-9-_.]*)", ClustersHandler),
 ]

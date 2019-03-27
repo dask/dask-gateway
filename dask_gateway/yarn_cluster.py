@@ -153,6 +153,14 @@ class YarnClusterManager(ClusterManager):
             type(self).clients[key] = client
         return client
 
+    def _get_security(self):
+        return skein.Security(cert_bytes=self.tls_cert, key_bytes=self.tls_key)
+
+    def _get_app_client(self):
+        # TODO: maybe keep an LRU cache of these?
+        return skein.ApplicationClient(self.app_address, self.app_id,
+                                       security=self._get_security())
+
     @contextmanager
     def temp_write_credentials(self):
         """Write credentials to disk in secure temporary files.
@@ -181,7 +189,8 @@ class YarnClusterManager(ClusterManager):
 
     def get_worker_args(self):
         return ['--nthreads', '$SKEIN_RESOURCE_VCORES',
-                '--memory-limit', '${SKEIN_RESOURCE_MEMORY}MiB']
+                '--memory-limit', '${SKEIN_RESOURCE_MEMORY}MiB',
+                '--name', '${SKEIN_CONTAINER_ID}']
 
     @property
     def worker_command(self):
@@ -206,7 +215,7 @@ class YarnClusterManager(ClusterManager):
         worker_script = '\n'.join([self.worker_setup, self.worker_command])
 
         master = skein.Master(
-            security=skein.Security.new_credentials(),
+            security=self._get_security(),
             resources=skein.Resources(
                 memory='%d b' % self.scheduler_memory,
                 vcores=self.scheduler_cores
@@ -223,7 +232,8 @@ class YarnClusterManager(ClusterManager):
                     memory='%d b' % self.worker_memory,
                     vcores=self.worker_cores
                 ),
-                max_restarts=-1,
+                max_restarts=0,
+                allow_failures=True,
                 files=files,
                 env=env,
                 script=worker_script
@@ -241,11 +251,13 @@ class YarnClusterManager(ClusterManager):
     def load_state(self, state):
         super().load_state(state)
         self.app_id = state.get('app_id', '')
+        self.app_address = state.get('app_address', '')
 
     def get_state(self):
         state = super().get_state()
         if self.app_id:
             state['app_id'] = self.app_id
+            state['app_address'] = self.app_address
         return state
 
     async def start(self):
@@ -268,9 +280,10 @@ class YarnClusterManager(ClusterManager):
                                 "application logs for more information"
                                 % self.app_id)
             elif state == 'RUNNING':
+                self.app_address = '%s:%d' % (report.host, report.port)
                 break
             else:
-                await gen.sleep(0.5)
+                await gen.sleep(1)
 
     async def is_running(self):
         if self.app_id == '':
@@ -290,3 +303,17 @@ class YarnClusterManager(ClusterManager):
         await gen.IOLoop.current().run_in_executor(
             None, client.kill_application, self.app_id
         )
+
+    def _scale_up(self, total, delta):
+        app = self._get_app_client()
+        new_containers = app.scale('dask.worker', total)
+        return [c.id for c in new_containers]
+
+    async def scale_up(self, total, delta):
+        return await gen.IOLoop.current().run_in_executor(
+            None, self._scale_up, total, delta
+        )
+
+    async def cleanup_worker(self, worker_name):
+        """No-op for YARN"""
+        pass

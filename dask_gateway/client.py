@@ -14,6 +14,7 @@ from distributed.security import Security
 from distributed.utils import LoopRunner, sync, thread_state
 from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+from tornado.httputil import HTTPHeaders
 
 from .cookiejar import CookieJar
 
@@ -200,7 +201,8 @@ class Gateway(object):
 
     async def _start_cluster(self):
         url = "%s/gateway/api/clusters/" % self.address
-        req = HTTPRequest(url=url, method="POST", body='{}')
+        req = HTTPRequest(url=url, method="POST", body=json.dumps({}),
+                          headers=HTTPHeaders({'Content-type': 'application/json'}))
         resp = await self._fetch(req)
         data = json.loads(resp.body)
         return data['cluster_name']
@@ -222,20 +224,37 @@ class Gateway(object):
         resp = await self._fetch(req)
         return json.loads(resp.body)
 
-    def get_cluster(self, cluster_name, **kwargs):
-        return self.sync(self._get_cluster, cluster_name, **kwargs)
+    def connect(self, cluster_name, **kwargs):
+        cluster_info = self.sync(self._get_cluster, cluster_name, **kwargs)
+        return Cluster(self, cluster_info)
+
+    async def _scale_cluster(self, cluster_name, worker_count):
+        url = "%s/gateway/api/clusters/%s/workers" % (self.address, cluster_name)
+        req = HTTPRequest(url=url,
+                          method="PUT",
+                          body=json.dumps({'worker_count': worker_count}),
+                          headers=HTTPHeaders({'Content-type': 'application/json'}))
+        await self._fetch(req)
+
+    def scale_cluster(self, cluster_name, worker_count, **kwargs):
+        return self.sync(self._scale_cluster, cluster_name, worker_count,
+                         **kwargs)
 
 
 class Cluster(object):
     def __init__(self, gateway, cluster_info):
         self._gateway = gateway
+        self.cluster_name = cluster_info['cluster_name']
         self.scheduler_address = cluster_info['scheduler_address']
         self.dashboard_address = cluster_info['dashboard_address']
         self.security = GatewaySecurity(tls_key=cluster_info['tls_key'],
                                         tls_cert=cluster_info['tls_cert'])
 
-    def connect(self, asynchronous=False, loop=None):
+    def get_client(self, asynchronous=False, loop=None):
         return Client(self.scheduler_address,
                       security=self.security,
                       asynchronous=asynchronous,
                       loop=(loop or self._gateway.loop))
+
+    def scale(self, n):
+        self._gateway.scale_cluster(self.cluster_name, n)
