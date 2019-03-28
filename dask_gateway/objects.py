@@ -19,13 +19,16 @@ clusters = Table(
     metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('name', Unicode(255), nullable=False, unique=True),
-    Column('user_id', Integer, ForeignKey("users.id"), nullable=False),
+    Column('user_id', Integer, ForeignKey("users.id", ondelete="CASCADE"),
+           nullable=False),
     Column('state', LargeBinary, nullable=False),
     Column('token', Unicode(32), nullable=False, unique=True),
     Column('scheduler_address', Unicode(255), nullable=False),
     Column('dashboard_address', Unicode(255), nullable=False),
+    Column('api_address', Unicode(255), nullable=False),
     Column('tls_cert', LargeBinary, nullable=False),
-    Column('tls_key', LargeBinary, nullable=False)
+    Column('tls_key', LargeBinary, nullable=False),
+    Column('requested_workers', Integer, nullable=False)
 )
 
 workers = Table(
@@ -33,8 +36,8 @@ workers = Table(
     metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('name', Unicode(255), nullable=False, unique=True),
-    Column('cluster_id', ForeignKey('clusters.id'), nullable=False),
-    Column('status', Enum('PENDING', 'RUNNING', 'FINISHED'), nullable=False)
+    Column('cluster_id', ForeignKey('clusters.id', ondelete="CASCADE"), nullable=False),
+    Column('status', Enum('PENDING', 'RUNNING'), nullable=False)
 )
 
 
@@ -63,7 +66,8 @@ class User(object):
 class Cluster(object):
     def __init__(self, id=None, name=None, user=None, token=None,
                  manager=None, scheduler_address='', dashboard_address='',
-                 tls_cert=None, tls_key=None):
+                 api_address='', tls_cert=None, tls_key=None,
+                 requested_workers=0):
         self.id = id
         self.name = name
         self.user = user
@@ -71,8 +75,10 @@ class Cluster(object):
         self.manager = manager
         self.scheduler_address = scheduler_address
         self.dashboard_address = dashboard_address
+        self.api_address = api_address
         self.tls_cert = tls_cert
         self.tls_key = tls_key
+        self.requested_workers = requested_workers
         self.workers = {}
         self.lock = asyncio.Lock()
 

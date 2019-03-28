@@ -173,17 +173,19 @@ class ClusterRegistrationHandler(BaseHandler):
         try:
             scheduler = self.json_data['scheduler_address']
             dashboard = self.json_data['dashboard_address']
+            api = self.json_data['api_address']
         except (TypeError, KeyError):
             raise web.HTTPError(405)
         await self.gateway.register_cluster(
-            self.dask_cluster, scheduler, dashboard
+            self.dask_cluster, scheduler, dashboard, api
         )
 
     @token_authenticated
     async def get(self, cluster_name):
         self.check_cluster(cluster_name)
         msg = {'scheduler_address': self.dask_cluster.scheduler_address,
-               'dashboard_address': self.dask_cluster.dashboard_address}
+               'dashboard_address': self.dask_cluster.dashboard_address,
+               'api_address': self.dask_cluster.api_address}
         self.write(msg)
 
 

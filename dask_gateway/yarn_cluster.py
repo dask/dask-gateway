@@ -314,6 +314,15 @@ class YarnClusterManager(ClusterManager):
             None, self._scale_up, total, delta
         )
 
+    def _kill_container(self, worker_name):
+        app = self._get_app_client()
+        try:
+            app.kill_container(worker_name)
+        except ValueError:
+            pass
+
     async def cleanup_worker(self, worker_name):
-        """No-op for YARN"""
-        pass
+        # TODO: this shouldn't be necessary
+        return await gen.IOLoop.current().run_in_executor(
+            None, self._kill_container, worker_name
+        )

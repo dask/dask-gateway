@@ -13,6 +13,7 @@ from tornado import web
 from tornado.log import LogFormatter
 from tornado.gen import IOLoop
 from tornado.platform.asyncio import AsyncIOMainLoop
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from traitlets import Unicode, Bool, Type, Bytes, Float, default, validate
 from traitlets.config import Application, catch_config_error
 
@@ -304,8 +305,10 @@ class DaskGateway(Application):
                 manager=manager,
                 scheduler_address=c.scheduler_address,
                 dashboard_address=c.dashboard_address,
+                api_address=c.api_address,
                 tls_cert=c.tls_cert,
-                tls_key=c.tls_key
+                tls_key=c.tls_key,
+                requested_workers=c.requested_workers
             )
             user.clusters[cluster.name] = cluster
             self.token_to_cluster[cluster.token] = cluster
@@ -443,8 +446,10 @@ class DaskGateway(Application):
                 state=state,
                 scheduler_address='',
                 dashboard_address='',
+                api_address='',
                 tls_cert=tls_cert,
-                tls_key=tls_key
+                tls_key=tls_key,
+                requested_workers=0,
             )
         )
         cluster = objects.Cluster(
@@ -455,8 +460,10 @@ class DaskGateway(Application):
             manager=manager,
             scheduler_address='',
             dashboard_address='',
+            api_address='',
             tls_cert=tls_cert,
-            tls_key=tls_key
+            tls_key=tls_key,
+            requested_workers=0,
         )
         user.clusters[cluster_name] = cluster
         self.token_to_cluster[token] = cluster
@@ -503,16 +510,19 @@ class DaskGateway(Application):
             del cluster.user.clusters[cluster.name]
         asyncio.ensure_future(stop_cluster())
 
-    async def register_cluster(self, cluster, scheduler_address, dashboard_address):
+    async def register_cluster(self, cluster, scheduler_address,
+                               dashboard_address, api_address):
         self.log.debug("Registering cluster %s", cluster.name)
         cluster.scheduler_address = scheduler_address
         cluster.dashboard_address = dashboard_address
+        cluster.api_address = api_address
         self.db.execute(
             objects.clusters
             .update()
             .where(objects.clusters.c.id == cluster.id)
             .values(scheduler_address=scheduler_address,
-                    dashboard_address=dashboard_address)
+                    dashboard_address=dashboard_address,
+                    api_address=api_address)
         )
         await self.web_proxy.add_route(
             "/gateway/clusters/" + cluster.name,
@@ -526,7 +536,7 @@ class DaskGateway(Application):
     async def scale(self, cluster, total):
         """Scale cluster to total workers"""
         async with cluster.lock:
-            delta = total - len(cluster.workers)
+            delta = total - cluster.requested_workers
             if delta == 0:
                 return
             self.log.debug("Scaling cluster %s to %d workers, a delta of %d",
@@ -535,6 +545,13 @@ class DaskGateway(Application):
                 await self.scale_up(cluster, total, delta)
             else:
                 await self.scale_down(cluster, total, delta)
+            self.db.execute(
+                objects.clusters
+                .update()
+                .where(objects.clusters.c.id == cluster.id)
+                .values(requested_workers=total)
+            )
+            cluster.requested_workers = total
 
     async def scale_up(self, cluster, total, delta):
         worker_names = await cluster.manager.scale_up(total, delta)
@@ -555,11 +572,21 @@ class DaskGateway(Application):
             cluster.workers[worker.name] = worker
 
     async def scale_down(self, cluster, total, delta):
-        # TODO:
-        # - ask cluster to remove delta workers
-        # - get back worker names removed
-        # - mark workers as pending shutdown
-        pass
+        # TODO: cancel pending requests first
+        client = AsyncHTTPClient()
+        body = json.dumps({'remove_count': -delta})
+        url = '%s/api/scale_down' % cluster.api_address
+        req = HTTPRequest(url,
+                          method='POST',
+                          headers={'Authorization': 'token %s' % cluster.token,
+                                   'Content-type': 'application/json'},
+                          body=body)
+        resp = await client.fetch(req)
+        data = json.loads(resp.body.decode('utf8', 'replace'))
+        workers_closed = data['workers_closed']
+        self.log.debug("Closed %d workers for cluster %s",
+                       len(workers_closed),
+                       cluster.name)
 
     async def register_worker(self, cluster, worker):
         self.log.debug("Registering worker %s for cluster %s",

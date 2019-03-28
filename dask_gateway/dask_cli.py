@@ -7,7 +7,7 @@ import os
 import sys
 from urllib.parse import urlparse, quote
 
-from tornado import gen
+from tornado import gen, web
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.ioloop import IOLoop, TimeoutError
 from distributed import Scheduler, Nanny
@@ -33,6 +33,64 @@ def init_logger(log_level='INFO'):
 
 
 logger = init_logger()
+
+
+class ScaleDownHandler(web.RequestHandler):
+    def initialize(self, service):
+        self.service = service
+
+    def prepare(self):
+        if self.request.headers.get("Content-Type", "").startswith("application/json"):
+            self.json_data = json.loads(self.request.body)
+        else:
+            self.json_data = None
+
+    async def post(self):
+        try:
+            remove_count = self.json_data['remove_count']
+        except (TypeError, KeyError):
+            raise web.HTTPError(405)
+        result = await self.service.scale_down(remove_count)
+        self.write(result)
+        self.set_status(201)
+
+
+class GatewaySchedulerService(object):
+    def __init__(self, scheduler, io_loop=None):
+        self.scheduler = scheduler
+        self.loop = io_loop or scheduler.loop
+        routes = [("/api/scale_down", ScaleDownHandler, {'service': self})]
+        self.app = web.Application(routes)
+        self.server = None
+
+    def listen(self, address):
+        ip, port = address
+        self.server = self.app.listen(address=ip, port=port)
+        ports = {s.getsockname()[1] for s in self.server._sockets.values()}
+        assert len(ports) == 1, "Only a single port allowed"
+        self.port = ports.pop()
+
+    def stop(self):
+        if self.server is not None:
+            self.server.stop()
+            self.server = None
+
+    async def scale_down(self, remove_count):
+        n_workers = len(self.scheduler.workers)
+        n_to_close = min(n_workers, remove_count)
+        logger.info("Scale down [remove_count: %d, n_workers: %d]",
+                    remove_count, n_workers)
+        if n_to_close > 0:
+            to_close = self.scheduler.workers_to_close(n=n_to_close)
+            closed = await self.scheduler.retire_workers(
+                workers=to_close, remove=True, close_workers=True
+            )
+            logger.info("Closed %d workers, of %d suggested", len(closed), len(to_close))
+            workers_closed = [v['name'] for v in closed.values()]
+        else:
+            workers_closed = []
+        return {'workers_closed': workers_closed,
+                'n_workers': n_workers}
 
 
 class GatewaySchedulerPlugin(SchedulerPlugin):
@@ -64,8 +122,9 @@ class GatewaySchedulerPlugin(SchedulerPlugin):
         # Start a timer to notify the gateway that the worker is permanently
         # gone. This allows for short-lived communication failures, while
         # still detecting worker failures.
-        def callback():
-            self.gateway.notify_worker_removed(ws)
+        async def callback():
+            logger.info("Notifying worker removed")
+            await self.gateway.notify_worker_removed(ws)
             self.timeouts.pop(ws.name, None)
 
         self.timeouts[ws.name] = self.loop.call_later(30, callback)
@@ -85,10 +144,11 @@ class GatewayClient(object):
                                  tls_worker_cert=tls_cert,
                                  tls_worker_key=tls_key)
 
-    async def send_addresses(self, scheduler, dashboard):
+    async def send_addresses(self, scheduler, dashboard, api):
         client = AsyncHTTPClient()
         body = json.dumps({'scheduler_address': scheduler,
-                           'dashboard_address': dashboard})
+                           'dashboard_address': dashboard,
+                           'api_address': api})
         url = '%s/clusters/%s/addresses' % (self.api_url, self.cluster_name)
         req = HTTPRequest(url,
                           method='PUT',
@@ -151,7 +211,7 @@ def scheduler():
         limit = max(soft, hard // 2)
         resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
 
-    services = {}
+    services = {('gateway', 0): GatewaySchedulerService}
     bokeh = False
     with ignoring(ImportError):
         from distributed.bokeh.scheduler import BokehScheduler
@@ -167,14 +227,19 @@ def scheduler():
 
     install_signal_handlers(loop)
 
+    host = urlparse(scheduler.address).hostname
+    gateway_port = scheduler.services['gateway'].port
+    api_address = 'http://%s:%d' % (host, gateway_port)
+
     if bokeh:
         bokeh_port = scheduler.services['bokeh'].port
-        bokeh_host = urlparse(scheduler.address).hostname
-        bokeh_address = 'http://%s:%d' % (bokeh_host, bokeh_port)
+        bokeh_address = 'http://%s:%d' % (host, bokeh_port)
     else:
         bokeh_address = ''
 
-    loop.run_sync(lambda: gateway.send_addresses(scheduler.address, bokeh_address))
+    loop.run_sync(
+        lambda: gateway.send_addresses(scheduler.address, bokeh_address, api_address)
+    )
 
     try:
         loop.start()
