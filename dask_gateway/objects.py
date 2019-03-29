@@ -35,7 +35,7 @@ workers = Table(
     'workers',
     metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('name', Unicode(255), nullable=False, unique=True),
+    Column('name', Unicode(255), nullable=False),
     Column('cluster_id', ForeignKey('clusters.id', ondelete="CASCADE"), nullable=False),
     Column('status', Enum('PENDING', 'RUNNING'), nullable=False)
 )
