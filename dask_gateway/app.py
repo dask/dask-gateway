@@ -542,9 +542,9 @@ class DaskGateway(Application):
             self.log.debug("Scaling cluster %s to %d workers, a delta of %d",
                            cluster.name, total, delta)
             if delta > 0:
-                await self.scale_up(cluster, total, delta)
+                await self.scale_up(cluster, delta)
             else:
-                await self.scale_down(cluster, total, delta)
+                await self.scale_down(cluster, delta)
             self.db.execute(
                 objects.clusters
                 .update()
@@ -553,9 +553,9 @@ class DaskGateway(Application):
             )
             cluster.requested_workers = total
 
-    async def scale_up(self, cluster, total, delta):
-        worker_names = await cluster.manager.scale_up(total, delta)
-        for name in worker_names:
+    async def scale_up(self, cluster, delta):
+        for _ in range(delta):
+            name = await cluster.manager.add_worker()
             res = self.db.execute(
                 objects.workers
                 .insert()
@@ -571,7 +571,7 @@ class DaskGateway(Application):
             )
             cluster.workers[worker.name] = worker
 
-    async def scale_down(self, cluster, total, delta):
+    async def scale_down(self, cluster, delta):
         # TODO: cancel pending requests first
         client = AsyncHTTPClient()
         body = json.dumps({'remove_count': -delta})
@@ -607,7 +607,7 @@ class DaskGateway(Application):
             .delete()
             .where(objects.workers.c.id == worker.id)
         )
-        await cluster.manager.cleanup_worker(worker.name)
+        await cluster.manager.remove_worker(worker.name)
         del cluster.workers[worker.name]
 
 

@@ -62,12 +62,6 @@ class YarnClusterManager(ClusterManager):
         config=True,
     )
 
-    worker_count = Integer(
-        0,
-        help="The number of workers to start initially",
-        config=True
-    )
-
     worker_memory = MemoryLimit(
         '2 G',
         help="""
@@ -227,11 +221,11 @@ class YarnClusterManager(ClusterManager):
 
         services = {
             'dask.worker': skein.Service(
-                instances=self.worker_count,
                 resources=skein.Resources(
                     memory='%d b' % self.worker_memory,
                     vcores=self.worker_cores
                 ),
+                instances=0,
                 max_restarts=0,
                 allow_failures=True,
                 files=files,
@@ -304,25 +298,25 @@ class YarnClusterManager(ClusterManager):
             None, client.kill_application, self.app_id
         )
 
-    def _scale_up(self, total, delta):
+    def _add_worker(self):
         app = self._get_app_client()
-        new_containers = app.scale('dask.worker', total)
-        return [c.id for c in new_containers]
+        new_containers = app.scale('dask.worker', delta=1)
+        assert len(new_containers) == 1
+        return new_containers[0].id
 
-    async def scale_up(self, total, delta):
+    async def add_worker(self):
         return await gen.IOLoop.current().run_in_executor(
-            None, self._scale_up, total, delta
+            None, self._add_worker
         )
 
-    def _kill_container(self, worker_name):
+    def _remove_worker(self, worker_name):
         app = self._get_app_client()
         try:
             app.kill_container(worker_name)
         except ValueError:
             pass
 
-    async def cleanup_worker(self, worker_name):
-        # TODO: this shouldn't be necessary
+    async def remove_worker(self, worker_name):
         return await gen.IOLoop.current().run_in_executor(
-            None, self._kill_container, worker_name
+            None, self._remove_worker, worker_name
         )
