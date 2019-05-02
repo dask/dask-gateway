@@ -60,7 +60,7 @@ func NewLogger(level LogLevel) *Logger {
 	return &Logger{level: level, out: os.Stderr}
 }
 
-func (l Logger) logMsg(level LogLevel, msg string) {
+func (l *Logger) logMsg(level LogLevel, msg string) {
 	if l.level >= level {
 		now := time.Now() // get this early.
 		l.Lock()
@@ -77,40 +77,40 @@ func (l Logger) logMsg(level LogLevel, msg string) {
 	}
 }
 
-func (l Logger) logF(level LogLevel, format string, args ...interface{}) {
+func (l *Logger) logF(level LogLevel, format string, args ...interface{}) {
 	if l.level >= level {
 		l.logMsg(level, fmt.Sprintf(format, args...))
 	}
 }
 
-func (l Logger) Debug(msg string) {
+func (l *Logger) Debug(msg string) {
 	l.logMsg(DEBUG, msg)
 }
 
-func (l Logger) Debugf(format string, args ...interface{}) {
+func (l *Logger) Debugf(format string, args ...interface{}) {
 	l.logF(DEBUG, format, args...)
 }
 
-func (l Logger) Info(msg string) {
+func (l *Logger) Info(msg string) {
 	l.logMsg(INFO, msg)
 }
 
-func (l Logger) Infof(format string, args ...interface{}) {
+func (l *Logger) Infof(format string, args ...interface{}) {
 	l.logF(INFO, format, args...)
 }
 
-func (l Logger) Warn(msg string) {
+func (l *Logger) Warn(msg string) {
 	l.logMsg(WARN, msg)
 }
 
-func (l Logger) Warnf(format string, args ...interface{}) {
+func (l *Logger) Warnf(format string, args ...interface{}) {
 	l.logF(WARN, format, args...)
 }
 
-func (l Logger) Error(msg string) {
+func (l *Logger) Error(msg string) {
 	l.logMsg(ERROR, msg)
 }
 
-func (l Logger) Errorf(format string, args ...interface{}) {
+func (l *Logger) Errorf(format string, args ...interface{}) {
 	l.logF(ERROR, format, args...)
 }
