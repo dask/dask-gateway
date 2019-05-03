@@ -267,7 +267,7 @@ def worker():
 
     nthreads = args.nthreads
     memory_limit = args.memory_limit
-    name = args.name
+    name = args.name or os.environ.get('DASK_GATEWAY_WORKER_NAME')
 
     enable_proctitle_on_current()
     enable_proctitle_on_children()

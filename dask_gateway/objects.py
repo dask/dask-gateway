@@ -37,7 +37,9 @@ workers = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('name', Unicode(255), nullable=False),
     Column('cluster_id', ForeignKey('clusters.id', ondelete="CASCADE"), nullable=False),
-    Column('status', Enum('PENDING', 'RUNNING'), nullable=False)
+    Column('status', Enum('PENDING', 'RUNNING', 'STOPPED', 'FAILED'), nullable=False),
+    Column('state', LargeBinary, nullable=False),
+    Column('diagnostics', Unicode(255), nullable=False, default="")
 )
 
 
@@ -84,8 +86,9 @@ class Cluster(object):
 
 
 class Worker(object):
-    def __init__(self, id=None, name=None, cluster=None, status=None):
+    def __init__(self, id=None, name=None, cluster=None, status=None, state=None):
         self.id = id
         self.name = name
         self.cluster = cluster
         self.status = status
+        self.state = state

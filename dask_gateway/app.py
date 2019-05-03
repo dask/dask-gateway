@@ -9,6 +9,7 @@ import uuid
 import weakref
 from urllib.parse import urlparse, urlunparse
 
+from sqlalchemy.sql import bindparam
 from tornado import web
 from tornado.log import LogFormatter
 from tornado.gen import IOLoop
@@ -20,7 +21,7 @@ from traitlets.config import Application, catch_config_error
 from . import __version__ as VERSION
 from . import handlers, objects
 from .tls import new_keypair
-from .utils import cleanup_tmpdir
+from .utils import cleanup_tmpdir, log_exceptions
 
 
 # Override default values for logging
@@ -321,7 +322,8 @@ class DaskGateway(Application):
                 id=w.id,
                 name=w.name,
                 status=w.status,
-                cluster=cluster
+                cluster=cluster,
+                state=json.loads(w.state)
             )
             cluster.workers[worker.name] = worker
 
@@ -554,22 +556,61 @@ class DaskGateway(Application):
             cluster.requested_workers = total
 
     async def scale_up(self, cluster, delta):
-        for _ in range(delta):
-            name = await cluster.manager.add_worker()
-            res = self.db.execute(
+        await asyncio.gather(*(self.add_worker(cluster) for _ in range(delta)),
+                             return_exceptions=True)
+
+    @log_exceptions
+    async def add_worker(self, cluster):
+        worker_name = uuid.uuid4().hex
+        self.log.debug("Creating worker %r for cluster %r",
+                       worker_name, cluster.name)
+        res = self.db.execute(
+            objects.workers
+            .insert()
+            .values(name=worker_name,
+                    status='PENDING',
+                    state=b"{}",
+                    cluster_id=cluster.id)
+        )
+        worker = objects.Worker(
+            id=res.inserted_primary_key[0],
+            name=worker_name,
+            status='PENDING',
+            state={},
+            cluster=cluster
+        )
+        cluster.workers[worker.name] = worker
+
+        try:
+            self.log.debug("Submitting worker %r for cluster %r", worker.name,
+                           cluster.name)
+            state = await cluster.manager.add_worker(worker_name)
+        except Exception as exc:
+            self.log.warn("Failure requesting worker %r for cluster %r",
+                          worker.name, cluster.name, exc_info=exc)
+            # Failed to submit, mark as failure and log
+            cluster.requested_workers -= 1
+            worker.status = 'FAILED'
+            self.db.execute(
                 objects.workers
-                .insert()
-                .values(name=name,
-                        status='PENDING',
-                        cluster_id=cluster.id)
+                .update()
+                .where(objects.workers.c.id == worker.id)
+                .values(status='FAILED',
+                        diagnostics='Worker request failed, see logs for more details')
             )
-            worker = objects.Worker(
-                id=res.inserted_primary_key[0],
-                name=name,
-                status='PENDING',
-                cluster=cluster
-            )
-            cluster.workers[worker.name] = worker
+            return
+
+        self.log.debug("Worker %r for cluster %r submitted successfully",
+                       worker.name, cluster.name)
+
+        # Succeeded, update state
+        worker.state = state
+        self.db.execute(
+            objects.workers
+            .update()
+            .where(objects.workers.c.id == worker.id)
+            .values(state=json.dumps(state).encode('utf-8'))
+        )
 
     async def scale_down(self, cluster, delta):
         # TODO: cancel pending requests first
@@ -587,6 +628,17 @@ class DaskGateway(Application):
         self.log.debug("Closed %d workers for cluster %s",
                        len(workers_closed),
                        cluster.name)
+        # Mark all workers as stopped
+        for name in workers_closed:
+            cluster.workers[name].status = 'STOPPED'
+        stmt = (objects.workers
+                .update()
+                .where(objects.workers.c.id == bindparam('_id')))
+        self.db.execute(
+            stmt,
+            [{'_id': cluster.workers[name].id, 'status': 'STOPPED'}
+             for name in workers_closed]
+        )
 
     async def register_worker(self, cluster, worker):
         self.log.debug("Registering worker %s for cluster %s",
@@ -602,13 +654,17 @@ class DaskGateway(Application):
     async def unregister_worker(self, cluster, worker):
         self.log.debug("Unregistering worker %s for cluster %s",
                        worker.name, cluster.name)
-        self.db.execute(
-            objects.workers
-            .delete()
-            .where(objects.workers.c.id == worker.id)
-        )
-        await cluster.manager.remove_worker(worker.name)
-        del cluster.workers[worker.name]
+        await cluster.manager.remove_worker(worker.name, worker.state)
+        if worker.status != 'STOPPED':
+            worker.status = 'FAILED'
+            self.db.execute(
+                objects.workers
+                .update()
+                .where(objects.workers.c.id == worker.id)
+                .values(status='FAILED',
+                        diagnostics='Worker failed, see logs for more information')
+            )
+            cluster.requested_workers -= 1
 
 
 main = DaskGateway.launch_instance

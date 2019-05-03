@@ -183,8 +183,7 @@ class YarnClusterManager(ClusterManager):
 
     def get_worker_args(self):
         return ['--nthreads', '$SKEIN_RESOURCE_VCORES',
-                '--memory-limit', '${SKEIN_RESOURCE_MEMORY}MiB',
-                '--name', '${SKEIN_CONTAINER_ID}']
+                '--memory-limit', '${SKEIN_RESOURCE_MEMORY}MiB']
 
     @property
     def worker_command(self):
@@ -298,25 +297,27 @@ class YarnClusterManager(ClusterManager):
             None, client.kill_application, self.app_id
         )
 
-    def _add_worker(self):
+    def _add_worker(self, worker_name):
         app = self._get_app_client()
-        new_containers = app.scale('dask.worker', delta=1)
-        assert len(new_containers) == 1
-        return new_containers[0].id
+        container = app.add_container(
+            'dask.worker',
+            env={'DASK_GATEWAY_WORKER_NAME': worker_name}
+        )
+        return {'container_id': container.id}
 
-    async def add_worker(self):
+    async def add_worker(self, worker_name):
         return await gen.IOLoop.current().run_in_executor(
-            None, self._add_worker
+            None, self._add_worker, worker_name
         )
 
-    def _remove_worker(self, worker_name):
+    def _remove_worker(self, worker_name, state):
         app = self._get_app_client()
         try:
-            app.kill_container(worker_name)
+            app.kill_container(state['container_id'])
         except ValueError:
             pass
 
-    async def remove_worker(self, worker_name):
+    async def remove_worker(self, worker_name, state):
         return await gen.IOLoop.current().run_in_executor(
-            None, self._remove_worker, worker_name
+            None, self._remove_worker, worker_name, state
         )

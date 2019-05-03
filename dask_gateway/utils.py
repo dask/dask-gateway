@@ -1,3 +1,4 @@
+import functools
 import shutil
 import socket
 
@@ -17,6 +18,20 @@ def cleanup_tmpdir(log, path):
         shutil.rmtree(path)
     except Exception as exc:
         log.error("Failed to remove temporary directory %r.", path, exc_info=exc)
+
+
+def log_exceptions(method):
+    """Wrap a method so that any exceptions that reach the top are caught and
+    logged"""
+
+    @functools.wraps(method)
+    def inner(self, *args, **kwargs):
+        try:
+            return method(self, *args, **kwargs)
+        except Exception as exc:
+            self.log("Exception in %r", method.__qualname__, exc_info=exc)
+
+    return inner
 
 
 # Adapted from JupyterHub

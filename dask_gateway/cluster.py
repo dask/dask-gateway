@@ -112,3 +112,33 @@ class ClusterManager(LoggingConfigurable):
     async def stop(self):
         """Stop the cluster"""
         pass
+
+    async def add_worker(self, worker_name):
+        """Add a new worker.
+
+        Parameters
+        ----------
+        worker_name : str
+            The worker name, should be passed to ``dask-gateway-worker`` via
+            the ``--name`` flag, or set as the ``DASK_GATEWAY_WORKER_NAME``
+            environment variable.
+
+        Returns
+        -------
+        state : dict
+            Any additional information about this worker needed to remove it in
+            the future.
+        """
+        pass
+
+    async def remove_worker(self, worker_name, state):
+        """Remove a worker.
+
+        Paramters
+        ---------
+        worker_name : str
+            The worker name.
+        state : dict
+            The state, same as the output of ``add_worker``.
+        """
+        pass
