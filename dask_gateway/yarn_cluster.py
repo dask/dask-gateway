@@ -3,10 +3,9 @@ from contextlib import contextmanager
 
 import skein
 from tornado import gen
-from traitlets import Unicode, Integer, Dict
+from traitlets import Unicode, Dict
 
 from .cluster import ClusterManager
-from .utils import MemoryLimit
 
 
 class YarnClusterManager(ClusterManager):
@@ -62,74 +61,16 @@ class YarnClusterManager(ClusterManager):
         config=True,
     )
 
-    worker_memory = MemoryLimit(
-        '2 G',
-        help="""
-        Maximum number of bytes a dask worker is allowed to use. Allows the
-        following suffixes:
-
-        - K -> Kibibytes
-        - M -> Mebibytes
-        - G -> Gibibytes
-        - T -> Tebibytes
-        """,
-        config=True
-    )
-
-    worker_cores = Integer(
-        1,
-        min=1,
-        help="""
-        Maximum number of cpu-cores a dask worker is allowed to use.
-        """,
-        config=True
-    )
-
     worker_setup = Unicode(
         '',
         help='Script to run before dask worker starts.',
         config=True,
     )
 
-    worker_cmd = Unicode(
-        'dask-gateway-worker',
-        help='Shell command to start a dask-gateway worker.',
-        config=True
-    )
-
-    scheduler_memory = MemoryLimit(
-        '2 G',
-        help="""
-        Maximum number of bytes a dask scheduler is allowed to use. Allows the
-        following suffixes:
-
-        - K -> Kibibytes
-        - M -> Mebibytes
-        - G -> Gibibytes
-        - T -> Tebibytes
-        """,
-        config=True
-    )
-
-    scheduler_cores = Integer(
-        1,
-        min=1,
-        help="""
-        Maximum number of cpu-cores a dask scheduler is allowed to use.
-        """,
-        config=True
-    )
-
     scheduler_setup = Unicode(
         '',
         help='Script to run before dask scheduler starts.',
         config=True,
-    )
-
-    scheduler_cmd = Unicode(
-        'dask-gateway-scheduler',
-        help='Shell command to start a dask-gateway scheduler.',
-        config=True
     )
 
     clients = {}

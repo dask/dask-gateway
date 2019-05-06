@@ -1,6 +1,8 @@
 from traitlets import Unicode, Integer, Dict, Bytes
 from traitlets.config import LoggingConfigurable
 
+from .utils import MemoryLimit
+
 
 class ClusterManager(LoggingConfigurable):
     """Base class for dask cluster managers"""
@@ -41,6 +43,64 @@ class ClusterManager(LoggingConfigurable):
         help="""
         Timeout (in seconds) before giving up on a starting dask cluster.
         """
+    )
+
+    worker_memory = MemoryLimit(
+        '2 G',
+        help="""
+        Maximum number of bytes a dask worker is allowed to use. Allows the
+        following suffixes:
+
+        - K -> Kibibytes
+        - M -> Mebibytes
+        - G -> Gibibytes
+        - T -> Tebibytes
+        """,
+        config=True
+    )
+
+    worker_cores = Integer(
+        1,
+        min=1,
+        help="""
+        Maximum number of cpu-cores a dask worker is allowed to use.
+        """,
+        config=True
+    )
+
+    scheduler_memory = MemoryLimit(
+        '2 G',
+        help="""
+        Maximum number of bytes a dask scheduler is allowed to use. Allows the
+        following suffixes:
+
+        - K -> Kibibytes
+        - M -> Mebibytes
+        - G -> Gibibytes
+        - T -> Tebibytes
+        """,
+        config=True
+    )
+
+    scheduler_cores = Integer(
+        1,
+        min=1,
+        help="""
+        Maximum number of cpu-cores a dask scheduler is allowed to use.
+        """,
+        config=True
+    )
+
+    worker_cmd = Unicode(
+        'dask-gateway-worker',
+        help='Shell command to start a dask-gateway worker.',
+        config=True
+    )
+
+    scheduler_cmd = Unicode(
+        'dask-gateway-scheduler',
+        help='Shell command to start a dask-gateway scheduler.',
+        config=True
     )
 
     # Parameters forwarded by gateway application
