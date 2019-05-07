@@ -325,6 +325,8 @@ class DaskGateway(Application):
                 state=json.loads(w.state)
             )
             cluster.workers[worker.name] = worker
+            if w.status == WorkerStatus.PENDING:
+                cluster.pending.add(worker.name)
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
@@ -508,6 +510,7 @@ class DaskGateway(Application):
 
             # Mark the cluster and workers as stopped
             cluster.status = ClusterStatus.STOPPED
+            cluster.pending.clear()
             for w in active_workers:
                 w.status = WorkerStatus.STOPPED
             with self.db.begin() as transaction:
@@ -564,7 +567,7 @@ class DaskGateway(Application):
             if delta > 0:
                 await self.scale_up(cluster, delta)
             else:
-                await self.scale_down(cluster, delta)
+                await self.scale_down(cluster, -delta)
             self.db.execute(
                 objects.clusters
                 .update()
@@ -573,8 +576,8 @@ class DaskGateway(Application):
             )
             cluster.active_workers = total
 
-    async def scale_up(self, cluster, delta):
-        await asyncio.gather(*(self.start_worker(cluster) for _ in range(delta)),
+    async def scale_up(self, cluster, n_start):
+        await asyncio.gather(*(self.start_worker(cluster) for _ in range(n_start)),
                              return_exceptions=True)
 
     @log_exceptions
@@ -597,6 +600,7 @@ class DaskGateway(Application):
             state=None,
             cluster=cluster
         )
+        cluster.pending.add(worker.name)
         cluster.workers[worker.name] = worker
 
         try:
@@ -611,6 +615,7 @@ class DaskGateway(Application):
             # Failed to submit, mark as failure and log
             cluster.active_workers -= 1
             worker.status = WorkerStatus.FAILED
+            cluster.pending.discard(worker.name)
             self.db.execute(
                 objects.workers
                 .update()
@@ -631,37 +636,57 @@ class DaskGateway(Application):
             .values(state=json.dumps(state).encode('utf-8'))
         )
 
-    async def scale_down(self, cluster, delta):
-        # TODO: cancel pending requests first
-        client = AsyncHTTPClient()
-        body = json.dumps({'remove_count': -delta})
-        url = '%s/api/scale_down' % cluster.api_address
-        req = HTTPRequest(url,
-                          method='POST',
-                          headers={'Authorization': 'token %s' % cluster.token,
-                                   'Content-type': 'application/json'},
-                          body=body)
-        resp = await client.fetch(req)
-        data = json.loads(resp.body.decode('utf8', 'replace'))
-        workers_closed = [cluster.workers[name] for name in data['workers_closed']]
-        self.log.debug("Closed %d workers for cluster %s",
-                       len(workers_closed),
-                       cluster.name)
+    async def scale_down(self, cluster, n_stop):
+        stopped = []
+        if cluster.pending:
+            if len(cluster.pending) > n_stop:
+                to_stop = [cluster.pending.pop() for _ in range(n_stop)]
+            else:
+                to_stop = list(cluster.pending)
+                cluster.pending.clear()
+            to_stop = [cluster.workers[n] for n in to_stop]
 
-        # Mark all workers as stopped
-        for w in workers_closed:
+            # Stop pending workers
+            tasks = (self.cluster_manager.stop_worker(
+                     w.name, w.state, cluster.info, cluster.state
+                     ) for w in to_stop)
+            await asyncio.gather(*tasks, return_exceptions=True)
+            stopped.extend(to_stop)
+            self.log.debug("Stopped %d pending workers for cluster %s",
+                           len(stopped), cluster.name)
+            n_stop -= len(stopped)
+
+        if n_stop:
+            client = AsyncHTTPClient()
+            body = json.dumps({'remove_count': n_stop})
+            url = '%s/api/scale_down' % cluster.api_address
+            req = HTTPRequest(url,
+                              method='POST',
+                              headers={'Authorization': 'token %s' % cluster.token,
+                                       'Content-type': 'application/json'},
+                              body=body)
+            resp = await client.fetch(req)
+            data = json.loads(resp.body.decode('utf8', 'replace'))
+            workers_closed = data['workers_closed']
+            self.log.debug("Stopped %d running workers for cluster %s",
+                           len(workers_closed), cluster.name)
+            stopped.extend(cluster.workers[name] for name in workers_closed)
+
+        # Update status for all stopped workers
+        for w in stopped:
             w.status = WorkerStatus.STOPPED
+            cluster.pending.discard(w.name)
         self.db.execute(
             (objects.workers
                 .update()
                 .where(objects.workers.c.id == bindparam('_id'))),
-            [{'_id': w.id, 'status': WorkerStatus.STOPPED}
-             for w in workers_closed]
+            [{'_id': w.id, 'status': WorkerStatus.STOPPED} for w in stopped]
         )
 
     async def register_worker(self, cluster, worker):
         self.log.debug("Registering worker %s for cluster %s",
                        worker.name, cluster.name)
+        cluster.pending.discard(worker.name)
         worker.status = WorkerStatus.RUNNING
         self.db.execute(
             objects.workers

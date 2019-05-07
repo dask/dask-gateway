@@ -128,6 +128,7 @@ class Cluster(object):
         self.tls_cert = tls_cert
         self.tls_key = tls_key
         self.active_workers = active_workers
+        self.pending = set()
         self.workers = {}
         self.lock = asyncio.Lock()
 
