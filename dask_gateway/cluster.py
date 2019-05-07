@@ -1,4 +1,4 @@
-from traitlets import Unicode, Integer, Dict
+from traitlets import Unicode, Integer, Dict, Bool
 from traitlets.config import LoggingConfigurable
 
 from .utils import MemoryLimit
@@ -98,6 +98,19 @@ class ClusterManager(LoggingConfigurable):
                     'DASK_GATEWAY_TLS_CERT': tls_cert_path,
                     'DASK_GATEWAY_TLS_KEY': tls_key_path})
         return out
+
+    supports_bulk_shutdown = Bool(
+        False,
+        help="""
+        Whether ``stop_cluster`` implements a bulk shutdown method.
+
+        If ``False`` (default), on shutdown ``stop_worker`` will be
+        individually called for each worker. Otherwise ``stop_cluster`` will be
+        called once and must stop all the workers in one action. This option
+        makes sense for cluster backends where all processes are in a group and
+        can be killed efficiently in one action.
+        """
+    )
 
     async def start_cluster(self, cluster_info):
         """Start a new cluster.

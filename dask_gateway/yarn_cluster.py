@@ -73,6 +73,8 @@ class YarnClusterManager(ClusterManager):
         config=True,
     )
 
+    supports_bulk_shutdown = True
+
     skein_client = Instance(
         klass="skein.Client",
         help="The skein client to use",

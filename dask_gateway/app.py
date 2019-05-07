@@ -487,6 +487,13 @@ class DaskGateway(Application):
                     "/" + cluster.name,
                 )
             # Stop the cluster
+            if not self.cluster_manager.supports_bulk_shutdown:
+                self.log.debug("Stopping remaining workers for cluster %s",
+                               cluster.name)
+                tasks = (self.cluster_manager.stop_worker(
+                         w.name, w.state, cluster.info, cluster.state
+                         ) for w in cluster.workers.values())
+                await asyncio.gather(*tasks, return_exceptions=True)
             await self.cluster_manager.stop_cluster(cluster.info, cluster.state)
             self.log.debug("Cluster %s stopped", cluster.name)
 
