@@ -1,4 +1,4 @@
-from traitlets import Unicode, Integer, Dict, Bytes
+from traitlets import Unicode, Integer, Dict
 from traitlets.config import LoggingConfigurable
 
 from .utils import MemoryLimit
@@ -6,30 +6,6 @@ from .utils import MemoryLimit
 
 class ClusterManager(LoggingConfigurable):
     """Base class for dask cluster managers"""
-
-    ip = Unicode(
-        '',
-        help="""
-        The IP address (or hostname) the dask scheduler should listen on.
-
-        The Dask Gateway Proxy should be able to access this ip.
-        """,
-        config=True
-    )
-
-    port = Integer(
-        0,
-        help="""
-        The port the dask scheduler should connect to.
-
-        Defaults to `0`, which uses a randomly allocated port number each time.
-
-        If set to a non-zero value, all dask clusters will use the same port,
-        which only makes sense if each server is on a different address (e.g.
-        in containers).
-        """,
-        config=True
-    )
 
     environment = Dict(
         help="""
@@ -104,77 +80,73 @@ class ClusterManager(LoggingConfigurable):
     )
 
     # Parameters forwarded by gateway application
-    username = Unicode()
     api_url = Unicode()
-    api_token = Unicode()
-    cluster_name = Unicode()
     temp_dir = Unicode()
-    tls_cert = Bytes()
-    tls_key = Bytes()
 
-    def get_tls_paths(self):
+    def get_tls_paths(self, cluster_info):
         """Get the absolute paths to the tls cert and key files."""
         return "dask.crt", "dask.pem"
 
-    def get_env(self):
+    def get_env(self, cluster_info):
         """Get a dict of environment variables to set for the process"""
         out = dict(self.environment)
-        tls_cert_path, tls_key_path = self.get_tls_paths()
+        tls_cert_path, tls_key_path = self.get_tls_paths(cluster_info)
         # Set values that dask-gateway needs to run
         out.update({'DASK_GATEWAY_API_URL': self.api_url,
-                    'DASK_GATEWAY_CLUSTER_NAME': self.cluster_name,
-                    'DASK_GATEWAY_API_TOKEN': self.api_token,
+                    'DASK_GATEWAY_CLUSTER_NAME': cluster_info.cluster_name,
+                    'DASK_GATEWAY_API_TOKEN': cluster_info.api_token,
                     'DASK_GATEWAY_TLS_CERT': tls_cert_path,
                     'DASK_GATEWAY_TLS_KEY': tls_key_path})
         return out
 
-    def get_state(self):
-        """Return all state that is needed to reconnect to this cluster-manager
-        instance after a gateway restart."""
-        return {}
+    async def start_cluster(self, cluster_info):
+        """Start a new cluster.
 
-    def load_state(self, state):
-        """Restore cluster manager from stored state.
-
-        Parameters
-        ----------
-        state : dict
-        """
-        pass
-
-    def initialize(self, request):
-        """Initialize the cluster manager with a cluster request.
-
-        This method has two purposes:
-        - Check that a given request is valid
-        - Initialize the cluster manager with any user-provided settings
-
-        If the request is invalid, this method should error with an informative
-        error message to be sent back to the user. Otherwise it should store
-        whatever parameters it needs from the request before ``start`` is
-        called.
+        This should do any initialization for the whole dask cluster
+        application, and then kickoff starting up the scheduler. The scheduler
+        does not need to have started before returning from this routine.
 
         Parameters
         ----------
-        request : dict
-            The request for a cluster, loaded from the cluster request json body.
+        cluster_info : ClusterInfo
+            Information about the cluster to be started.
+
+        Returns
+        -------
+        cluster_state : dict
+            Any state needed for further interactions with this cluster. This
+            should be serializable using ``json.dumps``.
         """
-        return request
+        raise NotImplementedError
 
-    async def start(self):
-        """Start a new cluster"""
-        pass
+    async def is_cluster_running(self, cluster_info, cluster_state):
+        """Check if the cluster is running.
 
-    async def is_running(self):
-        """Check if the cluster is running"""
-        pass
+        Returns ``True`` if running, ``False`` otherwise.
 
-    async def stop(self):
-        """Stop the cluster"""
-        pass
+        Parameters
+        ----------
+        cluster_info : ClusterInfo
+            Information about the cluster.
+        cluster_state : dict
+            Any additional state returned from ``start_cluster``.
+        """
+        raise NotImplementedError
 
-    async def add_worker(self, worker_name):
-        """Add a new worker.
+    async def stop_cluster(self, cluster_info, cluster_state):
+        """Stop the cluster.
+
+        Parameters
+        ----------
+        cluster_info : ClusterInfo
+            Information about the cluster.
+        cluster_state : dict
+            Any additional state returned from ``start_cluster``.
+        """
+        raise NotImplementedError
+
+    async def start_worker(self, worker_name, cluster_info, cluster_state):
+        """Start a new worker.
 
         Parameters
         ----------
@@ -182,23 +154,31 @@ class ClusterManager(LoggingConfigurable):
             The worker name, should be passed to ``dask-gateway-worker`` via
             the ``--name`` flag, or set as the ``DASK_GATEWAY_WORKER_NAME``
             environment variable.
+        cluster_info : ClusterInfo
+            Information about the cluster.
+        cluster_state : dict
+            Any additional state returned from ``start_cluster``.
 
         Returns
         -------
-        state : dict
+        worker_state : dict
             Any additional information about this worker needed to remove it in
             the future.
         """
-        pass
+        raise NotImplementedError
 
-    async def remove_worker(self, worker_name, state):
+    async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
         """Remove a worker.
 
-        Paramters
+        Parameters
         ---------
         worker_name : str
             The worker name.
-        state : dict
-            The state, same as the output of ``add_worker``.
+        worker_state : dict
+            Any additional worker state returned from ``start_worker``.
+        cluster_info : ClusterInfo
+            Information about the cluster.
+        cluster_state : dict
+            Any additional state returned from ``start_cluster``.
         """
-        pass
+        raise NotImplementedError

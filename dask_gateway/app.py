@@ -131,8 +131,8 @@ class DaskGateway(Application):
         config=True
     )
 
-    cluster_class = Type(
-        'dask_gateway.cluster.ClusterManager',
+    cluster_manager_class = Type(
+        'dask_gateway.local_cluster.LocalClusterManager',
         klass='dask_gateway.cluster.ClusterManager',
         help="The gateway cluster manager class to use",
         config=True
@@ -245,6 +245,7 @@ class DaskGateway(Application):
         self.init_tempdir()
         self.init_scheduler_proxy()
         self.init_web_proxy()
+        self.init_cluster_manager()
         self.init_authenticator()
         self.init_tornado_application()
         self.init_state()
@@ -294,16 +295,12 @@ class DaskGateway(Application):
         for c in self.db.execute(objects.clusters.select()):
             user = id_to_user[c.user_id]
             state = json.loads(c.state)
-            manager = self._new_cluster_manager(
-                user.name, c.name, c.token, c.tls_cert, c.tls_key
-            )
-            manager.load_state(state)
             cluster = objects.Cluster(
                 id=c.id,
                 name=c.name,
                 user=user,
                 token=c.token,
-                manager=manager,
+                state=state,
                 scheduler_address=c.scheduler_address,
                 dashboard_address=c.dashboard_address,
                 api_address=c.api_address,
@@ -339,6 +336,14 @@ class DaskGateway(Application):
             parent=self,
             log=self.log,
             public_url=self.public_url
+        )
+
+    def init_cluster_manager(self):
+        self.cluster_manager = self.cluster_manager_class(
+            parent=self,
+            log=self.log,
+            temp_dir=self.temp_dir,
+            api_url=self.api_url
         )
 
     def init_authenticator(self):
@@ -418,34 +423,17 @@ class DaskGateway(Application):
     def cluster_from_token(self, token):
         return self.token_to_cluster.get(token)
 
-    def _new_cluster_manager(self, username, cluster_name, token, tls_cert, tls_key):
-        return self.cluster_class(
-            parent=self,
-            log=self.log,
-            username=username,
-            cluster_name=cluster_name,
-            api_token=token,
-            api_url=self.api_url,
-            temp_dir=self.temp_dir,
-            tls_cert=tls_cert,
-            tls_key=tls_key
-        )
-
     def create_cluster(self, user):
         cluster_name = uuid.uuid4().hex
         token = uuid.uuid4().hex
         tls_cert, tls_key = new_keypair(cluster_name)
-        manager = self._new_cluster_manager(user.name, cluster_name, token,
-                                            tls_cert, tls_key)
-        manager.load_state({})
-        state = json.dumps(manager.get_state()).encode('utf-8')
 
         res = self.db.execute(
             objects.clusters.insert().values(
                 name=cluster_name,
                 user_id=user.id,
                 token=token,
-                state=state,
+                state=b"null",
                 scheduler_address='',
                 dashboard_address='',
                 api_address='',
@@ -459,7 +447,7 @@ class DaskGateway(Application):
             name=cluster_name,
             user=user,
             token=token,
-            manager=manager,
+            state=None,
             scheduler_address='',
             dashboard_address='',
             api_address='',
@@ -474,16 +462,16 @@ class DaskGateway(Application):
     def start_cluster(self, cluster):
         async def start_cluster():
             self.log.debug("Starting cluster %s", cluster.name)
-            await cluster.manager.start()
+            state = await self.cluster_manager.start_cluster(cluster.info)
             self.log.debug("Cluster %s started", cluster.name)
 
             # Cluster has started, update state
-            state = json.dumps(cluster.manager.get_state()).encode('utf-8')
+            cluster.state = state
             self.db.execute(
                 objects.clusters
                 .update()
                 .where(objects.clusters.c.id == cluster.id)
-                .values(state=state)
+                .values(state=json.dumps(state).encode('utf-8'))
             )
         asyncio.ensure_future(start_cluster())
 
@@ -499,7 +487,7 @@ class DaskGateway(Application):
                     "/" + cluster.name,
                 )
             # Stop the cluster
-            await cluster.manager.stop()
+            await self.cluster_manager.stop_cluster(cluster.info, cluster.state)
             self.log.debug("Cluster %s stopped", cluster.name)
 
             # Cluster has stopped, delete record
@@ -556,11 +544,11 @@ class DaskGateway(Application):
             cluster.requested_workers = total
 
     async def scale_up(self, cluster, delta):
-        await asyncio.gather(*(self.add_worker(cluster) for _ in range(delta)),
+        await asyncio.gather(*(self.start_worker(cluster) for _ in range(delta)),
                              return_exceptions=True)
 
     @log_exceptions
-    async def add_worker(self, cluster):
+    async def start_worker(self, cluster):
         worker_name = uuid.uuid4().hex
         self.log.debug("Creating worker %r for cluster %r",
                        worker_name, cluster.name)
@@ -569,14 +557,14 @@ class DaskGateway(Application):
             .insert()
             .values(name=worker_name,
                     status='PENDING',
-                    state=b"{}",
+                    state=b"null",
                     cluster_id=cluster.id)
         )
         worker = objects.Worker(
             id=res.inserted_primary_key[0],
             name=worker_name,
             status='PENDING',
-            state={},
+            state=None,
             cluster=cluster
         )
         cluster.workers[worker.name] = worker
@@ -584,7 +572,9 @@ class DaskGateway(Application):
         try:
             self.log.debug("Submitting worker %r for cluster %r", worker.name,
                            cluster.name)
-            state = await cluster.manager.add_worker(worker_name)
+            state = await self.cluster_manager.start_worker(
+                worker_name, cluster.info, cluster.state
+            )
         except Exception as exc:
             self.log.warn("Failure requesting worker %r for cluster %r",
                           worker.name, cluster.name, exc_info=exc)
@@ -654,7 +644,9 @@ class DaskGateway(Application):
     async def unregister_worker(self, cluster, worker):
         self.log.debug("Unregistering worker %s for cluster %s",
                        worker.name, cluster.name)
-        await cluster.manager.remove_worker(worker.name, worker.state)
+        await self.cluster_manager.stop_worker(
+            worker.name, worker.state, cluster.info, cluster.state
+        )
         if worker.status != 'STOPPED':
             worker.status = 'FAILED'
             self.db.execute(

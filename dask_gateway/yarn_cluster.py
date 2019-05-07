@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 import skein
 from tornado import gen
-from traitlets import Unicode, Dict
+from traitlets import Unicode, Dict, Instance, default
 
 from .cluster import ClusterManager
 
@@ -73,31 +73,29 @@ class YarnClusterManager(ClusterManager):
         config=True,
     )
 
-    clients = {}
+    skein_client = Instance(
+        klass="skein.Client",
+        help="The skein client to use",
+    )
 
-    async def _get_client(self):
-        key = (self.principal, self.keytab)
-        client = type(self).clients.get(key)
-        if client is None:
-            kwargs = dict(principal=self.principal,
-                          keytab=self.keytab,
-                          security=skein.Security.new_credentials())
-            client = await gen.IOLoop.current().run_in_executor(
-                None, lambda: skein.Client(**kwargs)
-            )
-            type(self).clients[key] = client
-        return client
+    @default("skein_client")
+    def _default_skein_client(self):
+        return skein.Client(principal=self.principal,
+                            keytab=self.keytab,
+                            security=skein.Security.new_credentials())
 
-    def _get_security(self):
-        return skein.Security(cert_bytes=self.tls_cert, key_bytes=self.tls_key)
+    def _get_security(self, cluster_info):
+        return skein.Security(cert_bytes=cluster_info.tls_cert,
+                              key_bytes=cluster_info.tls_key)
 
-    def _get_app_client(self):
+    def _get_app_client(self, cluster_info, cluster_state):
         # TODO: maybe keep an LRU cache of these?
-        return skein.ApplicationClient(self.app_address, self.app_id,
-                                       security=self._get_security())
+        return skein.ApplicationClient(cluster_state['app_address'],
+                                       cluster_state['app_id'],
+                                       security=self._get_security(cluster_info))
 
     @contextmanager
-    def temp_write_credentials(self):
+    def temp_write_credentials(self, cluster_info):
         """Write credentials to disk in secure temporary files.
 
         The files will be cleaned up upon exiting this context.
@@ -106,13 +104,14 @@ class YarnClusterManager(ClusterManager):
         -------
         cert_path, key_path
         """
-        prefix = os.path.join(self.temp_dir, self.cluster_name)
+        prefix = os.path.join(self.temp_dir, cluster_info.cluster_name)
         cert_path = prefix + ".crt"
         key_path = prefix + ".pem"
 
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
         try:
-            for path, data in [(cert_path, self.tls_cert), (key_path, self.tls_key)]:
+            for path, data in [(cert_path, cluster_info.tls_cert),
+                               (key_path, cluster_info.tls_key)]:
                 with os.fdopen(os.open(path, flags, 0o600), 'wb') as fil:
                     fil.write(data)
 
@@ -136,20 +135,20 @@ class YarnClusterManager(ClusterManager):
         """The full command (with args) to launch a dask scheduler"""
         return self.scheduler_cmd
 
-    def _build_specification(self, cert_path, key_path):
+    def _build_specification(self, cluster_info, cert_path, key_path):
         files = {k: skein.File.from_dict(v) if isinstance(v, dict) else v
                  for k, v in self.localize_files.items()}
 
         files['dask.crt'] = cert_path
         files['dask.pem'] = key_path
 
-        env = self.get_env()
+        env = self.get_env(cluster_info)
 
         scheduler_script = '\n'.join([self.scheduler_setup, self.scheduler_command])
         worker_script = '\n'.join([self.worker_setup, self.worker_command])
 
         master = skein.Master(
-            security=self._get_security(),
+            security=self._get_security(cluster_info),
             resources=skein.Resources(
                 memory='%d b' % self.scheduler_memory,
                 vcores=self.scheduler_cores
@@ -177,88 +176,72 @@ class YarnClusterManager(ClusterManager):
         return skein.ApplicationSpec(
             name='dask-gateway',
             queue=self.queue,
-            user=self.username,
+            user=cluster_info.username,
             master=master,
             services=services
         )
 
-    def load_state(self, state):
-        super().load_state(state)
-        self.app_id = state.get('app_id', '')
-        self.app_address = state.get('app_address', '')
-
-    def get_state(self):
-        state = super().get_state()
-        if self.app_id:
-            state['app_id'] = self.app_id
-            state['app_address'] = self.app_address
-        return state
-
-    async def start(self):
+    async def start_cluster(self, cluster_info):
         loop = gen.IOLoop.current()
 
-        client = await self._get_client()
-
         with self.temp_write_credentials() as (cert_path, key_path):
-            spec = self._build_specification(cert_path, key_path)
-            self.app_id = await loop.run_in_executor(None, client.submit, spec)
+            spec = self._build_specification(cluster_info, cert_path, key_path)
+            app_id = await loop.run_in_executor(None, self.skein_client.submit, spec)
 
         # Wait for application to start
         while True:
             report = await loop.run_in_executor(
-                None, client.application_report, self.app_id
+                None, self.skein_client.application_report, app_id
             )
             state = str(report.state)
             if state in {'FAILED', 'KILLED', 'FINISHED'}:
                 raise Exception("Application %s failed to start, check "
                                 "application logs for more information"
-                                % self.app_id)
+                                % app_id)
             elif state == 'RUNNING':
-                self.app_address = '%s:%d' % (report.host, report.port)
+                app_address = '%s:%d' % (report.host, report.port)
                 break
             else:
                 await gen.sleep(1)
 
-    async def is_running(self):
-        if self.app_id == '':
-            return False
+        return {'app_id': app_id,
+                'app_address': app_address}
 
-        client = await self._get_client()
+    async def is_cluster_running(self, cluster_info, cluster_state):
         report = await gen.IOLoop.current().run_in_executor(
-            None, client.application_report, self.app_id
+            None, self.skein_client.application_report, cluster_state['app_id']
         )
         return report.state == 'RUNNING'
 
-    async def stop(self):
-        if self.app_id == '':
-            return
-
-        client = await self._get_client()
+    async def stop_cluster(self, cluster_info, cluster_state):
         await gen.IOLoop.current().run_in_executor(
-            None, client.kill_application, self.app_id
+            None, self.skein_client.kill_application, cluster_state['app_id']
         )
 
-    def _add_worker(self, worker_name):
-        app = self._get_app_client()
+    def _start_worker(self, worker_name, cluster_info, cluster_state):
+        app = self._get_app_client(cluster_info, cluster_state)
         container = app.add_container(
             'dask.worker',
             env={'DASK_GATEWAY_WORKER_NAME': worker_name}
         )
         return {'container_id': container.id}
 
-    async def add_worker(self, worker_name):
+    async def start_worker(self, worker_name, cluster_info, cluster_state):
         return await gen.IOLoop.current().run_in_executor(
-            None, self._add_worker, worker_name
+            None, self._start_worker, worker_name, cluster_info, cluster_state
         )
 
-    def _remove_worker(self, worker_name, state):
-        app = self._get_app_client()
+    def _stop_worker(self, worker_name, worker_state, cluster_info,
+                     cluster_state):
+        app = self._get_app_client(cluster_info, cluster_state)
         try:
-            app.kill_container(state['container_id'])
+            app.kill_container(worker_state['container_id'])
         except ValueError:
             pass
 
-    async def remove_worker(self, worker_name, state):
+    async def stop_worker(self, worker_name, worker_state, cluster_info,
+                          cluster_state):
         return await gen.IOLoop.current().run_in_executor(
-            None, self._remove_worker, worker_name, state
+            None, self._stop_worker, worker_name, worker_state,
+            cluster_info, cluster_state
         )

@@ -65,16 +65,31 @@ class User(object):
         self.clusters = {}
 
 
+class ClusterInfo(object):
+    """Public Information about a cluster.
+
+    This object is passed to methods in the ``ClusterManager`` interface.
+    """
+    __slots__ = ('username', 'cluster_name', 'api_token', 'tls_cert', 'tls_key')
+
+    def __init__(self, username, cluster_name, api_token, tls_cert, tls_key):
+        self.username = username
+        self.cluster_name = cluster_name
+        self.api_token = api_token
+        self.tls_cert = tls_cert
+        self.tls_key = tls_key
+
+
 class Cluster(object):
     def __init__(self, id=None, name=None, user=None, token=None,
-                 manager=None, scheduler_address='', dashboard_address='',
+                 state=None, scheduler_address='', dashboard_address='',
                  api_address='', tls_cert=None, tls_key=None,
                  requested_workers=0):
         self.id = id
         self.name = name
         self.user = user
         self.token = token
-        self.manager = manager
+        self.state = state
         self.scheduler_address = scheduler_address
         self.dashboard_address = dashboard_address
         self.api_address = api_address
@@ -83,6 +98,14 @@ class Cluster(object):
         self.requested_workers = requested_workers
         self.workers = {}
         self.lock = asyncio.Lock()
+
+    @property
+    def info(self):
+        return ClusterInfo(username=self.user.name,
+                           cluster_name=self.name,
+                           api_token=self.token,
+                           tls_cert=self.tls_cert,
+                           tls_key=self.tls_key)
 
 
 class Worker(object):

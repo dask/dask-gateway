@@ -125,15 +125,7 @@ class ClustersHandler(BaseHandler):
 
         cluster = self.gateway.create_cluster(self.dask_user)
 
-        # First initialize the cluster manager to check that the cluster
-        # request is valid.
-        try:
-            cluster.manager.initialize(self.json_data)
-        except Exception as exc:
-            self.log.warning("Invalid cluster request:", exc_info=exc)
-            raise web.HTTPError(400, reason=str(exc))
-
-        # The cluster is valid, launch the start task to run in the background
+        # Launch the start task to run in the background
         self.gateway.start_cluster(cluster)
 
         # Return the cluster id, to be used in future requests
