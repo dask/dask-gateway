@@ -65,10 +65,16 @@ class BaseHandler(web.RequestHandler):
             auth_type, auth_key = auth_header.split(" ", 1)
             if auth_type == 'token':
                 cluster = self.gateway.cluster_from_token(auth_key)
-                if cluster is not None:
+                if cluster is None:
+                    return None
+                elif cluster.is_active():
                     self.dask_cluster = cluster
                     self.dask_user = cluster.user
                     return cluster.user.name
+                else:
+                    raise web.HTTPError(
+                        401, reason="Cluster is not active, api token expired"
+                    )
         return None
 
     def get_current_user(self):
@@ -109,7 +115,8 @@ def cluster_model(gateway, cluster, full=True):
         scheduler = dashboard = ''
     out = {'cluster_name': cluster.name,
            'scheduler_address': scheduler,
-           'dashboard_address': dashboard}
+           'dashboard_address': dashboard,
+           'status': cluster.status.name}
     if full:
         out['tls_cert'] = cluster.tls_cert.decode()
         out['tls_key'] = cluster.tls_key.decode()
@@ -154,7 +161,8 @@ class ClustersHandler(BaseHandler):
 
         if cluster_name in self.dask_user.clusters:
             cluster = self.dask_user.clusters[cluster_name]
-            self.gateway.stop_cluster(cluster)
+            if cluster.is_active():
+                self.gateway.stop_cluster(cluster)
         self.set_status(204)
 
 
@@ -187,6 +195,12 @@ class ClusterScaleHandler(BaseHandler):
         cluster = self.dask_user.clusters.get(cluster_name)
         if cluster is None:
             raise web.HTTPError(404, reason="Cluster %s does not exist" % cluster_name)
+        elif not cluster.is_active():
+            raise web.HTTPError(
+                409,
+                reason=("Cluster %s has status=%s, must be RUNNING to scale"
+                        % (cluster_name, cluster.status.name))
+            )
         try:
             total = self.json_data['worker_count']
         except (TypeError, KeyError):

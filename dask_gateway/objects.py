@@ -1,7 +1,37 @@
 import asyncio
+import enum
+
 from sqlalchemy import (MetaData, Table, Column, Integer, Unicode, ForeignKey,
-                        LargeBinary, Enum, create_engine)
+                        LargeBinary, TypeDecorator, create_engine)
 from sqlalchemy.pool import StaticPool
+
+
+class ClusterStatus(enum.IntEnum):
+    PENDING = 1
+    RUNNING = 2
+    STOPPED = 3
+    FAILED = 4
+
+
+class WorkerStatus(enum.IntEnum):
+    PENDING = 1
+    RUNNING = 2
+    STOPPED = 3
+    FAILED = 4
+
+
+class IntEnum(TypeDecorator):
+    impl = Integer
+
+    def __init__(self, enumclass, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._enumclass = enumclass
+
+    def process_bind_param(self, value, dialect):
+        return value.value
+
+    def process_result_value(self, value, dialect):
+        return self._enumclass(value)
 
 
 metadata = MetaData()
@@ -21,6 +51,7 @@ clusters = Table(
     Column('name', Unicode(255), nullable=False, unique=True),
     Column('user_id', Integer, ForeignKey("users.id", ondelete="CASCADE"),
            nullable=False),
+    Column('status', IntEnum(ClusterStatus), nullable=False),
     Column('state', LargeBinary, nullable=False),
     Column('token', Unicode(32), nullable=False, unique=True),
     Column('scheduler_address', Unicode(255), nullable=False),
@@ -28,7 +59,7 @@ clusters = Table(
     Column('api_address', Unicode(255), nullable=False),
     Column('tls_cert', LargeBinary, nullable=False),
     Column('tls_key', LargeBinary, nullable=False),
-    Column('requested_workers', Integer, nullable=False)
+    Column('active_workers', Integer, nullable=False)
 )
 
 workers = Table(
@@ -37,9 +68,8 @@ workers = Table(
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('name', Unicode(255), nullable=False),
     Column('cluster_id', ForeignKey('clusters.id', ondelete="CASCADE"), nullable=False),
-    Column('status', Enum('PENDING', 'RUNNING', 'STOPPED', 'FAILED'), nullable=False),
-    Column('state', LargeBinary, nullable=False),
-    Column('diagnostics', Unicode(255), nullable=False, default="")
+    Column('status', IntEnum(WorkerStatus), nullable=False),
+    Column('state', LargeBinary, nullable=False)
 )
 
 
@@ -81,23 +111,28 @@ class ClusterInfo(object):
 
 
 class Cluster(object):
-    def __init__(self, id=None, name=None, user=None, token=None,
+
+    def __init__(self, id=None, name=None, user=None, token=None, status=None,
                  state=None, scheduler_address='', dashboard_address='',
                  api_address='', tls_cert=None, tls_key=None,
-                 requested_workers=0):
+                 active_workers=0):
         self.id = id
         self.name = name
         self.user = user
         self.token = token
+        self.status = status
         self.state = state
         self.scheduler_address = scheduler_address
         self.dashboard_address = dashboard_address
         self.api_address = api_address
         self.tls_cert = tls_cert
         self.tls_key = tls_key
-        self.requested_workers = requested_workers
+        self.active_workers = active_workers
         self.workers = {}
         self.lock = asyncio.Lock()
+
+    def is_active(self):
+        return self.status in (ClusterStatus.PENDING, ClusterStatus.RUNNING)
 
     @property
     def info(self):
@@ -115,3 +150,6 @@ class Worker(object):
         self.cluster = cluster
         self.status = status
         self.state = state
+
+    def is_active(self):
+        return self.status in (WorkerStatus.PENDING, WorkerStatus.RUNNING)

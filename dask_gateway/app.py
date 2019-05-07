@@ -20,6 +20,7 @@ from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
 from . import handlers, objects
+from .objects import WorkerStatus, ClusterStatus
 from .tls import new_keypair
 from .utils import cleanup_tmpdir, log_exceptions
 
@@ -300,13 +301,14 @@ class DaskGateway(Application):
                 name=c.name,
                 user=user,
                 token=c.token,
+                status=c.status,
                 state=state,
                 scheduler_address=c.scheduler_address,
                 dashboard_address=c.dashboard_address,
                 api_address=c.api_address,
                 tls_cert=c.tls_cert,
                 tls_key=c.tls_key,
-                requested_workers=c.requested_workers
+                active_workers=c.active_workers
             )
             user.clusters[cluster.name] = cluster
             self.token_to_cluster[cluster.token] = cluster
@@ -433,13 +435,14 @@ class DaskGateway(Application):
                 name=cluster_name,
                 user_id=user.id,
                 token=token,
+                status=ClusterStatus.PENDING,
                 state=b"null",
                 scheduler_address='',
                 dashboard_address='',
                 api_address='',
                 tls_cert=tls_cert,
                 tls_key=tls_key,
-                requested_workers=0,
+                active_workers=0,
             )
         )
         cluster = objects.Cluster(
@@ -447,13 +450,14 @@ class DaskGateway(Application):
             name=cluster_name,
             user=user,
             token=token,
+            status=ClusterStatus.PENDING,
             state=None,
             scheduler_address='',
             dashboard_address='',
             api_address='',
             tls_cert=tls_cert,
             tls_key=tls_key,
-            requested_workers=0,
+            active_workers=0,
         )
         user.clusters[cluster_name] = cluster
         self.token_to_cluster[token] = cluster
@@ -478,6 +482,7 @@ class DaskGateway(Application):
     def stop_cluster(self, cluster):
         async def stop_cluster():
             self.log.debug("Stopping cluster %s", cluster.name)
+
             # Remove routes from proxies if already set
             if cluster.scheduler_address:
                 await self.web_proxy.delete_route(
@@ -486,25 +491,41 @@ class DaskGateway(Application):
                 await self.scheduler_proxy.delete_route(
                     "/" + cluster.name,
                 )
-            # Stop the cluster
+
+            # Filter active workers
+            active_workers = [w for w in cluster.workers.values() if w.is_active()]
+
+            # Shutdown individual workers if no bulk shutdown supported
             if not self.cluster_manager.supports_bulk_shutdown:
-                self.log.debug("Stopping remaining workers for cluster %s",
-                               cluster.name)
                 tasks = (self.cluster_manager.stop_worker(
                          w.name, w.state, cluster.info, cluster.state
-                         ) for w in cluster.workers.values())
+                         ) for w in active_workers)
                 await asyncio.gather(*tasks, return_exceptions=True)
+
+            # Shutdown the cluster
             await self.cluster_manager.stop_cluster(cluster.info, cluster.state)
             self.log.debug("Cluster %s stopped", cluster.name)
 
-            # Cluster has stopped, delete record
-            self.db.execute(
-                objects.clusters
-                .delete()
-                .where(objects.clusters.c.id == cluster.id)
-            )
-            del self.token_to_cluster[cluster.token]
-            del cluster.user.clusters[cluster.name]
+            # Mark the cluster and workers as stopped
+            cluster.status = ClusterStatus.STOPPED
+            for w in active_workers:
+                w.status = WorkerStatus.STOPPED
+            with self.db.begin() as transaction:
+                transaction.execute(
+                    objects.clusters
+                    .update()
+                    .where(objects.clusters.c.id == cluster.id)
+                    .values(status=ClusterStatus.STOPPED)
+                )
+                if active_workers:
+                    transaction.execute(
+                        (objects.workers
+                            .update()
+                            .where(objects.workers.c.id == bindparam('_id'))),
+                        [{'_id': w.id, 'status': WorkerStatus.STOPPED}
+                         for w in active_workers]
+                    )
+
         asyncio.ensure_future(stop_cluster())
 
     async def register_cluster(self, cluster, scheduler_address,
@@ -513,13 +534,15 @@ class DaskGateway(Application):
         cluster.scheduler_address = scheduler_address
         cluster.dashboard_address = dashboard_address
         cluster.api_address = api_address
+        cluster.status = ClusterStatus.RUNNING
         self.db.execute(
             objects.clusters
             .update()
             .where(objects.clusters.c.id == cluster.id)
             .values(scheduler_address=scheduler_address,
                     dashboard_address=dashboard_address,
-                    api_address=api_address)
+                    api_address=api_address,
+                    status=ClusterStatus.RUNNING)
         )
         await self.web_proxy.add_route(
             "/gateway/clusters/" + cluster.name,
@@ -533,7 +556,7 @@ class DaskGateway(Application):
     async def scale(self, cluster, total):
         """Scale cluster to total workers"""
         async with cluster.lock:
-            delta = total - cluster.requested_workers
+            delta = total - cluster.active_workers
             if delta == 0:
                 return
             self.log.debug("Scaling cluster %s to %d workers, a delta of %d",
@@ -546,9 +569,9 @@ class DaskGateway(Application):
                 objects.clusters
                 .update()
                 .where(objects.clusters.c.id == cluster.id)
-                .values(requested_workers=total)
+                .values(active_workers=total)
             )
-            cluster.requested_workers = total
+            cluster.active_workers = total
 
     async def scale_up(self, cluster, delta):
         await asyncio.gather(*(self.start_worker(cluster) for _ in range(delta)),
@@ -563,14 +586,14 @@ class DaskGateway(Application):
             objects.workers
             .insert()
             .values(name=worker_name,
-                    status='PENDING',
+                    status=WorkerStatus.PENDING,
                     state=b"null",
                     cluster_id=cluster.id)
         )
         worker = objects.Worker(
             id=res.inserted_primary_key[0],
             name=worker_name,
-            status='PENDING',
+            status=WorkerStatus.PENDING,
             state=None,
             cluster=cluster
         )
@@ -586,14 +609,13 @@ class DaskGateway(Application):
             self.log.warn("Failure requesting worker %r for cluster %r",
                           worker.name, cluster.name, exc_info=exc)
             # Failed to submit, mark as failure and log
-            cluster.requested_workers -= 1
-            worker.status = 'FAILED'
+            cluster.active_workers -= 1
+            worker.status = WorkerStatus.FAILED
             self.db.execute(
                 objects.workers
                 .update()
                 .where(objects.workers.c.id == worker.id)
-                .values(status='FAILED',
-                        diagnostics='Worker request failed, see logs for more details')
+                .values(status=WorkerStatus.FAILED)
             )
             return
 
@@ -621,31 +643,31 @@ class DaskGateway(Application):
                           body=body)
         resp = await client.fetch(req)
         data = json.loads(resp.body.decode('utf8', 'replace'))
-        workers_closed = data['workers_closed']
+        workers_closed = [cluster.workers[name] for name in data['workers_closed']]
         self.log.debug("Closed %d workers for cluster %s",
                        len(workers_closed),
                        cluster.name)
+
         # Mark all workers as stopped
-        for name in workers_closed:
-            cluster.workers[name].status = 'STOPPED'
-        stmt = (objects.workers
-                .update()
-                .where(objects.workers.c.id == bindparam('_id')))
+        for w in workers_closed:
+            w.status = WorkerStatus.STOPPED
         self.db.execute(
-            stmt,
-            [{'_id': cluster.workers[name].id, 'status': 'STOPPED'}
-             for name in workers_closed]
+            (objects.workers
+                .update()
+                .where(objects.workers.c.id == bindparam('_id'))),
+            [{'_id': w.id, 'status': WorkerStatus.STOPPED}
+             for w in workers_closed]
         )
 
     async def register_worker(self, cluster, worker):
         self.log.debug("Registering worker %s for cluster %s",
                        worker.name, cluster.name)
-        worker.status = 'RUNNING'
+        worker.status = WorkerStatus.RUNNING
         self.db.execute(
             objects.workers
             .update()
             .where(objects.workers.c.id == worker.id)
-            .values(status='RUNNING')
+            .values(status=WorkerStatus.RUNNING)
         )
 
     async def unregister_worker(self, cluster, worker):
@@ -654,16 +676,15 @@ class DaskGateway(Application):
         await self.cluster_manager.stop_worker(
             worker.name, worker.state, cluster.info, cluster.state
         )
-        if worker.status != 'STOPPED':
-            worker.status = 'FAILED'
+        if worker.status is not WorkerStatus.STOPPED:
+            worker.status = WorkerStatus.FAILED
             self.db.execute(
                 objects.workers
                 .update()
                 .where(objects.workers.c.id == worker.id)
-                .values(status='FAILED',
-                        diagnostics='Worker failed, see logs for more information')
+                .values(status=WorkerStatus.FAILED)
             )
-            cluster.requested_workers -= 1
+            cluster.active_workers -= 1
 
 
 main = DaskGateway.launch_instance

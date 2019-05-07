@@ -252,13 +252,18 @@ class Gateway(object):
                 info = await self._cluster_info(cluster_name)
             except HTTPError as exc:
                 if exc.code == 404:
-                    raise Exception("Cluster %r failed to start, see logs for "
-                                    "more information" % cluster_name)
+                    raise Exception("Unknown cluster %r" % cluster_name)
                 else:
                     raise
-            if info['scheduler_address'] != '':
+            status = info['status']
+            if status == 'RUNNING':
                 return DaskGatewayCluster(self, info)
-            # Not started yet
+            elif status == 'FAILED':
+                raise Exception("Cluster %r failed to start, see logs for "
+                                "more information" % cluster_name)
+            elif status == 'STOPPED':
+                raise Exception("Cluster %r is already stopped" % cluster_name)
+            # Not started yet, try again later
             await gen.sleep(2)
 
     def connect(self, cluster_name, **kwargs):
@@ -311,7 +316,12 @@ class Gateway(object):
                           method="PUT",
                           body=json.dumps({'worker_count': n}),
                           headers=HTTPHeaders({'Content-type': 'application/json'}))
-        await self._fetch(req)
+        try:
+            await self._fetch(req)
+        except HTTPError as exc:
+            if exc.code == 409:
+                raise Exception("Cluster %r is not running" % cluster_name)
+            raise
 
     def scale_cluster(self, cluster_name, n, **kwargs):
         """Scale a cluster to n workers.
