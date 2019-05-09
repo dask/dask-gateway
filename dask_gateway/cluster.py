@@ -116,19 +116,21 @@ class ClusterManager(LoggingConfigurable):
         """Start a new cluster.
 
         This should do any initialization for the whole dask cluster
-        application, and then kickoff starting up the scheduler. The scheduler
-        does not need to have started before returning from this routine.
+        application, and then start the scheduler.
 
         Parameters
         ----------
         cluster_info : ClusterInfo
             Information about the cluster to be started.
 
-        Returns
-        -------
+        Yields
+        ------
         cluster_state : dict
             Any state needed for further interactions with this cluster. This
-            should be serializable using ``json.dumps``.
+            should be serializable using ``json.dumps``. If startup occurs in
+            multiple stages, can iteratively yield state updates to be
+            checkpointed. If an error occurs at any time, the last yielded
+            state will be used when calling ``stop_cluster``.
         """
         raise NotImplementedError
 
@@ -175,8 +177,11 @@ class ClusterManager(LoggingConfigurable):
         Returns
         -------
         worker_state : dict
-            Any additional information about this worker needed to remove it in
-            the future.
+            Any state needed for further interactions with this worker. This
+            should be serializable using ``json.dumps``. If startup occurs in
+            multiple stages, can iteratively yield state updates to be
+            checkpointed. If an error occurs at any time, the last yielded
+            state will be used when calling ``stop_worker``.
         """
         raise NotImplementedError
 

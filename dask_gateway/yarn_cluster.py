@@ -190,6 +190,8 @@ class YarnClusterManager(ClusterManager):
             spec = self._build_specification(cluster_info, cert_path, key_path)
             app_id = await loop.run_in_executor(None, self.skein_client.submit, spec)
 
+        yield {'app_id': app_id}
+
         # Wait for application to start
         while True:
             report = await loop.run_in_executor(
@@ -206,8 +208,8 @@ class YarnClusterManager(ClusterManager):
             else:
                 await gen.sleep(1)
 
-        return {'app_id': app_id,
-                'app_address': app_address}
+        yield {'app_id': app_id,
+               'app_address': app_address}
 
     async def is_cluster_running(self, cluster_info, cluster_state):
         report = await gen.IOLoop.current().run_in_executor(
@@ -222,16 +224,20 @@ class YarnClusterManager(ClusterManager):
 
     def _start_worker(self, worker_name, cluster_info, cluster_state):
         app = self._get_app_client(cluster_info, cluster_state)
-        container = app.add_container(
+        return app.add_container(
             'dask.worker',
             env={'DASK_GATEWAY_WORKER_NAME': worker_name}
         )
-        return {'container_id': container.id}
 
     async def start_worker(self, worker_name, cluster_info, cluster_state):
-        return await gen.IOLoop.current().run_in_executor(
+        container = await gen.IOLoop.current().run_in_executor(
             None, self._start_worker, worker_name, cluster_info, cluster_state
         )
+        yield {'container_id': container.id}
+        # TODO: wait for worker to start before returning. To reduce costs,
+        # should have a single periodic task per application that fetches
+        # container states for if there are pending workers and notifies the
+        # corresponding `start_worker` coroutine of any updates.
 
     def _stop_worker(self, worker_name, worker_state, cluster_info,
                      cluster_state):

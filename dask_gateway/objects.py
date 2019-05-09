@@ -7,17 +7,21 @@ from sqlalchemy.pool import StaticPool
 
 
 class ClusterStatus(enum.IntEnum):
-    PENDING = 1
-    RUNNING = 2
-    STOPPED = 3
-    FAILED = 4
+    STARTING = 1
+    STARTED = 2
+    RUNNING = 3
+    STOPPING = 4
+    STOPPED = 5
+    FAILED = 6
 
 
 class WorkerStatus(enum.IntEnum):
-    PENDING = 1
-    RUNNING = 2
-    STOPPED = 3
-    FAILED = 4
+    STARTING = 1
+    STARTED = 2
+    RUNNING = 3
+    STOPPING = 4
+    STOPPED = 5
+    FAILED = 6
 
 
 class IntEnum(TypeDecorator):
@@ -58,8 +62,7 @@ clusters = Table(
     Column('dashboard_address', Unicode(255), nullable=False),
     Column('api_address', Unicode(255), nullable=False),
     Column('tls_cert', LargeBinary, nullable=False),
-    Column('tls_key', LargeBinary, nullable=False),
-    Column('active_workers', Integer, nullable=False)
+    Column('tls_key', LargeBinary, nullable=False)
 )
 
 workers = Table(
@@ -133,7 +136,7 @@ class Cluster(object):
         self.lock = asyncio.Lock()
 
     def is_active(self):
-        return self.status in (ClusterStatus.PENDING, ClusterStatus.RUNNING)
+        return self.status < ClusterStatus.STOPPING
 
     @property
     def info(self):
@@ -153,4 +156,4 @@ class Worker(object):
         self.state = state
 
     def is_active(self):
-        return self.status in (WorkerStatus.PENDING, WorkerStatus.RUNNING)
+        return self.status < WorkerStatus.STOPPING

@@ -307,8 +307,7 @@ class DaskGateway(Application):
                 dashboard_address=c.dashboard_address,
                 api_address=c.api_address,
                 tls_cert=c.tls_cert,
-                tls_key=c.tls_key,
-                active_workers=c.active_workers
+                tls_key=c.tls_key
             )
             user.clusters[cluster.name] = cluster
             self.token_to_cluster[cluster.token] = cluster
@@ -325,8 +324,10 @@ class DaskGateway(Application):
                 state=json.loads(w.state)
             )
             cluster.workers[worker.name] = worker
-            if w.status == WorkerStatus.PENDING:
+            if w.status == WorkerStatus.STARTING:
                 cluster.pending.add(worker.name)
+            if worker.is_active():
+                cluster.active_workers += 1
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
@@ -437,14 +438,13 @@ class DaskGateway(Application):
                 name=cluster_name,
                 user_id=user.id,
                 token=token,
-                status=ClusterStatus.PENDING,
+                status=ClusterStatus.STARTING,
                 state=b"null",
                 scheduler_address='',
                 dashboard_address='',
                 api_address='',
                 tls_cert=tls_cert,
-                tls_key=tls_key,
-                active_workers=0,
+                tls_key=tls_key
             )
         )
         cluster = objects.Cluster(
@@ -452,101 +452,136 @@ class DaskGateway(Application):
             name=cluster_name,
             user=user,
             token=token,
-            status=ClusterStatus.PENDING,
+            status=ClusterStatus.STARTING,
             state=None,
             scheduler_address='',
             dashboard_address='',
             api_address='',
             tls_cert=tls_cert,
-            tls_key=tls_key,
-            active_workers=0,
+            tls_key=tls_key
         )
         user.clusters[cluster_name] = cluster
         self.token_to_cluster[token] = cluster
         return cluster
 
-    def start_cluster(self, cluster):
-        async def start_cluster():
-            self.log.debug("Starting cluster %s", cluster.name)
-            state = await self.cluster_manager.start_cluster(cluster.info)
-            self.log.debug("Cluster %s started", cluster.name)
+    async def start_cluster(self, cluster):
+        self.log.debug("Cluster %s is starting...", cluster.name)
 
-            # Cluster has started, update state
-            cluster.state = state
-            self.db.execute(
-                objects.clusters
-                .update()
-                .where(objects.clusters.c.id == cluster.id)
-                .values(state=json.dumps(state).encode('utf-8'))
-            )
-        asyncio.ensure_future(start_cluster())
-
-    def stop_cluster(self, cluster):
-        async def stop_cluster():
-            self.log.debug("Stopping cluster %s", cluster.name)
-
-            # Remove routes from proxies if already set
-            if cluster.scheduler_address:
-                await self.web_proxy.delete_route(
-                    "/gateway/clusters/" + cluster.name
-                )
-                await self.scheduler_proxy.delete_route(
-                    "/" + cluster.name,
-                )
-
-            # Filter active workers
-            active_workers = [w for w in cluster.workers.values() if w.is_active()]
-
-            # Shutdown individual workers if no bulk shutdown supported
-            if not self.cluster_manager.supports_bulk_shutdown:
-                tasks = (self.cluster_manager.stop_worker(
-                         w.name, w.state, cluster.info, cluster.state
-                         ) for w in active_workers)
-                await asyncio.gather(*tasks, return_exceptions=True)
-
-            # Shutdown the cluster
-            await self.cluster_manager.stop_cluster(cluster.info, cluster.state)
-            self.log.debug("Cluster %s stopped", cluster.name)
-
-            # Mark the cluster and workers as stopped
-            cluster.status = ClusterStatus.STOPPED
-            cluster.pending.clear()
-            for w in active_workers:
-                w.status = WorkerStatus.STOPPED
-            with self.db.begin() as transaction:
-                transaction.execute(
+        # Walk through the startup process, saving state as updates occur
+        async for state in self.cluster_manager.start_cluster(cluster.info):
+            self.log.debug("State update for cluster %s", cluster.name)
+            with self.db.begin() as conn:
+                conn.execute(
                     objects.clusters
                     .update()
                     .where(objects.clusters.c.id == cluster.id)
-                    .values(status=ClusterStatus.STOPPED)
+                    .values(state=json.dumps(state).encode('utf-8'))
                 )
-                if active_workers:
-                    transaction.execute(
-                        (objects.workers
-                            .update()
-                            .where(objects.workers.c.id == bindparam('_id'))),
-                        [{'_id': w.id, 'status': WorkerStatus.STOPPED}
-                         for w in active_workers]
-                    )
+                cluster.state = state
 
-        asyncio.ensure_future(stop_cluster())
+        # Move cluster to started
+        with self.db.begin() as conn:
+            conn.execute(
+                objects.clusters
+                .update()
+                .where(objects.clusters.c.id == cluster.id)
+                .values(status=ClusterStatus.STARTED)
+            )
+            cluster.status = ClusterStatus.STARTED
+
+        self.log.debug("Cluster %s has started, waiting for connection to open...",
+                       cluster.name)
+
+        # TODO: start timeout for registration
+
+    def schedule_start_cluster(self, cluster):
+        asyncio.ensure_future(self.start_cluster(cluster))
+
+    async def stop_cluster(self, cluster):
+        self.log.debug("Cluster %s is stopping...", cluster.name)
+
+        # Move cluster to stopping
+        with self.db.begin() as conn:
+            conn.execute(
+                objects.clusters
+                .update()
+                .where(objects.clusters.c.id == cluster.id)
+                .values(status=ClusterStatus.STOPPING)
+            )
+            cluster.status = ClusterStatus.STOPPING
+
+        # Remove routes from proxies if already set
+        if cluster.status == ClusterStatus.RUNNING:
+            await self.web_proxy.delete_route(
+                "/gateway/clusters/" + cluster.name
+            )
+            await self.scheduler_proxy.delete_route(
+                "/" + cluster.name,
+            )
+
+        # Filter active workers
+        active_workers = [w for w in cluster.workers.values() if w.is_active()]
+
+        # Shutdown individual workers if no bulk shutdown supported
+        if not self.cluster_manager.supports_bulk_shutdown:
+            self.log.debug("Stopping active workers for cluster %s", cluster.name)
+            tasks = (self.cluster_manager.stop_worker(
+                     w.name, w.state, cluster.info, cluster.state
+                     ) for w in active_workers)
+            # TODO: handle errors
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Shutdown the cluster
+        await self.cluster_manager.stop_cluster(cluster.info, cluster.state)
+
+        # Mark the cluster and workers as stopped
+        with self.db.begin() as conn:
+            conn.execute(
+                objects.clusters
+                .update()
+                .where(objects.clusters.c.id == cluster.id)
+                .values(status=ClusterStatus.STOPPED)
+            )
+            if active_workers:
+                conn.execute(
+                    (objects.workers
+                        .update()
+                        .where(objects.workers.c.id == bindparam('_id'))),
+                    [{'_id': w.id, 'status': WorkerStatus.STOPPED}
+                     for w in active_workers]
+                )
+            cluster.status = ClusterStatus.STOPPED
+            cluster.pending.clear()
+            cluster.active_workers = 0
+            for w in active_workers:
+                w.status = WorkerStatus.STOPPED
+
+        self.log.debug("Cluster %s stopped", cluster.name)
+
+    def schedule_stop_cluster(self, cluster):
+        asyncio.ensure_future(self.stop_cluster(cluster))
 
     async def register_cluster(self, cluster, scheduler_address,
                                dashboard_address, api_address):
         self.log.debug("Registering cluster %s", cluster.name)
-        cluster.scheduler_address = scheduler_address
-        cluster.dashboard_address = dashboard_address
-        cluster.api_address = api_address
-        cluster.status = ClusterStatus.RUNNING
-        self.db.execute(
-            objects.clusters
-            .update()
-            .where(objects.clusters.c.id == cluster.id)
-            .values(scheduler_address=scheduler_address,
-                    dashboard_address=dashboard_address,
-                    api_address=api_address,
-                    status=ClusterStatus.RUNNING)
-        )
+
+        # Update internal state
+        with self.db.begin() as conn:
+            conn.execute(
+                objects.clusters
+                .update()
+                .where(objects.clusters.c.id == cluster.id)
+                .values(scheduler_address=scheduler_address,
+                        dashboard_address=dashboard_address,
+                        api_address=api_address,
+                        status=ClusterStatus.RUNNING)
+            )
+            cluster.scheduler_address = scheduler_address
+            cluster.dashboard_address = dashboard_address
+            cluster.api_address = api_address
+            cluster.status = ClusterStatus.RUNNING
+
+        # Register routes with proxies
         await self.web_proxy.add_route(
             "/gateway/clusters/" + cluster.name,
             dashboard_address
@@ -568,12 +603,7 @@ class DaskGateway(Application):
                 await self.scale_up(cluster, delta)
             else:
                 await self.scale_down(cluster, -delta)
-            self.db.execute(
-                objects.clusters
-                .update()
-                .where(objects.clusters.c.id == cluster.id)
-                .values(active_workers=total)
-            )
+
             cluster.active_workers = total
 
     async def scale_up(self, cluster, n_start):
@@ -585,56 +615,50 @@ class DaskGateway(Application):
         worker_name = uuid.uuid4().hex
         self.log.debug("Creating worker %r for cluster %r",
                        worker_name, cluster.name)
+
+        # Create worker record as STARTING
         res = self.db.execute(
             objects.workers
             .insert()
             .values(name=worker_name,
-                    status=WorkerStatus.PENDING,
+                    status=WorkerStatus.STARTING,
                     state=b"null",
                     cluster_id=cluster.id)
         )
         worker = objects.Worker(
             id=res.inserted_primary_key[0],
             name=worker_name,
-            status=WorkerStatus.PENDING,
+            status=WorkerStatus.STARTING,
             state=None,
             cluster=cluster
         )
         cluster.pending.add(worker.name)
         cluster.workers[worker.name] = worker
 
-        try:
-            self.log.debug("Submitting worker %r for cluster %r", worker.name,
-                           cluster.name)
-            state = await self.cluster_manager.start_worker(
-                worker_name, cluster.info, cluster.state
-            )
-        except Exception as exc:
-            self.log.warn("Failure requesting worker %r for cluster %r",
-                          worker.name, cluster.name, exc_info=exc)
-            # Failed to submit, mark as failure and log
-            cluster.active_workers -= 1
-            worker.status = WorkerStatus.FAILED
-            cluster.pending.discard(worker.name)
-            self.db.execute(
+        # Walk through the startup process, saving state as updates occur
+        async for state in self.cluster_manager.start_worker(
+                worker_name, cluster.info, cluster.state):
+            with self.db.begin() as conn:
+                conn.execute(
+                    objects.workers
+                    .update()
+                    .where(objects.workers.c.id == worker.id)
+                    .values(state=json.dumps(state).encode('utf-8'))
+                )
+                worker.state = state
+
+        # Move worker to started
+        with self.db.begin() as conn:
+            conn.execute(
                 objects.workers
                 .update()
                 .where(objects.workers.c.id == worker.id)
-                .values(status=WorkerStatus.FAILED)
+                .values(status=WorkerStatus.STARTED)
             )
-            return
+            worker.status = WorkerStatus.STARTED
 
-        self.log.debug("Worker %r for cluster %r submitted successfully",
-                       worker.name, cluster.name)
-
-        # Succeeded, update state
-        worker.state = state
-        self.db.execute(
-            objects.workers
-            .update()
-            .where(objects.workers.c.id == worker.id)
-            .values(state=json.dumps(state).encode('utf-8'))
-        )
+        self.log.debug("Worker %s has started, waiting for connection to open...",
+                       worker.name)
 
     async def scale_down(self, cluster, n_stop):
         stopped = []
@@ -687,17 +711,19 @@ class DaskGateway(Application):
         self.log.debug("Registering worker %s for cluster %s",
                        worker.name, cluster.name)
         cluster.pending.discard(worker.name)
-        worker.status = WorkerStatus.RUNNING
-        self.db.execute(
-            objects.workers
-            .update()
-            .where(objects.workers.c.id == worker.id)
-            .values(status=WorkerStatus.RUNNING)
-        )
+        with self.db.begin() as conn:
+            conn.execute(
+                objects.workers
+                .update()
+                .where(objects.workers.c.id == worker.id)
+                .values(status=WorkerStatus.RUNNING)
+            )
+            worker.status = WorkerStatus.RUNNING
 
     async def unregister_worker(self, cluster, worker):
         self.log.debug("Unregistering worker %s for cluster %s",
                        worker.name, cluster.name)
+        # TODO: rework worker registration/unregistration
         await self.cluster_manager.stop_worker(
             worker.name, worker.state, cluster.info, cluster.state
         )

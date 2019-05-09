@@ -133,7 +133,7 @@ class ClustersHandler(BaseHandler):
         cluster = self.gateway.create_cluster(self.dask_user)
 
         # Launch the start task to run in the background
-        self.gateway.start_cluster(cluster)
+        self.gateway.schedule_start_cluster(cluster)
 
         # Return the cluster id, to be used in future requests
         self.write({'cluster_name': cluster.name})
@@ -162,7 +162,7 @@ class ClustersHandler(BaseHandler):
         if cluster_name in self.dask_user.clusters:
             cluster = self.dask_user.clusters[cluster_name]
             if cluster.is_active():
-                self.gateway.stop_cluster(cluster)
+                self.gateway.schedule_stop_cluster(cluster)
         self.set_status(204)
 
 

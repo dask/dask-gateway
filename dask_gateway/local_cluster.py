@@ -229,7 +229,7 @@ class LocalClusterManager(ClusterManager):
             "scheduler",
             cluster_info
         )
-        return {'pid': pid}
+        yield {'pid': pid}
 
     async def is_cluster_running(self, cluster_info, cluster_state):
         return is_running(cluster_state['pid'])
@@ -244,7 +244,7 @@ class LocalClusterManager(ClusterManager):
         env['DASK_GATEWAY_WORKER_NAME'] = worker_name
         pid = await self.start_process(cmd, env, "worker-%s" % worker_name,
                                        cluster_info)
-        return {'pid': pid}
+        yield {'pid': pid}
 
     async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
         await self.stop_process(worker_state['pid'])
