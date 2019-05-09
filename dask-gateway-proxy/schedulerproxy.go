@@ -167,7 +167,7 @@ func (p *Proxy) proxy(c *Conn) {
 		return
 	}
 
-	p.logger.Infof("Routing connection to %q", c.outAddr)
+	p.logger.Debugf("Routing connection to %q", c.outAddr)
 
 	outConn, err := net.DialTimeout("tcp", c.outAddr, 10*time.Second)
 	if err != nil {

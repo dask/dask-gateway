@@ -136,6 +136,8 @@ class LocalClusterManager(ClusterManager):
 
     def remove_working_directory(self, cluster_info):
         workdir = self.get_working_directory(cluster_info)
+        if not os.path.exists(workdir):
+            return
         try:
             shutil.rmtree(workdir)
         except Exception:
@@ -235,7 +237,9 @@ class LocalClusterManager(ClusterManager):
         return is_running(cluster_state['pid'])
 
     async def stop_cluster(self, cluster_info, cluster_state):
-        await self.stop_process(cluster_state['pid'])
+        pid = cluster_state.get('pid')
+        if pid is not None:
+            await self.stop_process(pid)
         self.remove_working_directory(cluster_info)
 
     async def start_worker(self, worker_name, cluster_info, cluster_state):

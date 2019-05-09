@@ -218,8 +218,11 @@ class YarnClusterManager(ClusterManager):
         return report.state == 'RUNNING'
 
     async def stop_cluster(self, cluster_info, cluster_state):
+        app_id = cluster_state.get('app_id')
+        if app_id is None:
+            return
         await gen.IOLoop.current().run_in_executor(
-            None, self.skein_client.kill_application, cluster_state['app_id']
+            None, self.skein_client.kill_application, app_id
         )
 
     def _start_worker(self, worker_name, cluster_info, cluster_state):

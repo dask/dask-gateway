@@ -14,11 +14,34 @@ class ClusterManager(LoggingConfigurable):
         config=True
     )
 
-    start_timeout = Integer(
+    cluster_start_timeout = Integer(
         60,
         help="""
         Timeout (in seconds) before giving up on a starting dask cluster.
-        """
+
+        Note that this is the time for ``start_cluster`` to run, not the time
+        for the cluster to actually respond.
+        """,
+        config=True
+    )
+
+    cluster_connect_timeout = Integer(
+        60,
+        help="""
+        Timeout (in seconds) for a started dask cluster to connect to the gateway.
+
+        This is the time between ``start_cluster`` completing and the scheduler
+        connecting to the gateway.
+        """,
+        config=True
+    )
+
+    worker_start_timeout = Integer(
+        60,
+        help="""
+        Timeout (in seconds) before giving up on a starting dask worker.
+        """,
+        config=True
     )
 
     worker_memory = MemoryLimit(

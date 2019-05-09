@@ -133,7 +133,15 @@ class Cluster(object):
         self.active_workers = active_workers
         self.pending = set()
         self.workers = {}
-        self.lock = asyncio.Lock()
+
+        loop = asyncio.get_running_loop()
+        self.lock = asyncio.Lock(loop=loop)
+        self._started_future = loop.create_future()
+        if status >= ClusterStatus.RUNNING:
+            self._started_future.set_result(True)
+            self._addresses_future = None
+        else:
+            self._addresses_future = loop.create_future()
 
     def is_active(self):
         return self.status < ClusterStatus.STOPPING

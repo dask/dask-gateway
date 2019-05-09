@@ -240,8 +240,9 @@ class Gateway(object):
         """
         return self.sync(self._submit, **kwargs)
 
-    async def _cluster_info(self, cluster_name):
-        url = "%s/gateway/api/clusters/%s" % (self.address, cluster_name)
+    async def _cluster_info(self, cluster_name, wait=False):
+        params = "?wait" if wait else ""
+        url = "%s/gateway/api/clusters/%s%s" % (self.address, cluster_name, params)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
         return json.loads(resp.body)
@@ -249,22 +250,26 @@ class Gateway(object):
     async def _connect(self, cluster_name):
         while True:
             try:
-                info = await self._cluster_info(cluster_name)
+                info = await self._cluster_info(cluster_name, wait=True)
             except HTTPError as exc:
                 if exc.code == 404:
                     raise Exception("Unknown cluster %r" % cluster_name)
+                elif exc.code == 599:
+                    # Timeout, ignore
+                    pass
                 else:
                     raise
-            status = info['status']
-            if status == 'RUNNING':
-                return DaskGatewayCluster(self, info)
-            elif status == 'FAILED':
-                raise Exception("Cluster %r failed to start, see logs for "
-                                "more information" % cluster_name)
-            elif status == 'STOPPED':
-                raise Exception("Cluster %r is already stopped" % cluster_name)
+            else:
+                status = info['status']
+                if status == 'RUNNING':
+                    return DaskGatewayCluster(self, info)
+                elif status == 'FAILED':
+                    raise Exception("Cluster %r failed to start, see logs for "
+                                    "more information" % cluster_name)
+                elif status == 'STOPPED':
+                    raise Exception("Cluster %r is already stopped" % cluster_name)
             # Not started yet, try again later
-            await gen.sleep(2)
+            await gen.sleep(0.5)
 
     def connect(self, cluster_name, **kwargs):
         """Connect to a submitted cluster.

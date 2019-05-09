@@ -1,3 +1,4 @@
+import asyncio
 import functools
 import json
 from urllib.parse import urlparse, unquote
@@ -151,6 +152,14 @@ class ClustersHandler(BaseHandler):
         if cluster is None:
             raise web.HTTPError(404, reason="Cluster %s does not exist" % cluster_name)
 
+        wait = self.get_query_argument("wait", default=False)
+
+        if wait is not False:
+            self.waiter = asyncio.shield(cluster._started_future)
+            try:
+                await self.waiter
+            except asyncio.CancelledError:
+                return
         self.write(cluster_model(self.gateway, cluster, full=True))
 
     @user_authenticated
@@ -165,6 +174,10 @@ class ClustersHandler(BaseHandler):
                 self.gateway.schedule_stop_cluster(cluster)
         self.set_status(204)
 
+    def on_connection_close(self):
+        if hasattr(self, 'waiter'):
+            self.waiter.cancel()
+
 
 class ClusterRegistrationHandler(BaseHandler):
     @token_authenticated
@@ -176,9 +189,13 @@ class ClusterRegistrationHandler(BaseHandler):
             api = self.json_data['api_address']
         except (TypeError, KeyError):
             raise web.HTTPError(405)
-        await self.gateway.register_cluster(
-            self.dask_cluster, scheduler, dashboard, api
-        )
+
+        if self.dask_cluster._addresses_future.done():
+            raise web.HTTPError(
+                409, reason="Cluster %s is already registered" % cluster_name
+            )
+
+        self.dask_cluster._addresses_future.set_result((scheduler, dashboard, api))
 
     @token_authenticated
     async def get(self, cluster_name):

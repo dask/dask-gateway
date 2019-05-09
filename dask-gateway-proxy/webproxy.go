@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"net/http"
@@ -20,15 +21,24 @@ type HttpProxy struct {
 	routesLock sync.RWMutex
 }
 
-func NewWebProxy() *HttpProxy {
+func NewWebProxy(logLevel LogLevel) *HttpProxy {
 	out := HttpProxy{
 		router: NewRouter(),
+		logger: NewLogger(logLevel),
 	}
 	out.proxy = &httputil.ReverseProxy{
 		Director:      out.director,
 		FlushInterval: 250 * time.Millisecond,
+		ErrorHandler:  out.errorHandler,
 	}
 	return &out
+}
+
+func (p *HttpProxy) errorHandler(w http.ResponseWriter, r *http.Request, err error) {
+	if err != context.Canceled {
+		p.logger.Errorf("Web Proxy Error: %s", err)
+	}
+	w.WriteHeader(http.StatusBadGateway)
 }
 
 func (p *HttpProxy) routesHandler(w http.ResponseWriter, r *http.Request) {
@@ -143,8 +153,9 @@ func webProxyMain(args []string) {
 	if token == "" {
 		panic("DASK_GATEWAY_PROXY_TOKEN environment variable not set")
 	}
+	logLevel := ParseLevel(logLevelString)
 
-	proxy := NewWebProxy()
+	proxy := NewWebProxy(logLevel)
 
 	server := &http.Server{
 		Addr:    address,

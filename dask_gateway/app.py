@@ -439,7 +439,7 @@ class DaskGateway(Application):
                 user_id=user.id,
                 token=token,
                 status=ClusterStatus.STARTING,
-                state=b"null",
+                state=b"{}",
                 scheduler_address='',
                 dashboard_address='',
                 api_address='',
@@ -453,7 +453,7 @@ class DaskGateway(Application):
             user=user,
             token=token,
             status=ClusterStatus.STARTING,
-            state=None,
+            state={},
             scheduler_address='',
             dashboard_address='',
             api_address='',
@@ -464,7 +464,7 @@ class DaskGateway(Application):
         self.token_to_cluster[token] = cluster
         return cluster
 
-    async def start_cluster(self, cluster):
+    async def _start_cluster(self, cluster):
         self.log.debug("Cluster %s is starting...", cluster.name)
 
         # Walk through the startup process, saving state as updates occur
@@ -489,15 +489,72 @@ class DaskGateway(Application):
             )
             cluster.status = ClusterStatus.STARTED
 
-        self.log.debug("Cluster %s has started, waiting for connection to open...",
+    async def start_cluster(self, cluster):
+        try:
+            await asyncio.wait_for(
+                self._start_cluster(cluster),
+                timeout=self.cluster_manager.cluster_start_timeout
+            )
+        except Exception as exc:
+            if isinstance(exc, asyncio.TimeoutError):
+                self.log.warn("Cluster %s startup timed out after %d seconds",
+                              cluster.name, self.cluster_manager.cluster_start_timeout)
+            else:
+                self.log.error("Error while starting cluster %s", exc_info=exc)
+            await self.stop_cluster(cluster, failed=True)
+            return
+
+        self.log.debug("Cluster %s has started, waiting for connection",
                        cluster.name)
 
-        # TODO: start timeout for registration
+        try:
+            addresses = await asyncio.wait_for(
+                cluster._addresses_future,
+                timeout=self.cluster_manager.cluster_connect_timeout
+            )
+            scheduler_address, dashboard_address, api_address = addresses
+        except asyncio.TimeoutError:
+            self.log.warn("Cluster %s failed to connect after %d seconds",
+                          cluster.name,
+                          self.cluster_manager.cluster_connect_timeout)
+            await self.stop_cluster(cluster, failed=True)
+            return
+
+        self.log.debug("Cluster %s connected at %s", cluster.name, scheduler_address)
+
+        # Register routes with proxies
+        await self.web_proxy.add_route(
+            "/gateway/clusters/" + cluster.name,
+            dashboard_address
+        )
+        await self.scheduler_proxy.add_route(
+            "/" + cluster.name,
+            scheduler_address
+        )
+
+        # Mark cluster as running
+        with self.db.begin() as conn:
+            conn.execute(
+                objects.clusters
+                .update()
+                .where(objects.clusters.c.id == cluster.id)
+                .values(scheduler_address=scheduler_address,
+                        dashboard_address=dashboard_address,
+                        api_address=api_address,
+                        status=ClusterStatus.RUNNING)
+            )
+            cluster.scheduler_address = scheduler_address
+            cluster.dashboard_address = dashboard_address
+            cluster.api_address = api_address
+            cluster.status = ClusterStatus.RUNNING
+
+        # Signal waiting tasks that cluster is fully started
+        cluster._started_future.set_result(True)
 
     def schedule_start_cluster(self, cluster):
         asyncio.ensure_future(self.start_cluster(cluster))
 
-    async def stop_cluster(self, cluster):
+    async def stop_cluster(self, cluster, failed=False):
         self.log.debug("Cluster %s is stopping...", cluster.name)
 
         # Move cluster to stopping
@@ -534,13 +591,15 @@ class DaskGateway(Application):
         # Shutdown the cluster
         await self.cluster_manager.stop_cluster(cluster.info, cluster.state)
 
-        # Mark the cluster and workers as stopped
+        # Update the cluster and worker statuses
+        status = ClusterStatus.FAILED if failed else ClusterStatus.STOPPED
+
         with self.db.begin() as conn:
             conn.execute(
                 objects.clusters
                 .update()
                 .where(objects.clusters.c.id == cluster.id)
-                .values(status=ClusterStatus.STOPPED)
+                .values(status=status)
             )
             if active_workers:
                 conn.execute(
@@ -550,46 +609,21 @@ class DaskGateway(Application):
                     [{'_id': w.id, 'status': WorkerStatus.STOPPED}
                      for w in active_workers]
                 )
-            cluster.status = ClusterStatus.STOPPED
+            cluster.status = status
             cluster.pending.clear()
             cluster.active_workers = 0
             for w in active_workers:
                 w.status = WorkerStatus.STOPPED
 
+        # If failure occurred during startup, notify any waiting tasks that
+        # starting has completed.
+        if not cluster._started_future.done():
+            cluster._started_future.set_result(False)
+
         self.log.debug("Cluster %s stopped", cluster.name)
 
     def schedule_stop_cluster(self, cluster):
         asyncio.ensure_future(self.stop_cluster(cluster))
-
-    async def register_cluster(self, cluster, scheduler_address,
-                               dashboard_address, api_address):
-        self.log.debug("Registering cluster %s", cluster.name)
-
-        # Update internal state
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.clusters
-                .update()
-                .where(objects.clusters.c.id == cluster.id)
-                .values(scheduler_address=scheduler_address,
-                        dashboard_address=dashboard_address,
-                        api_address=api_address,
-                        status=ClusterStatus.RUNNING)
-            )
-            cluster.scheduler_address = scheduler_address
-            cluster.dashboard_address = dashboard_address
-            cluster.api_address = api_address
-            cluster.status = ClusterStatus.RUNNING
-
-        # Register routes with proxies
-        await self.web_proxy.add_route(
-            "/gateway/clusters/" + cluster.name,
-            dashboard_address
-        )
-        await self.scheduler_proxy.add_route(
-            "/" + cluster.name,
-            scheduler_address
-        )
 
     async def scale(self, cluster, total):
         """Scale cluster to total workers"""
@@ -622,14 +656,14 @@ class DaskGateway(Application):
             .insert()
             .values(name=worker_name,
                     status=WorkerStatus.STARTING,
-                    state=b"null",
+                    state=b"{}",
                     cluster_id=cluster.id)
         )
         worker = objects.Worker(
             id=res.inserted_primary_key[0],
             name=worker_name,
             status=WorkerStatus.STARTING,
-            state=None,
+            state={},
             cluster=cluster
         )
         cluster.pending.add(worker.name)
