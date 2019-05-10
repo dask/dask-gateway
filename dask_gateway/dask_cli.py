@@ -56,12 +56,13 @@ class ScaleDownHandler(web.RequestHandler):
 
 
 class GatewaySchedulerService(object):
-    def __init__(self, scheduler, io_loop=None):
+    def __init__(self, scheduler, io_loop=None, plugin=None):
         self.scheduler = scheduler
         self.loop = io_loop or scheduler.loop
         routes = [("/api/scale_down", ScaleDownHandler, {'service': self})]
         self.app = web.Application(routes)
         self.server = None
+        self.plugin = plugin
 
     def listen(self, address):
         ip, port = address
@@ -82,6 +83,7 @@ class GatewaySchedulerService(object):
                     remove_count, n_workers)
         if n_to_close > 0:
             to_close = self.scheduler.workers_to_close(n=n_to_close)
+            self.plugin.shutdown_requested.update(to_close)
             closed = await self.scheduler.retire_workers(
                 workers=to_close, remove=True, close_workers=True
             )
@@ -97,17 +99,19 @@ class GatewaySchedulerPlugin(SchedulerPlugin):
     """A plugin to notify the gateway when workers are added or removed"""
     def __init__(self, gateway, loop):
         self.gateway = gateway
-        self.workers = {}
         # A mapping from name to WorkerState. All workers have a specified
         # unique name that will be consistent between worker restarts. The
         # worker address may not be consistent though, so we track intermittent
         # connection failures from the worker name only.
+        self.workers = {}
+        # A set of worker *addresses* whose shutdown is requested
+        self.shutdown_requested = set()
         self.timeouts = {}
         self.loop = loop
 
     def add_worker(self, scheduler, worker):
         ws = scheduler.workers[worker]
-        logger.info("Worker added [address: %r, name: %r]", ws.address, ws.name)
+        logger.debug("Worker added [address: %r, name: %r]", ws.address, ws.name)
         timeout = self.timeouts.pop(ws.name, None)
         if timeout is not None:
             # Existing timeout running for this worker, cancel it
@@ -117,17 +121,25 @@ class GatewaySchedulerPlugin(SchedulerPlugin):
 
     def remove_worker(self, scheduler, worker):
         ws = self.workers.pop(worker)
-        logger.info("Worker removed [address: %r, name: %r]", ws.address, ws.name)
+        logger.debug("Worker removed [address: %r, name: %r]", ws.address, ws.name)
+
+        try:
+            self.shutdown_requested.remove(ws.address)
+            # This worker was expected to exit, no need to notify
+            return
+        except KeyError:
+            # Unexpected worker shutdown
+            pass
 
         # Start a timer to notify the gateway that the worker is permanently
         # gone. This allows for short-lived communication failures, while
         # still detecting worker failures.
         async def callback():
-            logger.info("Notifying worker removed")
+            logger.debug("Notifying worker %s removed", ws.name)
             await self.gateway.notify_worker_removed(ws)
             self.timeouts.pop(ws.name, None)
 
-        self.timeouts[ws.name] = self.loop.call_later(30, callback)
+        self.timeouts[ws.name] = self.loop.call_later(5, callback)
 
 
 class GatewayClient(object):
@@ -203,26 +215,26 @@ def scheduler():
     enable_proctitle_on_current()
     enable_proctitle_on_children()
 
-    gateway = GatewayClient()
-
     if sys.platform.startswith('linux'):
         import resource   # module fails importing on Windows
         soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
         limit = max(soft, hard // 2)
         resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
 
-    services = {('gateway', 0): GatewaySchedulerService}
+    gateway = GatewayClient()
+    loop = IOLoop.current()
+    plugin = GatewaySchedulerPlugin(gateway, loop)
+
+    services = {('gateway', 0): (GatewaySchedulerService, {'plugin': plugin})}
     bokeh = False
     with ignoring(ImportError):
         from distributed.bokeh.scheduler import BokehScheduler
         services[('bokeh', 0)] = (BokehScheduler, {})
         bokeh = True
 
-    loop = IOLoop.current()
     addr = uri_from_host_port('tls://', None, 0)
     scheduler = Scheduler(loop=loop, services=services, security=gateway.security)
-
-    scheduler.add_plugin(GatewaySchedulerPlugin(gateway, loop))
+    scheduler.add_plugin(plugin)
     scheduler.start(addr)
 
     install_signal_handlers(loop)

@@ -68,7 +68,7 @@ clusters = Table(
 workers = Table(
     'workers',
     metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('id', Integer, primary_key=True),
     Column('name', Unicode(255), nullable=False),
     Column('cluster_id', ForeignKey('clusters.id', ondelete="CASCADE"), nullable=False),
     Column('status', IntEnum(WorkerStatus), nullable=False),
@@ -162,6 +162,9 @@ class Worker(object):
         self.cluster = cluster
         self.status = status
         self.state = state
+
+        loop = asyncio.get_running_loop()
+        self._connect_future = loop.create_future()
 
     def is_active(self):
         return self.status < WorkerStatus.STOPPING

@@ -26,7 +26,7 @@ class ClusterManager(LoggingConfigurable):
     )
 
     cluster_connect_timeout = Integer(
-        60,
+        30,
         help="""
         Timeout (in seconds) for a started dask cluster to connect to the gateway.
 
@@ -40,6 +40,17 @@ class ClusterManager(LoggingConfigurable):
         60,
         help="""
         Timeout (in seconds) before giving up on a starting dask worker.
+        """,
+        config=True
+    )
+
+    worker_connect_timeout = Integer(
+        30,
+        help="""
+        Timeout (in seconds) for a started dask worker to connect to the scheduler.
+
+        This is the time between ``start_worker`` completing and the worker
+        connecting to the scheduler.
         """,
         config=True
     )

@@ -239,7 +239,7 @@ class ClusterWorkersHandler(BaseHandler):
     async def put(self, cluster_name, worker_name):
         """Register worker added to cluster"""
         cluster, worker = self.get_cluster_and_worker(cluster_name, worker_name)
-        await self.gateway.register_worker(cluster, worker)
+        self.gateway.register_worker(worker)
 
     @token_authenticated
     async def delete(self, cluster_name, worker_name):

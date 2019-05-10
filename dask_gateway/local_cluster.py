@@ -251,7 +251,10 @@ class LocalClusterManager(ClusterManager):
         yield {'pid': pid}
 
     async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
-        await self.stop_process(worker_state['pid'])
+        pid = worker_state.get('pid')
+        if pid is None:
+            return
+        await self.stop_process(pid)
 
 
 class UnsafeLocalClusterManager(LocalClusterManager):
