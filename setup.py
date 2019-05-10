@@ -1,4 +1,3 @@
-import glob
 import os
 import subprocess
 import sys
@@ -31,8 +30,6 @@ class build_go(Command):
         # Compile the go code and copy the executable to dask_gateway/proxy/
         # This will be picked up as package_data later
         self.mkpath(PROXY_TGT_DIR)
-        #src_glob = os.path.join(os.path.relpath(PROXY_SRC_DIR), '*.go')
-        #src_files = glob.glob(src_glob)
         code = subprocess.call(['go', 'build', '-o', PROXY_TGT_EXE], cwd=PROXY_SRC_DIR)
         if code:
             sys.exit(code)
