@@ -1,4 +1,4 @@
-recursive-include dask_gateway *.py
+recursive-include dask_gateway_server *.py
 graft dask-gateway-proxy
 exclude dask-gateway-proxy/dask-gateway-proxy
 

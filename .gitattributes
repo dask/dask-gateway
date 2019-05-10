@@ -1,1 +1,2 @@
-dask_gateway/_version.py export-subst
+dask-gateway/dask_gateway/_version.py export-subst
+dask-gateway-server/dask_gateway_server/_version.py export-subst

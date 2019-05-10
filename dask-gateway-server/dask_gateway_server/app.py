@@ -98,7 +98,7 @@ class DaskGateway(Application):
 
     subcommands = {
         'generate-config': (
-            'dask_gateway.app.GenerateConfig',
+            'dask_gateway_server.app.GenerateConfig',
             'Generate a default config file'
         )
     }
@@ -116,25 +116,25 @@ class DaskGateway(Application):
     )
 
     scheduler_proxy_class = Type(
-        'dask_gateway.proxy.SchedulerProxy',
+        'dask_gateway_server.proxy.SchedulerProxy',
         help="The gateway scheduler proxy class to use"
     )
 
     web_proxy_class = Type(
-        'dask_gateway.proxy.WebProxy',
+        'dask_gateway_server.proxy.WebProxy',
         help="The gateway web proxy class to use"
     )
 
     authenticator_class = Type(
-        'dask_gateway.auth.KerberosAuthenticator',
-        klass='dask_gateway.auth.Authenticator',
+        'dask_gateway_server.auth.KerberosAuthenticator',
+        klass='dask_gateway_server.auth.Authenticator',
         help="The gateway authenticator class to use",
         config=True
     )
 
     cluster_manager_class = Type(
-        'dask_gateway.local_cluster.LocalClusterManager',
-        klass='dask_gateway.cluster.ClusterManager',
+        'dask_gateway_server.local_cluster.LocalClusterManager',
+        klass='dask_gateway_server.cluster.ClusterManager',
         help="The gateway cluster manager class to use",
         config=True
     )

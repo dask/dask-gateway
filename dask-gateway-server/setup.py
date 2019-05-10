@@ -12,7 +12,7 @@ import versioneer
 
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.relpath(__file__)))
 PROXY_SRC_DIR = os.path.join(ROOT_DIR, 'dask-gateway-proxy')
-PROXY_TGT_DIR = os.path.join(ROOT_DIR, 'dask_gateway', 'proxy')
+PROXY_TGT_DIR = os.path.join(ROOT_DIR, 'dask_gateway_server', 'proxy')
 PROXY_TGT_EXE = os.path.join(PROXY_TGT_DIR, 'dask-gateway-proxy')
 
 
@@ -27,7 +27,7 @@ class build_go(Command):
     finalize_options = initialize_options
 
     def run(self):
-        # Compile the go code and copy the executable to dask_gateway/proxy/
+        # Compile the go code and copy the executable to dask_gateway_server/proxy/
         # This will be picked up as package_data later
         self.mkpath(PROXY_TGT_DIR)
         code = subprocess.call(['go', 'build', '-o', PROXY_TGT_EXE], cwd=PROXY_SRC_DIR)
@@ -82,6 +82,10 @@ install_requires = [
     'sqlalchemy'
 ]
 
+extras_require = {
+    'kerberos': ['pykerberos'],
+    'yarn': ['skein >= 0.7.3'],
+}
 
 # Due to quirks in setuptools/distutils dependency ordering, to get the go
 # source to build automatically in most cases, we need to check in multiple
@@ -94,25 +98,24 @@ cmdclass.update({'build_go': build_go,      # directly build the go source
                  'clean': clean})           # extra cleanup
 
 
-setup(name='dask-gateway',
+setup(name='dask-gateway-server',
       version=versioneer.get_version(),
       cmdclass=cmdclass,
       maintainer='Jim Crist',
       maintainer_email='jiminy.crist@gmail.com',
       license='BSD',
-      description=('A gateway for serving Dask clusters securely through a '
-                   'firewall'),
+      description=('A multi-tenant server for securely deploying and managing '
+                   'multiple Dask clusters.'),
       long_description=(open('README.rst').read()
                         if os.path.exists('README.rst') else ''),
       url='http://github.com/jcrist/dask-gateway/',
-      packages=['dask_gateway', 'dask_gateway.proxy'],
-      package_data={'dask_gateway': ['proxy/dask-gateway-proxy']},
+      packages=['dask_gateway_server', 'dask_gateway_server.proxy'],
+      package_data={'dask_gateway_server': ['proxy/dask-gateway-proxy']},
       install_requires=install_requires,
+      extras_require=extras_require,
       entry_points={
           'console_scripts': [
-              'dask-gateway = dask_gateway.app:main',
-              'dask-gateway-scheduler = dask_gateway.dask_cli:scheduler',
-              'dask-gateway-worker = dask_gateway.dask_cli:worker',
+              'dask-gateway = dask_gateway_server.app:main',
           ]
       },
       zip_safe=False)

@@ -1,0 +1,7 @@
+recursive-include dask_gateway *.py
+
+include versioneer.py
+include setup.py
+include README.rst
+include LICENSE
+include MANIFEST.in
