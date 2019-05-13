@@ -27,7 +27,7 @@ from .utils import cleanup_tmpdir, cancel_task
 
 
 # Override default values for logging
-Application.log_level.default_value = 'INFO'
+Application.log_level.default_value = "INFO"
 Application.log_format.default_value = (
     "%(color)s[%(levelname)1.1s %(asctime)s.%(msecs).03d "
     "%(name)s]%(end_color)s %(message)s"
@@ -37,7 +37,7 @@ Application.log_format.default_value = (
 class GenerateConfig(Application):
     """Generate and write a default configuration file"""
 
-    name = 'dask-gateway generate-config'
+    name = "dask-gateway generate-config"
     version = VERSION
     description = "Generate and write a default configuration file"
 
@@ -47,45 +47,42 @@ class GenerateConfig(Application):
     """
 
     output = Unicode(
-        "dask_gateway_config.py",
-        help="The path to write the config file",
-        config=True
+        "dask_gateway_config.py", help="The path to write the config file", config=True
     )
 
-    force = Bool(
-        False,
-        help="If true, will overwrite file if it exists.",
-        config=True
-    )
+    force = Bool(False, help="If true, will overwrite file if it exists.", config=True)
 
-    aliases = {
-        'output': 'GenerateConfig.output',
-    }
+    aliases = {"output": "GenerateConfig.output"}
 
     flags = {
-        'force': ({'GenerateConfig': {'force': True}},
-                  "Overwrite config file if it exists")
+        "force": (
+            {"GenerateConfig": {"force": True}},
+            "Overwrite config file if it exists",
+        )
     }
 
     def start(self):
         config_file_dir = os.path.dirname(os.path.abspath(self.output))
         if not os.path.isdir(config_file_dir):
-            self.exit("%r does not exist. The destination directory must exist "
-                      "before generating config file." % config_file_dir)
+            self.exit(
+                "%r does not exist. The destination directory must exist "
+                "before generating config file." % config_file_dir
+            )
         if os.path.exists(self.output) and not self.force:
             self.exit("Config file already exists, use `--force` to overwrite")
 
         config_text = DaskGateway.instance().generate_config_file()
         if isinstance(config_text, bytes):
-            config_text = config_text.decode('utf8')
+            config_text = config_text.decode("utf8")
         print("Writing default config to: %s" % self.output)
-        with open(self.output, mode='w') as f:
+        with open(self.output, mode="w") as f:
             f.write(config_text)
 
 
 class DaskGateway(Application):
     """A gateway for managing dask clusters across multiple users"""
-    name = 'dask-gateway'
+
+    name = "dask-gateway"
     version = VERSION
 
     description = """Start a Dask Gateway server"""
@@ -98,73 +95,68 @@ class DaskGateway(Application):
     """
 
     subcommands = {
-        'generate-config': (
-            'dask_gateway_server.app.GenerateConfig',
-            'Generate a default config file'
+        "generate-config": (
+            "dask_gateway_server.app.GenerateConfig",
+            "Generate a default config file",
         )
     }
 
     aliases = {
-        'log-level': 'DaskGateway.log_level',
-        'f': 'DaskGateway.config_file',
-        'config': 'DaskGateway.config_file'
+        "log-level": "DaskGateway.log_level",
+        "f": "DaskGateway.config_file",
+        "config": "DaskGateway.config_file",
     }
 
     config_file = Unicode(
-        'dask_gateway_config.py',
-        help="The config file to load",
-        config=True
+        "dask_gateway_config.py", help="The config file to load", config=True
     )
 
     scheduler_proxy_class = Type(
-        'dask_gateway_server.proxy.SchedulerProxy',
-        help="The gateway scheduler proxy class to use"
+        "dask_gateway_server.proxy.SchedulerProxy",
+        help="The gateway scheduler proxy class to use",
     )
 
     web_proxy_class = Type(
-        'dask_gateway_server.proxy.WebProxy',
-        help="The gateway web proxy class to use"
+        "dask_gateway_server.proxy.WebProxy", help="The gateway web proxy class to use"
     )
 
     authenticator_class = Type(
-        'dask_gateway_server.auth.KerberosAuthenticator',
-        klass='dask_gateway_server.auth.Authenticator',
+        "dask_gateway_server.auth.KerberosAuthenticator",
+        klass="dask_gateway_server.auth.Authenticator",
         help="The gateway authenticator class to use",
-        config=True
+        config=True,
     )
 
     cluster_manager_class = Type(
-        'dask_gateway_server.local_cluster.LocalClusterManager',
-        klass='dask_gateway_server.cluster.ClusterManager',
+        "dask_gateway_server.local_cluster.LocalClusterManager",
+        klass="dask_gateway_server.cluster.ClusterManager",
         help="The gateway cluster manager class to use",
-        config=True
+        config=True,
     )
 
     public_url = Unicode(
         "http://:8000",
         help="The public facing URL of the whole Dask Gateway application",
-        config=True
+        config=True,
     )
 
     gateway_url = Unicode(
-        "tls://:8786",
-        help="The URL that Dask clients will connect to",
-        config=True
+        "tls://:8786", help="The URL that Dask clients will connect to", config=True
     )
 
     private_url = Unicode(
         "http://127.0.0.1:8081",
         help="The gateway's private URL used for internal communication",
-        config=True
+        config=True,
     )
 
-    @validate('public_url', 'gateway_url', 'private_url')
+    @validate("public_url", "gateway_url", "private_url")
     def _resolve_hostname(self, proposal):
         url = proposal.value
         parsed = urlparse(url)
-        if parsed.hostname in {'', '0.0.0.0'}:
+        if parsed.hostname in {"", "0.0.0.0"}:
             host = socket.gethostname()
-            parsed = parsed._replace(netloc='%s:%i' % (host, parsed.port))
+            parsed = parsed._replace(netloc="%s:%i" % (host, parsed.port))
             url = urlunparse(parsed)
         return url
 
@@ -174,7 +166,7 @@ class DaskGateway(Application):
         Loaded from the DASK_GATEWAY_COOKIE_SECRET environment variable by
         default.
         """,
-        config=True
+        config=True,
     )
 
     cookie_max_age_days = Float(
@@ -182,19 +174,15 @@ class DaskGateway(Application):
         help="""Number of days for a login cookie to be valid.
         Default is one week.
         """,
-        config=True
+        config=True,
     )
 
     db_url = Unicode(
-        'sqlite:///dask_gateway.sqlite',
-        help="The URL for the database.",
-        config=True
+        "sqlite:///dask_gateway.sqlite", help="The URL for the database.", config=True
     )
 
     db_debug = Bool(
-        False,
-        help="If True, all database operations will be logged",
-        config=True
+        False, help="If True, all database operations will be logged", config=True
     )
 
     temp_dir = Unicode(
@@ -208,27 +196,29 @@ class DaskGateway(Application):
         The default is to create a temporary directory ``"dask-gateway"`` in
         the system tmpdir default location.
         """,
-        config=True
+        config=True,
     )
 
-    @default('temp_dir')
+    @default("temp_dir")
     def _temp_dir_default(self):
         return os.path.join(tempfile.gettempdir(), "dask-gateway")
 
-    @default('cookie_secret')
+    @default("cookie_secret")
     def _cookie_secret_default(self):
-        secret = os.environb.get(b'DASK_GATEWAY_COOKIE_SECRET', b'')
+        secret = os.environb.get(b"DASK_GATEWAY_COOKIE_SECRET", b"")
         if not secret:
             self.log.info("Generating new cookie secret")
             secret = os.urandom(32)
         return secret
 
-    @validate('cookie_secret')
+    @validate("cookie_secret")
     def _cookie_secret_validate(self, proposal):
-        if len(proposal['value']) != 32:
-            raise ValueError("Cookie secret is %d bytes, it must be "
-                             "32 bytes" % len(proposal['value']))
-        return proposal['value']
+        if len(proposal["value"]) != 32:
+            raise ValueError(
+                "Cookie secret is %d bytes, it must be "
+                "32 bytes" % len(proposal["value"])
+            )
+        return proposal["value"]
 
     _log_formatter_cls = LogFormatter
 
@@ -258,9 +248,10 @@ class DaskGateway(Application):
 
         # hook up tornado's loggers to our app handlers
         from tornado.log import app_log, access_log, gen_log
+
         for log in (app_log, access_log, gen_log):
             log.name = self.log.name
-        logger = logging.getLogger('tornado')
+        logger = logging.getLogger("tornado")
         logger.propagate = True
         logger.parent = self.log
         logger.setLevel(self.log.level)
@@ -272,8 +263,10 @@ class DaskGateway(Application):
         if os.path.exists(self.temp_dir):
             perm = stat.S_IMODE(os.stat(self.temp_dir).st_mode)
             if perm & (stat.S_IRWXO | stat.S_IRWXG):
-                raise ValueError("Temporary directory %s has excessive permissions "
-                                 "%r, should be at '0o700'" % (self.temp_dir, oct(perm)))
+                raise ValueError(
+                    "Temporary directory %s has excessive permissions "
+                    "%r, should be at '0o700'" % (self.temp_dir, oct(perm))
+                )
         else:
             self.log.debug("Creating temporary directory %r", self.temp_dir)
             os.mkdir(self.temp_dir, mode=0o700)
@@ -308,7 +301,7 @@ class DaskGateway(Application):
                 dashboard_address=c.dashboard_address,
                 api_address=c.api_address,
                 tls_cert=c.tls_cert,
-                tls_key=c.tls_key
+                tls_key=c.tls_key,
             )
             user.clusters[cluster.name] = cluster
             self.token_to_cluster[cluster.token] = cluster
@@ -324,7 +317,7 @@ class DaskGateway(Application):
                 name=w.name,
                 status=w.status,
                 cluster=cluster,
-                state=json.loads(w.state)
+                state=json.loads(w.state),
             )
             cluster.workers[worker.name] = worker
             if w.status == WorkerStatus.STARTING:
@@ -336,31 +329,21 @@ class DaskGateway(Application):
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
-            parent=self,
-            log=self.log,
-            public_url=self.gateway_url
+            parent=self, log=self.log, public_url=self.gateway_url
         )
 
     def init_web_proxy(self):
         self.web_proxy = self.web_proxy_class(
-            parent=self,
-            log=self.log,
-            public_url=self.public_url
+            parent=self, log=self.log, public_url=self.public_url
         )
 
     def init_cluster_manager(self):
         self.cluster_manager = self.cluster_manager_class(
-            parent=self,
-            log=self.log,
-            temp_dir=self.temp_dir,
-            api_url=self.api_url
+            parent=self, log=self.log, temp_dir=self.temp_dir, api_url=self.api_url
         )
 
     def init_authenticator(self):
-        self.authenticator = self.authenticator_class(
-            parent=self,
-            log=self.log
-        )
+        self.authenticator = self.authenticator_class(parent=self, log=self.log)
 
     def init_tornado_application(self):
         self.handlers = list(handlers.default_handlers)
@@ -370,7 +353,7 @@ class DaskGateway(Application):
             gateway=self,
             authenticator=self.authenticator,
             cookie_secret=self.cookie_secret,
-            cookie_max_age_days=self.cookie_max_age_days
+            cookie_max_age_days=self.cookie_max_age_days,
         )
 
     async def start_async(self):
@@ -422,9 +405,7 @@ class DaskGateway(Application):
                 objects.users.insert().values(name=username, cookie=cookie)
             )
             user = objects.User(
-                id=res.inserted_primary_key[0],
-                name=username,
-                cookie=cookie
+                id=res.inserted_primary_key[0], name=username, cookie=cookie
             )
             self.cookie_to_user[cookie] = user
             self.username_to_user[username] = user
@@ -445,11 +426,11 @@ class DaskGateway(Application):
                 token=token,
                 status=ClusterStatus.STARTING,
                 state=b"{}",
-                scheduler_address='',
-                dashboard_address='',
-                api_address='',
+                scheduler_address="",
+                dashboard_address="",
+                api_address="",
                 tls_cert=tls_cert,
-                tls_key=tls_key
+                tls_key=tls_key,
             )
         )
         cluster = objects.Cluster(
@@ -459,11 +440,11 @@ class DaskGateway(Application):
             token=token,
             status=ClusterStatus.STARTING,
             state={},
-            scheduler_address='',
-            dashboard_address='',
-            api_address='',
+            scheduler_address="",
+            dashboard_address="",
+            api_address="",
             tls_cert=tls_cert,
-            tls_key=tls_key
+            tls_key=tls_key,
         )
         user.clusters[cluster_name] = cluster
         self.token_to_cluster[token] = cluster
@@ -477,18 +458,16 @@ class DaskGateway(Application):
             self.log.debug("State update for cluster %s", cluster.name)
             with self.db.begin() as conn:
                 conn.execute(
-                    objects.clusters
-                    .update()
+                    objects.clusters.update()
                     .where(objects.clusters.c.id == cluster.id)
-                    .values(state=json.dumps(state).encode('utf-8'))
+                    .values(state=json.dumps(state).encode("utf-8"))
                 )
                 cluster.state = state
 
         # Move cluster to started
         with self.db.begin() as conn:
             conn.execute(
-                objects.clusters
-                .update()
+                objects.clusters.update()
                 .where(objects.clusters.c.id == cluster.id)
                 .values(status=ClusterStatus.STARTED)
             )
@@ -502,57 +481,59 @@ class DaskGateway(Application):
         try:
             await asyncio.wait_for(
                 self._start_cluster(cluster),
-                timeout=self.cluster_manager.cluster_start_timeout
+                timeout=self.cluster_manager.cluster_start_timeout,
             )
         except asyncio.TimeoutError:
-            self.log.warn("Cluster %s startup timed out after %d seconds",
-                          cluster.name, self.cluster_manager.cluster_start_timeout)
+            self.log.warn(
+                "Cluster %s startup timed out after %d seconds",
+                cluster.name,
+                self.cluster_manager.cluster_start_timeout,
+            )
             return False
         except asyncio.CancelledError:
             # Catch separately to avoid in generic handler below
             raise
         except Exception as exc:
-            self.log.error("Error while starting cluster %s",
-                           cluster.name, exc_info=exc)
+            self.log.error(
+                "Error while starting cluster %s", cluster.name, exc_info=exc
+            )
             return False
 
-        self.log.debug("Cluster %s has started, waiting for connection",
-                       cluster.name)
+        self.log.debug("Cluster %s has started, waiting for connection", cluster.name)
 
         try:
             addresses = await asyncio.wait_for(
                 cluster._connect_future,
-                timeout=self.cluster_manager.cluster_connect_timeout
+                timeout=self.cluster_manager.cluster_connect_timeout,
             )
             scheduler_address, dashboard_address, api_address = addresses
         except asyncio.TimeoutError:
-            self.log.warn("Cluster %s failed to connect after %d seconds",
-                          cluster.name,
-                          self.cluster_manager.cluster_connect_timeout)
+            self.log.warn(
+                "Cluster %s failed to connect after %d seconds",
+                cluster.name,
+                self.cluster_manager.cluster_connect_timeout,
+            )
             return False
 
         self.log.debug("Cluster %s connected at %s", cluster.name, scheduler_address)
 
         # Register routes with proxies
         await self.web_proxy.add_route(
-            "/gateway/clusters/" + cluster.name,
-            dashboard_address
+            "/gateway/clusters/" + cluster.name, dashboard_address
         )
-        await self.scheduler_proxy.add_route(
-            "/" + cluster.name,
-            scheduler_address
-        )
+        await self.scheduler_proxy.add_route("/" + cluster.name, scheduler_address)
 
         # Mark cluster as running
         with self.db.begin() as conn:
             conn.execute(
-                objects.clusters
-                .update()
+                objects.clusters.update()
                 .where(objects.clusters.c.id == cluster.id)
-                .values(scheduler_address=scheduler_address,
-                        dashboard_address=dashboard_address,
-                        api_address=api_address,
-                        status=ClusterStatus.RUNNING)
+                .values(
+                    scheduler_address=scheduler_address,
+                    dashboard_address=dashboard_address,
+                    api_address=api_address,
+                    status=ClusterStatus.RUNNING,
+                )
             )
             cluster.scheduler_address = scheduler_address
             cluster.dashboard_address = dashboard_address
@@ -575,9 +556,9 @@ class DaskGateway(Application):
             # Startup cancelled, cleanup is handled separately
             return
         except Exception as exc:
-            self.log.error("Unexpected error while starting cluster %s",
-                           cluster.name,
-                           exc_info=exc)
+            self.log.error(
+                "Unexpected error while starting cluster %s", cluster.name, exc_info=exc
+            )
 
         self.schedule_stop_cluster(cluster, failed=True)
 
@@ -590,8 +571,7 @@ class DaskGateway(Application):
         # Move cluster to stopping
         with self.db.begin() as conn:
             conn.execute(
-                objects.clusters
-                .update()
+                objects.clusters.update()
                 .where(objects.clusters.c.id == cluster.id)
                 .values(status=ClusterStatus.STOPPING)
             )
@@ -599,18 +579,16 @@ class DaskGateway(Application):
 
         # Remove routes from proxies if already set
         if cluster.status == ClusterStatus.RUNNING:
-            await self.web_proxy.delete_route(
-                "/gateway/clusters/" + cluster.name
-            )
-            await self.scheduler_proxy.delete_route(
-                "/" + cluster.name,
-            )
+            await self.web_proxy.delete_route("/gateway/clusters/" + cluster.name)
+            await self.scheduler_proxy.delete_route("/" + cluster.name)
 
         # Shutdown individual workers if no bulk shutdown supported
         if not self.cluster_manager.supports_bulk_shutdown:
-            tasks = (self.stop_worker(cluster, w)
-                     for w in cluster.workers.values()
-                     if w.is_active())
+            tasks = (
+                self.stop_worker(cluster, w)
+                for w in cluster.workers.values()
+                if w.is_active()
+            )
             await asyncio.gather(*tasks, return_exceptions=True)
 
         # Shutdown the cluster
@@ -620,8 +598,7 @@ class DaskGateway(Application):
         status = ClusterStatus.FAILED if failed else ClusterStatus.STOPPED
         with self.db.begin() as conn:
             conn.execute(
-                objects.clusters
-                .update()
+                objects.clusters.update()
                 .where(objects.clusters.c.id == cluster.id)
                 .values(status=status)
             )
@@ -639,8 +616,12 @@ class DaskGateway(Application):
             delta = total - cluster.active_workers
             if delta == 0:
                 return
-            self.log.debug("Scaling cluster %s to %d workers, a delta of %d",
-                           cluster.name, total, delta)
+            self.log.debug(
+                "Scaling cluster %s to %d workers, a delta of %d",
+                cluster.name,
+                total,
+                delta,
+            )
             if delta > 0:
                 await self.scale_up(cluster, delta)
             else:
@@ -648,9 +629,7 @@ class DaskGateway(Application):
 
     async def scale_up(self, cluster, n_start):
         for w in self.create_workers(cluster, n_start):
-            w._start_future = asyncio.ensure_future(
-                self.start_worker(cluster, w)
-            )
+            w._start_future = asyncio.ensure_future(self.start_worker(cluster, w))
             w._start_future.add_done_callback(
                 partial(self._monitor_start_worker, worker=w, cluster=cluster)
             )
@@ -658,50 +637,55 @@ class DaskGateway(Application):
     def create_workers(self, cluster, n):
         self.log.debug("Creating %d new workers for cluster %s", n, cluster.name)
 
-        workers = [objects.Worker(id=id, name=uuid.uuid4().hex, cluster=cluster,
-                                  status=WorkerStatus.STARTING, state={})
-                   for id in range(self._next_worker_id, self._next_worker_id + n)]
+        workers = [
+            objects.Worker(
+                id=id,
+                name=uuid.uuid4().hex,
+                cluster=cluster,
+                status=WorkerStatus.STARTING,
+                state={},
+            )
+            for id in range(self._next_worker_id, self._next_worker_id + n)
+        ]
 
         with self.db.begin() as conn:
             conn.execute(
-                objects.workers
-                .insert()
-                .values(id=bindparam('_id'),
-                        name=bindparam('_name'),
-                        status=WorkerStatus.STARTING,
-                        state=b'{}',
-                        cluster_id=cluster.id),
-                [{'_id': w.id, '_name': w.name} for w in workers]
+                objects.workers.insert().values(
+                    id=bindparam("_id"),
+                    name=bindparam("_name"),
+                    status=WorkerStatus.STARTING,
+                    state=b"{}",
+                    cluster_id=cluster.id,
+                ),
+                [{"_id": w.id, "_name": w.name} for w in workers],
             )
             cluster.pending.update(w.name for w in workers)
             cluster.workers.update({w.name: w for w in workers})
-            self._next_worker_id += (n + 1)
+            self._next_worker_id += n + 1
 
         cluster.active_workers += n
 
         return workers
 
     async def _start_worker(self, cluster, worker):
-        self.log.debug("Starting worker %r for cluster %r",
-                       worker.name, cluster.name)
+        self.log.debug("Starting worker %r for cluster %r", worker.name, cluster.name)
 
         # Walk through the startup process, saving state as updates occur
         async for state in self.cluster_manager.start_worker(
-                worker.name, cluster.info, cluster.state):
+            worker.name, cluster.info, cluster.state
+        ):
             with self.db.begin() as conn:
                 conn.execute(
-                    objects.workers
-                    .update()
+                    objects.workers.update()
                     .where(objects.workers.c.id == worker.id)
-                    .values(state=json.dumps(state).encode('utf-8'))
+                    .values(state=json.dumps(state).encode("utf-8"))
                 )
                 worker.state = state
 
         # Move worker to started
         with self.db.begin() as conn:
             conn.execute(
-                objects.workers
-                .update()
+                objects.workers.update()
                 .where(objects.workers.c.id == worker.id)
                 .values(status=WorkerStatus.STARTED)
             )
@@ -711,12 +695,14 @@ class DaskGateway(Application):
         try:
             await asyncio.wait_for(
                 self._start_worker(cluster, worker),
-                timeout=self.cluster_manager.worker_start_timeout
+                timeout=self.cluster_manager.worker_start_timeout,
             )
         except asyncio.TimeoutError:
-            self.log.warn("Worker %s startup timed out after %d seconds",
-                          worker.name,
-                          self.cluster_manager.worker_start_timeout)
+            self.log.warn(
+                "Worker %s startup timed out after %d seconds",
+                worker.name,
+                self.cluster_manager.worker_start_timeout,
+            )
             return False
         except asyncio.CancelledError:
             # Catch separately to avoid in generic handler below
@@ -725,18 +711,19 @@ class DaskGateway(Application):
             self.log.error("Error while starting worker %s", worker, exc_info=exc)
             return False
 
-        self.log.debug("Worker %s has started, waiting for connection",
-                       worker.name)
+        self.log.debug("Worker %s has started, waiting for connection", worker.name)
 
         try:
             await asyncio.wait_for(
                 worker._connect_future,
-                timeout=self.cluster_manager.worker_connect_timeout
+                timeout=self.cluster_manager.worker_connect_timeout,
             )
         except asyncio.TimeoutError:
-            self.log.warn("Worker %s failed to connect after %d seconds",
-                          worker.name,
-                          self.cluster_manager.worker_connect_timeout)
+            self.log.warn(
+                "Worker %s failed to connect after %d seconds",
+                worker.name,
+                self.cluster_manager.worker_connect_timeout,
+            )
             return False
 
         self.log.debug("Worker %s connected to cluster %s", worker.name, cluster.name)
@@ -744,8 +731,7 @@ class DaskGateway(Application):
         # Mark worker as running
         with self.db.begin() as conn:
             conn.execute(
-                objects.workers
-                .update()
+                objects.workers.update()
                 .where(objects.workers.c.id == worker.id)
                 .values(status=WorkerStatus.RUNNING)
             )
@@ -763,14 +749,17 @@ class DaskGateway(Application):
             self.log.debug("Cancelled worker %s", worker.name)
             return
         except Exception as exc:
-            self.log.error("Unexpected error while starting worker %s for cluster %s",
-                           worker.name, cluster.name, exc_info=exc)
+            self.log.error(
+                "Unexpected error while starting worker %s for cluster %s",
+                worker.name,
+                cluster.name,
+                exc_info=exc,
+            )
 
         self.schedule_stop_worker(cluster, worker, failed=True)
 
     async def stop_worker(self, cluster, worker, failed=False):
-        self.log.debug("Stopping worker %s for cluster %s",
-                       worker.name, cluster.name)
+        self.log.debug("Stopping worker %s for cluster %s", worker.name, cluster.name)
 
         # Cancel a pending start if needed
         await cancel_task(worker._start_future)
@@ -778,8 +767,7 @@ class DaskGateway(Application):
         # Move worker to stopping
         with self.db.begin() as conn:
             conn.execute(
-                objects.workers
-                .update()
+                objects.workers.update()
                 .where(objects.workers.c.id == worker.id)
                 .values(status=WorkerStatus.STOPPING)
             )
@@ -799,8 +787,7 @@ class DaskGateway(Application):
 
         with self.db.begin() as conn:
             conn.execute(
-                objects.workers
-                .update()
+                objects.workers.update()
                 .where(objects.workers.c.id == worker.id)
                 .values(status=status)
             )
@@ -814,8 +801,10 @@ class DaskGateway(Application):
 
     def maybe_fail_worker(self, cluster, worker):
         # Ignore if cluster or worker isn't active (
-        if (cluster.status != ClusterStatus.RUNNING or
-                worker.status >= WorkerStatus.STOPPING):
+        if (
+            cluster.status != ClusterStatus.RUNNING
+            or worker.status >= WorkerStatus.STOPPING
+        ):
             return
         self.schedule_stop_worker(cluster, worker, failed=True)
 
@@ -828,8 +817,9 @@ class DaskGateway(Application):
                 cluster.pending.clear()
             to_stop = [cluster.workers[n] for n in to_stop]
 
-            self.log.debug("Stopping %d pending workers for cluster %s",
-                           len(to_stop), cluster.name)
+            self.log.debug(
+                "Stopping %d pending workers for cluster %s", len(to_stop), cluster.name
+            )
             for w in to_stop:
                 self.schedule_stop_worker(cluster, w)
             n_stop -= len(to_stop)
@@ -837,19 +827,24 @@ class DaskGateway(Application):
         if n_stop:
             # Request scheduler shutdown n_stop workers
             client = AsyncHTTPClient()
-            body = json.dumps({'remove_count': n_stop})
-            url = '%s/api/scale_down' % cluster.api_address
-            req = HTTPRequest(url,
-                              method='POST',
-                              headers={'Authorization': 'token %s' % cluster.token,
-                                       'Content-type': 'application/json'},
-                              body=body)
+            body = json.dumps({"remove_count": n_stop})
+            url = "%s/api/scale_down" % cluster.api_address
+            req = HTTPRequest(
+                url,
+                method="POST",
+                headers={
+                    "Authorization": "token %s" % cluster.token,
+                    "Content-type": "application/json",
+                },
+                body=body,
+            )
             resp = await client.fetch(req)
-            data = json.loads(resp.body.decode('utf8', 'replace'))
-            to_stop = [cluster.workers[n] for n in data['workers_closed']]
+            data = json.loads(resp.body.decode("utf8", "replace"))
+            to_stop = [cluster.workers[n] for n in data["workers_closed"]]
 
-            self.log.debug("Stopping %d running workers for cluster %s",
-                           len(to_stop), cluster.name)
+            self.log.debug(
+                "Stopping %d running workers for cluster %s", len(to_stop), cluster.name
+            )
             for w in to_stop:
                 self.schedule_stop_worker(cluster, w)
 

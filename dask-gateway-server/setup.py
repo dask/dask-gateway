@@ -11,9 +11,9 @@ from setuptools.command.install import install as _install
 import versioneer
 
 ROOT_DIR = os.path.abspath(os.path.dirname(os.path.relpath(__file__)))
-PROXY_SRC_DIR = os.path.join(ROOT_DIR, 'dask-gateway-proxy')
-PROXY_TGT_DIR = os.path.join(ROOT_DIR, 'dask_gateway_server', 'proxy')
-PROXY_TGT_EXE = os.path.join(PROXY_TGT_DIR, 'dask-gateway-proxy')
+PROXY_SRC_DIR = os.path.join(ROOT_DIR, "dask-gateway-proxy")
+PROXY_TGT_DIR = os.path.join(ROOT_DIR, "dask_gateway_server", "proxy")
+PROXY_TGT_EXE = os.path.join(PROXY_TGT_DIR, "dask-gateway-proxy")
 
 
 class build_go(Command):
@@ -30,14 +30,14 @@ class build_go(Command):
         # Compile the go code and copy the executable to dask_gateway_server/proxy/
         # This will be picked up as package_data later
         self.mkpath(PROXY_TGT_DIR)
-        code = subprocess.call(['go', 'build', '-o', PROXY_TGT_EXE], cwd=PROXY_SRC_DIR)
+        code = subprocess.call(["go", "build", "-o", PROXY_TGT_EXE], cwd=PROXY_SRC_DIR)
         if code:
             sys.exit(code)
 
 
 def _ensure_go(command):
-    if not getattr(command, 'no_go', False) and not os.path.exists(PROXY_TGT_EXE):
-        command.run_command('build_go')
+    if not getattr(command, "no_go", False) and not os.path.exists(PROXY_TGT_EXE):
+        command.run_command("build_go")
 
 
 class build(_build):
@@ -54,7 +54,7 @@ class install(_install):
 
 class develop(_develop):
     user_options = list(_develop.user_options)
-    user_options.append(('no-go', None, "Don't build the go source"))
+    user_options.append(("no-go", None, "Don't build the go source"))
 
     def initialize_options(self):
         self.no_go = False
@@ -75,47 +75,44 @@ class clean(_clean):
         _clean.run(self)
 
 
-install_requires = [
-    'cryptography',
-    'tornado',
-    'traitlets',
-    'sqlalchemy'
-]
+install_requires = ["cryptography", "tornado", "traitlets", "sqlalchemy"]
 
-extras_require = {
-    'kerberos': ['pykerberos'],
-    'yarn': ['skein >= 0.7.3'],
-}
+extras_require = {"kerberos": ["pykerberos"], "yarn": ["skein >= 0.7.3"]}
 
 # Due to quirks in setuptools/distutils dependency ordering, to get the go
 # source to build automatically in most cases, we need to check in multiple
 # locations. This is unfortunate, but seems necessary.
 cmdclass = versioneer.get_cmdclass()
-cmdclass.update({'build_go': build_go,      # directly build the go source
-                 'build': build,            # bdist_wheel or pip install .
-                 'install': install,        # python setup.py install
-                 'develop': develop,        # python setup.py develop
-                 'clean': clean})           # extra cleanup
+cmdclass.update(
+    {
+        "build_go": build_go,  # directly build the go source
+        "build": build,  # bdist_wheel or pip install .
+        "install": install,  # python setup.py install
+        "develop": develop,  # python setup.py develop
+        "clean": clean,
+    }
+)  # extra cleanup
 
 
-setup(name='dask-gateway-server',
-      version=versioneer.get_version(),
-      cmdclass=cmdclass,
-      maintainer='Jim Crist',
-      maintainer_email='jiminy.crist@gmail.com',
-      license='BSD',
-      description=('A multi-tenant server for securely deploying and managing '
-                   'multiple Dask clusters.'),
-      long_description=(open('README.rst').read()
-                        if os.path.exists('README.rst') else ''),
-      url='http://github.com/jcrist/dask-gateway/',
-      packages=['dask_gateway_server', 'dask_gateway_server.proxy'],
-      package_data={'dask_gateway_server': ['proxy/dask-gateway-proxy']},
-      install_requires=install_requires,
-      extras_require=extras_require,
-      entry_points={
-          'console_scripts': [
-              'dask-gateway = dask_gateway_server.app:main',
-          ]
-      },
-      zip_safe=False)
+setup(
+    name="dask-gateway-server",
+    version=versioneer.get_version(),
+    cmdclass=cmdclass,
+    maintainer="Jim Crist",
+    maintainer_email="jiminy.crist@gmail.com",
+    license="BSD",
+    description=(
+        "A multi-tenant server for securely deploying and managing "
+        "multiple Dask clusters."
+    ),
+    long_description=(
+        open("README.rst").read() if os.path.exists("README.rst") else ""
+    ),
+    url="http://github.com/jcrist/dask-gateway/",
+    packages=["dask_gateway_server", "dask_gateway_server.proxy"],
+    package_data={"dask_gateway_server": ["proxy/dask-gateway-proxy"]},
+    install_requires=install_requires,
+    extras_require=extras_require,
+    entry_points={"console_scripts": ["dask-gateway = dask_gateway_server.app:main"]},
+    zip_safe=False,
+)

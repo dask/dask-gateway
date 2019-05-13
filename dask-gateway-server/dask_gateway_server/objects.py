@@ -1,8 +1,17 @@
 import asyncio
 import enum
 
-from sqlalchemy import (MetaData, Table, Column, Integer, Unicode, ForeignKey,
-                        LargeBinary, TypeDecorator, create_engine)
+from sqlalchemy import (
+    MetaData,
+    Table,
+    Column,
+    Integer,
+    Unicode,
+    ForeignKey,
+    LargeBinary,
+    TypeDecorator,
+    create_engine,
+)
 from sqlalchemy.pool import StaticPool
 
 
@@ -52,47 +61,48 @@ class IntEnum(TypeDecorator):
 metadata = MetaData()
 
 users = Table(
-    'users',
+    "users",
     metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('name', Unicode(255), nullable=False, unique=True),
-    Column('cookie', Unicode(32), nullable=False, unique=True)
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("name", Unicode(255), nullable=False, unique=True),
+    Column("cookie", Unicode(32), nullable=False, unique=True),
 )
 
 clusters = Table(
-    'clusters',
+    "clusters",
     metadata,
-    Column('id', Integer, primary_key=True, autoincrement=True),
-    Column('name', Unicode(255), nullable=False, unique=True),
-    Column('user_id', Integer, ForeignKey("users.id", ondelete="CASCADE"),
-           nullable=False),
-    Column('status', IntEnum(ClusterStatus), nullable=False),
-    Column('state', LargeBinary, nullable=False),
-    Column('token', Unicode(32), nullable=False, unique=True),
-    Column('scheduler_address', Unicode(255), nullable=False),
-    Column('dashboard_address', Unicode(255), nullable=False),
-    Column('api_address', Unicode(255), nullable=False),
-    Column('tls_cert', LargeBinary, nullable=False),
-    Column('tls_key', LargeBinary, nullable=False)
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("name", Unicode(255), nullable=False, unique=True),
+    Column(
+        "user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    ),
+    Column("status", IntEnum(ClusterStatus), nullable=False),
+    Column("state", LargeBinary, nullable=False),
+    Column("token", Unicode(32), nullable=False, unique=True),
+    Column("scheduler_address", Unicode(255), nullable=False),
+    Column("dashboard_address", Unicode(255), nullable=False),
+    Column("api_address", Unicode(255), nullable=False),
+    Column("tls_cert", LargeBinary, nullable=False),
+    Column("tls_key", LargeBinary, nullable=False),
 )
 
 workers = Table(
-    'workers',
+    "workers",
     metadata,
-    Column('id', Integer, primary_key=True),
-    Column('name', Unicode(255), nullable=False),
-    Column('cluster_id', ForeignKey('clusters.id', ondelete="CASCADE"), nullable=False),
-    Column('status', IntEnum(WorkerStatus), nullable=False),
-    Column('state', LargeBinary, nullable=False)
+    Column("id", Integer, primary_key=True),
+    Column("name", Unicode(255), nullable=False),
+    Column("cluster_id", ForeignKey("clusters.id", ondelete="CASCADE"), nullable=False),
+    Column("status", IntEnum(WorkerStatus), nullable=False),
+    Column("state", LargeBinary, nullable=False),
 )
 
 
 def make_engine(url="sqlite:///:memory:", **kwargs):
-    if url.startswith('sqlite'):
-        kwargs['connect_args'] = {'check_same_thread': False}
+    if url.startswith("sqlite"):
+        kwargs["connect_args"] = {"check_same_thread": False}
 
-    if url.endswith(':memory:'):
-        kwargs['poolclass'] = StaticPool
+    if url.endswith(":memory:"):
+        kwargs["poolclass"] = StaticPool
 
     engine = create_engine(url, **kwargs)
 
@@ -114,7 +124,8 @@ class ClusterInfo(object):
 
     This object is passed to methods in the ``ClusterManager`` interface.
     """
-    __slots__ = ('username', 'cluster_name', 'api_token', 'tls_cert', 'tls_key')
+
+    __slots__ = ("username", "cluster_name", "api_token", "tls_cert", "tls_key")
 
     def __init__(self, username, cluster_name, api_token, tls_cert, tls_key):
         self.username = username
@@ -125,10 +136,21 @@ class ClusterInfo(object):
 
 
 class Cluster(object):
-
-    def __init__(self, id=None, name=None, user=None, token=None, status=None,
-                 state=None, scheduler_address='', dashboard_address='',
-                 api_address='', tls_cert=b'', tls_key=b'', active_workers=0):
+    def __init__(
+        self,
+        id=None,
+        name=None,
+        user=None,
+        token=None,
+        status=None,
+        state=None,
+        scheduler_address="",
+        dashboard_address="",
+        api_address="",
+        tls_cert=b"",
+        tls_key=b"",
+        active_workers=0,
+    ):
         self.id = id
         self.name = name
         self.user = user
@@ -158,11 +180,13 @@ class Cluster(object):
 
     @property
     def info(self):
-        return ClusterInfo(username=self.user.name,
-                           cluster_name=self.name,
-                           api_token=self.token,
-                           tls_cert=self.tls_cert,
-                           tls_key=self.tls_key)
+        return ClusterInfo(
+            username=self.user.name,
+            cluster_name=self.name,
+            api_token=self.token,
+            tls_cert=self.tls_cert,
+            tls_key=self.tls_key,
+        )
 
 
 class Worker(object):

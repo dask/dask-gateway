@@ -13,8 +13,7 @@ from urllib.parse import urlparse
 
 from distributed import Client
 from distributed.security import Security
-from distributed.utils import (LoopRunner, sync, thread_state, format_bytes,
-                               log_errors)
+from distributed.utils import LoopRunner, sync, thread_state, format_bytes, log_errors
 from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 from tornado.httputil import HTTPHeaders
@@ -23,9 +22,10 @@ from .cookiejar import CookieJar
 
 # Register gateway protocol
 from . import comm
+
 del comm
 
-__all__ = ('Gateway', 'BasicAuth', 'KerberosAuth', 'DaskGatewayCluster')
+__all__ = ("Gateway", "BasicAuth", "KerberosAuth", "DaskGatewayCluster")
 
 
 class GatewayAuth(object):
@@ -43,38 +43,42 @@ class BasicAuth(GatewayAuth):
         if username is None:
             username = getpass.getuser()
         if password is None:
-            password = ''
+            password = ""
         self._username = username
         self._password = password
-        data = b':'.join((self._username.encode('latin1'),
-                          self._password.encode('latin1')))
-        self._auth = 'Basic ' + b64encode(data).decode()
+        data = b":".join(
+            (self._username.encode("latin1"), self._password.encode("latin1"))
+        )
+        self._auth = "Basic " + b64encode(data).decode()
 
     def pre_request(self, req, resp):
-        req.headers['Authorization'] = self._auth
+        req.headers["Authorization"] = self._auth
         return None
 
 
 class KerberosAuth(GatewayAuth):
     """Authenticate with kerberos"""
-    auth_regex = re.compile('(?:.*,)*\s*Negotiate\s*([^,]*),?', re.I)  # noqa
+
+    auth_regex = re.compile("(?:.*,)*\s*Negotiate\s*([^,]*),?", re.I)  # noqa
 
     def pre_request(self, req, resp):
         # TODO: convert errors to some common error class
         import kerberos
+
         hostname = urlparse(resp.effective_url).hostname
         _, context = kerberos.authGSSClientInit(
             "HTTP@%s" % hostname,
-            gssflags=kerberos.GSS_C_MUTUAL_FLAG | kerberos.GSS_C_SEQUENCE_FLAG
+            gssflags=kerberos.GSS_C_MUTUAL_FLAG | kerberos.GSS_C_SEQUENCE_FLAG,
         )
         kerberos.authGSSClientStep(context, "")
         response = kerberos.authGSSClientResponse(context)
-        req.headers['Authorization'] = "Negotiate " + response
+        req.headers["Authorization"] = "Negotiate " + response
         return context
 
     def post_response(self, req, resp, context):
         import kerberos
-        www_auth = resp.headers.get('www-authenticate', None)
+
+        www_auth = resp.headers.get("www-authenticate", None)
         token = None
         if www_auth:
             match = self.auth_regex.search(www_auth)
@@ -94,27 +98,29 @@ class GatewaySecurity(Security):
     temporarily to disk when creating the context, then delete them
     immediately.
     """
+
     def __init__(self, tls_key, tls_cert):
         self.tls_key = tls_key
         self.tls_cert = tls_cert
 
     def __repr__(self):
-        return 'GatewaySecurity<...>'
+        return "GatewaySecurity<...>"
 
     def get_connection_args(self, role):
         with tempfile.TemporaryDirectory() as tempdir:
-            key_path = os.path.join(tempdir, 'dask.pem')
-            cert_path = os.path.join(tempdir, 'dask.crt')
-            with open(key_path, 'w') as f:
+            key_path = os.path.join(tempdir, "dask.pem")
+            cert_path = os.path.join(tempdir, "dask.crt")
+            with open(key_path, "w") as f:
                 f.write(self.tls_key)
-            with open(cert_path, 'w') as f:
+            with open(cert_path, "w") as f:
                 f.write(self.tls_cert)
-            ctx = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
-                                             cafile=cert_path)
+            ctx = ssl.create_default_context(
+                purpose=ssl.Purpose.SERVER_AUTH, cafile=cert_path
+            )
             ctx.verify_mode = ssl.CERT_REQUIRED
             ctx.check_hostname = False
             ctx.load_cert_chain(cert_path, key_path)
-        return {'ssl_context': ctx}
+        return {"ssl_context": ctx}
 
 
 class _EnumMixin(object):
@@ -151,6 +157,7 @@ class ClusterStatus(_EnumMixin, enum.IntEnum):
         A failure occurred during any of the above states, see the logs for
         more information.
     """
+
     STARTING = 1
     STARTED = 2
     RUNNING = 3
@@ -179,11 +186,25 @@ class ClusterReport(object):
         The tls key. None if not currently running or a full report wasn't
         requested.
     """
-    __slots__ = ('name', 'status', 'scheduler_address', 'dashboard_address',
-                 'tls_cert', 'tls_key')
 
-    def __init__(self, name, status, scheduler_address, dashboard_address,
-                 tls_cert=None, tls_key=None):
+    __slots__ = (
+        "name",
+        "status",
+        "scheduler_address",
+        "dashboard_address",
+        "tls_cert",
+        "tls_key",
+    )
+
+    def __init__(
+        self,
+        name,
+        status,
+        scheduler_address,
+        dashboard_address,
+        tls_cert=None,
+        tls_key=None,
+    ):
         self.name = name
         self.status = ClusterStatus._create(status)
         self.scheduler_address = scheduler_address
@@ -192,7 +213,7 @@ class ClusterReport(object):
         self.tls_key = tls_key
 
     def __repr__(self):
-        return 'ClusterReport<name=%s, status=%s>' % (self.name, self.status.name)
+        return "ClusterReport<name=%s, status=%s>" % (self.name, self.status.name)
 
 
 class Gateway(object):
@@ -211,6 +232,7 @@ class Gateway(object):
         The IOLoop instance to use. Defaults to the current loop in
         asynchronous mode, otherwise a background loop is started.
     """
+
     def __init__(self, address=None, auth=None, asynchronous=False, loop=None):
         self.address = address
         self._auth = auth or BasicAuth()
@@ -254,24 +276,25 @@ class Gateway(object):
         await self._close()
 
     def __repr__(self):
-        return 'Gateway<%s>' % self.address
+        return "Gateway<%s>" % self.address
 
     @property
     def asynchronous(self):
         return (
-            self._asynchronous or
-            getattr(thread_state, 'asynchronous', False) or
-            (hasattr(self.loop, '_thread_identity') and
-                self.loop._thread_identity == get_ident())
+            self._asynchronous
+            or getattr(thread_state, "asynchronous", False)
+            or (
+                hasattr(self.loop, "_thread_identity")
+                and self.loop._thread_identity == get_ident()
+            )
         )
 
     def sync(self, func, *args, **kwargs):
-        if kwargs.pop('asynchronous', None) or self.asynchronous:
-            callback_timeout = kwargs.pop('callback_timeout', None)
+        if kwargs.pop("asynchronous", None) or self.asynchronous:
+            callback_timeout = kwargs.pop("callback_timeout", None)
             future = func(*args, **kwargs)
             if callback_timeout is not None:
-                future = gen.with_timeout(timedelta(seconds=callback_timeout),
-                                          future)
+                future = gen.with_timeout(timedelta(seconds=callback_timeout), future)
             return future
         else:
             return sync(self.loop, func, *args, **kwargs)
@@ -294,9 +317,9 @@ class Gateway(object):
                 status = [ClusterStatus._create(status)]
             else:
                 status = [ClusterStatus._create(s) for s in status]
-            query = '?status=' + ','.join(s.name for s in status)
+            query = "?status=" + ",".join(s.name for s in status)
         else:
-            query = ''
+            query = ""
 
         url = "%s/gateway/api/clusters/%s" % (self.address, query)
         req = HTTPRequest(url=url)
@@ -322,11 +345,15 @@ class Gateway(object):
 
     async def _submit(self):
         url = "%s/gateway/api/clusters/" % self.address
-        req = HTTPRequest(url=url, method="POST", body=json.dumps({}),
-                          headers=HTTPHeaders({'Content-type': 'application/json'}))
+        req = HTTPRequest(
+            url=url,
+            method="POST",
+            body=json.dumps({}),
+            headers=HTTPHeaders({"Content-type": "application/json"}),
+        )
         resp = await self._fetch(req)
         data = json.loads(resp.body)
-        return data['name']
+        return data["name"]
 
     def submit(self, **kwargs):
         """Submit a new cluster to be started.
@@ -364,8 +391,10 @@ class Gateway(object):
                 if report.status is ClusterStatus.RUNNING:
                     return DaskGatewayCluster(self, report)
                 elif report.status is ClusterStatus.FAILED:
-                    raise Exception("Cluster %r failed to start, see logs for "
-                                    "more information" % cluster_name)
+                    raise Exception(
+                        "Cluster %r failed to start, see logs for "
+                        "more information" % cluster_name
+                    )
                 elif report.status is ClusterStatus.STOPPED:
                     raise Exception("Cluster %r is already stopped" % cluster_name)
             # Not started yet, try again later
@@ -417,10 +446,12 @@ class Gateway(object):
 
     async def _scale_cluster(self, cluster_name, n):
         url = "%s/gateway/api/clusters/%s/workers" % (self.address, cluster_name)
-        req = HTTPRequest(url=url,
-                          method="PUT",
-                          body=json.dumps({'worker_count': n}),
-                          headers=HTTPHeaders({'Content-type': 'application/json'}))
+        req = HTTPRequest(
+            url=url,
+            method="PUT",
+            body=json.dumps({"worker_count": n}),
+            headers=HTTPHeaders({"Content-type": "application/json"}),
+        )
         try:
             await self._fetch(req)
         except HTTPError as exc:
@@ -471,8 +502,9 @@ class DaskGatewayCluster(object):
         self.name = report.name
         self.scheduler_address = report.scheduler_address
         self.dashboard_address = report.dashboard_address
-        self.security = GatewaySecurity(tls_key=report.tls_key,
-                                        tls_cert=report.tls_cert)
+        self.security = GatewaySecurity(
+            tls_key=report.tls_key, tls_cert=report.tls_cert
+        )
         self._internal_client = None
         # XXX: Ensure client is closed. Currently disconnected clients try to
         # reconnect forever, which spams the schedulerproxy. Once this bug is
@@ -480,7 +512,7 @@ class DaskGatewayCluster(object):
         self._clients = weakref.WeakSet()
 
     def __repr__(self):
-        return 'DaskGatewayCluster<%s>' % self.name
+        return "DaskGatewayCluster<%s>" % self.name
 
     async def __aenter__(self):
         return self
@@ -540,18 +572,16 @@ class DaskGatewayCluster(object):
         if self._internal_client is None:
             return None
         try:
-            workers = self._internal_client._scheduler_identity['workers']
+            workers = self._internal_client._scheduler_identity["workers"]
         except KeyError:
-            if self._internal_client.status in ('closing', 'closed'):
+            if self._internal_client.status in ("closing", "closed"):
                 return None
         else:
             n_workers = len(workers)
-            cores = sum(w['ncores'] for w in workers.values())
-            memory = sum(w['memory_limit'] for w in workers.values())
+            cores = sum(w["ncores"] for w in workers.values())
+            memory = sum(w["memory_limit"] for w in workers.values())
 
-            return _widget_status_template % (
-                n_workers, cores, format_bytes(memory)
-            )
+            return _widget_status_template % (n_workers, cores, format_bytes(memory))
 
     async def _widget_updater(self, widget):
         while True:
@@ -582,27 +612,28 @@ class DaskGatewayCluster(object):
         except Exception:
             return None
 
-        layout = Layout(width='150px')
+        layout = Layout(width="150px")
 
-        title = HTML('<h2>DaskGatewayCluster</h2>')
+        title = HTML("<h2>DaskGatewayCluster</h2>")
 
-        status = HTML(self._widget_status(), layout=Layout(min_width='150px'))
+        status = HTML(self._widget_status(), layout=Layout(min_width="150px"))
 
-        request = IntText(0, description='Workers', layout=layout)
-        scale = Button(description='Scale', layout=layout)
+        request = IntText(0, description="Workers", layout=layout)
+        scale = Button(description="Scale", layout=layout)
 
         @scale.on_click
         def scale_cb(b):
             with log_errors():
                 self.scale(request.value)
 
-        elements = [title,
-                    HBox([status, request, scale])]
+        elements = [title, HBox([status, request, scale])]
 
         if self.dashboard_address is not None:
-            link_address = '%s/status' % self.dashboard_address
-            link = HTML('<p><b>Dashboard: </b><a href="%s" target="_blank">%s'
-                        '</a></p>\n' % (link_address, link_address))
+            link_address = "%s/status" % self.dashboard_address
+            link = HTML(
+                '<p><b>Dashboard: </b><a href="%s" target="_blank">%s'
+                "</a></p>\n" % (link_address, link_address)
+            )
             elements.append(link)
 
         self._cached_widget = box = VBox(elements)

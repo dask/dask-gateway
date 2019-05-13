@@ -11,7 +11,7 @@ class ClusterManager(LoggingConfigurable):
         help="""
         Environment variables to set for both the worker and scheduler processes.
         """,
-        config=True
+        config=True,
     )
 
     cluster_start_timeout = Integer(
@@ -22,7 +22,7 @@ class ClusterManager(LoggingConfigurable):
         Note that this is the time for ``start_cluster`` to run, not the time
         for the cluster to actually respond.
         """,
-        config=True
+        config=True,
     )
 
     cluster_connect_timeout = Integer(
@@ -33,7 +33,7 @@ class ClusterManager(LoggingConfigurable):
         This is the time between ``start_cluster`` completing and the scheduler
         connecting to the gateway.
         """,
-        config=True
+        config=True,
     )
 
     worker_start_timeout = Integer(
@@ -41,7 +41,7 @@ class ClusterManager(LoggingConfigurable):
         help="""
         Timeout (in seconds) before giving up on a starting dask worker.
         """,
-        config=True
+        config=True,
     )
 
     worker_connect_timeout = Integer(
@@ -52,11 +52,11 @@ class ClusterManager(LoggingConfigurable):
         This is the time between ``start_worker`` completing and the worker
         connecting to the scheduler.
         """,
-        config=True
+        config=True,
     )
 
     worker_memory = MemoryLimit(
-        '2 G',
+        "2 G",
         help="""
         Maximum number of bytes a dask worker is allowed to use. Allows the
         following suffixes:
@@ -66,7 +66,7 @@ class ClusterManager(LoggingConfigurable):
         - G -> Gibibytes
         - T -> Tebibytes
         """,
-        config=True
+        config=True,
     )
 
     worker_cores = Integer(
@@ -75,11 +75,11 @@ class ClusterManager(LoggingConfigurable):
         help="""
         Maximum number of cpu-cores a dask worker is allowed to use.
         """,
-        config=True
+        config=True,
     )
 
     scheduler_memory = MemoryLimit(
-        '2 G',
+        "2 G",
         help="""
         Maximum number of bytes a dask scheduler is allowed to use. Allows the
         following suffixes:
@@ -89,7 +89,7 @@ class ClusterManager(LoggingConfigurable):
         - G -> Gibibytes
         - T -> Tebibytes
         """,
-        config=True
+        config=True,
     )
 
     scheduler_cores = Integer(
@@ -98,19 +98,19 @@ class ClusterManager(LoggingConfigurable):
         help="""
         Maximum number of cpu-cores a dask scheduler is allowed to use.
         """,
-        config=True
+        config=True,
     )
 
     worker_cmd = Unicode(
-        'dask-gateway-worker',
-        help='Shell command to start a dask-gateway worker.',
-        config=True
+        "dask-gateway-worker",
+        help="Shell command to start a dask-gateway worker.",
+        config=True,
     )
 
     scheduler_cmd = Unicode(
-        'dask-gateway-scheduler',
-        help='Shell command to start a dask-gateway scheduler.',
-        config=True
+        "dask-gateway-scheduler",
+        help="Shell command to start a dask-gateway scheduler.",
+        config=True,
     )
 
     # Parameters forwarded by gateway application
@@ -126,11 +126,15 @@ class ClusterManager(LoggingConfigurable):
         out = dict(self.environment)
         tls_cert_path, tls_key_path = self.get_tls_paths(cluster_info)
         # Set values that dask-gateway needs to run
-        out.update({'DASK_GATEWAY_API_URL': self.api_url,
-                    'DASK_GATEWAY_CLUSTER_NAME': cluster_info.cluster_name,
-                    'DASK_GATEWAY_API_TOKEN': cluster_info.api_token,
-                    'DASK_GATEWAY_TLS_CERT': tls_cert_path,
-                    'DASK_GATEWAY_TLS_KEY': tls_key_path})
+        out.update(
+            {
+                "DASK_GATEWAY_API_URL": self.api_url,
+                "DASK_GATEWAY_CLUSTER_NAME": cluster_info.cluster_name,
+                "DASK_GATEWAY_API_TOKEN": cluster_info.api_token,
+                "DASK_GATEWAY_TLS_CERT": tls_cert_path,
+                "DASK_GATEWAY_TLS_KEY": tls_key_path,
+            }
+        )
         return out
 
     supports_bulk_shutdown = Bool(
@@ -143,7 +147,7 @@ class ClusterManager(LoggingConfigurable):
         called once and must stop all the workers in one action. This option
         makes sense for cluster backends where all processes are in a group and
         can be killed efficiently in one action.
-        """
+        """,
     )
 
     async def start_cluster(self, cluster_info):

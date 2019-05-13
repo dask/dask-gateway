@@ -5,9 +5,7 @@ from tornado import web
 from traitlets import Unicode
 from traitlets.config import LoggingConfigurable
 
-__all__ = ('Authenticator',
-           'KerberosAuthenticator',
-           'DummyAuthenticator')
+__all__ = ("Authenticator", "KerberosAuthenticator", "DummyAuthenticator")
 
 
 class Authenticator(LoggingConfigurable):
@@ -37,18 +35,16 @@ class KerberosAuthenticator(Authenticator):
         help="""The service's kerberos principal name.
 
         This is almost always "HTTP" (the default)""",
-        config=True
+        config=True,
     )
 
     keytab = Unicode(
-        "dask_gateway.keytab",
-        help="The path to the keytab file",
-        config=True
+        "dask_gateway.keytab", help="The path to the keytab file", config=True
     )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        os.environ['KRB5_KTNAME'] = self.keytab
+        os.environ["KRB5_KTNAME"] = self.keytab
 
     def raise_auth_error(self, err):
         self.log.error("Kerberos failure: %s", err)
@@ -56,19 +52,19 @@ class KerberosAuthenticator(Authenticator):
 
     def raise_auth_required(self, handler):
         handler.set_status(401)
-        handler.write('Authentication required')
+        handler.write("Authentication required")
         handler.set_header("WWW-Authenticate", "Negotiate")
         raise web.Finish()
 
     def authenticate(self, handler):
         import kerberos
 
-        auth_header = handler.request.headers.get('Authorization')
+        auth_header = handler.request.headers.get("Authorization")
         if not auth_header:
             return self.raise_auth_required(handler)
 
         auth_type, auth_key = auth_header.split(" ", 1)
-        if auth_type != 'Negotiate':
+        if auth_type != "Negotiate":
             return self.raise_auth_required(handler)
 
         gss_context = None
@@ -101,7 +97,7 @@ class KerberosAuthenticator(Authenticator):
             user = fulluser.split("@", 1)[0]
 
             # Complete the protocol by responding with the Negotiate header
-            handler.set_header('WWW-Authenticate', "Negotiate %s" % gss_key)
+            handler.set_header("WWW-Authenticate", "Negotiate %s" % gss_key)
         except kerberos.GSSError as err:
             return self.raise_auth_error(err)
         finally:
@@ -116,6 +112,7 @@ class DummyAuthenticator(Authenticator):
 
     This is highly insecure, use only for testing!!!
     """
+
     password = Unicode(
         None,
         allow_none=True,
@@ -124,26 +121,26 @@ class DummyAuthenticator(Authenticator):
 
         If unset (default), the password field is completely ignored.
         """,
-        config=True
+        config=True,
     )
 
     def raise_auth_required(self, handler):
         handler.set_status(401)
-        handler.write('Authentication required')
+        handler.write("Authentication required")
         handler.set_header("WWW-Authenticate", "Basic")
         raise web.Finish()
 
     def authenticate(self, handler):
-        auth_header = handler.request.headers.get('Authorization')
+        auth_header = handler.request.headers.get("Authorization")
         if not auth_header:
             self.raise_auth_required(handler)
 
         auth_type, auth_key = auth_header.split(" ", 1)
-        if auth_type != 'Basic':
+        if auth_type != "Basic":
             self.raise_auth_required(handler)
 
-        auth_key = base64.b64decode(auth_key).decode('ascii')
-        user, password = auth_key.split(':', 1)
+        auth_key = base64.b64decode(auth_key).decode("ascii")
+        user, password = auth_key.split(":", 1)
 
         if self.password and password != self.password:
             self.raise_auth_required(handler)

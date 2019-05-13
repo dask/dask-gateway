@@ -33,14 +33,17 @@ class CookieJar(object):
 
     DATE_TOKENS_RE = re.compile(
         r"[\x09\x20-\x2F\x3B-\x40\x5B-\x60\x7B-\x7E]*"
-        r"(?P<token>[\x00-\x08\x0A-\x1F\d:a-zA-Z\x7F-\xFF]+)")
+        r"(?P<token>[\x00-\x08\x0A-\x1F\d:a-zA-Z\x7F-\xFF]+)"
+    )
 
     DATE_HMS_TIME_RE = re.compile(r"(\d{1,2}):(\d{1,2}):(\d{1,2})")
 
     DATE_DAY_OF_MONTH_RE = re.compile(r"(\d{1,2})")
 
-    DATE_MONTH_RE = re.compile("(jan)|(feb)|(mar)|(apr)|(may)|(jun)|(jul)|"
-                               "(aug)|(sep)|(oct)|(nov)|(dec)", re.I)
+    DATE_MONTH_RE = re.compile(
+        "(jan)|(feb)|(mar)|(apr)|(may)|(jun)|(jul)|" "(aug)|(sep)|(oct)|(nov)|(dec)",
+        re.I,
+    )
 
     DATE_YEAR_RE = re.compile(r"(\d{2,4})")
 
@@ -94,7 +97,7 @@ class CookieJar(object):
             url_path = effective_url.path
         else:
             hostname = None
-            url_path = '/'
+            url_path = "/"
 
         if isinstance(cookies, str):
             cookies = SimpleCookie(cookies)
@@ -103,7 +106,7 @@ class CookieJar(object):
             domain = cookie["domain"]
 
             # ignore domains with trailing dots
-            if domain.endswith('.'):
+            if domain.endswith("."):
                 domain = ""
                 del cookie["domain"]
 
@@ -130,15 +133,14 @@ class CookieJar(object):
                     path = "/"
                 else:
                     # Cut everything from the last slash to the end
-                    path = "/" + path[1:path.rfind("/")]
+                    path = "/" + path[1 : path.rfind("/")]
                 cookie["path"] = path
 
             max_age = cookie["max-age"]
             if max_age:
                 try:
                     delta_seconds = int(max_age)
-                    self._expire_cookie(self._loop.time() + delta_seconds,
-                                        domain, name)
+                    self._expire_cookie(self._loop.time() + delta_seconds, domain, name)
                 except ValueError:
                     cookie["max-age"] = ""
 
@@ -147,8 +149,7 @@ class CookieJar(object):
                 if expires:
                     expire_time = self._parse_date(expires)
                     if expire_time:
-                        self._expire_cookie(expire_time.timestamp(),
-                                            domain, name)
+                        self._expire_cookie(expire_time.timestamp(), domain, name)
                     else:
                         cookie["expires"] = ""
 
@@ -199,7 +200,7 @@ class CookieJar(object):
         if not hostname.endswith(domain):
             return False
 
-        return hostname[:-len(domain)].endswith(".")
+        return hostname[: -len(domain)].endswith(".")
 
     @staticmethod
     def _is_path_match(req_path, cookie_path):
@@ -216,7 +217,7 @@ class CookieJar(object):
         if cookie_path.endswith("/"):
             return True
 
-        return req_path[len(cookie_path):].startswith("/")
+        return req_path[len(cookie_path) :].startswith("/")
 
     def _parse_date(self, date_str):
         """Implements date string parsing adhering to RFC 6265."""
@@ -241,8 +242,7 @@ class CookieJar(object):
                 time_match = self.DATE_HMS_TIME_RE.match(token)
                 if time_match:
                     found_time = True
-                    hour, minute, second = [
-                        int(s) for s in time_match.groups()]
+                    hour, minute, second = [int(s) for s in time_match.groups()]
                     continue
 
             if not found_day:
@@ -279,19 +279,19 @@ class CookieJar(object):
         if year < 1601 or hour > 23 or minute > 59 or second > 59:
             return None
 
-        return datetime.datetime(year, month, day,
-                                 hour, minute, second,
-                                 tzinfo=datetime.timezone.utc)
+        return datetime.datetime(
+            year, month, day, hour, minute, second, tzinfo=datetime.timezone.utc
+        )
 
     def pre_request(self, req):
         """Update a HTTPRequest with any relevant cookies"""
         cookies = self.filter_cookies(req.url)
         for v in cookies.values():
-            req.headers.add('Cookie', v.OutputString(attrs=()))
+            req.headers.add("Cookie", v.OutputString(attrs=()))
 
     def post_response(self, resp):
         """Update our cookiejar with the results from a HTTPResponse"""
-        new = resp.headers.get_list('Set-Cookie')
+        new = resp.headers.get_list("Set-Cookie")
         if new:
             cookies = SimpleCookie()
             for m in new:

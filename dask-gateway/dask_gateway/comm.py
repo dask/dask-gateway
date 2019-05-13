@@ -8,18 +8,22 @@ from tornado import netutil
 
 from distributed.comm.core import Connector
 from distributed.comm.registry import Backend, backends
-from distributed.comm.tcp import (TLS, MAX_BUFFER_SIZE, get_stream_address,
-                                  convert_stream_closed_error)
+from distributed.comm.tcp import (
+    TLS,
+    MAX_BUFFER_SIZE,
+    get_stream_address,
+    convert_stream_closed_error,
+)
 from distributed.utils import ensure_ip, get_ip
 
 
 def parse_gateway_address(address):
-    if not address.startswith('gateway://'):
-        address = 'gateway://' + address
+    if not address.startswith("gateway://"):
+        address = "gateway://" + address
     parsed = urlparse(address)
     if not parsed.path:
         raise ValueError("Gateway address %r missing path component" % address)
-    path = parsed.path.strip('/')
+    path = parsed.path.strip("/")
     return parsed.hostname, parsed.port, path
 
 
@@ -30,10 +34,12 @@ class GatewayConnector(Connector):
 
     async def connect(self, address, deserialize=True, **connection_args):
         ip, port, sni = parse_gateway_address(address)
-        ctx = connection_args.get('ssl_context')
+        ctx = connection_args.get("ssl_context")
         if not isinstance(ctx, ssl.SSLContext):
-            raise TypeError("Gateway expects a `ssl_context` argument of type "
-                            "ssl.SSLContext, instead got %s" % ctx)
+            raise TypeError(
+                "Gateway expects a `ssl_context` argument of type "
+                "ssl.SSLContext, instead got %s" % ctx
+            )
 
         try:
             plain_stream = await self.client.connect(
@@ -49,8 +55,8 @@ class GatewayConnector(Connector):
             # The socket connect() call failed
             convert_stream_closed_error(self, e)
 
-        local_address = 'tls://' + get_stream_address(stream)
-        peer_address = 'gateway://' + address
+        local_address = "tls://" + get_stream_address(stream)
+        peer_address = "gateway://" + address
         return TLS(stream, local_address, peer_address, deserialize)
 
 
@@ -72,13 +78,13 @@ class GatewayBackend(Backend):
     def resolve_address(self, loc):
         host, port, path = parse_gateway_address(loc)
         host = ensure_ip(host)
-        return '%s:%d/%s' % (host, port, path)
+        return "%s:%d/%s" % (host, port, path)
 
     def get_local_address_for(self, loc):
         host, port, path = parse_gateway_address(loc)
         host = ensure_ip(host)
         host = get_ip(host)
-        return '%s:%d/%s' % (host, port, path)
+        return "%s:%d/%s" % (host, port, path)
 
 
-backends['gateway'] = GatewayBackend()
+backends["gateway"] = GatewayBackend()
