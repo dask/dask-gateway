@@ -1,3 +1,4 @@
+import enum
 import getpass
 import json
 import os
@@ -116,6 +117,84 @@ class GatewaySecurity(Security):
         return {'ssl_context': ctx}
 
 
+class _EnumMixin(object):
+    @classmethod
+    def _create(cls, x):
+        return x if isinstance(x, cls) else cls.from_name(x)
+
+    @classmethod
+    def from_name(cls, name):
+        """Create an enum value from a name"""
+        try:
+            return cls[name.upper()]
+        except KeyError:
+            pass
+        raise ValueError("%r is not a valid %s" % (name, cls.__name__))
+
+
+class ClusterStatus(_EnumMixin, enum.IntEnum):
+    """The cluster's status.
+
+    Attributes
+    ----------
+    STARTING : ClusterStatus
+        The cluster is starting.
+    STARTED : ClusterStatus
+        The cluster has started, but hasn't connected to the gateway.
+    RUNNING : ClusterStatus
+        The cluster is running.
+    STOPPING : ClusterStatus
+        The cluster is stopping, but not fully stopped.
+    STOPPED : ClusterStatus
+        The cluster was shutdown by user or admin request.
+    FAILED : ClusterStatus
+        A failure occurred during any of the above states, see the logs for
+        more information.
+    """
+    STARTING = 1
+    STARTED = 2
+    RUNNING = 3
+    STOPPING = 4
+    STOPPED = 5
+    FAILED = 6
+
+
+class ClusterReport(object):
+    """A report on a cluster's state.
+
+    Attributes
+    ----------
+    name : str
+        The cluster's name, a unique id.
+    status : ClusterStatus
+        The cluster's status.
+    scheduler_address : str or None
+        The address of the scheduler, or None if not currently running.
+    dashboard_address : str or None
+        The address of the dashboard, or None if not currently running.
+    tls_cert : str or None
+        The tls certificate. None if not currently running or a full report
+        wasn't requested.
+    tls_key : str or None
+        The tls key. None if not currently running or a full report wasn't
+        requested.
+    """
+    __slots__ = ('name', 'status', 'scheduler_address', 'dashboard_address',
+                 'tls_cert', 'tls_key')
+
+    def __init__(self, name, status, scheduler_address, dashboard_address,
+                 tls_cert=None, tls_key=None):
+        self.name = name
+        self.status = ClusterStatus._create(status)
+        self.scheduler_address = scheduler_address
+        self.dashboard_address = dashboard_address
+        self.tls_cert = tls_cert
+        self.tls_key = tls_key
+
+    def __repr__(self):
+        return 'ClusterReport<name=%s, status=%s>' % (self.name, self.status.name)
+
+
 class Gateway(object):
     """A client for a Dask Gateway Server.
 
@@ -209,15 +288,37 @@ class Gateway(object):
             resp.rethrow()
         return resp
 
-    async def _clusters(self):
-        url = "%s/gateway/api/clusters/" % self.address
+    async def _clusters(self, status=None):
+        if status is not None:
+            if isinstance(status, (str, ClusterStatus)):
+                status = [ClusterStatus._create(status)]
+            else:
+                status = [ClusterStatus._create(s) for s in status]
+            query = '?status=' + ','.join(s.name for s in status)
+        else:
+            query = ''
+
+        url = "%s/gateway/api/clusters/%s" % (self.address, query)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
-        return list(json.loads(resp.body))
+        return [ClusterReport(**r) for r in json.loads(resp.body).values()]
 
-    def list_clusters(self, **kwargs):
-        """List all running clusters for this user."""
-        return self.sync(self._clusters, **kwargs)
+    def list_clusters(self, status=None, **kwargs):
+        """List clusters for this user.
+
+        Parameters
+        ----------
+        status : ClusterStatus, str, or list, optional
+            The cluster status (or statuses) to select. Valid options are
+            'starting', 'started', 'running', 'stopping', 'stopped', 'failed'.
+            By default selects active clusters ('starting', 'started',
+            'running').
+
+        Returns
+        -------
+        clusters : list of ClusterReport
+        """
+        return self.sync(self._clusters, status=status, **kwargs)
 
     async def _submit(self):
         url = "%s/gateway/api/clusters/" % self.address
@@ -225,7 +326,7 @@ class Gateway(object):
                           headers=HTTPHeaders({'Content-type': 'application/json'}))
         resp = await self._fetch(req)
         data = json.loads(resp.body)
-        return data['cluster_name']
+        return data['name']
 
     def submit(self, **kwargs):
         """Submit a new cluster to be started.
@@ -240,17 +341,17 @@ class Gateway(object):
         """
         return self.sync(self._submit, **kwargs)
 
-    async def _cluster_info(self, cluster_name, wait=False):
+    async def _cluster_report(self, cluster_name, wait=False):
         params = "?wait" if wait else ""
         url = "%s/gateway/api/clusters/%s%s" % (self.address, cluster_name, params)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
-        return json.loads(resp.body)
+        return ClusterReport(**json.loads(resp.body))
 
     async def _connect(self, cluster_name):
         while True:
             try:
-                info = await self._cluster_info(cluster_name, wait=True)
+                report = await self._cluster_report(cluster_name, wait=True)
             except HTTPError as exc:
                 if exc.code == 404:
                     raise Exception("Unknown cluster %r" % cluster_name)
@@ -260,13 +361,12 @@ class Gateway(object):
                 else:
                     raise
             else:
-                status = info['status']
-                if status == 'RUNNING':
-                    return DaskGatewayCluster(self, info)
-                elif status == 'FAILED':
+                if report.status is ClusterStatus.RUNNING:
+                    return DaskGatewayCluster(self, report)
+                elif report.status is ClusterStatus.FAILED:
                     raise Exception("Cluster %r failed to start, see logs for "
                                     "more information" % cluster_name)
-                elif status == 'STOPPED':
+                elif report.status is ClusterStatus.STOPPED:
                     raise Exception("Cluster %r is already stopped" % cluster_name)
             # Not started yet, try again later
             await gen.sleep(0.5)
@@ -366,13 +466,13 @@ _widget_status_template = """
 
 
 class DaskGatewayCluster(object):
-    def __init__(self, gateway, cluster_info):
+    def __init__(self, gateway, report):
         self._gateway = gateway
-        self.cluster_name = cluster_info['cluster_name']
-        self.scheduler_address = cluster_info['scheduler_address']
-        self.dashboard_address = cluster_info['dashboard_address'] or None
-        self.security = GatewaySecurity(tls_key=cluster_info['tls_key'],
-                                        tls_cert=cluster_info['tls_cert'])
+        self.name = report.name
+        self.scheduler_address = report.scheduler_address
+        self.dashboard_address = report.dashboard_address
+        self.security = GatewaySecurity(tls_key=report.tls_key,
+                                        tls_cert=report.tls_cert)
         self._internal_client = None
         # XXX: Ensure client is closed. Currently disconnected clients try to
         # reconnect forever, which spams the schedulerproxy. Once this bug is
@@ -380,7 +480,7 @@ class DaskGatewayCluster(object):
         self._clients = weakref.WeakSet()
 
     def __repr__(self):
-        return 'DaskGatewayCluster<%s>' % self.cluster_name
+        return 'DaskGatewayCluster<%s>' % self.name
 
     async def __aenter__(self):
         return self
@@ -402,7 +502,7 @@ class DaskGatewayCluster(object):
         for client in list(self._clients):
             client.close()
             self._clients.discard(client)
-        return self._gateway.stop_cluster(self.cluster_name, **kwargs)
+        return self._gateway.stop_cluster(self.name, **kwargs)
 
     def close(self, **kwargs):
         """Shutdown this cluster, alias for ``shutdown``"""
@@ -434,7 +534,7 @@ class DaskGatewayCluster(object):
         n : int
             The number of workers to scale to.
         """
-        return self._gateway.scale_cluster(self.cluster_name, n, **kwargs)
+        return self._gateway.scale_cluster(self.name, n, **kwargs)
 
     def _widget_status(self):
         if self._internal_client is None:

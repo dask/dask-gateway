@@ -116,13 +116,13 @@ def cluster_model(gateway, cluster, full=True):
         dashboard = ('%s/gateway/clusters/%s' % (gateway.public_url, cluster.name))
     else:
         scheduler = dashboard = ''
-    out = {'cluster_name': cluster.name,
-           'scheduler_address': scheduler,
-           'dashboard_address': dashboard,
+    out = {'name': cluster.name,
+           'scheduler_address': scheduler or None,
+           'dashboard_address': dashboard or None,
            'status': cluster.status.name}
     if full:
-        out['tls_cert'] = cluster.tls_cert.decode()
-        out['tls_key'] = cluster.tls_key.decode()
+        out['tls_cert'] = cluster.tls_cert.decode() or None
+        out['tls_key'] = cluster.tls_key.decode() or None
     return out
 
 
@@ -139,14 +139,24 @@ class ClustersHandler(BaseHandler):
         self.gateway.schedule_start_cluster(cluster)
 
         # Return the cluster id, to be used in future requests
-        self.write({'cluster_name': cluster.name})
+        self.write({'name': cluster.name})
         self.set_status(201)
 
     @user_authenticated
     async def get(self, cluster_name):
         if not cluster_name:
+            status = self.get_query_argument("status", default=None)
+            if status is None:
+                select = lambda x: x.is_active()
+            else:
+                try:
+                    statuses = [ClusterStatus.from_name(k) for k in status.split(",")]
+                except Exception as exc:
+                    raise web.HTTPError(405, reason=str(exc))
+                select = lambda x: x.status in statuses
             out = {k: cluster_model(self.gateway, v, full=False)
-                   for k, v in self.dask_user.clusters.items()}
+                   for k, v in self.dask_user.clusters.items()
+                   if select(v)}
             self.write(out)
             return
 

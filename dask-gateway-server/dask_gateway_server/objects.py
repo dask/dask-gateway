@@ -6,7 +6,18 @@ from sqlalchemy import (MetaData, Table, Column, Integer, Unicode, ForeignKey,
 from sqlalchemy.pool import StaticPool
 
 
-class ClusterStatus(enum.IntEnum):
+class _EnumMixin(object):
+    @classmethod
+    def from_name(cls, name):
+        """Create an enum value from a name"""
+        try:
+            return cls[name.upper()]
+        except KeyError:
+            pass
+        raise ValueError("%r is not a valid %s" % (name, cls.__name__))
+
+
+class ClusterStatus(_EnumMixin, enum.IntEnum):
     STARTING = 1
     STARTED = 2
     RUNNING = 3
@@ -15,7 +26,7 @@ class ClusterStatus(enum.IntEnum):
     FAILED = 6
 
 
-class WorkerStatus(enum.IntEnum):
+class WorkerStatus(_EnumMixin, enum.IntEnum):
     STARTING = 1
     STARTED = 2
     RUNNING = 3
@@ -117,8 +128,7 @@ class Cluster(object):
 
     def __init__(self, id=None, name=None, user=None, token=None, status=None,
                  state=None, scheduler_address='', dashboard_address='',
-                 api_address='', tls_cert=None, tls_key=None,
-                 active_workers=0):
+                 api_address='', tls_cert=b'', tls_key=b'', active_workers=0):
         self.id = id
         self.name = name
         self.user = user
