@@ -7,6 +7,7 @@ import stat
 import tempfile
 import uuid
 import weakref
+from functools import partial
 from urllib.parse import urlparse, urlunparse
 
 from sqlalchemy.sql import bindparam
@@ -22,7 +23,7 @@ from . import __version__ as VERSION
 from . import handlers, objects
 from .objects import WorkerStatus, ClusterStatus
 from .tls import new_keypair
-from .utils import cleanup_tmpdir
+from .utils import cleanup_tmpdir, cancel_task
 
 
 # Override default values for logging
@@ -494,26 +495,33 @@ class DaskGateway(Application):
             cluster.status = ClusterStatus.STARTED
 
     async def start_cluster(self, cluster):
+        """Start the cluster.
+
+        Returns True if successfully started, False otherwise.
+        """
         try:
             await asyncio.wait_for(
                 self._start_cluster(cluster),
                 timeout=self.cluster_manager.cluster_start_timeout
             )
+        except asyncio.TimeoutError:
+            self.log.warn("Cluster %s startup timed out after %d seconds",
+                          cluster.name, self.cluster_manager.cluster_start_timeout)
+            return False
+        except asyncio.CancelledError:
+            # Catch separately to avoid in generic handler below
+            raise
         except Exception as exc:
-            if isinstance(exc, asyncio.TimeoutError):
-                self.log.warn("Cluster %s startup timed out after %d seconds",
-                              cluster.name, self.cluster_manager.cluster_start_timeout)
-            else:
-                self.log.error("Error while starting cluster %s", exc_info=exc)
-            await self.stop_cluster(cluster, failed=True)
-            return
+            self.log.error("Error while starting cluster %s",
+                           cluster.name, exc_info=exc)
+            return False
 
         self.log.debug("Cluster %s has started, waiting for connection",
                        cluster.name)
 
         try:
             addresses = await asyncio.wait_for(
-                cluster._addresses_future,
+                cluster._connect_future,
                 timeout=self.cluster_manager.cluster_connect_timeout
             )
             scheduler_address, dashboard_address, api_address = addresses
@@ -521,8 +529,7 @@ class DaskGateway(Application):
             self.log.warn("Cluster %s failed to connect after %d seconds",
                           cluster.name,
                           self.cluster_manager.cluster_connect_timeout)
-            await self.stop_cluster(cluster, failed=True)
-            return
+            return False
 
         self.log.debug("Cluster %s connected at %s", cluster.name, scheduler_address)
 
@@ -552,14 +559,33 @@ class DaskGateway(Application):
             cluster.api_address = api_address
             cluster.status = ClusterStatus.RUNNING
 
-        # Signal waiting tasks that cluster is fully started
-        cluster._started_future.set_result(True)
+        return True
 
     def schedule_start_cluster(self, cluster):
-        asyncio.ensure_future(self.start_cluster(cluster))
+        f = asyncio.ensure_future(self.start_cluster(cluster))
+        f.add_done_callback(partial(self._monitor_start_cluster, cluster=cluster))
+        cluster._start_future = f
+
+    def _monitor_start_cluster(self, future, cluster=None):
+        try:
+            if future.result():
+                # Startup succeeded, nothing to do
+                return
+        except asyncio.CancelledError:
+            # Startup cancelled, cleanup is handled separately
+            return
+        except Exception as exc:
+            self.log.error("Unexpected error while starting cluster %s",
+                           cluster.name,
+                           exc_info=exc)
+
+        self.schedule_stop_cluster(cluster, failed=True)
 
     async def stop_cluster(self, cluster, failed=False):
         self.log.debug("Cluster %s is stopping...", cluster.name)
+
+        # If running, cancel running start task
+        await cancel_task(cluster._start_future)
 
         # Move cluster to stopping
         with self.db.begin() as conn:
@@ -602,15 +628,10 @@ class DaskGateway(Application):
             cluster.status = status
             cluster.pending.clear()
 
-        # If failure occurred during startup, notify any waiting tasks that
-        # starting has completed.
-        if not cluster._started_future.done():
-            cluster._started_future.set_result(False)
-
         self.log.debug("Cluster %s stopped", cluster.name)
 
-    def schedule_stop_cluster(self, cluster):
-        asyncio.ensure_future(self.stop_cluster(cluster))
+    def schedule_stop_cluster(self, cluster, failed=False):
+        asyncio.ensure_future(self.stop_cluster(cluster, failed=failed))
 
     async def scale(self, cluster, total):
         """Scale cluster to total workers"""
@@ -626,9 +647,13 @@ class DaskGateway(Application):
                 await self.scale_down(cluster, -delta)
 
     async def scale_up(self, cluster, n_start):
-        workers = self.create_workers(cluster, n_start)
-        tasks = (self.start_worker(cluster, w) for w in workers)
-        await asyncio.gather(*tasks, return_exceptions=True)
+        for w in self.create_workers(cluster, n_start):
+            w._start_future = asyncio.ensure_future(
+                self.start_worker(cluster, w)
+            )
+            w._start_future.add_done_callback(
+                partial(self._monitor_start_worker, worker=w, cluster=cluster)
+            )
 
     def create_workers(self, cluster, n):
         self.log.debug("Creating %d new workers for cluster %s", n, cluster.name)
@@ -688,15 +713,17 @@ class DaskGateway(Application):
                 self._start_worker(cluster, worker),
                 timeout=self.cluster_manager.worker_start_timeout
             )
+        except asyncio.TimeoutError:
+            self.log.warn("Worker %s startup timed out after %d seconds",
+                          worker.name,
+                          self.cluster_manager.worker_start_timeout)
+            return False
+        except asyncio.CancelledError:
+            # Catch separately to avoid in generic handler below
+            raise
         except Exception as exc:
-            if isinstance(exc, asyncio.TimeoutError):
-                self.log.warn("Worker %s startup timed out after %d seconds",
-                              worker.name,
-                              self.cluster_manager.worker_start_timeout)
-            else:
-                self.log.error("Error while starting worker %s", exc_info=exc)
-            await self.stop_worker(cluster, worker, failed=True)
-            return
+            self.log.error("Error while starting worker %s", worker, exc_info=exc)
+            return False
 
         self.log.debug("Worker %s has started, waiting for connection",
                        worker.name)
@@ -710,8 +737,7 @@ class DaskGateway(Application):
             self.log.warn("Worker %s failed to connect after %d seconds",
                           worker.name,
                           self.cluster_manager.worker_connect_timeout)
-            await self.stop_worker(cluster, worker, failed=True)
-            return
+            return False
 
         self.log.debug("Worker %s connected to cluster %s", worker.name, cluster.name)
 
@@ -725,13 +751,29 @@ class DaskGateway(Application):
             )
             cluster.pending.discard(worker.name)
             worker.status = WorkerStatus.RUNNING
+        return True
+
+    def _monitor_start_worker(self, future, worker=None, cluster=None):
+        try:
+            if future.result():
+                # Startup succeeded, nothing to do
+                return
+        except asyncio.CancelledError:
+            # Startup cancelled, cleanup is handled separately
+            self.log.debug("Cancelled worker %s", worker.name)
+            return
+        except Exception as exc:
+            self.log.error("Unexpected error while starting worker %s for cluster %s",
+                           worker.name, cluster.name, exc_info=exc)
+
+        self.schedule_stop_worker(cluster, worker, failed=True)
 
     async def stop_worker(self, cluster, worker, failed=False):
-        if failed:
-            self.log.debug("Worker %s for cluster %s has failed, cleaning up...")
-        else:
-            self.log.debug("Stopping worker %s for cluster %s",
-                           worker.name, cluster.name)
+        self.log.debug("Stopping worker %s for cluster %s",
+                       worker.name, cluster.name)
+
+        # Cancel a pending start if needed
+        await cancel_task(worker._start_future)
 
         # Move worker to stopping
         with self.db.begin() as conn:
@@ -767,6 +809,16 @@ class DaskGateway(Application):
 
         self.log.debug("Worker %s stopped", worker.name)
 
+    def schedule_stop_worker(self, cluster, worker, failed=False):
+        asyncio.ensure_future(self.stop_worker(cluster, worker, failed=failed))
+
+    def maybe_fail_worker(self, cluster, worker):
+        # Ignore if cluster or worker isn't active (
+        if (cluster.status != ClusterStatus.RUNNING or
+                worker.status >= WorkerStatus.STOPPING):
+            return
+        self.schedule_stop_worker(cluster, worker, failed=True)
+
     async def scale_down(self, cluster, n_stop):
         if cluster.pending:
             if len(cluster.pending) > n_stop:
@@ -776,11 +828,10 @@ class DaskGateway(Application):
                 cluster.pending.clear()
             to_stop = [cluster.workers[n] for n in to_stop]
 
-            # Stop pending workers
-            tasks = (self.stop_worker(cluster, w) for w in to_stop)
-            await asyncio.gather(*tasks, return_exceptions=True)
-            self.log.debug("Stopped %d pending workers for cluster %s",
+            self.log.debug("Stopping %d pending workers for cluster %s",
                            len(to_stop), cluster.name)
+            for w in to_stop:
+                self.schedule_stop_worker(cluster, w)
             n_stop -= len(to_stop)
 
         if n_stop:
@@ -797,17 +848,10 @@ class DaskGateway(Application):
             data = json.loads(resp.body.decode('utf8', 'replace'))
             to_stop = [cluster.workers[n] for n in data['workers_closed']]
 
-            # Call stop_worker on the shutdown workers
-            tasks = (self.stop_worker(cluster, w) for w in to_stop)
-            await asyncio.gather(*tasks, return_exceptions=True)
-            self.log.debug("Stopped %d running workers for cluster %s",
+            self.log.debug("Stopping %d running workers for cluster %s",
                            len(to_stop), cluster.name)
-
-    def register_worker(self, worker):
-        worker._connect_future.set_result(True)
-
-    async def unregister_worker(self, cluster, worker):
-        await self.stop_worker(cluster, worker, failed=True)
+            for w in to_stop:
+                self.schedule_stop_worker(cluster, w)
 
 
 main = DaskGateway.launch_instance

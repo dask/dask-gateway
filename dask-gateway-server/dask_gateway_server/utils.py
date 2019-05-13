@@ -1,3 +1,4 @@
+import asyncio
 import functools
 import shutil
 import socket
@@ -32,6 +33,14 @@ def log_exceptions(method):
             self.log("Exception in %r", method.__qualname__, exc_info=exc)
 
     return inner
+
+
+async def cancel_task(task):
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
 
 
 # Adapted from JupyterHub

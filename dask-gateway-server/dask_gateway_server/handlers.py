@@ -6,6 +6,8 @@ from urllib.parse import urlparse, unquote
 from tornado import web
 from tornado.log import app_log
 
+from .objects import ClusterStatus
+
 
 DASK_GATEWAY_COOKIE = 'dask-gateway'
 
@@ -155,7 +157,7 @@ class ClustersHandler(BaseHandler):
         wait = self.get_query_argument("wait", default=False)
 
         if wait is not False:
-            self.waiter = asyncio.shield(cluster._started_future)
+            self.waiter = asyncio.shield(cluster._start_future)
             try:
                 await self.waiter
             except asyncio.CancelledError:
@@ -190,12 +192,12 @@ class ClusterRegistrationHandler(BaseHandler):
         except (TypeError, KeyError):
             raise web.HTTPError(405)
 
-        if self.dask_cluster._addresses_future.done():
+        if self.dask_cluster._connect_future.done():
             raise web.HTTPError(
                 409, reason="Cluster %s is already registered" % cluster_name
             )
 
-        self.dask_cluster._addresses_future.set_result((scheduler, dashboard, api))
+        self.dask_cluster._connect_future.set_result((scheduler, dashboard, api))
 
     @token_authenticated
     async def get(self, cluster_name):
@@ -212,7 +214,7 @@ class ClusterScaleHandler(BaseHandler):
         cluster = self.dask_user.clusters.get(cluster_name)
         if cluster is None:
             raise web.HTTPError(404, reason="Cluster %s does not exist" % cluster_name)
-        elif not cluster.is_active():
+        elif cluster.status != ClusterStatus.RUNNING:
             raise web.HTTPError(
                 409,
                 reason=("Cluster %s has status=%s, must be RUNNING to scale"
@@ -239,13 +241,17 @@ class ClusterWorkersHandler(BaseHandler):
     async def put(self, cluster_name, worker_name):
         """Register worker added to cluster"""
         cluster, worker = self.get_cluster_and_worker(cluster_name, worker_name)
-        self.gateway.register_worker(worker)
+        if worker._connect_future.done():
+            raise web.HTTPError(
+                409, reason="Worker %s is already registered" % cluster_name
+            )
+        worker._connect_future.set_result(True)
 
     @token_authenticated
     async def delete(self, cluster_name, worker_name):
         """Register worker removed from cluster"""
         cluster, worker = self.get_cluster_and_worker(cluster_name, worker_name)
-        await self.gateway.unregister_worker(cluster, worker)
+        self.gateway.maybe_fail_worker(cluster, worker)
 
 
 default_handlers = [

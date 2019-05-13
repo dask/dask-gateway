@@ -136,12 +136,12 @@ class Cluster(object):
 
         loop = asyncio.get_running_loop()
         self.lock = asyncio.Lock(loop=loop)
-        self._started_future = loop.create_future()
+        self._start_future = loop.create_future()
+        self._connect_future = loop.create_future()
         if status >= ClusterStatus.RUNNING:
-            self._started_future.set_result(True)
-            self._addresses_future = None
-        else:
-            self._addresses_future = loop.create_future()
+            # Already running, create finished futures to mark
+            self._start_future.set_result(True)
+            self._connect_future.set_result(None)
 
     def is_active(self):
         return self.status < ClusterStatus.STOPPING
@@ -164,7 +164,14 @@ class Worker(object):
         self.state = state
 
         loop = asyncio.get_running_loop()
+
+        self._start_future = loop.create_future()
         self._connect_future = loop.create_future()
+
+        if status >= WorkerStatus.RUNNING:
+            # Already running, create finished future to mark
+            self._start_future.set_result(True)
+            self._connect_future.set_result(None)
 
     def is_active(self):
         return self.status < WorkerStatus.STOPPING
