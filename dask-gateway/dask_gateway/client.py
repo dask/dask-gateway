@@ -1,15 +1,11 @@
 import enum
-import getpass
 import json
 import os
-import re
 import ssl
 import tempfile
 import weakref
-from base64 import b64encode
 from datetime import timedelta
 from threading import get_ident
-from urllib.parse import urlparse
 
 from distributed import Client
 from distributed.security import Security
@@ -22,82 +18,20 @@ from .cookiejar import CookieJar
 
 # Register gateway protocol
 from . import comm
+from .auth import BasicAuth
 
 del comm
 
-__all__ = ("Gateway", "BasicAuth", "KerberosAuth", "DaskGatewayCluster")
-
-
-class GatewayAuth(object):
-    def pre_request(self, req, resp):
-        pass
-
-    def post_response(self, req, resp, context):
-        pass
-
-
-class BasicAuth(GatewayAuth):
-    """Attaches HTTP Basic Authentication to the given Request object."""
-
-    def __init__(self, username=None, password=None):
-        if username is None:
-            username = getpass.getuser()
-        if password is None:
-            password = ""
-        self._username = username
-        self._password = password
-        data = b":".join(
-            (self._username.encode("latin1"), self._password.encode("latin1"))
-        )
-        self._auth = "Basic " + b64encode(data).decode()
-
-    def pre_request(self, req, resp):
-        req.headers["Authorization"] = self._auth
-        return None
-
-
-class KerberosAuth(GatewayAuth):
-    """Authenticate with kerberos"""
-
-    auth_regex = re.compile("(?:.*,)*\s*Negotiate\s*([^,]*),?", re.I)  # noqa
-
-    def pre_request(self, req, resp):
-        # TODO: convert errors to some common error class
-        import kerberos
-
-        hostname = urlparse(resp.effective_url).hostname
-        _, context = kerberos.authGSSClientInit(
-            "HTTP@%s" % hostname,
-            gssflags=kerberos.GSS_C_MUTUAL_FLAG | kerberos.GSS_C_SEQUENCE_FLAG,
-        )
-        kerberos.authGSSClientStep(context, "")
-        response = kerberos.authGSSClientResponse(context)
-        req.headers["Authorization"] = "Negotiate " + response
-        return context
-
-    def post_response(self, req, resp, context):
-        import kerberos
-
-        www_auth = resp.headers.get("www-authenticate", None)
-        token = None
-        if www_auth:
-            match = self.auth_regex.search(www_auth)
-            if match:
-                token = match.group(1)
-        if not token:
-            raise ValueError("Kerberos negotiation failed")
-        kerberos.authGSSClientStep(context, token)
+__all__ = ("Gateway", "DaskGatewayCluster")
 
 
 class GatewaySecurity(Security):
     """A security implementation that temporarily stores credentials on disk.
 
     The normal ``Security`` class assumes credentials already exist on disk,
-    but we our credentials exist only in memory. Since Python's SSLContext
-    doesn't support directly loading credentials from memory, we write them
-    temporarily to disk when creating the context, then delete them
-    immediately.
-    """
+    but our credentials exist only in memory. Since Python's SSLContext doesn't
+    support directly loading credentials from memory, we write them temporarily
+    to disk when creating the context, then delete them immediately."""
 
     def __init__(self, tls_key, tls_cert):
         self.tls_key = tls_key
@@ -497,6 +431,12 @@ _widget_status_template = """
 
 
 class DaskGatewayCluster(object):
+    """A dask-gateway cluster.
+
+    Users should use ``Gateway.new_cluster`` or ``Gateway.connect`` instead of
+    calling this class directly.
+    """
+
     def __init__(self, gateway, report):
         self._gateway = gateway
         self.name = report.name
@@ -545,7 +485,7 @@ class DaskGatewayCluster(object):
 
         Returns
         -------
-        client : Client
+        client : dask.distributed.Client
         """
         client = Client(
             self.scheduler_address,

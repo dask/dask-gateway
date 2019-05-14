@@ -1,4 +1,5 @@
-from .client import Gateway, DaskGatewayCluster, KerberosAuth, BasicAuth
+from .client import Gateway, DaskGatewayCluster
+from .auth import KerberosAuth, BasicAuth
 
 from ._version import get_versions
 
