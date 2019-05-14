@@ -36,7 +36,7 @@ func NewWebProxy(logLevel LogLevel) *HttpProxy {
 
 func (p *HttpProxy) errorHandler(w http.ResponseWriter, r *http.Request, err error) {
 	if err != context.Canceled {
-		p.logger.Errorf("Web Proxy Error: %s", err)
+		p.logger.Warnf("Web Proxy Error: %s", err)
 	}
 	w.WriteHeader(http.StatusBadGateway)
 }
