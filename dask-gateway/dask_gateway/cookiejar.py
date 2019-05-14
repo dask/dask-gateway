@@ -28,26 +28,119 @@ from urllib.parse import urlparse
 from tornado.gen import IOLoop
 
 
+_DATE_TOKENS_RE = re.compile(
+    r"[\x09\x20-\x2F\x3B-\x40\x5B-\x60\x7B-\x7E]*"
+    r"(?P<token>[\x00-\x08\x0A-\x1F\d:a-zA-Z\x7F-\xFF]+)"
+)
+
+_DATE_HMS_TIME_RE = re.compile(r"(\d{1,2}):(\d{1,2}):(\d{1,2})")
+
+_DATE_DAY_OF_MONTH_RE = re.compile(r"(\d{1,2})")
+
+_DATE_MONTH_RE = re.compile(
+    "(jan)|(feb)|(mar)|(apr)|(may)|(jun)|(jul)|" "(aug)|(sep)|(oct)|(nov)|(dec)", re.I
+)
+
+_DATE_YEAR_RE = re.compile(r"(\d{2,4})")
+
+
+def _is_domain_match(domain, hostname):
+    """Implements domain matching adhering to RFC 6265."""
+    if hostname == domain:
+        return True
+
+    if not hostname.endswith(domain):
+        return False
+
+    return hostname[: -len(domain)].endswith(".")
+
+
+def _is_path_match(req_path, cookie_path):
+    """Implements path matching adhering to RFC 6265."""
+    if not req_path.startswith("/"):
+        req_path = "/"
+
+    if req_path == cookie_path:
+        return True
+
+    if not req_path.startswith(cookie_path):
+        return False
+
+    if cookie_path.endswith("/"):
+        return True
+
+    return req_path[len(cookie_path) :].startswith("/")
+
+
+def _parse_date(date_str):
+    """Implements date string parsing adhering to RFC 6265."""
+    if not date_str:
+        return None
+
+    found_time = False
+    found_day = False
+    found_month = False
+    found_year = False
+
+    hour = minute = second = 0
+    day = 0
+    month = 0
+    year = 0
+
+    for token_match in _DATE_TOKENS_RE.finditer(date_str):
+
+        token = token_match.group("token")
+
+        if not found_time:
+            time_match = _DATE_HMS_TIME_RE.match(token)
+            if time_match:
+                found_time = True
+                hour, minute, second = [int(s) for s in time_match.groups()]
+                continue
+
+        if not found_day:
+            day_match = _DATE_DAY_OF_MONTH_RE.match(token)
+            if day_match:
+                found_day = True
+                day = int(day_match.group())
+                continue
+
+        if not found_month:
+            month_match = _DATE_MONTH_RE.match(token)
+            if month_match:
+                found_month = True
+                month = month_match.lastindex
+                continue
+
+        if not found_year:
+            year_match = _DATE_YEAR_RE.match(token)
+            if year_match:
+                found_year = True
+                year = int(year_match.group())
+
+    if 70 <= year <= 99:
+        year += 1900
+    elif 0 <= year <= 69:
+        year += 2000
+
+    if False in (found_day, found_month, found_year, found_time):
+        return None
+
+    if not 1 <= day <= 31:
+        return None
+
+    if year < 1601 or hour > 23 or minute > 59 or second > 59:
+        return None
+
+    return datetime.datetime(
+        year, month, day, hour, minute, second, tzinfo=datetime.timezone.utc
+    )
+
+
 class CookieJar(object):
     """Implements cookie storage adhering to RFC 6265."""
 
-    DATE_TOKENS_RE = re.compile(
-        r"[\x09\x20-\x2F\x3B-\x40\x5B-\x60\x7B-\x7E]*"
-        r"(?P<token>[\x00-\x08\x0A-\x1F\d:a-zA-Z\x7F-\xFF]+)"
-    )
-
-    DATE_HMS_TIME_RE = re.compile(r"(\d{1,2}):(\d{1,2}):(\d{1,2})")
-
-    DATE_DAY_OF_MONTH_RE = re.compile(r"(\d{1,2})")
-
-    DATE_MONTH_RE = re.compile(
-        "(jan)|(feb)|(mar)|(apr)|(may)|(jun)|(jul)|" "(aug)|(sep)|(oct)|(nov)|(dec)",
-        re.I,
-    )
-
-    DATE_YEAR_RE = re.compile(r"(\d{2,4})")
-
-    MAX_TIME = 2051215261.0  # so far in future (2035-01-01)
+    _MAX_TIME = 2051215261.0  # so far in future (2035-01-01)
 
     def __init__(self, loop=None):
         self._loop = loop or IOLoop.current()
@@ -62,13 +155,21 @@ class CookieJar(object):
         self._next_expiration = ceil(self._loop.time())
         self._expirations.clear()
 
+    def __iter__(self):
+        self._do_expiration()
+        return (m for c in self._cookies.values() for m in c.values())
+
+    def __len__(self):
+        self._do_expiration()
+        return sum(map(len, self._cookies.values()))
+
     def _do_expiration(self):
         now = self._loop.time()
         if self._next_expiration > now:
             return
         if not self._expirations:
             return
-        next_expiration = self.MAX_TIME
+        next_expiration = self._MAX_TIME
         to_del = []
         cookies = self._cookies
         expirations = self._expirations
@@ -121,7 +222,7 @@ class CookieJar(object):
                 domain = domain[1:]
                 cookie["domain"] = domain
 
-            if hostname and not self._is_domain_match(domain, hostname):
+            if hostname and not _is_domain_match(domain, hostname):
                 # Setting cookies for different domains is not allowed
                 continue
 
@@ -147,7 +248,7 @@ class CookieJar(object):
             else:
                 expires = cookie["expires"]
                 if expires:
-                    expire_time = self._parse_date(expires)
+                    expire_time = _parse_date(expires)
                     if expire_time:
                         self._expire_cookie(expire_time.timestamp(), domain, name)
                     else:
@@ -178,10 +279,10 @@ class CookieJar(object):
                 if (domain, name) in self._host_only_cookies:
                     if domain != hostname:
                         continue
-                elif not self._is_domain_match(domain, hostname):
+                elif not _is_domain_match(domain, hostname):
                     continue
 
-                if not self._is_path_match(request_url.path, morsel["path"]):
+                if not _is_path_match(request_url.path, morsel["path"]):
                     continue
 
                 if is_not_secure and morsel["secure"]:
@@ -190,98 +291,6 @@ class CookieJar(object):
                 filtered[name] = morsel
 
         return filtered
-
-    @staticmethod
-    def _is_domain_match(domain, hostname):
-        """Implements domain matching adhering to RFC 6265."""
-        if hostname == domain:
-            return True
-
-        if not hostname.endswith(domain):
-            return False
-
-        return hostname[: -len(domain)].endswith(".")
-
-    @staticmethod
-    def _is_path_match(req_path, cookie_path):
-        """Implements path matching adhering to RFC 6265."""
-        if not req_path.startswith("/"):
-            req_path = "/"
-
-        if req_path == cookie_path:
-            return True
-
-        if not req_path.startswith(cookie_path):
-            return False
-
-        if cookie_path.endswith("/"):
-            return True
-
-        return req_path[len(cookie_path) :].startswith("/")
-
-    def _parse_date(self, date_str):
-        """Implements date string parsing adhering to RFC 6265."""
-        if not date_str:
-            return None
-
-        found_time = False
-        found_day = False
-        found_month = False
-        found_year = False
-
-        hour = minute = second = 0
-        day = 0
-        month = 0
-        year = 0
-
-        for token_match in self.DATE_TOKENS_RE.finditer(date_str):
-
-            token = token_match.group("token")
-
-            if not found_time:
-                time_match = self.DATE_HMS_TIME_RE.match(token)
-                if time_match:
-                    found_time = True
-                    hour, minute, second = [int(s) for s in time_match.groups()]
-                    continue
-
-            if not found_day:
-                day_match = self.DATE_DAY_OF_MONTH_RE.match(token)
-                if day_match:
-                    found_day = True
-                    day = int(day_match.group())
-                    continue
-
-            if not found_month:
-                month_match = self.DATE_MONTH_RE.match(token)
-                if month_match:
-                    found_month = True
-                    month = month_match.lastindex
-                    continue
-
-            if not found_year:
-                year_match = self.DATE_YEAR_RE.match(token)
-                if year_match:
-                    found_year = True
-                    year = int(year_match.group())
-
-        if 70 <= year <= 99:
-            year += 1900
-        elif 0 <= year <= 69:
-            year += 2000
-
-        if False in (found_day, found_month, found_year, found_time):
-            return None
-
-        if not 1 <= day <= 31:
-            return None
-
-        if year < 1601 or hour > 23 or minute > 59 or second > 59:
-            return None
-
-        return datetime.datetime(
-            year, month, day, hour, minute, second, tzinfo=datetime.timezone.utc
-        )
 
     def pre_request(self, req):
         """Update a HTTPRequest with any relevant cookies"""
