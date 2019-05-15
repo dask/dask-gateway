@@ -11,7 +11,7 @@ branches:
     - master
 
 install:
-  - source continuous_integration/travis/install.sh
+  - source continuous_integration/install.sh
 
 script:
   - source test-environment/bin/activate
