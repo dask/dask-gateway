@@ -18,7 +18,6 @@ install:
   - source continuous_integration/install.sh
 
 script:
-  - source test-environment/bin/activate
   - py.test tests/ -v
   - flake8
   - black . --check

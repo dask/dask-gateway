@@ -1,9 +1,5 @@
 set -xe
 
-python -m venv test-environment
-
-source test-environment/bin/activate
-
 pip install \
     dask \
     distributed \
