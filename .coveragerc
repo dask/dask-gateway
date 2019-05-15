@@ -1,0 +1,7 @@
+[run]
+omit =
+    tests/*.py
+    */_version.py
+source = 
+    dask-gateway-server/dask_gateway_server
+    dask-gateway/dask_gateway

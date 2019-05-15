@@ -157,8 +157,8 @@ def test_path_matching():
 
 
 @pytest.mark.asyncio
-async def test_constructor(loop, cookies_to_send, cookies_to_receive):
-    jar = CookieJar(loop=loop)
+async def test_constructor(cookies_to_send, cookies_to_receive):
+    jar = CookieJar()
     jar.update_cookies(cookies_to_send)
     jar_cookies = SimpleCookie()
     for cookie in jar:
@@ -166,12 +166,11 @@ async def test_constructor(loop, cookies_to_send, cookies_to_receive):
     expected_cookies = cookies_to_send.copy()
     expected_cookies.pop("expires-cookie")
     assert jar_cookies == expected_cookies
-    assert jar._loop is loop
 
 
 @pytest.mark.asyncio
-async def test_domain_filter_ip_cookie_send(loop):
-    jar = CookieJar(loop=loop)
+async def test_domain_filter_ip_cookie_send():
+    jar = CookieJar()
     cookies = SimpleCookie(
         "shared-cookie=first; "
         "domain-cookie=second; Domain=example.com; "
@@ -203,8 +202,8 @@ async def test_domain_filter_ip_cookie_send(loop):
 
 
 @pytest.mark.asyncio
-async def test_preserving_ip_domain_cookies(loop):
-    jar = CookieJar(loop=loop)
+async def test_preserving_ip_domain_cookies():
+    jar = CookieJar()
     jar.update_cookies(
         SimpleCookie("shared-cookie=first; " "ip-cookie=second; Domain=127.0.0.1;")
     )
@@ -217,8 +216,8 @@ async def test_preserving_ip_domain_cookies(loop):
 
 
 @pytest.mark.asyncio
-async def test_preserving_quoted_cookies(loop):
-    jar = CookieJar(loop=loop)
+async def test_preserving_quoted_cookies():
+    jar = CookieJar()
     jar.update_cookies(SimpleCookie('ip-cookie="second"; Domain=127.0.0.1;'))
     cookies_sent = jar.filter_cookies("http://127.0.0.1/").output(
         header="Cookie:", attrs=()
@@ -227,8 +226,8 @@ async def test_preserving_quoted_cookies(loop):
 
 
 @pytest.mark.asyncio
-async def test_ignore_domain_ending_with_dot(loop):
-    jar = CookieJar(loop=loop)
+async def test_ignore_domain_ending_with_dot():
+    jar = CookieJar()
     jar.update_cookies(
         SimpleCookie("cookie=val; Domain=example.com.;"), "http://www.example.com"
     )
@@ -239,8 +238,8 @@ async def test_ignore_domain_ending_with_dot(loop):
 
 
 @pytest.mark.asyncio
-async def test_tornado_request(loop):
-    jar = CookieJar(loop=loop)
+async def test_tornado_request():
+    jar = CookieJar()
     jar.update_cookies("cookie1=val1;", "http://www.example.com")
     jar.update_cookies("cookie2=val2; Path=/foo", "http://www.example.com")
 
@@ -254,8 +253,8 @@ async def test_tornado_request(loop):
 
 
 @pytest.mark.asyncio
-async def test_tornado_response(loop):
-    jar = CookieJar(loop=loop)
+async def test_tornado_response():
+    jar = CookieJar()
     req = HTTPResponse(
         HTTPRequest("http://www.example.com"),
         200,

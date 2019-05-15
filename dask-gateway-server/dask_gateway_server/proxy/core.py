@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 from traitlets.config import LoggingConfigurable
-from traitlets import default, Unicode, CaselessStrEnum
+from traitlets import default, Unicode, CaselessStrEnum, Float
 
 from ..utils import random_port
 
@@ -51,6 +51,13 @@ class ProxyBase(LoggingConfigurable):
         The Proxy auth token
 
         Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.
+        """,
+        config=True,
+    )
+
+    connect_timeout = Float(
+        help="""
+        Timeout (in seconds) from init until the proxy process is connected.
         """,
         config=True,
     )
@@ -101,10 +108,10 @@ class ProxyBase(LoggingConfigurable):
 
         await self.wait_until_up()
 
-    async def wait_until_up(self, timeout=10):
+    async def wait_until_up(self):
         client = AsyncHTTPClient()
         loop = gen.IOLoop.current()
-        deadline = loop.time() + timeout
+        deadline = loop.time() + self.connect_timeout
         dt = 0.1
         while True:
             try:
@@ -115,7 +122,11 @@ class ProxyBase(LoggingConfigurable):
                     return True
             except (OSError, socket.error):
                 # Failed to connect, see if the process erred out
-                exitcode = self.proxy_process.poll()
+                exitcode = (
+                    self.proxy_process.poll()
+                    if hasattr(self, "proxy_process")
+                    else None
+                )
                 if exitcode is not None:
                     raise RuntimeError(
                         "Failed to start %s proxy, exit code %i"
@@ -129,13 +140,14 @@ class ProxyBase(LoggingConfigurable):
             await gen.sleep(dt)
         raise RuntimeError(
             "Failed to connect to %s proxy at %s in %d secs"
-            % (self._subcommand, self.api_url, timeout)
+            % (self._subcommand, self.api_url, self.connect_timeout)
         )
 
     def stop(self):
         """Stop the proxy."""
-        self.log.info("Stopping the Dask gateway %s proxy", self._subcommand)
-        self.proxy_process.terminate()
+        if hasattr(self, "proxy_process"):
+            self.log.info("Stopping the Dask gateway %s proxy", self._subcommand)
+            self.proxy_process.terminate()
 
     async def _api_request(self, url, method="GET", body=None):
         client = AsyncHTTPClient()
