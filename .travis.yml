@@ -13,6 +13,7 @@ branches:
 before_install:
   - gimme 1.12
   - source ~/.gimme/envs/go1.12.env
+  - go get github.com/stretchr/testify/assert
 
 install:
   - source continuous_integration/install.sh
@@ -21,6 +22,10 @@ script:
   - py.test tests/ -v
   - flake8
   - black . --check
+  - |
+    pushd dask-gateway-server/dask-gateway-proxy
+    go test
+    popd
 
 notifications:
   email: false
