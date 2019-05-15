@@ -1,6 +1,6 @@
 set -xe
 
-python3.7 -m venv test-environment
+python -m venv test-environment
 
 source test-environment/bin/activate
 

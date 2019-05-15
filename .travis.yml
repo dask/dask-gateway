@@ -1,7 +1,7 @@
 dist: xenial
-language: go
-go:
-  - "1.12"
+language: python
+python:
+  - "3.7"
 
 git:
   depth: false  # Ensure latest tag is pulled
@@ -9,6 +9,10 @@ git:
 branches:
   only:
     - master
+
+before_install:
+  - gimme 1.12
+  - source ~/.gimme/envs/go1.12.env
 
 install:
   - source continuous_integration/install.sh
