@@ -1,0 +1,23 @@
+dist: xenial
+language: go
+go:
+  - "1.12"
+
+git:
+  depth: false  # Ensure latest tag is pulled
+
+branches:
+  only:
+    - master
+
+install:
+  - source continuous_integration/travis/install.sh
+
+script:
+  - source test-environment/bin/activate
+  - py.test tests/ -v
+  - flake8
+  - black . --check
+
+notifications:
+  email: false
