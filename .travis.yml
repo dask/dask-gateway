@@ -1,0 +1,26 @@
+dist: xenial
+language: python
+python:
+  - "3.7"
+
+git:
+  depth: false  # Ensure latest tag is pulled
+
+branches:
+  only:
+    - master
+
+before_install:
+  - gimme 1.12
+  - source ~/.gimme/envs/go1.12.env
+
+install:
+  - source continuous_integration/install.sh
+
+script:
+  - py.test tests/ -v
+  - flake8
+  - black . --check
+
+notifications:
+  email: false
