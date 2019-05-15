@@ -21,6 +21,10 @@ script:
   - py.test tests/ -v
   - flake8
   - black . --check
+  - |
+    pushd dask-gateway-server/dask-gateway-proxy
+    go test
+    popd
 
 notifications:
   email: false

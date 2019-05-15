@@ -56,6 +56,7 @@ class ProxyBase(LoggingConfigurable):
     )
 
     connect_timeout = Float(
+        10.0,
         help="""
         Timeout (in seconds) from init until the proxy process is connected.
         """,
