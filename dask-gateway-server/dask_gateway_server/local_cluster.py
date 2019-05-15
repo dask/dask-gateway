@@ -6,7 +6,7 @@ import shutil
 import signal
 import sys
 
-from traitlets import Unicode, Integer, default
+from traitlets import List, Unicode, Integer, default
 
 from .cluster import ClusterManager
 
@@ -28,9 +28,7 @@ def _signal(pid, sig):
 
 
 def is_running(pid):
-    if pid != 0:
-        return _signal(pid, 0)
-    return False
+    return _signal(pid, 0)
 
 
 async def wait_is_shutdown(pid, timeout=10):
@@ -94,6 +92,23 @@ class LocalClusterManager(ClusterManager):
         config=True,
     )
 
+    inherited_environment = List(
+        [
+            "PATH",
+            "PYTHONPATH",
+            "CONDA_ROOT",
+            "CONDA_DEFAULT_ENV",
+            "VIRTUAL_ENV",
+            "LANG",
+            "LC_ALL",
+        ],
+        help="""
+        Whitelist of environment variables for the scheduler and worker
+        processes to inherit from the Dask-Gateway process.
+        """,
+        config=True,
+    )
+
     pid = Integer(0, help="The pid of the scheduler process")
 
     @default("clusters_directory")
@@ -111,10 +126,13 @@ class LocalClusterManager(ClusterManager):
 
     def get_env(self, cluster_info):
         env = super().get_env(cluster_info)
+        for key in self.inherited_environment:
+            if key in os.environ:
+                env[key] = os.environ[key]
         env["USER"] = cluster_info.username
         return env
 
-    def create_working_directory(self, cluster_info):
+    def create_working_directory(self, cluster_info):  # pragma: nocover
         user = pwd.getpwnam(cluster_info.username)
         uid = user.pw_uid
         gid = user.pw_gid
@@ -143,7 +161,7 @@ class LocalClusterManager(ClusterManager):
             return
         try:
             shutil.rmtree(workdir)
-        except Exception:
+        except Exception:  # pragma: nocover
             self.log.warn("Failed to remove working directory %r", workdir)
 
     def get_tls_paths(self, cluster_info):
@@ -154,7 +172,7 @@ class LocalClusterManager(ClusterManager):
         key_path = os.path.join(certsdir, "dask.pem")
         return cert_path, key_path
 
-    def make_preexec_fn(self, cluster_info):
+    def make_preexec_fn(self, cluster_info):  # pragma: nocover
         # Borrowed and modified from jupyterhub/spawner.py
         import grp
         import pwd
@@ -242,9 +260,6 @@ class LocalClusterManager(ClusterManager):
         )
         yield {"pid": pid}
 
-    async def is_cluster_running(self, cluster_info, cluster_state):
-        return is_running(cluster_state["pid"])
-
     async def stop_cluster(self, cluster_info, cluster_state):
         pid = cluster_state.get("pid")
         if pid is not None:
@@ -277,7 +292,7 @@ class UnsafeLocalClusterManager(LocalClusterManager):
     def make_preexec_fn(self, cluster_info):
         workdir = self.get_working_directory(cluster_info)
 
-        def preexec():
+        def preexec():  # pragma: nocover
             os.chdir(workdir)
 
         return preexec

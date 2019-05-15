@@ -172,20 +172,6 @@ class ClusterManager(LoggingConfigurable):
         """
         raise NotImplementedError
 
-    async def is_cluster_running(self, cluster_info, cluster_state):
-        """Check if the cluster is running.
-
-        Returns ``True`` if running, ``False`` otherwise.
-
-        Parameters
-        ----------
-        cluster_info : ClusterInfo
-            Information about the cluster.
-        cluster_state : dict
-            Any additional state returned from ``start_cluster``.
-        """
-        raise NotImplementedError
-
     async def stop_cluster(self, cluster_info, cluster_state):
         """Stop the cluster.
 

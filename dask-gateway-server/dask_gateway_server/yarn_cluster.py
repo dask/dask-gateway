@@ -213,12 +213,6 @@ class YarnClusterManager(ClusterManager):
 
         yield {"app_id": app_id, "app_address": app_address}
 
-    async def is_cluster_running(self, cluster_info, cluster_state):
-        report = await gen.IOLoop.current().run_in_executor(
-            None, self.skein_client.application_report, cluster_state["app_id"]
-        )
-        return report.state == "RUNNING"
-
     async def stop_cluster(self, cluster_info, cluster_state):
         app_id = cluster_state.get("app_id")
         if app_id is None:
