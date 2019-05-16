@@ -1,4 +1,4 @@
-from traitlets import Unicode, Integer, Dict, Bool
+from traitlets import Unicode, Float, Integer, Dict, Bool
 from traitlets.config import LoggingConfigurable
 
 from .utils import MemoryLimit
@@ -14,7 +14,7 @@ class ClusterManager(LoggingConfigurable):
         config=True,
     )
 
-    cluster_start_timeout = Integer(
+    cluster_start_timeout = Float(
         60,
         help="""
         Timeout (in seconds) before giving up on a starting dask cluster.
@@ -25,7 +25,7 @@ class ClusterManager(LoggingConfigurable):
         config=True,
     )
 
-    cluster_connect_timeout = Integer(
+    cluster_connect_timeout = Float(
         30,
         help="""
         Timeout (in seconds) for a started dask cluster to connect to the gateway.
@@ -36,7 +36,7 @@ class ClusterManager(LoggingConfigurable):
         config=True,
     )
 
-    worker_start_timeout = Integer(
+    worker_start_timeout = Float(
         60,
         help="""
         Timeout (in seconds) before giving up on a starting dask worker.
@@ -44,7 +44,7 @@ class ClusterManager(LoggingConfigurable):
         config=True,
     )
 
-    worker_connect_timeout = Integer(
+    worker_connect_timeout = Float(
         30,
         help="""
         Timeout (in seconds) for a started dask worker to connect to the scheduler.
