@@ -1,35 +1,6 @@
-import atexit
-import os
-import signal
+from dask_gateway_server.local_cluster import is_running
 
-from dask_gateway_server.local_cluster import UnsafeLocalClusterManager, is_running
-
-from .utils import ClusterManagerTests
-
-
-_PIDS = set()
-
-
-def cleanup_lost_processes():
-    if not _PIDS:
-        return
-    for pid in _PIDS:
-        os.kill(pid, signal.SIGTERM)
-    print("-- Stopped %d lost processes --" % len(_PIDS))
-
-
-atexit.register(cleanup_lost_processes)
-
-
-class LocalTestingClusterManager(UnsafeLocalClusterManager):
-    async def start_process(self, *args, **kwargs):
-        pid = await super().start_process(*args, **kwargs)
-        _PIDS.add(pid)
-        return pid
-
-    async def stop_process(self, pid):
-        await super().stop_process(pid)
-        _PIDS.discard(pid)
+from .utils import ClusterManagerTests, LocalTestingClusterManager
 
 
 class TestLocalClusterManager(ClusterManagerTests):

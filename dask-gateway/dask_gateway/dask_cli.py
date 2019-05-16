@@ -10,7 +10,7 @@ from urllib.parse import urlparse, quote
 from tornado import gen, web
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.ioloop import IOLoop, TimeoutError
-from distributed import Scheduler, Nanny
+from distributed import Scheduler, Worker, Nanny
 from distributed.security import Security
 from distributed.utils import ignoring
 from distributed.cli.utils import install_signal_handlers, uri_from_host_port
@@ -23,18 +23,7 @@ from distributed.diagnostics.plugin import SchedulerPlugin
 from . import __version__ as VERSION
 
 
-def init_logger(log_level="INFO"):
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(logging.Formatter("%(name)s - %(levelname)s - %(message)s"))
-    logger = logging.getLogger(__name__)
-    logger.setLevel(log_level.upper())
-    logger.handlers[:] = []
-    logger.addHandler(handler)
-    logger.propagate = False
-    return logger
-
-
-logger = init_logger()
+logger = logging.getLogger(__name__)
 
 
 class ScaleDownHandler(web.RequestHandler):
@@ -148,20 +137,10 @@ class GatewaySchedulerPlugin(SchedulerPlugin):
 
 
 class GatewayClient(object):
-    def __init__(self):
-        self.api_url = os.environ.get("DASK_GATEWAY_API_URL")
-        self.cluster_name = os.environ.get("DASK_GATEWAY_CLUSTER_NAME")
-        self.token = os.environ.get("DASK_GATEWAY_API_TOKEN")
-
-        tls_cert = os.environ.get("DASK_GATEWAY_TLS_CERT")
-        tls_key = os.environ.get("DASK_GATEWAY_TLS_KEY")
-        self.security = Security(
-            tls_ca_file=tls_cert,
-            tls_scheduler_cert=tls_cert,
-            tls_scheduler_key=tls_key,
-            tls_worker_cert=tls_cert,
-            tls_worker_key=tls_key,
-        )
+    def __init__(self, cluster_name, api_token, api_url):
+        self.cluster_name = cluster_name
+        self.token = api_token
+        self.api_url = api_url
 
     async def send_addresses(self, scheduler, dashboard, api):
         client = AsyncHTTPClient()
@@ -232,9 +211,43 @@ scheduler_parser = argparse.ArgumentParser(
 scheduler_parser.add_argument("--version", action="version", version=VERSION)
 
 
-def scheduler():
-    _ = scheduler_parser.parse_args()
+def getenv(key):
+    out = os.environ.get(key)
+    if not out:
+        logger.error("Environment variable %r not found, shutting down", key)
+        sys.exit(1)
+    return out
 
+
+def make_security(tls_cert=None, tls_key=None):
+    tls_cert = tls_cert or getenv("DASK_GATEWAY_TLS_CERT")
+    tls_key = tls_key or getenv("DASK_GATEWAY_TLS_KEY")
+
+    return Security(
+        tls_ca_file=tls_cert,
+        tls_scheduler_cert=tls_cert,
+        tls_scheduler_key=tls_key,
+        tls_worker_cert=tls_cert,
+        tls_worker_key=tls_key,
+    )
+
+
+def make_gateway_client(cluster_name=None, api_url=None, api_token=None):
+    cluster_name = cluster_name or getenv("DASK_GATEWAY_CLUSTER_NAME")
+    api_url = api_url or getenv("DASK_GATEWAY_API_URL")
+    api_token = api_token or getenv("DASK_GATEWAY_API_TOKEN")
+    return GatewayClient(cluster_name, api_token, api_url)
+
+
+def scheduler():
+    scheduler_parser.parse_args()
+
+    gateway = make_gateway_client()
+    security = make_security()
+
+    loop = IOLoop.current()
+
+    install_signal_handlers(loop)
     enable_proctitle_on_current()
     enable_proctitle_on_children()
 
@@ -245,7 +258,12 @@ def scheduler():
         limit = max(soft, hard // 2)
         resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
 
-    gateway = GatewayClient()
+    loop.add_callback(start_scheduler, gateway, security)
+
+    loop.start()
+
+
+async def start_scheduler(gateway, security, exit_on_failure=True):
     loop = IOLoop.current()
     plugin = GatewaySchedulerPlugin(gateway, loop)
 
@@ -258,11 +276,9 @@ def scheduler():
         bokeh = True
 
     addr = uri_from_host_port("tls://", None, 0)
-    scheduler = Scheduler(loop=loop, services=services, security=gateway.security)
+    scheduler = Scheduler(loop=loop, services=services, security=security)
     scheduler.add_plugin(plugin)
     scheduler.start(addr)
-
-    install_signal_handlers(loop)
 
     host = urlparse(scheduler.address).hostname
     gateway_port = scheduler.services["gateway"].port
@@ -274,15 +290,14 @@ def scheduler():
     else:
         bokeh_address = ""
 
-    loop.run_sync(
-        lambda: gateway.send_addresses(scheduler.address, bokeh_address, api_address)
-    )
-
     try:
-        loop.start()
-        loop.close()
-    finally:
-        scheduler.stop()
+        await gateway.send_addresses(scheduler.address, bokeh_address, api_address)
+    except Exception as exc:
+        logger.error("Failed to send addresses to gateway", exc_info=exc)
+        if exit_on_failure:
+            sys.exit(1)
+
+    return scheduler
 
 
 worker_parser = argparse.ArgumentParser(
@@ -294,47 +309,68 @@ worker_parser.add_argument(
     "--nthreads", type=int, default=1, help="The number of threads to use"
 )
 worker_parser.add_argument(
-    "--memory-limit", default=None, help="The maximum amount of memory to allow"
+    "--memory-limit", default="auto", help="The maximum amount of memory to allow"
 )
 worker_parser.add_argument("--name", default=None, help="The worker name")
+
+
+async def start_worker(
+    gateway,
+    security,
+    worker_name,
+    nthreads=1,
+    memory_limit="auto",
+    local_dir="",
+    nanny=True,
+):
+    loop = IOLoop.current()
+
+    scheduler = await gateway.get_scheduler_address()
+
+    typ = Nanny if nanny else Worker
+
+    worker = typ(
+        scheduler,
+        ncores=nthreads,
+        loop=loop,
+        memory_limit=memory_limit,
+        security=security,
+        name=worker_name,
+        local_dir=local_dir,
+    )
+
+    if nanny:
+
+        async def close(signalnum):
+            await worker.close(timeout=2)
+
+        install_signal_handlers(loop, cleanup=close)
+
+    await worker._start(None)
+    return worker
 
 
 def worker():
     args = worker_parser.parse_args()
 
+    worker_name = args.name or getenv("DASK_GATEWAY_WORKER_NAME")
     nthreads = args.nthreads
     memory_limit = args.memory_limit
-    name = args.name or os.environ.get("DASK_GATEWAY_WORKER_NAME")
+
+    gateway = make_gateway_client()
+    security = make_security()
 
     enable_proctitle_on_current()
     enable_proctitle_on_children()
 
     loop = IOLoop.current()
 
-    gateway = GatewayClient()
-    scheduler = loop.run_sync(gateway.get_scheduler_address)
-
-    worker = Nanny(
-        scheduler,
-        ncores=nthreads,
-        loop=loop,
-        memory_limit=memory_limit,
-        worker_port=0,
-        security=gateway.security,
-        name=name,
-    )
-
-    @gen.coroutine
-    def close(signalnum):
-        worker._close(timeout=2)
-
-    install_signal_handlers(loop, cleanup=close)
-
-    @gen.coroutine
-    def run():
-        yield worker._start(None)
+    async def run():
+        worker = await start_worker(
+            gateway, security, worker_name, nthreads, memory_limit
+        )
         while worker.status != "closed":
-            yield gen.sleep(0.2)
+            await gen.sleep(0.2)
 
     try:
         loop.run_sync(run)

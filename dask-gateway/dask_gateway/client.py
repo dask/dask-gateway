@@ -207,7 +207,7 @@ class Gateway(object):
         return self
 
     async def __aexit__(self, typ, value, traceback):
-        await self._close()
+        pass
 
     def __repr__(self):
         return "Gateway<%s>" % self.address

@@ -226,6 +226,11 @@ class DaskGateway(Application):
     def api_url(self):
         return self.public_url + "/gateway/api"
 
+    def create_task(self, task):
+        out = asyncio.ensure_future(task)
+        self.pending_tasks.add(out)
+        return out
+
     @catch_config_error
     def initialize(self, argv=None):
         super().initialize(argv)
@@ -251,7 +256,9 @@ class DaskGateway(Application):
 
         for log in (app_log, access_log, gen_log):
             log.name = self.log.name
+            log.handlers[:] = []
         logger = logging.getLogger("tornado")
+        logger.handlers[:] = []
         logger.propagate = True
         logger.parent = self.log
         logger.setLevel(self.log.level)
@@ -355,11 +362,23 @@ class DaskGateway(Application):
             cookie_secret=self.cookie_secret,
             cookie_max_age_days=self.cookie_max_age_days,
         )
+        self.pending_tasks = weakref.WeakSet()
 
     async def start_async(self):
         await self.start_scheduler_proxy()
         await self.start_web_proxy()
         await self.start_tornado_application()
+
+    async def stop_async(self, timeout=20):
+        if hasattr(self, "http_server"):
+            self.http_server.stop()
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(*self.pending_tasks, return_exceptions=True), timeout
+            )
+        except (asyncio.TimeoutError, asyncio.CancelledError):
+            pass
+        IOLoop.current().stop()
 
     async def start_scheduler_proxy(self):
         try:
@@ -484,7 +503,7 @@ class DaskGateway(Application):
                 timeout=self.cluster_manager.cluster_start_timeout,
             )
         except asyncio.TimeoutError:
-            self.log.warn(
+            self.log.warning(
                 "Cluster %s startup timed out after %d seconds",
                 cluster.name,
                 self.cluster_manager.cluster_start_timeout,
@@ -508,7 +527,7 @@ class DaskGateway(Application):
             )
             scheduler_address, dashboard_address, api_address = addresses
         except asyncio.TimeoutError:
-            self.log.warn(
+            self.log.warning(
                 "Cluster %s failed to connect after %d seconds",
                 cluster.name,
                 self.cluster_manager.cluster_connect_timeout,
@@ -543,7 +562,7 @@ class DaskGateway(Application):
         return True
 
     def schedule_start_cluster(self, cluster):
-        f = asyncio.ensure_future(self.start_cluster(cluster))
+        f = self.create_task(self.start_cluster(cluster))
         f.add_done_callback(partial(self._monitor_start_cluster, cluster=cluster))
         cluster._start_future = f
 
@@ -608,7 +627,7 @@ class DaskGateway(Application):
         self.log.debug("Cluster %s stopped", cluster.name)
 
     def schedule_stop_cluster(self, cluster, failed=False):
-        asyncio.ensure_future(self.stop_cluster(cluster, failed=failed))
+        self.create_task(self.stop_cluster(cluster, failed=failed))
 
     async def scale(self, cluster, total):
         """Scale cluster to total workers"""
@@ -629,7 +648,7 @@ class DaskGateway(Application):
 
     async def scale_up(self, cluster, n_start):
         for w in self.create_workers(cluster, n_start):
-            w._start_future = asyncio.ensure_future(self.start_worker(cluster, w))
+            w._start_future = self.create_task(self.start_worker(cluster, w))
             w._start_future.add_done_callback(
                 partial(self._monitor_start_worker, worker=w, cluster=cluster)
             )
@@ -698,7 +717,7 @@ class DaskGateway(Application):
                 timeout=self.cluster_manager.worker_start_timeout,
             )
         except asyncio.TimeoutError:
-            self.log.warn(
+            self.log.warning(
                 "Worker %s startup timed out after %d seconds",
                 worker.name,
                 self.cluster_manager.worker_start_timeout,
@@ -719,7 +738,7 @@ class DaskGateway(Application):
                 timeout=self.cluster_manager.worker_connect_timeout,
             )
         except asyncio.TimeoutError:
-            self.log.warn(
+            self.log.warning(
                 "Worker %s failed to connect after %d seconds",
                 worker.name,
                 self.cluster_manager.worker_connect_timeout,
@@ -797,7 +816,7 @@ class DaskGateway(Application):
         self.log.debug("Worker %s stopped", worker.name)
 
     def schedule_stop_worker(self, cluster, worker, failed=False):
-        asyncio.ensure_future(self.stop_worker(cluster, worker, failed=failed))
+        self.create_task(self.stop_worker(cluster, worker, failed=failed))
 
     def maybe_fail_worker(self, cluster, worker):
         # Ignore if cluster or worker isn't active (

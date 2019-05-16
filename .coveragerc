@@ -2,7 +2,6 @@
 omit =
     tests/*.py
     */_version.py
-    dask-gateway/dask_gateway/dask_cli.py
 source = 
     dask-gateway-server/dask_gateway_server
     dask-gateway/dask_gateway
