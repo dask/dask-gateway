@@ -180,7 +180,7 @@ async def test_proxy_wait_until_up(two_proxies):
         await asyncio.sleep(0.5)
         await proxy.start()
 
-    asyncio.ensure_future(start_proxy())
+    start_task = asyncio.ensure_future(start_proxy())
 
     # Wait for proxy to start
     proxy2.connect_timeout = 2
@@ -189,6 +189,9 @@ async def test_proxy_wait_until_up(two_proxies):
     # Connected proxy works
     routes = await proxy2.get_all_routes()
     assert not routes
+
+    # Wait for task to finish to cleanup resources
+    await start_task
 
 
 @pytest.mark.asyncio

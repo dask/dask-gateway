@@ -16,12 +16,15 @@ from tornado.log import LogFormatter
 from tornado.gen import IOLoop
 from tornado.platform.asyncio import AsyncIOMainLoop
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
-from traitlets import Unicode, Bool, Type, Bytes, Float, default, validate
+from traitlets import Unicode, Bool, Type, Bytes, Float, default, validate, List
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
 from . import handlers, objects
+from .cluster import ClusterManager
+from .auth import Authenticator
 from .objects import WorkerStatus, ClusterStatus
+from .proxy import SchedulerProxy, WebProxy
 from .tls import new_keypair
 from .utils import cleanup_tmpdir, cancel_task
 
@@ -193,15 +196,18 @@ class DaskGateway(Application):
         the directory doesn't already exist, it will be created on startup and
         removed on shutdown.
 
-        The default is to create a temporary directory ``"dask-gateway"`` in
-        the system tmpdir default location.
+        The default is to create a temporary directory
+        ``"dask-gateway-<UUID>"`` in the system tmpdir default location.
         """,
         config=True,
     )
 
     @default("temp_dir")
     def _temp_dir_default(self):
-        return os.path.join(tempfile.gettempdir(), "dask-gateway")
+        temp_dir = tempfile.mkdtemp(prefix="dask-gateway-")
+        self.log.debug("Creating temporary directory %r", temp_dir)
+        weakref.finalize(self, cleanup_tmpdir, self.log, temp_dir)
+        return temp_dir
 
     @default("cookie_secret")
     def _cookie_secret_default(self):
@@ -221,6 +227,8 @@ class DaskGateway(Application):
         return proposal["value"]
 
     _log_formatter_cls = LogFormatter
+
+    classes = List([ClusterManager, Authenticator, WebProxy, SchedulerProxy])
 
     @property
     def api_url(self):
@@ -369,15 +377,22 @@ class DaskGateway(Application):
         await self.start_web_proxy()
         await self.start_tornado_application()
 
-    async def stop_async(self, timeout=20):
+    async def stop_async(self, timeout=5):
         if hasattr(self, "http_server"):
             self.http_server.stop()
         try:
             await asyncio.wait_for(
-                asyncio.gather(*self.pending_tasks, return_exceptions=True), timeout
+                asyncio.gather(
+                    *getattr(self, "pending_tasks", ()), return_exceptions=True
+                ),
+                timeout,
             )
         except (asyncio.TimeoutError, asyncio.CancelledError):
             pass
+        if hasattr(self, "scheduler_proxy"):
+            self.scheduler_proxy.stop()
+        if hasattr(self, "web_proxy"):
+            self.web_proxy.stop()
         IOLoop.current().stop()
 
     async def start_scheduler_proxy(self):
@@ -597,9 +612,8 @@ class DaskGateway(Application):
             cluster.status = ClusterStatus.STOPPING
 
         # Remove routes from proxies if already set
-        if cluster.status == ClusterStatus.RUNNING:
-            await self.web_proxy.delete_route("/gateway/clusters/" + cluster.name)
-            await self.scheduler_proxy.delete_route("/" + cluster.name)
+        await self.web_proxy.delete_route("/gateway/clusters/" + cluster.name)
+        await self.scheduler_proxy.delete_route("/" + cluster.name)
 
         # Shutdown individual workers if no bulk shutdown supported
         if not self.cluster_manager.supports_bulk_shutdown:
