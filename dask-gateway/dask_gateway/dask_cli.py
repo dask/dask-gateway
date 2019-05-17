@@ -239,8 +239,8 @@ def make_gateway_client(cluster_name=None, api_url=None, api_token=None):
     return GatewayClient(cluster_name, api_token, api_url)
 
 
-def scheduler():
-    scheduler_parser.parse_args()
+def scheduler(argv=None):
+    scheduler_parser.parse_args(argv)
 
     gateway = make_gateway_client()
     security = make_security()
@@ -350,8 +350,8 @@ async def start_worker(
     return worker
 
 
-def worker():
-    args = worker_parser.parse_args()
+def worker(argv=None):
+    args = worker_parser.parse_args(argv)
 
     worker_name = args.name or getenv("DASK_GATEWAY_WORKER_NAME")
     nthreads = args.nthreads
