@@ -1,0 +1,81 @@
+<configuration>
+  <!--
+    The following queue structures is used:
+      - default (cap: 60%, max: 100%)
+      - fruit (cap: 40%, max: 50%)
+        - apples (cap: 50%, max: 100%)
+        - bananas (cap: 25%, max: 50%)
+        - oranges (cap: 25%, max: 60%)
+  -->
+
+  <property>
+    <name>yarn.scheduler.capacity.root.queues</name>
+    <value>default,fruit</value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.capacity.root.fruit.queues</name>
+    <value>apples,bananas,oranges</value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.capacity.maximum-am-resource-percent</name>
+    <value>0.75</value>
+  </property>
+
+  <!-- root.default -->
+  <property>
+    <name>yarn.scheduler.capacity.root.default.capacity</name>
+    <value>60.0</value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.capacity.root.default.maximum-capacity</name>
+    <value>100.0</value>
+  </property>
+
+  <!-- root.fruit -->
+  <property>
+    <name>yarn.scheduler.capacity.root.fruit.capacity</name>
+    <value>40.0</value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.capacity.root.fruit.maximum-capacity</name>
+    <value>50.0</value>
+  </property>
+
+  <!-- root.fruit.apples -->
+  <property>
+    <name>yarn.scheduler.capacity.root.fruit.apples.capacity</name>
+    <value>50.0</value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.capacity.root.fruit.apples.maximum-capacity</name>
+    <value>100.0</value>
+  </property>
+
+  <!-- root.fruit.bananas -->
+  <property>
+    <name>yarn.scheduler.capacity.root.fruit.bananas.capacity</name>
+    <value>25.0</value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.capacity.root.fruit.bananas.maximum-capacity</name>
+    <value>50.0</value>
+  </property>
+
+  <!-- root.fruit.oranges -->
+  <property>
+    <name>yarn.scheduler.capacity.root.fruit.oranges.capacity</name>
+    <value>25.0</value>
+  </property>
+
+  <property>
+    <name>yarn.scheduler.capacity.root.fruit.oranges.maximum-capacity</name>
+    <value>60.0</value>
+  </property>
+
+</configuration>
