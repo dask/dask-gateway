@@ -15,6 +15,8 @@ jobs:
 
     include:
         - if: commit_message ~= test-yarn
+          env:
+            - MAIN-TESTS=true
           services:
             - docker
           before_install:
@@ -24,8 +26,10 @@ jobs:
           script:
             - docker exec master /working/continuous_integration/docker/hadoop/script.sh
 
-        - before_install:
-            - source continuous_integration/docker/hadoop/before_install.sh
+        - env:
+            - YARN-TESTS=true
+          before_install:
+            - source continuous_integration/before_install.sh
           install:
             - source continuous_integration/install.sh
           script:
