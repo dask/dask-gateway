@@ -4,7 +4,9 @@ from .utils import ClusterManagerTests, LocalTestingClusterManager
 
 
 class TestLocalClusterManager(ClusterManagerTests):
-    async def cleanup_cluster(self, manager, cluster_state, worker_states):
+    async def cleanup_cluster(
+        self, manager, cluster_info, cluster_state, worker_states
+    ):
         for state in worker_states + [cluster_state]:
             pid = state.get("pid")
             if pid is not None:
@@ -13,11 +15,11 @@ class TestLocalClusterManager(ClusterManagerTests):
     def new_manager(self, **kwargs):
         return LocalTestingClusterManager(**kwargs)
 
-    def is_cluster_running(self, cluster_state):
+    def is_cluster_running(self, manager, cluster_info, cluster_state):
         pid = cluster_state.get("pid")
         return is_running(pid) if pid is not None else False
 
-    def is_worker_running(self, cluster_state, worker_state):
+    def is_worker_running(self, manager, cluster_info, cluster_state, worker_state):
         pid = worker_state.get("pid")
         return is_running(pid) if pid is not None else False
 

@@ -188,7 +188,7 @@ class YarnClusterManager(ClusterManager):
     async def start_cluster(self, cluster_info):
         loop = gen.IOLoop.current()
 
-        with self.temp_write_credentials() as (cert_path, key_path):
+        with self.temp_write_credentials(cluster_info) as (cert_path, key_path):
             spec = self._build_specification(cluster_info, cert_path, key_path)
             app_id = await loop.run_in_executor(None, self.skein_client.submit, spec)
 
@@ -237,19 +237,17 @@ class YarnClusterManager(ClusterManager):
         # container states for if there are pending workers and notifies the
         # corresponding `start_worker` coroutine of any updates.
 
-    def _stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
+    def _stop_worker(self, container_id, cluster_info, cluster_state):
         app = self._get_app_client(cluster_info, cluster_state)
         try:
-            app.kill_container(worker_state["container_id"])
+            app.kill_container(container_id)
         except ValueError:
             pass
 
     async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
+        container_id = worker_state.get("container_id")
+        if container_id is None:
+            return
         return await gen.IOLoop.current().run_in_executor(
-            None,
-            self._stop_worker,
-            worker_name,
-            worker_state,
-            cluster_info,
-            cluster_state,
+            None, self._stop_worker, container_id, cluster_info, cluster_state
         )

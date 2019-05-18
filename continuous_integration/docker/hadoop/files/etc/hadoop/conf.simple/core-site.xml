@@ -1,0 +1,58 @@
+<configuration>
+
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>/var/tmp/</value>
+    </property>
+
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://master.example.com:9000</value>
+    </property>
+
+    <property>
+        <name>hadoop.proxyuser.mapred.hosts</name>
+        <value>*</value>
+    </property>
+
+    <property>
+        <name>hadoop.proxyuser.mapred.groups</name>
+        <value>*</value>
+    </property>
+
+    <property>
+        <name>hadoop.security.authentication</name>
+        <value>simple</value>
+    </property>
+
+    <property>
+        <name>hadoop.security.authorization</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hadoop.http.filter.initializers</name>
+        <value>org.apache.hadoop.security.AuthenticationFilterInitializer</value>
+    </property>
+
+    <property>
+        <name>hadoop.http.authentication.type</name>
+        <value>simple</value>
+    </property>
+
+    <property>
+        <name>hadoop.http.authentication.signature.secret.file</name>
+        <value>/etc/hadoop/conf/http-secret-file</value>
+    </property>
+
+    <property>
+        <name>hadoop.http.authentication.cookie.domain</name>
+        <value>.example.com</value>
+    </property>
+
+    <property>
+        <name>hadoop.http.authentication.simple.anonymous.allowed</name>
+        <value>false</value>
+    </property>
+
+</configuration>

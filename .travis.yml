@@ -10,22 +10,36 @@ branches:
   only:
     - master
 
-before_install:
-  - gimme 1.12
-  - source ~/.gimme/envs/go1.12.env
-  - go get github.com/stretchr/testify/assert
+jobs:
+    fast_finish: true
 
-install:
-  - source continuous_integration/install.sh
+    include:
+        - if: commit_message ~= test-yarn
+          env:
+            - MAIN-TESTS=true
+          services:
+            - docker
+          before_install:
+            - ./continuous_integration/docker/hadoop/start-hadoop.sh
+          install:
+            - docker exec master /working/continuous_integration/docker/hadoop/install.sh
+          script:
+            - docker exec master /working/continuous_integration/docker/hadoop/script.sh
 
-script:
-  - py.test tests/ -v
-  - flake8
-  - black . --check
-  - |
-    pushd dask-gateway-server/dask-gateway-proxy
-    go test
-    popd
+        - env:
+            - YARN-TESTS=true
+          before_install:
+            - source continuous_integration/before_install.sh
+          install:
+            - source continuous_integration/install.sh
+          script:
+            - py.test tests/ -v
+            - flake8
+            - black . --check
+            - |
+              pushd dask-gateway-server/dask-gateway-proxy
+              go test
+              popd
 
 notifications:
   email: false
