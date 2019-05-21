@@ -89,7 +89,7 @@ clusters = Table(
 workers = Table(
     "workers",
     metadata,
-    Column("id", Integer, primary_key=True),
+    Column("id", Integer, primary_key=True, autoincrement=True),
     Column("name", Unicode(255), nullable=False),
     Column("cluster_id", ForeignKey("clusters.id", ondelete="CASCADE"), nullable=False),
     Column("status", IntEnum(WorkerStatus), nullable=False),
@@ -149,7 +149,6 @@ class Cluster(object):
         api_address="",
         tls_cert=b"",
         tls_key=b"",
-        active_workers=0,
     ):
         self.id = id
         self.name = name
@@ -162,7 +161,6 @@ class Cluster(object):
         self.api_address = api_address
         self.tls_cert = tls_cert
         self.tls_key = tls_key
-        self.active_workers = active_workers
         self.pending = set()
         self.workers = {}
 
@@ -174,6 +172,10 @@ class Cluster(object):
             # Already running, create finished futures to mark
             self._start_future.set_result(True)
             self._connect_future.set_result(None)
+
+    @property
+    def active_workers(self):
+        return [w for w in self.workers.values() if w.is_active()]
 
     def is_active(self):
         return self.status < ClusterStatus.STOPPING

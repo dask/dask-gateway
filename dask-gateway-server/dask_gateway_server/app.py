@@ -10,7 +10,6 @@ import weakref
 from functools import partial
 from urllib.parse import urlparse, urlunparse
 
-from sqlalchemy.sql import bindparam
 from tornado import web
 from tornado.log import LogFormatter
 from tornado.gen import IOLoop
@@ -323,9 +322,7 @@ class DaskGateway(Application):
             id_to_cluster[cluster.id] = cluster
 
         # Next load all existing workers into memory
-        worker_ids = []
         for w in self.db.execute(objects.workers.select()):
-            worker_ids.append(w.id)
             cluster = id_to_cluster[w.cluster_id]
             worker = objects.Worker(
                 id=w.id,
@@ -337,10 +334,6 @@ class DaskGateway(Application):
             cluster.workers[worker.name] = worker
             if w.status == WorkerStatus.STARTING:
                 cluster.pending.add(worker.name)
-            if worker.is_active():
-                cluster.active_workers += 1
-
-        self._next_worker_id = max(worker_ids) + 1 if worker_ids else 0
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
@@ -617,11 +610,7 @@ class DaskGateway(Application):
 
         # Shutdown individual workers if no bulk shutdown supported
         if not self.cluster_manager.supports_bulk_shutdown:
-            tasks = (
-                self.stop_worker(cluster, w)
-                for w in cluster.workers.values()
-                if w.is_active()
-            )
+            tasks = (self.stop_worker(cluster, w) for w in cluster.active_workers)
             await asyncio.gather(*tasks, return_exceptions=True)
 
         # Shutdown the cluster
@@ -646,7 +635,7 @@ class DaskGateway(Application):
     async def scale(self, cluster, total):
         """Scale cluster to total workers"""
         async with cluster.lock:
-            delta = total - cluster.active_workers
+            delta = total - len(cluster.active_workers)
             if delta == 0:
                 return
             self.log.debug(
@@ -661,44 +650,34 @@ class DaskGateway(Application):
                 await self.scale_down(cluster, -delta)
 
     async def scale_up(self, cluster, n_start):
-        for w in self.create_workers(cluster, n_start):
+        for _ in range(n_start):
+            w = self.create_worker(cluster)
             w._start_future = self.create_task(self.start_worker(cluster, w))
             w._start_future.add_done_callback(
                 partial(self._monitor_start_worker, worker=w, cluster=cluster)
             )
 
-    def create_workers(self, cluster, n):
-        self.log.debug("Creating %d new workers for cluster %s", n, cluster.name)
+    def create_worker(self, cluster):
+        worker_name = uuid.uuid4().hex
 
-        workers = [
-            objects.Worker(
-                id=id,
-                name=uuid.uuid4().hex,
-                cluster=cluster,
+        res = self.db.execute(
+            objects.workers.insert().values(
+                name=worker_name,
+                cluster_id=cluster.id,
                 status=WorkerStatus.STARTING,
-                state={},
+                state=b"{}",
             )
-            for id in range(self._next_worker_id, self._next_worker_id + n)
-        ]
-
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.workers.insert().values(
-                    id=bindparam("_id"),
-                    name=bindparam("_name"),
-                    status=WorkerStatus.STARTING,
-                    state=b"{}",
-                    cluster_id=cluster.id,
-                ),
-                [{"_id": w.id, "_name": w.name} for w in workers],
-            )
-            cluster.pending.update(w.name for w in workers)
-            cluster.workers.update({w.name: w for w in workers})
-            self._next_worker_id += n + 1
-
-        cluster.active_workers += n
-
-        return workers
+        )
+        worker = objects.Worker(
+            id=res.inserted_primary_key[0],
+            name=worker_name,
+            cluster=cluster,
+            status=WorkerStatus.STARTING,
+            state={},
+        )
+        cluster.pending.add(worker.name)
+        cluster.workers[worker.name] = worker
+        return worker
 
     async def _start_worker(self, cluster, worker):
         self.log.debug("Starting worker %r for cluster %r", worker.name, cluster.name)
@@ -825,7 +804,6 @@ class DaskGateway(Application):
                 .values(status=status)
             )
             worker.status = status
-            cluster.active_workers -= 1
 
         self.log.debug("Worker %s stopped", worker.name)
 
