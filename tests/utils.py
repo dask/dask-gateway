@@ -34,12 +34,15 @@ _PIDS = set()
 def cleanup_lost_processes():
     if not _PIDS:
         return
+    nkilled = 0
     for pid in _PIDS:
         try:
             os.kill(pid, signal.SIGTERM)
+            nkilled += 1
         except OSError:
             pass
-    print("-- Stopped %d lost processes --" % len(_PIDS))
+    if nkilled:
+        print("-- Stopped %d lost processes --" % nkilled)
 
 
 class LocalTestingClusterManager(UnsafeLocalClusterManager):
