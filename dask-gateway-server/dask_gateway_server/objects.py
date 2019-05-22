@@ -202,6 +202,12 @@ class DataManager(object):
         """Lookup a cluster from a token"""
         return self.token_to_cluster.get(token)
 
+    def active_clusters(self):
+        for user in self.username_to_user.values():
+            for cluster in user.clusters.values():
+                if cluster.is_active():
+                    yield cluster
+
     def create_cluster(self, user):
         """Create a new cluster for a user"""
         cluster_name = uuid.uuid4().hex

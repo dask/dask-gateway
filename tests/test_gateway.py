@@ -297,3 +297,27 @@ async def test_successful_cluster(tmpdir):
                 assert res == 2
 
             await cluster.shutdown()
+
+
+@pytest.mark.asyncio
+async def test_gateway_stop_clusters_on_shutdown(tmpdir):
+    async with temp_gateway(
+        cluster_manager_class=InProcessClusterManager,
+        temp_dir=str(tmpdir.join("dask-gateway")),
+    ) as gateway_proc:
+
+        manager = gateway_proc.cluster_manager
+
+        async with Gateway(
+            address=gateway_proc.public_url, asynchronous=True
+        ) as gateway:
+
+            await gateway.new_cluster()
+            cluster2 = await gateway.new_cluster()
+            await cluster2.shutdown()
+
+            # There are active clusters
+            assert manager.active_schedulers
+
+    # Active clusters are stopped on shutdown
+    assert not manager.active_schedulers

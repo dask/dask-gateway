@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import signal
 import socket
 import stat
 import tempfile
@@ -177,6 +178,17 @@ class DaskGateway(Application):
         config=True,
     )
 
+    stop_clusters_on_shutdown = Bool(
+        True,
+        help="""
+        Whether to stop active clusters on gateway shutdown.
+
+        If true, all active clusters will be stopped before shutting down the
+        gateway. Set to False to leave active clusters running.
+        """,
+        config=True,
+    )
+
     db_url = Unicode(
         "sqlite:///dask_gateway.sqlite", help="The URL for the database.", config=True
     )
@@ -314,27 +326,10 @@ class DaskGateway(Application):
         self.pending_tasks = weakref.WeakSet()
 
     async def start_async(self):
+        self.init_signal()
         await self.start_scheduler_proxy()
         await self.start_web_proxy()
         await self.start_tornado_application()
-
-    async def stop_async(self, timeout=5):
-        if hasattr(self, "http_server"):
-            self.http_server.stop()
-        try:
-            await asyncio.wait_for(
-                asyncio.gather(
-                    *getattr(self, "pending_tasks", ()), return_exceptions=True
-                ),
-                timeout,
-            )
-        except (asyncio.TimeoutError, asyncio.CancelledError):
-            pass
-        if hasattr(self, "scheduler_proxy"):
-            self.scheduler_proxy.stop()
-        if hasattr(self, "web_proxy"):
-            self.web_proxy.stop()
-        IOLoop.current().stop()
 
     async def start_scheduler_proxy(self):
         try:
@@ -368,6 +363,64 @@ class DaskGateway(Application):
             loop.start()
         except KeyboardInterrupt:
             print("\nInterrupted")
+
+    def init_signal(self):
+        loop = asyncio.get_event_loop()
+        for s in (signal.SIGTERM, signal.SIGINT):
+            loop.add_signal_handler(s, self.handle_shutdown_signal, s)
+
+    def handle_shutdown_signal(self, sig):
+        self.log.info("Received signal %s, initiating shutdown...", sig.name)
+        asyncio.ensure_future(self.stop_async())
+
+    async def stop_async(self, timeout=5):
+        # Stop the server to prevent new requests
+        if hasattr(self, "http_server"):
+            self.http_server.stop()
+
+        # If requested, shutdown any active clusters
+        if self.stop_clusters_on_shutdown:
+            tasks = {
+                asyncio.ensure_future(self.stop_cluster(c, failed=True)): c
+                for c in self.db.active_clusters()
+            }
+            if tasks:
+                self.log.info("Stopping all active clusters...")
+                done, pending = await asyncio.wait(tasks.keys())
+                for f in done:
+                    try:
+                        await f
+                    except Exception as exc:
+                        cluster = tasks[f]
+                        self.log.error(
+                            "Failed to stop cluster %s for user %s",
+                            cluster.name,
+                            cluster.user.name,
+                            exc_info=exc,
+                        )
+        else:
+            self.log.info("Leaving any active clusters running")
+
+        # Wait for a short period for any ongoing tasks to complete, before
+        # canceling them
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(
+                    *getattr(self, "pending_tasks", ()), return_exceptions=True
+                ),
+                timeout,
+            )
+        except (asyncio.TimeoutError, asyncio.CancelledError):
+            pass
+
+        # Shutdown the proxies
+        if hasattr(self, "scheduler_proxy"):
+            self.scheduler_proxy.stop()
+        if hasattr(self, "web_proxy"):
+            self.web_proxy.stop()
+
+        # Stop the event loop
+        IOLoop.current().stop()
 
     async def _start_cluster(self, cluster):
         self.log.debug("Cluster %s is starting...", cluster.name)
@@ -669,7 +722,3 @@ class DaskGateway(Application):
 
 
 main = DaskGateway.launch_instance
-
-
-if __name__ == "__main__":
-    main()
