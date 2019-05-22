@@ -5,12 +5,10 @@ import os
 import socket
 import stat
 import tempfile
-import uuid
 import weakref
 from functools import partial
 from urllib.parse import urlparse, urlunparse
 
-from sqlalchemy.sql import bindparam
 from tornado import web
 from tornado.log import LogFormatter
 from tornado.gen import IOLoop
@@ -25,7 +23,6 @@ from .cluster import ClusterManager
 from .auth import Authenticator
 from .objects import WorkerStatus, ClusterStatus
 from .proxy import SchedulerProxy, WebProxy
-from .tls import new_keypair
 from .utils import cleanup_tmpdir, cancel_task
 
 
@@ -253,7 +250,6 @@ class DaskGateway(Application):
         self.init_cluster_manager()
         self.init_authenticator()
         self.init_tornado_application()
-        self.init_state()
 
     def init_logging(self):
         # Prevent double log messages from tornado
@@ -272,7 +268,7 @@ class DaskGateway(Application):
         logger.setLevel(self.log.level)
 
     def init_database(self):
-        self.db = objects.make_engine(url=self.db_url, echo=self.db_debug)
+        self.db = objects.DataManager(url=self.db_url, echo=self.db_debug)
 
     def init_tempdir(self):
         if os.path.exists(self.temp_dir):
@@ -286,61 +282,6 @@ class DaskGateway(Application):
             self.log.debug("Creating temporary directory %r", self.temp_dir)
             os.mkdir(self.temp_dir, mode=0o700)
             weakref.finalize(self, cleanup_tmpdir, self.log, self.temp_dir)
-
-    def init_state(self):
-        self.username_to_user = {}
-        self.cookie_to_user = {}
-        self.token_to_cluster = {}
-
-        # Load all existing users into memory
-        id_to_user = {}
-        for u in self.db.execute(objects.users.select()):
-            user = objects.User(id=u.id, name=u.name, cookie=u.cookie)
-            self.username_to_user[user.name] = user
-            self.cookie_to_user[user.cookie] = user
-            id_to_user[user.id] = user
-
-        # Next load all existing clusters into memory
-        id_to_cluster = {}
-        for c in self.db.execute(objects.clusters.select()):
-            user = id_to_user[c.user_id]
-            state = json.loads(c.state)
-            cluster = objects.Cluster(
-                id=c.id,
-                name=c.name,
-                user=user,
-                token=c.token,
-                status=c.status,
-                state=state,
-                scheduler_address=c.scheduler_address,
-                dashboard_address=c.dashboard_address,
-                api_address=c.api_address,
-                tls_cert=c.tls_cert,
-                tls_key=c.tls_key,
-            )
-            user.clusters[cluster.name] = cluster
-            self.token_to_cluster[cluster.token] = cluster
-            id_to_cluster[cluster.id] = cluster
-
-        # Next load all existing workers into memory
-        worker_ids = []
-        for w in self.db.execute(objects.workers.select()):
-            worker_ids.append(w.id)
-            cluster = id_to_cluster[w.cluster_id]
-            worker = objects.Worker(
-                id=w.id,
-                name=w.name,
-                status=w.status,
-                cluster=cluster,
-                state=json.loads(w.state),
-            )
-            cluster.workers[worker.name] = worker
-            if w.status == WorkerStatus.STARTING:
-                cluster.pending.add(worker.name)
-            if worker.is_active():
-                cluster.active_workers += 1
-
-        self._next_worker_id = max(worker_ids) + 1 if worker_ids else 0
 
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
@@ -428,84 +369,16 @@ class DaskGateway(Application):
         except KeyboardInterrupt:
             print("\nInterrupted")
 
-    def user_from_cookie(self, cookie):
-        return self.cookie_to_user.get(cookie)
-
-    def get_or_create_user(self, username):
-        user = self.username_to_user.get(username)
-        if user is None:
-            cookie = uuid.uuid4().hex
-            res = self.db.execute(
-                objects.users.insert().values(name=username, cookie=cookie)
-            )
-            user = objects.User(
-                id=res.inserted_primary_key[0], name=username, cookie=cookie
-            )
-            self.cookie_to_user[cookie] = user
-            self.username_to_user[username] = user
-        return user
-
-    def cluster_from_token(self, token):
-        return self.token_to_cluster.get(token)
-
-    def create_cluster(self, user):
-        cluster_name = uuid.uuid4().hex
-        token = uuid.uuid4().hex
-        tls_cert, tls_key = new_keypair(cluster_name)
-
-        res = self.db.execute(
-            objects.clusters.insert().values(
-                name=cluster_name,
-                user_id=user.id,
-                token=token,
-                status=ClusterStatus.STARTING,
-                state=b"{}",
-                scheduler_address="",
-                dashboard_address="",
-                api_address="",
-                tls_cert=tls_cert,
-                tls_key=tls_key,
-            )
-        )
-        cluster = objects.Cluster(
-            id=res.inserted_primary_key[0],
-            name=cluster_name,
-            user=user,
-            token=token,
-            status=ClusterStatus.STARTING,
-            state={},
-            scheduler_address="",
-            dashboard_address="",
-            api_address="",
-            tls_cert=tls_cert,
-            tls_key=tls_key,
-        )
-        user.clusters[cluster_name] = cluster
-        self.token_to_cluster[token] = cluster
-        return cluster
-
     async def _start_cluster(self, cluster):
         self.log.debug("Cluster %s is starting...", cluster.name)
 
         # Walk through the startup process, saving state as updates occur
         async for state in self.cluster_manager.start_cluster(cluster.info):
             self.log.debug("State update for cluster %s", cluster.name)
-            with self.db.begin() as conn:
-                conn.execute(
-                    objects.clusters.update()
-                    .where(objects.clusters.c.id == cluster.id)
-                    .values(state=json.dumps(state).encode("utf-8"))
-                )
-                cluster.state = state
+            self.db.update_cluster(cluster, state=state)
 
         # Move cluster to started
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.clusters.update()
-                .where(objects.clusters.c.id == cluster.id)
-                .values(status=ClusterStatus.STARTED)
-            )
-            cluster.status = ClusterStatus.STARTED
+        self.db.update_cluster(cluster, status=ClusterStatus.STARTED)
 
     async def start_cluster(self, cluster):
         """Start the cluster.
@@ -558,28 +431,21 @@ class DaskGateway(Application):
         await self.scheduler_proxy.add_route("/" + cluster.name, scheduler_address)
 
         # Mark cluster as running
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.clusters.update()
-                .where(objects.clusters.c.id == cluster.id)
-                .values(
-                    scheduler_address=scheduler_address,
-                    dashboard_address=dashboard_address,
-                    api_address=api_address,
-                    status=ClusterStatus.RUNNING,
-                )
-            )
-            cluster.scheduler_address = scheduler_address
-            cluster.dashboard_address = dashboard_address
-            cluster.api_address = api_address
-            cluster.status = ClusterStatus.RUNNING
-
+        self.db.update_cluster(
+            cluster,
+            scheduler_address=scheduler_address,
+            dashboard_address=dashboard_address,
+            api_address=api_address,
+            status=ClusterStatus.RUNNING,
+        )
         return True
 
-    def schedule_start_cluster(self, cluster):
+    def start_new_cluster(self, user):
+        cluster = self.db.create_cluster(user)
         f = self.create_task(self.start_cluster(cluster))
         f.add_done_callback(partial(self._monitor_start_cluster, cluster=cluster))
         cluster._start_future = f
+        return cluster
 
     def _monitor_start_cluster(self, future, cluster=None):
         try:
@@ -603,13 +469,7 @@ class DaskGateway(Application):
         await cancel_task(cluster._start_future)
 
         # Move cluster to stopping
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.clusters.update()
-                .where(objects.clusters.c.id == cluster.id)
-                .values(status=ClusterStatus.STOPPING)
-            )
-            cluster.status = ClusterStatus.STOPPING
+        self.db.update_cluster(cluster, status=ClusterStatus.STOPPING)
 
         # Remove routes from proxies if already set
         await self.web_proxy.delete_route("/gateway/clusters/" + cluster.name)
@@ -617,11 +477,7 @@ class DaskGateway(Application):
 
         # Shutdown individual workers if no bulk shutdown supported
         if not self.cluster_manager.supports_bulk_shutdown:
-            tasks = (
-                self.stop_worker(cluster, w)
-                for w in cluster.workers.values()
-                if w.is_active()
-            )
+            tasks = (self.stop_worker(cluster, w) for w in cluster.active_workers)
             await asyncio.gather(*tasks, return_exceptions=True)
 
         # Shutdown the cluster
@@ -629,14 +485,8 @@ class DaskGateway(Application):
 
         # Update the cluster status
         status = ClusterStatus.FAILED if failed else ClusterStatus.STOPPED
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.clusters.update()
-                .where(objects.clusters.c.id == cluster.id)
-                .values(status=status)
-            )
-            cluster.status = status
-            cluster.pending.clear()
+        self.db.update_cluster(cluster, status=status)
+        cluster.pending.clear()
 
         self.log.debug("Cluster %s stopped", cluster.name)
 
@@ -646,7 +496,7 @@ class DaskGateway(Application):
     async def scale(self, cluster, total):
         """Scale cluster to total workers"""
         async with cluster.lock:
-            delta = total - cluster.active_workers
+            delta = total - len(cluster.active_workers)
             if delta == 0:
                 return
             self.log.debug(
@@ -661,44 +511,12 @@ class DaskGateway(Application):
                 await self.scale_down(cluster, -delta)
 
     async def scale_up(self, cluster, n_start):
-        for w in self.create_workers(cluster, n_start):
+        for _ in range(n_start):
+            w = self.db.create_worker(cluster)
             w._start_future = self.create_task(self.start_worker(cluster, w))
             w._start_future.add_done_callback(
                 partial(self._monitor_start_worker, worker=w, cluster=cluster)
             )
-
-    def create_workers(self, cluster, n):
-        self.log.debug("Creating %d new workers for cluster %s", n, cluster.name)
-
-        workers = [
-            objects.Worker(
-                id=id,
-                name=uuid.uuid4().hex,
-                cluster=cluster,
-                status=WorkerStatus.STARTING,
-                state={},
-            )
-            for id in range(self._next_worker_id, self._next_worker_id + n)
-        ]
-
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.workers.insert().values(
-                    id=bindparam("_id"),
-                    name=bindparam("_name"),
-                    status=WorkerStatus.STARTING,
-                    state=b"{}",
-                    cluster_id=cluster.id,
-                ),
-                [{"_id": w.id, "_name": w.name} for w in workers],
-            )
-            cluster.pending.update(w.name for w in workers)
-            cluster.workers.update({w.name: w for w in workers})
-            self._next_worker_id += n + 1
-
-        cluster.active_workers += n
-
-        return workers
 
     async def _start_worker(self, cluster, worker):
         self.log.debug("Starting worker %r for cluster %r", worker.name, cluster.name)
@@ -707,22 +525,10 @@ class DaskGateway(Application):
         async for state in self.cluster_manager.start_worker(
             worker.name, cluster.info, cluster.state
         ):
-            with self.db.begin() as conn:
-                conn.execute(
-                    objects.workers.update()
-                    .where(objects.workers.c.id == worker.id)
-                    .values(state=json.dumps(state).encode("utf-8"))
-                )
-                worker.state = state
+            self.db.update_worker(worker, state=state)
 
         # Move worker to started
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.workers.update()
-                .where(objects.workers.c.id == worker.id)
-                .values(status=WorkerStatus.STARTED)
-            )
-            worker.status = WorkerStatus.STARTED
+        self.db.update_worker(worker, status=WorkerStatus.STARTED)
 
     async def start_worker(self, cluster, worker):
         try:
@@ -762,14 +568,8 @@ class DaskGateway(Application):
         self.log.debug("Worker %s connected to cluster %s", worker.name, cluster.name)
 
         # Mark worker as running
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.workers.update()
-                .where(objects.workers.c.id == worker.id)
-                .values(status=WorkerStatus.RUNNING)
-            )
-            cluster.pending.discard(worker.name)
-            worker.status = WorkerStatus.RUNNING
+        self.db.update_worker(worker, status=WorkerStatus.RUNNING)
+        cluster.pending.discard(worker.name)
         return True
 
     def _monitor_start_worker(self, future, worker=None, cluster=None):
@@ -798,14 +598,8 @@ class DaskGateway(Application):
         await cancel_task(worker._start_future)
 
         # Move worker to stopping
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.workers.update()
-                .where(objects.workers.c.id == worker.id)
-                .values(status=WorkerStatus.STOPPING)
-            )
-            cluster.pending.discard(worker.name)
-            worker.status = WorkerStatus.STOPPING
+        self.db.update_worker(worker, status=WorkerStatus.STOPPING)
+        cluster.pending.discard(worker.name)
 
         # Shutdown the worker
         try:
@@ -817,15 +611,7 @@ class DaskGateway(Application):
 
         # Update the worker status
         status = WorkerStatus.FAILED if failed else WorkerStatus.STOPPED
-
-        with self.db.begin() as conn:
-            conn.execute(
-                objects.workers.update()
-                .where(objects.workers.c.id == worker.id)
-                .values(status=status)
-            )
-            worker.status = status
-            cluster.active_workers -= 1
+        self.db.update_worker(worker, status=status)
 
         self.log.debug("Worker %s stopped", worker.name)
 

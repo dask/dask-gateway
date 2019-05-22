@@ -1,5 +1,7 @@
 import asyncio
 import enum
+import json
+import uuid
 
 from sqlalchemy import (
     MetaData,
@@ -13,6 +15,8 @@ from sqlalchemy import (
     create_engine,
 )
 from sqlalchemy.pool import StaticPool
+
+from .tls import new_keypair
 
 
 class _EnumMixin(object):
@@ -58,6 +62,22 @@ class IntEnum(TypeDecorator):
         return self._enumclass(value)
 
 
+class JSON(TypeDecorator):
+    "Represents an immutable structure as a json-encoded string."
+
+    impl = LargeBinary
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            value = json.dumps(value).encode("utf-8")
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = json.loads(value)
+        return value
+
+
 metadata = MetaData()
 
 users = Table(
@@ -77,7 +97,7 @@ clusters = Table(
         "user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     ),
     Column("status", IntEnum(ClusterStatus), nullable=False),
-    Column("state", LargeBinary, nullable=False),
+    Column("state", JSON, nullable=False),
     Column("token", Unicode(32), nullable=False, unique=True),
     Column("scheduler_address", Unicode(255), nullable=False),
     Column("dashboard_address", Unicode(255), nullable=False),
@@ -89,26 +109,156 @@ clusters = Table(
 workers = Table(
     "workers",
     metadata,
-    Column("id", Integer, primary_key=True),
+    Column("id", Integer, primary_key=True, autoincrement=True),
     Column("name", Unicode(255), nullable=False),
     Column("cluster_id", ForeignKey("clusters.id", ondelete="CASCADE"), nullable=False),
     Column("status", IntEnum(WorkerStatus), nullable=False),
-    Column("state", LargeBinary, nullable=False),
+    Column("state", JSON, nullable=False),
 )
 
 
-def make_engine(url="sqlite:///:memory:", **kwargs):
-    if url.startswith("sqlite"):
-        kwargs["connect_args"] = {"check_same_thread": False}
+class DataManager(object):
+    """Holds the internal state for a single Dask Gateway.
 
-    if url.endswith(":memory:"):
-        kwargs["poolclass"] = StaticPool
+    Keeps the memory representation in-sync with the database.
+    """
 
-    engine = create_engine(url, **kwargs)
+    def __init__(self, url="sqlite:///:memory:", **kwargs):
+        if url.startswith("sqlite"):
+            kwargs["connect_args"] = {"check_same_thread": False}
 
-    metadata.create_all(engine)
+        if url.endswith(":memory:"):
+            kwargs["poolclass"] = StaticPool
 
-    return engine
+        engine = create_engine(url, **kwargs)
+
+        metadata.create_all(engine)
+
+        self.db = engine
+
+        self.username_to_user = {}
+        self.cookie_to_user = {}
+        self.token_to_cluster = {}
+
+        # Load state from database
+        self._init_from_database()
+
+    def _init_from_database(self):
+        # Load all existing users into memory
+        id_to_user = {}
+        for u in self.db.execute(users.select()):
+            user = User(id=u.id, name=u.name, cookie=u.cookie)
+            self.username_to_user[user.name] = user
+            self.cookie_to_user[user.cookie] = user
+            id_to_user[user.id] = user
+
+        # Next load all existing clusters into memory
+        id_to_cluster = {}
+        for c in self.db.execute(clusters.select()):
+            user = id_to_user[c.user_id]
+            cluster = Cluster(
+                id=c.id,
+                name=c.name,
+                user=user,
+                token=c.token,
+                status=c.status,
+                state=c.state,
+                scheduler_address=c.scheduler_address,
+                dashboard_address=c.dashboard_address,
+                api_address=c.api_address,
+                tls_cert=c.tls_cert,
+                tls_key=c.tls_key,
+            )
+            user.clusters[cluster.name] = cluster
+            self.token_to_cluster[cluster.token] = cluster
+            id_to_cluster[cluster.id] = cluster
+
+        # Next load all existing workers into memory
+        for w in self.db.execute(workers.select()):
+            cluster = id_to_cluster[w.cluster_id]
+            worker = Worker(
+                id=w.id, name=w.name, status=w.status, cluster=cluster, state=w.state
+            )
+            cluster.workers[worker.name] = worker
+            if w.status == WorkerStatus.STARTING:
+                cluster.pending.add(worker.name)
+
+    def user_from_cookie(self, cookie):
+        """Lookup a user from a cookie"""
+        return self.cookie_to_user.get(cookie)
+
+    def get_or_create_user(self, username):
+        """Lookup a user if they exist, otherwise create a new user"""
+        user = self.username_to_user.get(username)
+        if user is None:
+            cookie = uuid.uuid4().hex
+            res = self.db.execute(users.insert().values(name=username, cookie=cookie))
+            user = User(id=res.inserted_primary_key[0], name=username, cookie=cookie)
+            self.cookie_to_user[cookie] = user
+            self.username_to_user[username] = user
+        return user
+
+    def cluster_from_token(self, token):
+        """Lookup a cluster from a token"""
+        return self.token_to_cluster.get(token)
+
+    def create_cluster(self, user):
+        """Create a new cluster for a user"""
+        cluster_name = uuid.uuid4().hex
+        token = uuid.uuid4().hex
+        tls_cert, tls_key = new_keypair(cluster_name)
+
+        common = {
+            "name": cluster_name,
+            "token": token,
+            "status": ClusterStatus.STARTING,
+            "state": {},
+            "scheduler_address": "",
+            "dashboard_address": "",
+            "api_address": "",
+            "tls_cert": tls_cert,
+            "tls_key": tls_key,
+        }
+
+        with self.db.begin() as conn:
+            res = conn.execute(clusters.insert().values(user_id=user.id, **common))
+            cluster = Cluster(id=res.inserted_primary_key[0], user=user, **common)
+            user.clusters[cluster_name] = cluster
+            self.token_to_cluster[token] = cluster
+
+        return cluster
+
+    def create_worker(self, cluster):
+        """Create a new worker for a cluster"""
+        worker_name = uuid.uuid4().hex
+
+        common = {"name": worker_name, "status": WorkerStatus.STARTING, "state": {}}
+
+        with self.db.begin() as conn:
+            res = conn.execute(workers.insert().values(cluster_id=cluster.id, **common))
+            worker = Worker(id=res.inserted_primary_key[0], cluster=cluster, **common)
+            cluster.pending.add(worker.name)
+            cluster.workers[worker.name] = worker
+
+        return worker
+
+    def update_cluster(self, cluster, **kwargs):
+        """Update a cluster's state"""
+        with self.db.begin() as conn:
+            conn.execute(
+                clusters.update().where(clusters.c.id == cluster.id).values(**kwargs)
+            )
+            for k, v in kwargs.items():
+                setattr(cluster, k, v)
+
+    def update_worker(self, worker, **kwargs):
+        """Update a worker's state"""
+        with self.db.begin() as conn:
+            conn.execute(
+                workers.update().where(workers.c.id == worker.id).values(**kwargs)
+            )
+            for k, v in kwargs.items():
+                setattr(worker, k, v)
 
 
 class User(object):
@@ -149,7 +299,6 @@ class Cluster(object):
         api_address="",
         tls_cert=b"",
         tls_key=b"",
-        active_workers=0,
     ):
         self.id = id
         self.name = name
@@ -162,7 +311,6 @@ class Cluster(object):
         self.api_address = api_address
         self.tls_cert = tls_cert
         self.tls_key = tls_key
-        self.active_workers = active_workers
         self.pending = set()
         self.workers = {}
 
@@ -174,6 +322,10 @@ class Cluster(object):
             # Already running, create finished futures to mark
             self._start_future.set_result(True)
             self._connect_future.set_result(None)
+
+    @property
+    def active_workers(self):
+        return [w for w in self.workers.values() if w.is_active()]
 
     def is_active(self):
         return self.status < ClusterStatus.STOPPING

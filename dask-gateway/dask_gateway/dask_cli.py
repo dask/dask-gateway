@@ -13,7 +13,8 @@ from tornado.ioloop import IOLoop, TimeoutError
 from distributed import Scheduler, Worker, Nanny
 from distributed.security import Security
 from distributed.utils import ignoring
-from distributed.cli.utils import install_signal_handlers, uri_from_host_port
+from distributed.cli.utils import install_signal_handlers
+
 from distributed.proctitle import (
     enable_proctitle_on_children,
     enable_proctitle_on_current,
@@ -275,10 +276,9 @@ async def start_scheduler(gateway, security, exit_on_failure=True):
         services[("bokeh", 0)] = (BokehScheduler, {})
         bokeh = True
 
-    addr = uri_from_host_port("tls://", None, 0)
     scheduler = Scheduler(loop=loop, services=services, security=security)
     scheduler.add_plugin(plugin)
-    scheduler.start(addr)
+    scheduler.start("tls://")
 
     host = urlparse(scheduler.address).hostname
     gateway_port = scheduler.services["gateway"].port
