@@ -27,9 +27,14 @@ from . import __version__ as VERSION
 logger = logging.getLogger(__name__)
 
 
-class ScaleDownHandler(web.RequestHandler):
-    def initialize(self, service):
-        self.service = service
+class BaseHandler(web.RequestHandler):
+    @property
+    def gateway_service(self):
+        return self.settings.get("gateway_service")
+
+    @property
+    def auth_token(self):
+        return self.settings.get("auth_token")
 
     def prepare(self):
         if self.request.headers.get("Content-Type", "").startswith("application/json"):
@@ -37,12 +42,31 @@ class ScaleDownHandler(web.RequestHandler):
         else:
             self.json_data = None
 
+    def get_current_user(self):
+        auth_header = self.request.headers.get("Authorization")
+        if auth_header:
+            auth_type, auth_token = auth_header.split(" ", 1)
+            if auth_type == "token" and auth_token == self.auth_token:
+                return "gateway"
+        return None
+
+
+class ScaleDownHandler(BaseHandler):
+    @web.authenticated
     async def post(self):
         try:
             remove_count = self.json_data["remove_count"]
         except (TypeError, KeyError):
             raise web.HTTPError(405)
-        result = await self.service.scale_down(remove_count)
+        result = await self.gateway_service.scale_down(remove_count)
+        self.write(result)
+        self.set_status(201)
+
+
+class StatusHandler(BaseHandler):
+    @web.authenticated
+    async def get(self):
+        result = self.gateway_service.status()
         self.write(result)
         self.set_status(201)
 
@@ -51,8 +75,10 @@ class GatewaySchedulerService(object):
     def __init__(self, scheduler, io_loop=None, plugin=None):
         self.scheduler = scheduler
         self.loop = io_loop or scheduler.loop
-        routes = [("/api/scale_down", ScaleDownHandler, {"service": self})]
-        self.app = web.Application(routes)
+        routes = [("/api/scale_down", ScaleDownHandler), ("/api/status", StatusHandler)]
+        self.app = web.Application(
+            routes, gateway_service=self, auth_token=plugin.gateway.token
+        )
         self.server = None
         self.plugin = plugin
 
@@ -87,6 +113,12 @@ class GatewaySchedulerService(object):
         else:
             workers_closed = []
         return {"workers_closed": workers_closed, "n_workers": n_workers}
+
+    def status(self):
+        workers = [
+            ws.name for ws in self.scheduler.workers.values() if ws.status != "closed"
+        ]
+        return {"workers": workers}
 
 
 class GatewaySchedulerPlugin(SchedulerPlugin):

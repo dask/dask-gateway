@@ -255,7 +255,6 @@ class DaskGateway(Application):
             return
         self.load_config_file(self.config_file)
         self.init_logging()
-        self.init_database()
         self.init_tempdir()
         self.init_scheduler_proxy()
         self.init_web_proxy()
@@ -278,9 +277,6 @@ class DaskGateway(Application):
         logger.propagate = True
         logger.parent = self.log
         logger.setLevel(self.log.level)
-
-    def init_database(self):
-        self.db = objects.DataManager(url=self.db_url, echo=self.db_debug)
 
     def init_tempdir(self):
         if os.path.exists(self.temp_dir):
@@ -329,6 +325,7 @@ class DaskGateway(Application):
         self.init_signal()
         await self.start_scheduler_proxy()
         await self.start_web_proxy()
+        await self.load_database_state()
         await self.start_tornado_application()
 
     async def start_scheduler_proxy(self):
@@ -344,6 +341,78 @@ class DaskGateway(Application):
         except Exception:
             self.log.critical("Failed to start web proxy", exc_info=True)
             self.exit(1)
+
+    async def load_database_state(self):
+        self.db = objects.DataManager(url=self.db_url, echo=self.db_debug)
+
+        active_clusters = list(self.db.active_clusters())
+        if not active_clusters:
+            return
+
+        self.log.info(
+            "Gateway was stopped with %d active clusters, "
+            "checking cluster status...",
+            len(active_clusters),
+        )
+
+        tasks = (self.check_cluster(c) for c in active_clusters)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        n_clusters = 0
+        for c, r in zip(active_clusters, results):
+            if isinstance(r, Exception):
+                self.log.error(
+                    "Error while checking status of cluster %d", c, exc_info=r
+                )
+            elif r:
+                n_clusters += 1
+
+        self.log.info(
+            "All clusters have been checked, there are %d active " "clusters",
+            n_clusters,
+        )
+
+    async def check_cluster(self, cluster):
+        if cluster.status == ClusterStatus.RUNNING:
+            client = AsyncHTTPClient()
+            url = "%s/api/status" % cluster.api_address
+            req = HTTPRequest(
+                url, method="GET", headers={"Authorization": "token %s" % cluster.token}
+            )
+            try:
+                resp = await asyncio.wait_for(client.fetch(req), timeout=10)
+                workers = json.loads(resp.body.decode("utf8", "replace"))["workers"]
+                running = True
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                running = False
+                workers = []
+        else:
+            # Gateway was stopped before cluster fully started.
+            running = False
+            workers = []
+
+        if running:
+            # Cluster is running, update our state to match
+            await self.add_cluster_to_proxies(cluster)
+
+            # Update our set of workers to match
+            actual_workers = set(workers)
+            to_stop = []
+            for w in cluster.active_workers:
+                if w.name in actual_workers:
+                    self.mark_worker_running(cluster, w)
+                else:
+                    to_stop.append(w)
+
+            tasks = (self.stop_worker(cluster, w, failed=True) for w in to_stop)
+            await asyncio.gather(*tasks, return_exceptions=False)
+        else:
+            # Cluster is not available, shut it down
+            await self.stop_cluster(cluster, failed=True)
+
+        return running
 
     async def start_tornado_application(self):
         private_url = urlparse(self.private_url)
@@ -373,7 +442,7 @@ class DaskGateway(Application):
         self.log.info("Received signal %s, initiating shutdown...", sig.name)
         asyncio.ensure_future(self.stop_async())
 
-    async def stop_async(self, timeout=5):
+    async def stop_async(self, timeout=5, stop_event_loop=True):
         # Stop the server to prevent new requests
         if hasattr(self, "http_server"):
             self.http_server.stop()
@@ -420,7 +489,8 @@ class DaskGateway(Application):
             self.web_proxy.stop()
 
         # Stop the event loop
-        IOLoop.current().stop()
+        if stop_event_loop:
+            IOLoop.current().stop()
 
     async def _start_cluster(self, cluster):
         self.log.debug("Cluster %s is starting...", cluster.name)
@@ -477,12 +547,6 @@ class DaskGateway(Application):
 
         self.log.debug("Cluster %s connected at %s", cluster.name, scheduler_address)
 
-        # Register routes with proxies
-        await self.web_proxy.add_route(
-            "/gateway/clusters/" + cluster.name, dashboard_address
-        )
-        await self.scheduler_proxy.add_route("/" + cluster.name, scheduler_address)
-
         # Mark cluster as running
         self.db.update_cluster(
             cluster,
@@ -491,7 +555,19 @@ class DaskGateway(Application):
             api_address=api_address,
             status=ClusterStatus.RUNNING,
         )
+
+        # Register routes with proxies
+        await self.add_cluster_to_proxies(cluster)
+
         return True
+
+    async def add_cluster_to_proxies(self, cluster):
+        await self.web_proxy.add_route(
+            "/gateway/clusters/" + cluster.name, cluster.dashboard_address
+        )
+        await self.scheduler_proxy.add_route(
+            "/" + cluster.name, cluster.scheduler_address
+        )
 
     def start_new_cluster(self, user):
         cluster = self.db.create_cluster(user)
@@ -621,9 +697,14 @@ class DaskGateway(Application):
         self.log.debug("Worker %s connected to cluster %s", worker.name, cluster.name)
 
         # Mark worker as running
-        self.db.update_worker(worker, status=WorkerStatus.RUNNING)
-        cluster.pending.discard(worker.name)
+        self.mark_worker_running(cluster, worker)
+
         return True
+
+    def mark_worker_running(self, cluster, worker):
+        if worker.status != WorkerStatus.RUNNING:
+            self.db.update_worker(worker, status=WorkerStatus.RUNNING)
+            cluster.pending.discard(worker.name)
 
     def _monitor_start_worker(self, future, worker=None, cluster=None):
         try:

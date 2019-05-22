@@ -1,4 +1,6 @@
 import asyncio
+import os
+import signal
 
 import pytest
 
@@ -7,7 +9,7 @@ from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.cluster import ClusterManager
 from dask_gateway_server.utils import random_port
 
-from .utils import InProcessClusterManager
+from .utils import InProcessClusterManager, LocalTestingClusterManager
 
 
 class SlowStartClusterManager(ClusterManager):
@@ -87,7 +89,7 @@ class temp_gateway(object):
         return self.gateway
 
     async def __aexit__(self, *args):
-        await self.gateway.stop_async()
+        await self.gateway.stop_async(stop_event_loop=False)
         DaskGateway.clear_instance()
 
 
@@ -321,3 +323,78 @@ async def test_gateway_stop_clusters_on_shutdown(tmpdir):
 
     # Active clusters are stopped on shutdown
     assert not manager.active_schedulers
+
+
+@pytest.mark.asyncio
+async def test_gateway_resume_clusters_after_shutdown(tmpdir):
+    temp_dir = str(tmpdir.join("dask-gateway"))
+    os.mkdir(temp_dir, mode=0o700)
+
+    db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
+
+    async with temp_gateway(
+        cluster_manager_class=LocalTestingClusterManager,
+        temp_dir=temp_dir,
+        db_url=db_url,
+        stop_clusters_on_shutdown=False,
+    ) as gateway_proc:
+
+        async with Gateway(
+            address=gateway_proc.public_url, asynchronous=True
+        ) as gateway:
+
+            cluster1_name = await gateway.submit()
+            cluster1 = await gateway.connect(cluster1_name)
+            await cluster1.scale(2)
+
+            cluster2_name = await gateway.submit()
+            await gateway.connect(cluster2_name)
+
+            cluster3 = await gateway.new_cluster()
+            await cluster3.shutdown()
+
+    active_clusters = {c.name: c for c in gateway_proc.db.active_clusters()}
+
+    # Active clusters are not stopped on shutdown
+    assert active_clusters
+
+    # Stop 1 worker in cluster 1
+    worker = list(active_clusters[cluster1_name].workers.values())[0]
+    pid = worker.state["pid"]
+    os.kill(pid, signal.SIGTERM)
+
+    # Stop cluster 2
+    pid = active_clusters[cluster2_name].state["pid"]
+    os.kill(pid, signal.SIGTERM)
+
+    # Restart a new temp_gateway
+    async with temp_gateway(
+        cluster_manager_class=LocalTestingClusterManager,
+        temp_dir=temp_dir,
+        db_url=db_url,
+        stop_clusters_on_shutdown=False,
+        gateway_url=gateway_proc.gateway_url,
+        private_url=gateway_proc.private_url,
+        public_url=gateway_proc.public_url,
+    ) as gateway_proc:
+
+        active_clusters = list(gateway_proc.db.active_clusters())
+        assert len(active_clusters) == 1
+
+        cluster = active_clusters[0]
+
+        assert cluster.name == cluster1_name
+        assert len(cluster.active_workers) == 1
+
+        # Check that cluster is available and everything still works
+        async with Gateway(
+            address=gateway_proc.public_url, asynchronous=True
+        ) as gateway:
+
+            cluster = await gateway.connect(cluster1_name)
+
+            with cluster.get_client(set_as_default=False) as client:
+                res = await client.submit(lambda x: x + 1, 1)
+                assert res == 2
+
+            await cluster.shutdown()
