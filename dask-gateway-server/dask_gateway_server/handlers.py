@@ -71,7 +71,7 @@ class BaseHandler(web.RequestHandler):
         if auth_header:
             auth_type, auth_key = auth_header.split(" ", 1)
             if auth_type == "token":
-                cluster = self.gateway.cluster_from_token(auth_key)
+                cluster = self.gateway.db.cluster_from_token(auth_key)
                 if cluster is None:
                     return None
                 elif cluster.is_active():
@@ -90,7 +90,7 @@ class BaseHandler(web.RequestHandler):
         )
         if cookie is not None:
             cookie = cookie.decode("utf-8", "replace")
-            user = self.gateway.user_from_cookie(cookie)
+            user = self.gateway.db.user_from_cookie(cookie)
             if user is not None:
                 self.dask_cluster = None
                 self.dask_user = user
@@ -101,7 +101,7 @@ class BaseHandler(web.RequestHandler):
 
         # Finally, fall back to using the authenticator
         username = self.authenticator.authenticate(self)
-        user = self.gateway.get_or_create_user(username)
+        user = self.gateway.db.get_or_create_user(username)
         self.set_secure_cookie(
             DASK_GATEWAY_COOKIE, user.cookie, expires_days=self.cookie_max_age_days
         )
@@ -138,10 +138,8 @@ class ClustersHandler(BaseHandler):
         if cluster_name:
             raise web.HTTPError(405)
 
-        cluster = self.gateway.create_cluster(self.dask_user)
-
         # Launch the start task to run in the background
-        self.gateway.schedule_start_cluster(cluster)
+        cluster = self.gateway.start_new_cluster(self.dask_user)
 
         # Return the cluster id, to be used in future requests
         self.write({"name": cluster.name})
