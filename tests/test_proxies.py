@@ -159,7 +159,7 @@ def two_proxies():
     }
     try:
         proxy = WebProxy(**kwargs)
-        proxy2 = WebProxy(**kwargs)
+        proxy2 = WebProxy(externally_managed=True, **kwargs)
         yield proxy, proxy2
     finally:
         proxy.stop()
@@ -167,13 +167,13 @@ def two_proxies():
 
 
 @pytest.mark.asyncio
-async def test_proxy_wait_until_up(two_proxies):
+async def test_proxy_externally_managed(two_proxies):
     proxy, proxy2 = two_proxies
 
     # Connect times out
     proxy2.connect_timeout = 0.3
     with pytest.raises(RuntimeError):
-        await proxy2.wait_until_up()
+        await proxy2.start()
 
     # Start the proxy sometime in the future
     async def start_proxy():
@@ -184,11 +184,21 @@ async def test_proxy_wait_until_up(two_proxies):
 
     # Wait for proxy to start
     proxy2.connect_timeout = 2
-    await proxy2.wait_until_up()
+    await proxy2.start()
 
     # Connected proxy works
     routes = await proxy2.get_all_routes()
     assert not routes
+
+    # Stop proxy2
+    proxy2.stop()
+
+    # Change the auth_token so connection fails
+    proxy2.auth_token = "badvalue"
+    with pytest.raises(RuntimeError) as exc:
+        await proxy2.start()
+    assert "authentication" in str(exc.value)
+    assert "DASK_GATEWAY_PROXY_TOKEN" in str(exc.value)
 
     # Wait for task to finish to cleanup resources
     await start_task

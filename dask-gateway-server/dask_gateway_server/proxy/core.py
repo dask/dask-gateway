@@ -7,9 +7,10 @@ from urllib.parse import urlparse
 
 from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
-from traitlets.config import LoggingConfigurable
-from traitlets import default, Unicode, CaselessStrEnum, Float
+from traitlets.config import LoggingConfigurable, Application, catch_config_error
+from traitlets import default, Unicode, CaselessStrEnum, Float, Bool
 
+from .. import __version__ as VERSION
 from ..utils import random_port
 
 
@@ -63,6 +64,18 @@ class ProxyBase(LoggingConfigurable):
         config=True,
     )
 
+    externally_managed = Bool(
+        False,
+        help="""
+        Whether the proxy process is externally managed.
+
+        If False (default), the proxy process will be started and stopped by
+        the gateway process. Set to True if the proxy will be started via some
+        external manager (e.g. supervisord).
+        """,
+        config=True,
+    )
+
     @default("api_url")
     def _default_api_url(self):
         return "http://127.0.0.1:%d" % random_port()
@@ -77,50 +90,71 @@ class ProxyBase(LoggingConfigurable):
 
     async def start(self):
         """Start the proxy."""
-        address = urlparse(self.public_url).netloc
-        api_address = urlparse(self.api_url).netloc
-        command = [
-            _PROXY_EXE,
-            self._subcommand,
-            "-address",
-            address,
-            "-api-address",
-            api_address,
-            "-log-level",
-            self.log_level,
-            "-is-child-process",
-        ]
+        if not self.externally_managed:
+            address = urlparse(self.public_url).netloc
+            api_address = urlparse(self.api_url).netloc
+            command = [
+                _PROXY_EXE,
+                self._subcommand,
+                "-address",
+                address,
+                "-api-address",
+                api_address,
+                "-log-level",
+                self.log_level,
+                "-is-child-process",
+            ]
 
-        env = os.environ.copy()
-        env["DASK_GATEWAY_PROXY_TOKEN"] = self.auth_token
-        self.log.info("Starting the Dask gateway %s proxy...", self._subcommand)
-        proc = subprocess.Popen(
-            command,
-            env=env,
-            stdin=subprocess.PIPE,
-            stdout=None,
-            stderr=None,
-            start_new_session=True,
-        )
-        self.proxy_process = proc
-        self.log.info(
-            "Dask gateway %s proxy running at %r", self._subcommand, self.public_url
-        )
+            env = os.environ.copy()
+            env["DASK_GATEWAY_PROXY_TOKEN"] = self.auth_token
+            self.log.info("Starting the Dask gateway %s proxy...", self._subcommand)
+            proc = subprocess.Popen(
+                command,
+                env=env,
+                stdin=subprocess.PIPE,
+                stdout=None,
+                stderr=None,
+                start_new_session=True,
+            )
+            self.proxy_process = proc
+            self.log.info(
+                "Dask gateway %s proxy running at %r, api at %r",
+                self._subcommand,
+                self.public_url,
+                self.api_url,
+            )
+        else:
+            self.log.info(
+                "Connecting to dask gateway %s proxy at %r, api at %r",
+                self._subcommand,
+                self.public_url,
+                self.api_url,
+            )
 
         await self.wait_until_up()
 
     async def wait_until_up(self):
-        client = AsyncHTTPClient()
         loop = gen.IOLoop.current()
         deadline = loop.time() + self.connect_timeout
         dt = 0.1
         while True:
             try:
-                await client.fetch(self.api_url, follow_redirects=False)
+                await self.get_all_routes()
                 return
             except HTTPError as e:
-                if e.code < 500:
-                    return True
+                if e.code == 403:
+                    raise RuntimeError(
+                        "Failed to connect to %s proxy api at %s due to "
+                        "authentication failure, please ensure that "
+                        "DASK_GATEWAY_PROXY_TOKEN is the same between "
+                        "the proxy process and the gateway"
+                        % (self._subcommand, self.api_url)
+                    )
+                else:
+                    raise RuntimeError(
+                        "Error while connecting to %s proxy api at %s: %s"
+                        % (self._subcommand, self.api_url, e)
+                    )
             except (OSError, socket.error):
                 # Failed to connect, see if the process erred out
                 exitcode = (
@@ -216,3 +250,76 @@ class WebProxy(ProxyBase):
     """A proxy for proxying out the dashboards from behind a firewall"""
 
     _subcommand = "web"
+
+
+class ProxyApp(Application):
+    """Start a proxy application"""
+
+    version = VERSION
+
+    config_file = Unicode(
+        "dask_gateway_config.py", help="The config file to load", config=True
+    )
+
+    aliases = {"f": "ProxyApp.config_file", "config": "ProxyApp.config_file"}
+
+    @catch_config_error
+    def initialize(self, argv=None):
+        super().initialize(argv)
+        self.parent.load_config_file(self.config_file)
+
+    def exec_args(self, proxy):
+        """Start the proxy."""
+        address = urlparse(proxy.public_url).netloc
+        api_address = urlparse(proxy.api_url).netloc
+        env = os.environ.copy()
+        env["DASK_GATEWAY_PROXY_TOKEN"] = proxy.auth_token
+
+        return (
+            _PROXY_EXE,
+            "dask-gateway-proxy",
+            proxy._subcommand,
+            "-address",
+            address,
+            "-api-address",
+            api_address,
+            "-log-level",
+            proxy.log_level,
+            env,
+        )
+
+    def start(self):
+        public_url = getattr(self.parent, self.public_url_attr)
+        proxy = self.proxy_class(
+            parent=self.parent, log=self.parent.log, public_url=public_url
+        )
+        args = self.exec_args(proxy)
+        os.execle(*args)
+
+
+class SchedulerProxyApp(ProxyApp):
+    """Start the scheduler proxy"""
+
+    name = "dask-gateway scheduler-proxy"
+    description = "Start the scheduler proxy"
+
+    examples = """
+
+        dask-gateway scheduler-proxy
+    """
+    proxy_class = SchedulerProxy
+    public_url_attr = "gateway_url"
+
+
+class WebProxyApp(ProxyApp):
+    """Start the web proxy"""
+
+    name = "dask-gateway scheduler-proxy"
+    description = "Start the web proxy"
+
+    examples = """
+
+        dask-gateway web-proxy
+    """
+    proxy_class = WebProxy
+    public_url_attr = "public_url"

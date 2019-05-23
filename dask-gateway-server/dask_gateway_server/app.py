@@ -99,7 +99,15 @@ class DaskGateway(Application):
         "generate-config": (
             "dask_gateway_server.app.GenerateConfig",
             "Generate a default config file",
-        )
+        ),
+        "scheduler-proxy": (
+            "dask_gateway_server.proxy.core.SchedulerProxyApp",
+            "Start the scheduler proxy",
+        ),
+        "web-proxy": (
+            "dask_gateway_server.proxy.core.WebProxyApp",
+            "Start the web proxy",
+        ),
     }
 
     aliases = {
@@ -187,6 +195,18 @@ class DaskGateway(Application):
         gateway. Set to False to leave active clusters running.
         """,
         config=True,
+    )
+
+    check_cluster_timeout = Float(
+        10,
+        help="""
+        Timeout (in seconds) before deciding a cluster is no longer active.
+
+        When the gateway restarts, any clusters still marked as active have
+        their status checked. This timeout sets the max time we allocate for
+        checking a cluster's status before deciding that the cluster is no
+        longer active.
+        """,
     )
 
     db_url = Unicode(
@@ -380,7 +400,9 @@ class DaskGateway(Application):
                 url, method="GET", headers={"Authorization": "token %s" % cluster.token}
             )
             try:
-                resp = await asyncio.wait_for(client.fetch(req), timeout=10)
+                resp = await asyncio.wait_for(
+                    client.fetch(req), timeout=self.check_cluster_timeout
+                )
                 workers = json.loads(resp.body.decode("utf8", "replace"))["workers"]
                 running = True
             except asyncio.CancelledError:

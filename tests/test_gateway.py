@@ -376,6 +376,7 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
         gateway_url=gateway_proc.gateway_url,
         private_url=gateway_proc.private_url,
         public_url=gateway_proc.public_url,
+        check_cluster_timeout=2,
     ) as gateway_proc:
 
         active_clusters = list(gateway_proc.db.active_clusters())

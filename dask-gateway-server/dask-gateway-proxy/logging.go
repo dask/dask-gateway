@@ -35,29 +35,30 @@ func ParseLevel(s string) LogLevel {
 	panic("Couldn't parse log level " + s)
 }
 
-func (l LogLevel) String() string {
+func (l LogLevel) Char() byte {
 	switch l {
 	case ERROR:
-		return "ERROR"
+		return 'E'
 	case WARN:
-		return "WARN"
+		return 'W'
 	case INFO:
-		return "INFO"
+		return 'I'
 	case DEBUG:
-		return "DEBUG"
+		return 'D'
 	}
-	return "<unknown>"
+	return '?'
 }
 
 type Logger struct {
 	sync.Mutex
+	name  string
 	level LogLevel
 	out   io.Writer
 	buf   []byte
 }
 
-func NewLogger(level LogLevel) *Logger {
-	return &Logger{level: level, out: os.Stderr}
+func NewLogger(name string, level LogLevel) *Logger {
+	return &Logger{name: name, level: level, out: os.Stderr}
 }
 
 func (l *Logger) logMsg(level LogLevel, msg string) {
@@ -66,11 +67,13 @@ func (l *Logger) logMsg(level LogLevel, msg string) {
 		l.Lock()
 		defer l.Unlock()
 		l.buf = l.buf[:0]
-		l.buf = append(l.buf, "[dask-gateway-proxy] "...)
-		l.buf = now.AppendFormat(l.buf, "2006-01-02 15:04:05")
+		l.buf = append(l.buf, '[')
+		l.buf = append(l.buf, level.Char())
 		l.buf = append(l.buf, ' ')
-		l.buf = append(l.buf, level.String()...)
-		l.buf = append(l.buf, ": "...)
+		l.buf = now.AppendFormat(l.buf, "2006-01-02 15:04:05.000")
+		l.buf = append(l.buf, ' ')
+		l.buf = append(l.buf, l.name...)
+		l.buf = append(l.buf, "] "...)
 		l.buf = append(l.buf, msg...)
 		l.buf = append(l.buf, '\n')
 		l.out.Write(l.buf)
