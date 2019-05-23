@@ -19,10 +19,10 @@ from traitlets import Unicode, Bool, Type, Bytes, Float, default, validate, List
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
-from . import handlers, objects
+from . import handlers
 from .cluster import ClusterManager
 from .auth import Authenticator
-from .objects import WorkerStatus, ClusterStatus
+from .objects import DataManager, WorkerStatus, ClusterStatus, timestamp
 from .proxy import SchedulerProxy, WebProxy
 from .utils import cleanup_tmpdir, cancel_task
 
@@ -217,6 +217,29 @@ class DaskGateway(Application):
         False, help="If True, all database operations will be logged", config=True
     )
 
+    db_cleanup_period = Float(
+        600,
+        help="""
+        Time (in seconds) between database cleanup tasks.
+
+        This sets how frequently old records are removed from the database.
+        This shouldn't be too small (to keep the overhead low), but should be
+        smaller than ``db_record_max_age`` (probably by an order of magnitude).
+        """,
+        config=True,
+    )
+
+    db_cluster_max_age = Float(
+        3600 * 24,
+        help="""
+        Max time (in seconds) to keep around records of completed clusters.
+
+        Every ``db_cleanup_period``, completed clusters older than
+        ``db_cluster_max_age`` are removed from the database.
+        """,
+        config=True,
+    )
+
     temp_dir = Unicode(
         help="""
         Path to a directory to use to store temporary runtime files.
@@ -363,34 +386,46 @@ class DaskGateway(Application):
             self.exit(1)
 
     async def load_database_state(self):
-        self.db = objects.DataManager(url=self.db_url, echo=self.db_debug)
+        self.db = DataManager(url=self.db_url, echo=self.db_debug)
 
         active_clusters = list(self.db.active_clusters())
-        if not active_clusters:
-            return
+        if active_clusters:
+            self.log.info(
+                "Gateway was stopped with %d active clusters, "
+                "checking cluster status...",
+                len(active_clusters),
+            )
 
-        self.log.info(
-            "Gateway was stopped with %d active clusters, "
-            "checking cluster status...",
-            len(active_clusters),
-        )
+            tasks = (self.check_cluster(c) for c in active_clusters)
+            results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        tasks = (self.check_cluster(c) for c in active_clusters)
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+            n_clusters = 0
+            for c, r in zip(active_clusters, results):
+                if isinstance(r, Exception):
+                    self.log.error(
+                        "Error while checking status of cluster %d", c, exc_info=r
+                    )
+                elif r:
+                    n_clusters += 1
 
-        n_clusters = 0
-        for c, r in zip(active_clusters, results):
-            if isinstance(r, Exception):
+            self.log.info(
+                "All clusters have been checked, there are %d active clusters",
+                n_clusters,
+            )
+
+        self.db_cleanup_task = asyncio.ensure_future(self.cleanup_database())
+
+    async def cleanup_database(self):
+        while True:
+            try:
+                n = self.db.cleanup_expired(self.db_cluster_max_age)
+            except Exception as exc:
                 self.log.error(
-                    "Error while checking status of cluster %d", c, exc_info=r
+                    "Error while cleaning expired database records", exc_info=exc
                 )
-            elif r:
-                n_clusters += 1
-
-        self.log.info(
-            "All clusters have been checked, there are %d active " "clusters",
-            n_clusters,
-        )
+            else:
+                self.log.debug("Removed %d expired clusters from the database", n)
+            await asyncio.sleep(self.db_cleanup_period)
 
     async def check_cluster(self, cluster):
         if cluster.status == ClusterStatus.RUNNING:
@@ -468,6 +503,10 @@ class DaskGateway(Application):
         # Stop the server to prevent new requests
         if hasattr(self, "http_server"):
             self.http_server.stop()
+
+        # Stop the db cleanup task if present
+        if hasattr(self, "db_cleanup_task"):
+            self.db_cleanup_task.cancel()
 
         # If requested, shutdown any active clusters
         if self.stop_clusters_on_shutdown:
@@ -636,7 +675,7 @@ class DaskGateway(Application):
 
         # Update the cluster status
         status = ClusterStatus.FAILED if failed else ClusterStatus.STOPPED
-        self.db.update_cluster(cluster, status=status)
+        self.db.update_cluster(cluster, status=status, stop_time=timestamp())
         cluster.pending.clear()
 
         self.log.debug("Cluster %s stopped", cluster.name)
@@ -767,7 +806,7 @@ class DaskGateway(Application):
 
         # Update the worker status
         status = WorkerStatus.FAILED if failed else WorkerStatus.STOPPED
-        self.db.update_worker(worker, status=status)
+        self.db.update_worker(worker, status=status, stop_time=timestamp())
 
         self.log.debug("Worker %s stopped", worker.name)
 

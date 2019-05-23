@@ -124,6 +124,8 @@ def cluster_model(gateway, cluster, full=True):
         "scheduler_address": scheduler or None,
         "dashboard_address": dashboard or None,
         "status": cluster.status.name,
+        "start_time": cluster.start_time,
+        "stop_time": cluster.stop_time,
     }
     if full:
         out["tls_cert"] = cluster.tls_cert.decode() or None
