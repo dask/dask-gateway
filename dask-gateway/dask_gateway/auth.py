@@ -142,5 +142,5 @@ class KerberosAuth(GatewayAuth):
             if match:
                 token = match.group(1)
         if not token:
-            raise ValueError("Kerberos negotiation failed")
+            raise Exception("Kerberos negotiation failed")
         kerberos.authGSSClientStep(context, token)

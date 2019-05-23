@@ -5,4 +5,4 @@ set -xe
 
 cd /working
 
-py.test tests/test_yarn_cluster.py -v
+py.test tests/test_auth.py -v
