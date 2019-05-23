@@ -1,6 +1,11 @@
 from .client import Gateway, DaskGatewayCluster
 from .auth import KerberosAuth, BasicAuth
 
+# Load configuration
+from . import config
+
+del config
+
 from ._version import get_versions
 
 __version__ = get_versions()["version"]

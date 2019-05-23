@@ -1,4 +1,5 @@
 recursive-include dask_gateway *.py
+recursive-include dask_gateway *.yaml
 
 include versioneer.py
 include setup.py
