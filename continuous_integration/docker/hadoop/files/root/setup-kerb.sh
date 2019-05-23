@@ -25,5 +25,5 @@ kdb5_util create -s -P testpass \
 && kadmin.local -q "addprinc -pw testpass dask" \
 && kadmin.local -q "addprinc -pw testpass alice" \
 && kadmin.local -q "addprinc -pw testpass bob" \
-&& kadmin.local -q "xst -norandkey -k /home/dask/dask.keytab dask" \
+&& kadmin.local -q "xst -norandkey -k /home/dask/dask.keytab dask HTTP/master.example.com" \
 && chown dask:dask /home/dask/dask.keytab

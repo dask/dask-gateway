@@ -5,7 +5,7 @@ set -xe
 
 cd /working
 
-conda install psutil
+conda install psutil pykerberos
 
 pip install \
     dask \

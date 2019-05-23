@@ -5,11 +5,9 @@ import signal
 import pytest
 
 from dask_gateway import Gateway
-from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.cluster import ClusterManager
-from dask_gateway_server.utils import random_port
 
-from .utils import InProcessClusterManager, LocalTestingClusterManager
+from .utils import InProcessClusterManager, LocalTestingClusterManager, temp_gateway
 
 
 class SlowStartClusterManager(ClusterManager):
@@ -69,28 +67,6 @@ class FailWorkerStartClusterManager(InProcessClusterManager):
 
     async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
         self.stop_worker_state = worker_state
-
-
-class temp_gateway(object):
-    def __init__(self, **kwargs):
-        self.options = {
-            "gateway_url": "tls://127.0.0.1:%d" % random_port(),
-            "private_url": "http://127.0.0.1:%d" % random_port(),
-            "public_url": "http://127.0.0.1:%d" % random_port(),
-            "db_url": "sqlite:///:memory:",
-            "authenticator_class": "dask_gateway_server.auth.DummyAuthenticator",
-        }
-        self.options.update(**kwargs)
-
-    async def __aenter__(self):
-        self.gateway = DaskGateway.instance(**self.options)
-        self.gateway.initialize([])
-        await self.gateway.start_async()
-        return self.gateway
-
-    async def __aexit__(self, *args):
-        await self.gateway.stop_async(stop_event_loop=False)
-        DaskGateway.clear_instance()
 
 
 @pytest.mark.asyncio
