@@ -1,6 +1,7 @@
 import asyncio
 import enum
 import json
+import time
 import uuid
 
 from sqlalchemy import (
@@ -13,10 +14,18 @@ from sqlalchemy import (
     LargeBinary,
     TypeDecorator,
     create_engine,
+    bindparam,
+    select,
+    event,
 )
 from sqlalchemy.pool import StaticPool
 
 from .tls import new_keypair
+
+
+def timestamp():
+    """An integer timestamp represented as milliseconds since the epoch UTC"""
+    return int(time.time() * 1000)
 
 
 class _EnumMixin(object):
@@ -104,6 +113,8 @@ clusters = Table(
     Column("api_address", Unicode(255), nullable=False),
     Column("tls_cert", LargeBinary, nullable=False),
     Column("tls_key", LargeBinary, nullable=False),
+    Column("start_time", Integer, nullable=False),
+    Column("stop_time", Integer, nullable=True),
 )
 
 workers = Table(
@@ -114,7 +125,19 @@ workers = Table(
     Column("cluster_id", ForeignKey("clusters.id", ondelete="CASCADE"), nullable=False),
     Column("status", IntEnum(WorkerStatus), nullable=False),
     Column("state", JSON, nullable=False),
+    Column("start_time", Integer, nullable=False),
+    Column("stop_time", Integer, nullable=True),
 )
+
+
+def register_foreign_keys(engine):
+    """register PRAGMA foreign_keys=on on connection"""
+
+    @event.listens_for(engine, "connect")
+    def connect(dbapi_con, con_record):
+        cursor = dbapi_con.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 
 class DataManager(object):
@@ -131,6 +154,8 @@ class DataManager(object):
             kwargs["poolclass"] = StaticPool
 
         engine = create_engine(url, **kwargs)
+        if url.startswith("sqlite"):
+            register_foreign_keys(engine)
 
         metadata.create_all(engine)
 
@@ -139,6 +164,7 @@ class DataManager(object):
         self.username_to_user = {}
         self.cookie_to_user = {}
         self.token_to_cluster = {}
+        self.id_to_cluster = {}
 
         # Load state from database
         self._init_from_database()
@@ -153,7 +179,6 @@ class DataManager(object):
             id_to_user[user.id] = user
 
         # Next load all existing clusters into memory
-        id_to_cluster = {}
         for c in self.db.execute(clusters.select()):
             user = id_to_user[c.user_id]
             cluster = Cluster(
@@ -168,20 +193,50 @@ class DataManager(object):
                 api_address=c.api_address,
                 tls_cert=c.tls_cert,
                 tls_key=c.tls_key,
+                start_time=c.start_time,
+                stop_time=c.stop_time,
             )
-            user.clusters[cluster.name] = cluster
+            self.id_to_cluster[cluster.id] = cluster
             self.token_to_cluster[cluster.token] = cluster
-            id_to_cluster[cluster.id] = cluster
+            user.clusters[cluster.name] = cluster
 
         # Next load all existing workers into memory
         for w in self.db.execute(workers.select()):
-            cluster = id_to_cluster[w.cluster_id]
+            cluster = self.id_to_cluster[w.cluster_id]
             worker = Worker(
-                id=w.id, name=w.name, status=w.status, cluster=cluster, state=w.state
+                id=w.id,
+                name=w.name,
+                status=w.status,
+                cluster=cluster,
+                state=w.state,
+                start_time=w.start_time,
+                stop_time=w.stop_time,
             )
             cluster.workers[worker.name] = worker
             if w.status == WorkerStatus.STARTING:
                 cluster.pending.add(worker.name)
+
+    def cleanup_expired(self, max_age_in_seconds):
+        cutoff = timestamp() - max_age_in_seconds * 1000
+        with self.db.begin() as conn:
+            to_delete = conn.execute(
+                select([clusters.c.id]).where(clusters.c.stop_time < cutoff)
+            ).fetchall()
+
+            if to_delete:
+                to_delete = [i for i, in to_delete]
+
+                conn.execute(
+                    clusters.delete().where(clusters.c.id == bindparam("id")),
+                    [{"id": i} for i in to_delete],
+                )
+
+                for i in to_delete:
+                    cluster = self.id_to_cluster.pop(i)
+                    del self.token_to_cluster[cluster.token]
+                    del cluster.user.clusters[cluster.name]
+
+        return len(to_delete)
 
     def user_from_cookie(self, cookie):
         """Lookup a user from a cookie"""
@@ -224,13 +279,15 @@ class DataManager(object):
             "api_address": "",
             "tls_cert": tls_cert,
             "tls_key": tls_key,
+            "start_time": timestamp(),
         }
 
         with self.db.begin() as conn:
             res = conn.execute(clusters.insert().values(user_id=user.id, **common))
             cluster = Cluster(id=res.inserted_primary_key[0], user=user, **common)
-            user.clusters[cluster_name] = cluster
+            self.id_to_cluster[cluster.id] = cluster
             self.token_to_cluster[token] = cluster
+            user.clusters[cluster_name] = cluster
 
         return cluster
 
@@ -238,7 +295,12 @@ class DataManager(object):
         """Create a new worker for a cluster"""
         worker_name = uuid.uuid4().hex
 
-        common = {"name": worker_name, "status": WorkerStatus.STARTING, "state": {}}
+        common = {
+            "name": worker_name,
+            "status": WorkerStatus.STARTING,
+            "state": {},
+            "start_time": timestamp(),
+        }
 
         with self.db.begin() as conn:
             res = conn.execute(workers.insert().values(cluster_id=cluster.id, **common))
@@ -305,6 +367,8 @@ class Cluster(object):
         api_address="",
         tls_cert=b"",
         tls_key=b"",
+        start_time=None,
+        stop_time=None,
     ):
         self.id = id
         self.name = name
@@ -317,6 +381,9 @@ class Cluster(object):
         self.api_address = api_address
         self.tls_cert = tls_cert
         self.tls_key = tls_key
+        self.start_time = start_time
+        self.stop_time = stop_time
+
         self.pending = set()
         self.workers = {}
 
@@ -348,12 +415,23 @@ class Cluster(object):
 
 
 class Worker(object):
-    def __init__(self, id=None, name=None, cluster=None, status=None, state=None):
+    def __init__(
+        self,
+        id=None,
+        name=None,
+        cluster=None,
+        status=None,
+        state=None,
+        start_time=None,
+        stop_time=None,
+    ):
         self.id = id
         self.name = name
         self.cluster = cluster
         self.status = status
         self.state = state
+        self.start_time = start_time
+        self.stop_time = stop_time
 
         loop = asyncio.get_running_loop()
 

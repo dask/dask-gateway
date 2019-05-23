@@ -4,7 +4,7 @@ import os
 import ssl
 import tempfile
 import weakref
-from datetime import timedelta
+from datetime import timedelta, datetime
 from threading import get_ident
 
 import dask
@@ -114,6 +114,10 @@ class ClusterReport(object):
         The address of the scheduler, or None if not currently running.
     dashboard_address : str or None
         The address of the dashboard, or None if not currently running.
+    start_time : datetime.datetime
+        The time the cluster was started.
+    stop_time : datetime.datetime or None
+        The time the cluster was stopped, or None if currently running.
     tls_cert : str or None
         The tls certificate. None if not currently running or a full report
         wasn't requested.
@@ -127,6 +131,8 @@ class ClusterReport(object):
         "status",
         "scheduler_address",
         "dashboard_address",
+        "start_time",
+        "stop_time",
         "tls_cert",
         "tls_key",
     )
@@ -137,6 +143,8 @@ class ClusterReport(object):
         status,
         scheduler_address,
         dashboard_address,
+        start_time,
+        stop_time,
         tls_cert=None,
         tls_key=None,
     ):
@@ -144,11 +152,21 @@ class ClusterReport(object):
         self.status = ClusterStatus._create(status)
         self.scheduler_address = scheduler_address
         self.dashboard_address = dashboard_address
+        self.start_time = start_time
+        self.stop_time = stop_time
         self.tls_cert = tls_cert
         self.tls_key = tls_key
 
     def __repr__(self):
         return "ClusterReport<name=%s, status=%s>" % (self.name, self.status.name)
+
+    @classmethod
+    def _from_json(cls, msg):
+        start_time = datetime.fromtimestamp(msg.pop("start_time") / 1000)
+        stop_time = msg.pop("stop_time")
+        if stop_time is not None:
+            stop_time = datetime.from_timestamp(stop_time / 1000)
+        return cls(start_time=start_time, stop_time=stop_time, **msg)
 
 
 class Gateway(object):
@@ -268,7 +286,7 @@ class Gateway(object):
         url = "%s/gateway/api/clusters/%s" % (self.address, query)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
-        return [ClusterReport(**r) for r in json.loads(resp.body).values()]
+        return [ClusterReport._from_json(r) for r in json.loads(resp.body).values()]
 
     def list_clusters(self, status=None, **kwargs):
         """List clusters for this user.
