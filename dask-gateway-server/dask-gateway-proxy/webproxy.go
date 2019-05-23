@@ -24,7 +24,7 @@ type HttpProxy struct {
 func NewWebProxy(logLevel LogLevel) *HttpProxy {
 	out := HttpProxy{
 		router: NewRouter(),
-		logger: NewLogger(logLevel),
+		logger: NewLogger("WebProxy", logLevel),
 	}
 	out.proxy = &httputil.ReverseProxy{
 		Director:      out.director,
@@ -78,11 +78,13 @@ func (p *HttpProxy) routesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			p.router.Put(route, target)
 			p.routesLock.Unlock()
+			p.logger.Infof("Added route %s -> %s", route, target)
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodDelete:
 			p.routesLock.Lock()
 			p.router.Delete(route)
 			p.routesLock.Unlock()
+			p.logger.Infof("Removed route %s", route)
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -165,6 +167,9 @@ func webProxyMain(args []string) {
 		go awaitShutdown()
 	}
 	go serveAPI(proxy.routesHandler, apiAddress, token)
+
+	proxy.logger.Infof("Proxy serving at %s", address)
+	proxy.logger.Infof("API serving at %s", apiAddress)
 
 	server.ListenAndServe()
 }

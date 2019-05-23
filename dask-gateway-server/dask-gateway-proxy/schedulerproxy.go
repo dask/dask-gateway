@@ -45,7 +45,7 @@ func NewSchedulerProxy(address string, apiAddress string, token string,
 		address:    address,
 		apiAddress: apiAddress,
 		timeout:    timeout,
-		logger:     NewLogger(logLevel),
+		logger:     NewLogger("SchedulerProxy", logLevel),
 		token:      token,
 		routes:     make(map[string]string),
 	}
@@ -88,11 +88,13 @@ func (p *Proxy) routesHandler(w http.ResponseWriter, r *http.Request) {
 			p.routesLock.Lock()
 			p.routes[route] = target.Host
 			p.routesLock.Unlock()
+			p.logger.Infof("Added route %s -> %s", route, target.Host)
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodDelete:
 			p.routesLock.Lock()
 			delete(p.routes, route)
 			p.routesLock.Unlock()
+			p.logger.Infof("Removed route %s", route)
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -124,7 +126,11 @@ func (p *Proxy) Run(isChildProcess bool) {
 }
 
 func (p *Proxy) sendAlert(c *Conn, alert tlsAlert, format string, args ...interface{}) {
-	p.logger.Errorf(format, args...)
+	if alert == unrecognizedName {
+		p.logger.Debugf(format, args...)
+	} else {
+		p.logger.Errorf(format, args...)
+	}
 
 	alertMsg := []byte{21, 3, byte(c.tlsMinor), 0, 2, 2, byte(alert)}
 
@@ -154,7 +160,6 @@ func (p *Proxy) proxy(c *Conn) {
 		p.sendAlert(c, internalError, "Extracting SNI: %s", err)
 		return
 	}
-	p.logger.Debugf("SNI extracted: %s", c.sni)
 
 	if err = c.inConn.SetReadDeadline(time.Time{}); err != nil {
 		p.sendAlert(c, internalError, "Clearing read deadline for handshake: %s", err)

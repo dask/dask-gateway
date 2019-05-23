@@ -81,4 +81,4 @@ def test_client_init():
     with dask.config.set(config):
         # No address provided
         with pytest.raises(ValueError):
-            gateway = Gateway()
+            Gateway()

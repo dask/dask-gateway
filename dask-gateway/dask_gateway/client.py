@@ -198,7 +198,10 @@ class Gateway(object):
             self._loop_runner.stop()
 
     def __del__(self):
-        self.close()
+        # __del__ is still called, even if __init__ failed. Only close if init
+        # actually succeeded.
+        if hasattr(self, "_started"):
+            self.close()
 
     def __enter__(self):
         return self
