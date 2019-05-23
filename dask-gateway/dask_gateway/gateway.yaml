@@ -1,0 +1,9 @@
+gateway:
+  address: null     # The full address to the dask-gateway server
+
+  auth:
+    type: basic     # The authentication type to use. Options are basic,
+                    # kerberos, or a full class path to a custom class.
+
+    kwargs: {}      # Keyword arguments to use when instantiating the
+                    # authentication class above.

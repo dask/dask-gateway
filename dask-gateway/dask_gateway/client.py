@@ -7,6 +7,7 @@ import weakref
 from datetime import timedelta
 from threading import get_ident
 
+import dask
 from distributed import Client
 from distributed.security import Security
 from distributed.utils import LoopRunner, sync, thread_state, format_bytes, log_errors
@@ -18,7 +19,7 @@ from .cookiejar import CookieJar
 
 # Register gateway protocol
 from . import comm
-from .auth import BasicAuth
+from .auth import get_auth
 
 del comm
 
@@ -155,7 +156,7 @@ class Gateway(object):
 
     Parameters
     ----------
-    address : str
+    address : str, optional
         The address to the gateway server.
     auth : GatewayAuth, optional
         The authentication method to use.
@@ -168,8 +169,14 @@ class Gateway(object):
     """
 
     def __init__(self, address=None, auth=None, asynchronous=False, loop=None):
+        if address is None:
+            address = dask.config.get("gateway.address")
+        if address is None:
+            raise ValueError(
+                "No dask-gateway address provided or found in configuration"
+            )
         self.address = address
-        self._auth = auth or BasicAuth()
+        self._auth = get_auth(auth)
         self._cookie_jar = CookieJar()
 
         self._asynchronous = asynchronous

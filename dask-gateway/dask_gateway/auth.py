@@ -3,11 +3,60 @@ import re
 from base64 import b64encode
 from urllib.parse import urlparse
 
-__all__ = ("GatewayAuth", "BasicAuth", "KerberosAuth")
+import dask
+
+
+__all__ = ("GatewayAuth", "BasicAuth", "KerberosAuth", "get_auth")
+
+
+def _import_object(name):
+    parts = name.rsplit(".", 1)
+    if len(parts) == 2:
+        package, obj = parts
+        mod = __import__(package, fromlist=[obj])
+        try:
+            return getattr(mod, obj)
+        except AttributeError:
+            raise ImportError("Failed to import %s" % name)
+    else:
+        return __import__(name)
+
+
+def get_auth(auth=None):
+    """Get a ``GatewayAuth`` instance.
+
+    Creates an authenticator depending on the given parameters and gateway
+    configuration.
+    """
+    if isinstance(auth, GatewayAuth):
+        return auth
+
+    if auth is None:
+        auth = dask.config.get("gateway.auth.type", None)
+
+    if isinstance(auth, str):
+        if auth == "kerberos":
+            auth = KerberosAuth
+        elif auth == "basic":
+            auth = BasicAuth
+        else:
+            auth = _import_object(auth)
+    elif not callable(auth):
+        raise TypeError("Unknown auth value %r" % auth)
+
+    auth_kwargs = dask.config.get("gateway.auth.kwargs", None) or {}
+    out = auth(**auth_kwargs)
+
+    if not isinstance(out, GatewayAuth):
+        raise TypeError("auth must be instance of GatewayAuth, got %r" % out)
+    return out
 
 
 class GatewayAuth(object):
     """Base class for authenticating clients in dask-gateway"""
+
+    def __init__(self, **kwargs):
+        pass
 
     def pre_request(self, req, resp):
         """Authentication hook before client request is sent.
@@ -54,21 +103,20 @@ class BasicAuth(GatewayAuth):
             username = getpass.getuser()
         if password is None:
             password = ""
-        self._username = username
-        self._password = password
-        data = b":".join(
-            (self._username.encode("latin1"), self._password.encode("latin1"))
-        )
-        self._auth = "Basic " + b64encode(data).decode()
+        self.username = username
+        self.password = password
 
     def pre_request(self, req, resp):
-        req.headers["Authorization"] = self._auth
+        data = b":".join(
+            (self.username.encode("latin1"), self.password.encode("latin1"))
+        )
+        req.headers["Authorization"] = "Basic " + b64encode(data).decode()
 
 
 class KerberosAuth(GatewayAuth):
     """Authenticate with kerberos"""
 
-    auth_regex = re.compile("(?:.*,)*\s*Negotiate\s*([^,]*),?", re.I)  # noqa
+    auth_regex = re.compile(r"(?:.*,)*\s*Negotiate\s*([^,]*),?", re.I)  # noqa
 
     def pre_request(self, req, resp):
         # TODO: convert errors to some common error class
