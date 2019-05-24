@@ -165,7 +165,7 @@ class ClusterReport(object):
         start_time = datetime.fromtimestamp(msg.pop("start_time") / 1000)
         stop_time = msg.pop("stop_time")
         if stop_time is not None:
-            stop_time = datetime.from_timestamp(stop_time / 1000)
+            stop_time = datetime.fromtimestamp(stop_time / 1000)
         return cls(start_time=start_time, stop_time=stop_time, **msg)
 
 

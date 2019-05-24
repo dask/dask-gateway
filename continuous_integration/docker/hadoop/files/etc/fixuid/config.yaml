@@ -1,4 +1,0 @@
-user: dask
-group: dask
-paths:
-    - /home/dask

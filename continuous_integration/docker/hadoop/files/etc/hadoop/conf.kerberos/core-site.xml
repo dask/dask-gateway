@@ -47,7 +47,7 @@
 
     <property>
         <name>hadoop.http.authentication.type</name>
-        <value>kerberos</value>
+        <value>simple</value>
     </property>
 
     <property>
@@ -62,17 +62,7 @@
 
     <property>
         <name>hadoop.http.authentication.simple.anonymous.allowed</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>hadoop.http.authentication.kerberos.principal</name>
-        <value>HTTP/master.example.com@EXAMPLE.COM</value>
-    </property>
-
-    <property>
-        <name>hadoop.http.authentication.kerberos.keytab</name>
-        <value>/etc/hadoop/conf/master-keytabs/HTTP.keytab</value>
+        <value>true</value>
     </property>
 
 </configuration>
