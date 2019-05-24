@@ -2,7 +2,8 @@
 exclude =
     __init__.py,
     versioneer.py,
-    _version.py
+    _version.py,
+    dask_gateway_config.py
 ignore =
     # Import formatting
     E4,

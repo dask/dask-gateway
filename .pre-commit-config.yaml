@@ -9,4 +9,8 @@ repos:
   rev: 3.7.7
   hooks:
     - id: flake8
+      exclude: >
+        (?x)^(
+            demo/dask_gateway_config.py
+        )$
       language_version: python3.7
