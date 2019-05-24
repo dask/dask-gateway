@@ -1,4 +1,4 @@
-from .client import Gateway, DaskGatewayCluster
+from .client import Gateway, GatewayCluster
 from .auth import KerberosAuth, BasicAuth
 
 # Load configuration

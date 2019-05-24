@@ -1,0 +1,19 @@
+pre {
+    padding: 7px 10px;
+}
+
+.body li {
+    margin: 0 0 15px 0;
+}
+
+.toctree-wrapper li {
+    margin: 0 0 0 0;
+}
+
+.contents li {
+    margin: 0 0 0 0;
+}
+
+.light-bordered-image {
+    border: 1px solid whitesmoke;
+}
