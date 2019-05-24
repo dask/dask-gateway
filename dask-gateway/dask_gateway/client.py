@@ -23,7 +23,7 @@ from .auth import get_auth
 
 del comm
 
-__all__ = ("Gateway", "DaskGatewayCluster")
+__all__ = ("Gateway", "GatewayCluster")
 
 
 class GatewaySecurity(Security):
@@ -351,7 +351,7 @@ class Gateway(object):
                     raise
             else:
                 if report.status is ClusterStatus.RUNNING:
-                    return DaskGatewayCluster(self, report)
+                    return GatewayCluster(self, report)
                 elif report.status is ClusterStatus.FAILED:
                     raise Exception(
                         "Cluster %r failed to start, see logs for "
@@ -367,7 +367,7 @@ class Gateway(object):
 
         Returns
         -------
-        cluster : DaskGatewayCluster
+        cluster : GatewayCluster
         """
         return self.sync(self._connect, cluster_name, **kwargs)
 
@@ -387,7 +387,7 @@ class Gateway(object):
 
         Returns
         -------
-        cluster : DaskGatewayCluster
+        cluster : GatewayCluster
         """
         return self.sync(self._new_cluster, **kwargs)
 
@@ -458,7 +458,7 @@ _widget_status_template = """
 """
 
 
-class DaskGatewayCluster(object):
+class GatewayCluster(object):
     """A dask-gateway cluster.
 
     Users should use ``Gateway.new_cluster`` or ``Gateway.connect`` instead of
@@ -480,7 +480,7 @@ class DaskGatewayCluster(object):
         self._clients = weakref.WeakSet()
 
     def __repr__(self):
-        return "DaskGatewayCluster<%s>" % self.name
+        return "GatewayCluster<%s>" % self.name
 
     async def __aenter__(self):
         return self
@@ -582,7 +582,7 @@ class DaskGatewayCluster(object):
 
         layout = Layout(width="150px")
 
-        title = HTML("<h2>DaskGatewayCluster</h2>")
+        title = HTML("<h2>GatewayCluster</h2>")
 
         status = HTML(self._widget_status(), layout=Layout(min_width="150px"))
 
