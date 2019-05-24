@@ -1,0 +1,148 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dask Gateway &#8212; Dask Gateway 0+untagged.88.g91ced6d documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration API" href="api-server.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="dask-gateway">
+<h1>Dask Gateway<a class="headerlink" href="#dask-gateway" title="Permalink to this headline">¶</a></h1>
+<p>Dask Gateway provides a secure, multi-tenant server for managing <a class="reference external" href="https://dask.org/">Dask</a>
+clusters.  It allows users to launch and use Dask clusters in a shared,
+centrally managed cluster environment, without requiring users have direct
+access to the underlying cluster backend (e.g. Kubernetes, YARN, Job queues,
+etc…).</p>
+<div class="section" id="architecture-overview">
+<h2>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permalink to this headline">¶</a></h2>
+<p>Dask Gateway is divided into four separate components:</p>
+<ul class="simple">
+<li><p>Multiple active <strong>Dask Clusters</strong> (potentially more than one per user)</p></li>
+<li><p>A <strong>Web proxy</strong> for proxying the Dask Web UI for each cluster</p></li>
+<li><p>A <strong>Scheduler proxy</strong> for proxying the connection between the user’s client
+and their respective scheduler</p></li>
+<li><p>A central <strong>Gateway</strong> that manages authentication and cluster startup/shutdown</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/architecture.svg"><div align="center" class="align-center"><img alt="Dask-Gateway high-level architecture" src="_images/architecture.svg" width="90%" /></div>
+</a>
+<p>The gateway is designed to be flexible and pluggable, and makes heavy use of
+<a class="reference external" href="https://traitlets.readthedocs.io/en/stable/">traitlets</a> (the same technology used by the <a class="reference external" href="https://jupyter.org/">Jupyter</a> ecosystem). In particular,
+both the cluster backend and the authentication protocol are pluggable.</p>
+<p><strong>Cluster Backends</strong></p>
+<ul class="simple">
+<li><p>YARN</p></li>
+<li><p>Local Processes</p></li>
+<li><p>Kubernetes (planned)</p></li>
+<li><p>Job Queues (planned)</p></li>
+</ul>
+<p><strong>Authentication Methods</strong></p>
+<ul class="simple">
+<li><p>Kerberos</p></li>
+<li><p>Basic</p></li>
+<li><p>JupyterHub (planned)</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">Dask Gateway</a></h1>
+
+
+
+<p class="blurb">A multi-tenant server for securely deploying and managing Dask clusters</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jcrist&repo=dask-gateway&type=watch&count=False&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://travis-ci.org/jcrist/dask-gateway">
+    <img
+        alt="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
+        src="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
+    />
+</a>
+</p>
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
+</ul>
+
+<h3>Need help?</h3>
+
+<p>
+  Open an issue in the <a href="https://github.com/jcrist/dask-gateway/issues">issue tracker</a>.
+</p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Jim Crist.
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

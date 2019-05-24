@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Client API &#8212; Dask Gateway 0+untagged.88.g91ced6d documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Configuration API" href="api-server.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="client-api">
+<h1>Client API<a class="headerlink" href="#client-api" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="dask_gateway.Gateway">
+<em class="property">class </em><code class="descclassname">dask_gateway.</code><code class="descname">Gateway</code><span class="sig-paren">(</span><em>address=None</em>, <em>auth=None</em>, <em>asynchronous=False</em>, <em>loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway" title="Permalink to this definition">¶</a></dt>
+<dd><p>A client for a Dask Gateway Server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<em>str</em><em>, </em><em>optional</em>) – The address to the gateway server.</p></li>
+<li><p><strong>auth</strong> (<em>GatewayAuth</em><em>, </em><em>optional</em>) – The authentication method to use.</p></li>
+<li><p><strong>asynchronous</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, starts the client in asynchronous mode, where it can be used
+in other async code.</p></li>
+<li><p><strong>loop</strong> (<em>IOLoop</em><em>, </em><em>optional</em>) – The IOLoop instance to use. Defaults to the current loop in
+asynchronous mode, otherwise a background loop is started.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="dask_gateway.Gateway.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close this gateway client</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.Gateway.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><em>cluster_name</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to a submitted cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>cluster</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster">GatewayCluster</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.Gateway.list_clusters">
+<code class="descname">list_clusters</code><span class="sig-paren">(</span><em>status=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.list_clusters" title="Permalink to this definition">¶</a></dt>
+<dd><p>List clusters for this user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>status</strong> (<em>ClusterStatus</em><em>, </em><em>str</em><em>, or </em><em>list</em><em>, </em><em>optional</em>) – The cluster status (or statuses) to select. Valid options are
+‘starting’, ‘started’, ‘running’, ‘stopping’, ‘stopped’, ‘failed’.
+By default selects active clusters (‘starting’, ‘started’,
+‘running’).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>clusters</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of ClusterReport</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.Gateway.new_cluster">
+<code class="descname">new_cluster</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submit a new cluster to the gateway, and wait for it to be started.</p>
+<p>Same as calling <code class="docutils literal notranslate"><span class="pre">submit</span></code> and <code class="docutils literal notranslate"><span class="pre">connect</span></code> in one go.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>cluster</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster">GatewayCluster</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.Gateway.scale_cluster">
+<code class="descname">scale_cluster</code><span class="sig-paren">(</span><em>cluster_name</em>, <em>n</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.scale_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale a cluster to n workers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_name</strong> (<em>str</em>) – The cluster name.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – The number of workers to scale to.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.Gateway.stop_cluster">
+<code class="descname">stop_cluster</code><span class="sig-paren">(</span><em>cluster_name</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.stop_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop a cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cluster_name</strong> (<em>str</em>) – The cluster name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.Gateway.submit">
+<code class="descname">submit</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.submit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submit a new cluster to be started.</p>
+<p>This returns quickly with a <code class="docutils literal notranslate"><span class="pre">cluster_name</span></code>, which can later be used
+to connect to the cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>cluster_name</strong> – The cluster name.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dask_gateway.GatewayCluster">
+<em class="property">class </em><code class="descclassname">dask_gateway.</code><code class="descname">GatewayCluster</code><span class="sig-paren">(</span><em>gateway</em>, <em>report</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dask-gateway cluster.</p>
+<p>Users should use <code class="docutils literal notranslate"><span class="pre">Gateway.new_cluster</span></code> or <code class="docutils literal notranslate"><span class="pre">Gateway.connect</span></code> instead of
+calling this class directly.</p>
+<dl class="method">
+<dt id="dask_gateway.GatewayCluster.close">
+<code class="descname">close</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shutdown this cluster, alias for <code class="docutils literal notranslate"><span class="pre">shutdown</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.GatewayCluster.get_client">
+<code class="descname">get_client</code><span class="sig-paren">(</span><em>set_as_default=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.get_client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a <code class="docutils literal notranslate"><span class="pre">Client</span></code> for this cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>client</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dask.distributed.Client</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.GatewayCluster.scale">
+<code class="descname">scale</code><span class="sig-paren">(</span><em>n</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale the cluster to <code class="docutils literal notranslate"><span class="pre">n</span></code> workers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – The number of workers to scale to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.GatewayCluster.shutdown">
+<code class="descname">shutdown</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shutdown this cluster.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Dask Gateway</a></h1>
+
+
+
+<p class="blurb">A multi-tenant server for securely deploying and managing Dask clusters</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jcrist&repo=dask-gateway&type=watch&count=False&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://travis-ci.org/jcrist/dask-gateway">
+    <img
+        alt="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
+        src="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
+    />
+</a>
+</p>
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Client API</a></li>
+</ul>
+
+<h3>Need help?</h3>
+
+<p>
+  Open an issue in the <a href="https://github.com/jcrist/dask-gateway/issues">issue tracker</a>.
+</p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Jim Crist.
+      
+      |
+      <a href="_sources/api-client.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

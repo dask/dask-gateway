@@ -1,0 +1,816 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Configuration API &#8212; Dask Gateway 0+untagged.88.g91ced6d documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Client API" href="api-client.html" />
+    <link rel="prev" title="Dask Gateway" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="configuration-api">
+<h1>Configuration API<a class="headerlink" href="#configuration-api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="gateway">
+<h2>Gateway<a class="headerlink" href="#gateway" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dask_gateway_server.app.DaskGateway">
+<em class="property">class </em><code class="descclassname">dask_gateway_server.app.</code><code class="descname">DaskGateway</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.app.DaskGateway" title="Permalink to this definition">¶</a></dt>
+<dd><p>A gateway for managing dask clusters across multiple users</p>
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.authenticator_class = Type('dask_gateway_server.auth.KerberosAuthenticator')</code></dt>
+<dd><p>The gateway authenticator class to use</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.cluster_manager_class = Type('dask_gateway_server.local_cluster.LocalClusterManager')</code></dt>
+<dd><p>The gateway cluster manager class to use</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.config_file = Unicode('dask_gateway_config.py')</code></dt>
+<dd><p>The config file to load</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.cookie_max_age_days = Float(7)</code></dt>
+<dd><p>Number of days for a login cookie to be valid.
+Default is one week.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.cookie_secret = Bytes(b'')</code></dt>
+<dd><p>The cookie secret to use to encrypt cookies.</p>
+<p>Loaded from the DASK_GATEWAY_COOKIE_SECRET environment variable by
+default.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.db_cleanup_period = Float(600)</code></dt>
+<dd><p>Time (in seconds) between database cleanup tasks.</p>
+<p>This sets how frequently old records are removed from the database.
+This shouldn’t be too small (to keep the overhead low), but should be
+smaller than <code class="docutils literal notranslate"><span class="pre">db_record_max_age</span></code> (probably by an order of magnitude).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.db_cluster_max_age = Float(86400)</code></dt>
+<dd><p>Max time (in seconds) to keep around records of completed clusters.</p>
+<p>Every <code class="docutils literal notranslate"><span class="pre">db_cleanup_period</span></code>, completed clusters older than
+<code class="docutils literal notranslate"><span class="pre">db_cluster_max_age</span></code> are removed from the database.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.db_debug = Bool(False)</code></dt>
+<dd><p>If True, all database operations will be logged</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.db_url = Unicode('sqlite:///dask_gateway.sqlite')</code></dt>
+<dd><p>The URL for the database.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.gateway_url = Unicode('tls://:8786')</code></dt>
+<dd><p>The URL that Dask clients will connect to</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.log_datefmt = Unicode('%Y-%m-%d %H:%M:%S')</code></dt>
+<dd><p>The date format used by logging formatters for %(asctime)s</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.log_format = Unicode('%(color)s[%(levelname)1.1s %(asctime)s.%(msecs).03d %(name)s]%(end_color)s %(message)s')</code></dt>
+<dd><p>The Logging format template</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.log_level = Enum('INFO')</code></dt>
+<dd><p>Set the log level by value or name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.private_url = Unicode('http://127.0.0.1:8081')</code></dt>
+<dd><p>The gateway’s private URL used for internal communication</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.public_url = Unicode('http://:8000')</code></dt>
+<dd><p>The public facing URL of the whole Dask Gateway application</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.stop_clusters_on_shutdown = Bool(True)</code></dt>
+<dd><p>Whether to stop active clusters on gateway shutdown.</p>
+<p>If true, all active clusters will be stopped before shutting down the
+gateway. Set to False to leave active clusters running.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.temp_dir = Unicode('')</code></dt>
+<dd><p>Path to a directory to use to store temporary runtime files.</p>
+<p>The permissions on this directory must be restricted to <code class="docutils literal notranslate"><span class="pre">0o700</span></code>. If
+the directory doesn’t already exist, it will be created on startup and
+removed on shutdown.</p>
+<p>The default is to create a temporary directory
+<code class="docutils literal notranslate"><span class="pre">&quot;dask-gateway-&lt;UUID&gt;&quot;</span></code> in the system tmpdir default location.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="proxies">
+<h2>Proxies<a class="headerlink" href="#proxies" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="web-proxy">
+<h3>Web Proxy<a class="headerlink" href="#web-proxy" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="dask_gateway_server.proxy.WebProxy">
+<em class="property">class </em><code class="descclassname">dask_gateway_server.proxy.</code><code class="descname">WebProxy</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.proxy.WebProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>A proxy for proxying out the dashboards from behind a firewall</p>
+<dl class="attribute">
+<dt>
+<code class="descname">config c.WebProxy.api_url = Unicode('')</code></dt>
+<dd><p>The address for configuring the Proxy.</p>
+<p>This is the address that the Dask Gateway will connect to when
+adding/removing routes. This must be reachable from the Dask Gateway
+server, but shouldn’t be publicly accessible (if possible). Default’s
+to <code class="docutils literal notranslate"><span class="pre">127.0.0.1:{random-port}</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.WebProxy.auth_token = Unicode('')</code></dt>
+<dd><p>The Proxy auth token</p>
+<p>Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.WebProxy.connect_timeout = Float(10.0)</code></dt>
+<dd><p>Timeout (in seconds) from init until the proxy process is connected.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.WebProxy.externally_managed = Bool(False)</code></dt>
+<dd><p>Whether the proxy process is externally managed.</p>
+<p>If False (default), the proxy process will be started and stopped by
+the gateway process. Set to True if the proxy will be started via some
+external manager (e.g. supervisord).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.WebProxy.log_level = CaselessStrEnum('warn')</code></dt>
+<dd><p>The proxy log-level.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="scheduler-proxy">
+<h3>Scheduler Proxy<a class="headerlink" href="#scheduler-proxy" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="dask_gateway_server.proxy.SchedulerProxy">
+<em class="property">class </em><code class="descclassname">dask_gateway_server.proxy.</code><code class="descname">SchedulerProxy</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.proxy.SchedulerProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>A proxy for connecting Dask clients to schedulers behind a firewall.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">config c.SchedulerProxy.api_url = Unicode('')</code></dt>
+<dd><p>The address for configuring the Proxy.</p>
+<p>This is the address that the Dask Gateway will connect to when
+adding/removing routes. This must be reachable from the Dask Gateway
+server, but shouldn’t be publicly accessible (if possible). Default’s
+to <code class="docutils literal notranslate"><span class="pre">127.0.0.1:{random-port}</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.SchedulerProxy.auth_token = Unicode('')</code></dt>
+<dd><p>The Proxy auth token</p>
+<p>Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.SchedulerProxy.connect_timeout = Float(10.0)</code></dt>
+<dd><p>Timeout (in seconds) from init until the proxy process is connected.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.SchedulerProxy.externally_managed = Bool(False)</code></dt>
+<dd><p>Whether the proxy process is externally managed.</p>
+<p>If False (default), the proxy process will be started and stopped by
+the gateway process. Set to True if the proxy will be started via some
+external manager (e.g. supervisord).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.SchedulerProxy.log_level = CaselessStrEnum('warn')</code></dt>
+<dd><p>The proxy log-level.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="kerberos">
+<h3>Kerberos<a class="headerlink" href="#kerberos" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="dask_gateway_server.auth.KerberosAuthenticator">
+<em class="property">class </em><code class="descclassname">dask_gateway_server.auth.</code><code class="descname">KerberosAuthenticator</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.auth.KerberosAuthenticator" title="Permalink to this definition">¶</a></dt>
+<dd><p>An authenticator using kerberos</p>
+<dl class="attribute">
+<dt>
+<code class="descname">config c.KerberosAuthenticator.keytab = Unicode('dask_gateway.keytab')</code></dt>
+<dd><p>The path to the keytab file</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.KerberosAuthenticator.service_name = Unicode('HTTP')</code></dt>
+<dd><p>The service’s kerberos principal name.</p>
+<p>This is almost always “HTTP” (the default)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="basic">
+<h3>Basic<a class="headerlink" href="#basic" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="dask_gateway_server.auth.DummyAuthenticator">
+<em class="property">class </em><code class="descclassname">dask_gateway_server.auth.</code><code class="descname">DummyAuthenticator</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.auth.DummyAuthenticator" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple authenticator that uses Basic Auth.</p>
+<p>This is highly insecure, use only for testing!!!</p>
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DummyAuthenticator.password = Unicode(None)</code></dt>
+<dd><p>If set, a global password that all users must provide.</p>
+<p>If unset (default), the password field is completely ignored.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="cluster-managers">
+<h2>Cluster Managers<a class="headerlink" href="#cluster-managers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="local-processes">
+<h3>Local Processes<a class="headerlink" href="#local-processes" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="dask_gateway_server.local_cluster.LocalClusterManager">
+<em class="property">class </em><code class="descclassname">dask_gateway_server.local_cluster.</code><code class="descname">LocalClusterManager</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.local_cluster.LocalClusterManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>A cluster manager that launches local processes.</p>
+<p>Requires super-user permissions in order to run processes for the
+requesting username.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
+connecting to the gateway.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+<p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
+for the cluster to actually respond.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.clusters_directory = Unicode('')</code></dt>
+<dd><p>The base directory for cluster working directories.</p>
+<p>A subdirectory will be created for each new cluster which will serve as
+the working directory for that cluster. On cluster shutdown the
+subdirectory will be removed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.environment = Dict('')</code></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.inherited_environment = List('')</code></dt>
+<dd><p>Whitelist of environment variables for the scheduler and worker
+processes to inherit from the Dask-Gateway process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.scheduler_cores = Int(1)</code></dt>
+<dd><p>Maximum number of cpu-cores a dask scheduler is allowed to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Maximum number of bytes a dask scheduler is allowed to use. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.sigint_timeout = Int(10)</code></dt>
+<dd><p>Seconds to wait for process to stop after SIGINT.</p>
+<p>If the process has not stopped after this time, a SIGTERM is sent.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.sigkill_timeout = Int(5)</code></dt>
+<dd><p>Seconds to wait for process to stop after SIGKILL.</p>
+<p>If the process has not stopped after this time, a warning is logged and
+the process is deemed a zombie process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.sigterm_timeout = Int(5)</code></dt>
+<dd><p>Seconds to wait for process to stop after SIGTERM.</p>
+<p>If the process has not stopped after this time, a SIGKILL is sent.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
+connecting to the scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.worker_cores = Int(1)</code></dt>
+<dd><p>Maximum number of cpu-cores a dask worker is allowed to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Maximum number of bytes a dask worker is allowed to use. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.LocalClusterManager.worker_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="dask_gateway_server.local_cluster.UnsafeLocalClusterManager">
+<em class="property">class </em><code class="descclassname">dask_gateway_server.local_cluster.</code><code class="descname">UnsafeLocalClusterManager</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.local_cluster.UnsafeLocalClusterManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>A version of LocalClusterManager that doesn’t set permissions.</p>
+<p>FOR TESTING ONLY! This provides no user separations - clusters run with the
+same level of permission as the gateway.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
+connecting to the gateway.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+<p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
+for the cluster to actually respond.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.clusters_directory = Unicode('')</code></dt>
+<dd><p>The base directory for cluster working directories.</p>
+<p>A subdirectory will be created for each new cluster which will serve as
+the working directory for that cluster. On cluster shutdown the
+subdirectory will be removed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.environment = Dict('')</code></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.inherited_environment = List('')</code></dt>
+<dd><p>Whitelist of environment variables for the scheduler and worker
+processes to inherit from the Dask-Gateway process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.scheduler_cores = Int(1)</code></dt>
+<dd><p>Maximum number of cpu-cores a dask scheduler is allowed to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Maximum number of bytes a dask scheduler is allowed to use. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.sigint_timeout = Int(10)</code></dt>
+<dd><p>Seconds to wait for process to stop after SIGINT.</p>
+<p>If the process has not stopped after this time, a SIGTERM is sent.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.sigkill_timeout = Int(5)</code></dt>
+<dd><p>Seconds to wait for process to stop after SIGKILL.</p>
+<p>If the process has not stopped after this time, a warning is logged and
+the process is deemed a zombie process.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.sigterm_timeout = Int(5)</code></dt>
+<dd><p>Seconds to wait for process to stop after SIGTERM.</p>
+<p>If the process has not stopped after this time, a SIGKILL is sent.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
+connecting to the scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.worker_cores = Int(1)</code></dt>
+<dd><p>Maximum number of cpu-cores a dask worker is allowed to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Maximum number of bytes a dask worker is allowed to use. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.UnsafeLocalClusterManager.worker_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="yarn">
+<h3>YARN<a class="headerlink" href="#yarn" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="dask_gateway_server.yarn_cluster.YarnClusterManager">
+<em class="property">class </em><code class="descclassname">dask_gateway_server.yarn_cluster.</code><code class="descname">YarnClusterManager</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.yarn_cluster.YarnClusterManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>A cluster manager for deploying Dask on a YARN cluster.</p>
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
+connecting to the gateway.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+<p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
+for the cluster to actually respond.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.environment = Dict('')</code></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.keytab = Unicode(None)</code></dt>
+<dd><p>Path to kerberos keytab for Dask Gateway user</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.localize_files = Dict('')</code></dt>
+<dd><p>Extra files to distribute to both the worker and scheduler containers.</p>
+<p>This is a mapping from <code class="docutils literal notranslate"><span class="pre">local-name</span></code> to <code class="docutils literal notranslate"><span class="pre">resource</span></code>. Resource paths
+can be local, or in HDFS (prefix with <code class="docutils literal notranslate"><span class="pre">hdfs://...</span></code> if so). If an
+archive (<code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> or <code class="docutils literal notranslate"><span class="pre">.zip</span></code>), the resource will be unarchived as
+directory <code class="docutils literal notranslate"><span class="pre">local-name</span></code>. For finer control, resources can also be
+specified as <code class="docutils literal notranslate"><span class="pre">skein.File</span></code> objects, or their <code class="docutils literal notranslate"><span class="pre">dict</span></code> equivalents.</p>
+<p>This can be used to distribute conda/virtual environments by
+configuring the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">YarnSpawner</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;hdfs:///path/to/archived/environment.tar.gz&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;visibility&#39;</span><span class="p">:</span> <span class="s1">&#39;public&#39;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnSpawner</span><span class="o">.</span><span class="n">prologue</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+</pre></div>
+</div>
+<p>These archives are usually created using either <code class="docutils literal notranslate"><span class="pre">conda-pack</span></code> or
+<code class="docutils literal notranslate"><span class="pre">venv-pack</span></code>. For more information on distributing files, see
+<a class="reference external" href="https://jcrist.github.io/skein/distributing-files.html">https://jcrist.github.io/skein/distributing-files.html</a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.principal = Unicode(None)</code></dt>
+<dd><p>Kerberos principal for Dask Gateway user</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.queue = Unicode('default')</code></dt>
+<dd><p>The YARN queue to submit applications under</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.scheduler_cores = Int(1)</code></dt>
+<dd><p>Maximum number of cpu-cores a dask scheduler is allowed to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Maximum number of bytes a dask scheduler is allowed to use. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.scheduler_setup = Unicode('')</code></dt>
+<dd><p>Script to run before dask scheduler starts.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
+connecting to the scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.worker_cores = Int(1)</code></dt>
+<dd><p>Maximum number of cpu-cores a dask worker is allowed to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Maximum number of bytes a dask worker is allowed to use. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.worker_setup = Unicode('')</code></dt>
+<dd><p>Script to run before dask worker starts.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.YarnClusterManager.worker_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Dask Gateway</a></h1>
+
+
+
+<p class="blurb">A multi-tenant server for securely deploying and managing Dask clusters</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jcrist&repo=dask-gateway&type=watch&count=False&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://travis-ci.org/jcrist/dask-gateway">
+    <img
+        alt="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
+        src="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
+    />
+</a>
+</p>
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#gateway">Gateway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#proxies">Proxies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#web-proxy">Web Proxy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scheduler-proxy">Scheduler Proxy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kerberos">Kerberos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cluster-managers">Cluster Managers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#local-processes">Local Processes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#yarn">YARN</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
+</ul>
+
+<h3>Need help?</h3>
+
+<p>
+  Open an issue in the <a href="https://github.com/jcrist/dask-gateway/issues">issue tracker</a>.
+</p>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Jim Crist.
+      
+      |
+      <a href="_sources/api-server.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
