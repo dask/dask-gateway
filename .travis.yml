@@ -10,24 +10,17 @@ branches:
   only:
     - master
 
+env:
+  global:
+    - secure: "gLp7Y6oMOKQeDGXy5PUjIbAxOwuaAkxBtJYq0vhelH3AzsCMUusNMPD3r+XLJtq0UJAKj/4CrEclKOR1umWRIVHdgGreqI+L/CkgaN8jjNdhoo60hVrsBZwMm7XnlPv+AJDCWXZXObHSoExMuPYMH2dI+5Zi2welOw1PpvPyjCZF25ZrSblkWuWIKYbATFchj5UA9uKdFERN3XpmXL4hJoHZvRoiNkp05Ivrs+rkCOs+zeRdeVT9XZuH4L3Bbfkz2jtmoXSWQRhl60C2ItZwCpKAVLTBazBXT/N8kCijQq2KIAM1AXBljXn2NCtfL0Oq3+0zs6+ArSoPEQGk68CXINLE2oAChmGNKw81wZXS+tGgsyQ0Ls0nzA1YYtW7VK6MASxEUkvwMaxCmHkK4tT4XIRlfJb/3fJJ74CZlokTDRvYlW6yhXMtg8NR4o1maaSqWb/1mTQgfYJu71UvINA3zzi4p7RS5mpxg82Cq09uDzGOB8aYiAgFTuvhLTAdNN8p5QTJBDqlqcMqilTIXo2s73ABf2jlT1A0jkya0HKL9P0p3io44qQbeqbWbYXbXT2x0Ql47tY8cTmULPM5WtpotgtJHXrbD5DE10Os90q9o9B49GmyX1AeqojDvBi5sBXcjrBBDzOS5tcXSdo/sqdHxWCLnPBESTpCvOgzlXlplQU="
+
 jobs:
     fast_finish: true
 
     include:
-        - if: commit_message ~= test-yarn
+        - if: commit_message !~ skip-tests
           env:
             - MAIN-TESTS=true
-          services:
-            - docker
-          before_install:
-            - ./continuous_integration/docker/hadoop/start-hadoop.sh
-          install:
-            - docker exec master /working/continuous_integration/docker/hadoop/install.sh
-          script:
-            - docker exec master /working/continuous_integration/docker/hadoop/script.sh
-
-        - env:
-            - YARN-TESTS=true
           before_install:
             - source continuous_integration/before_install.sh
           install:
@@ -40,6 +33,35 @@ jobs:
               pushd dask-gateway-server/dask-gateway-proxy
               go test
               popd
+
+        - if: (commit_message !~ skip-tests) AND (commit_message ~= test-yarn)
+          env:
+            - YARN-TESTS=true
+          services:
+            - docker
+          before_install:
+            - ./continuous_integration/docker/hadoop/start-hadoop.sh
+          install:
+            - docker exec master /working/continuous_integration/docker/hadoop/install.sh
+          script:
+            - docker exec master /working/continuous_integration/docker/hadoop/script.sh
+
+        - env:
+            - DOCS=true
+          before_install:
+            - source continuous_integration/before_install.sh
+          install:
+            - source continuous_integration/install.sh
+            - pip install skein sphinx doctr
+          script:
+            - |
+              set -xe
+              pushd docs
+              make html
+              popd
+              if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_EVENT_TYPE" == "push" ]]; then
+                  doctr deploy . --built-docs docs/build/html/
+              fi
 
 notifications:
   email: false
