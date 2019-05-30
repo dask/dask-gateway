@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0+untagged.90.g3c7d292 documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0+untagged.91.g143ccfe documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -98,8 +98,24 @@ smaller than <code class="docutils literal notranslate"><span class="pre">db_rec
 
 <dl class="attribute">
 <dt>
-<code class="descname">config c.DaskGateway.db_url = Unicode('sqlite:///dask_gateway.sqlite')</code></dt>
-<dd><p>The URL for the database.</p>
+<code class="descname">config c.DaskGateway.db_encrypt_keys = List('')</code></dt>
+<dd><p>A list of keys to use to encrypt private data in the database. Can also
+be set by the environment variable <code class="docutils literal notranslate"><span class="pre">DASK_GATEWAY_ENCRYPT_KEYS</span></code>, where
+the value is a <code class="docutils literal notranslate"><span class="pre">;</span></code> delimited string of encryption keys.</p>
+<p>Each key should be a base64-encoded 32 byte value, and should be
+cryptographically random. Lacking other options, openssl can be used to
+generate a single key via:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -base64 <span class="m">32</span>
+</pre></div>
+</div>
+<p>A single key is valid, multiple keys can be used to support key rotation.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.db_url = Unicode('sqlite:///:memory:')</code></dt>
+<dd><p>The URL for the database. Default is in-memory only.</p>
+<p>If not in-memory, <code class="docutils literal notranslate"><span class="pre">db_encrypt_keys</span></code> must also be set.</p>
 </dd></dl>
 
 <dl class="attribute">
