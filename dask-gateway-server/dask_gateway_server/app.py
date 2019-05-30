@@ -169,6 +169,24 @@ class DaskGateway(Application):
             url = urlunparse(parsed)
         return url
 
+    tls_key = Unicode(
+        "",
+        help="""Path to TLS key file for the public url of the web proxy.
+
+        When setting this, you should also set tls_cert.
+        """,
+        config=True,
+    )
+
+    tls_cert = Unicode(
+        "",
+        help="""Path to TLS certificate file for the public url of the web proxy.
+
+        When setting this, you should also set tls_key.
+        """,
+        config=True,
+    )
+
     cookie_secret = Bytes(
         help="""The cookie secret to use to encrypt cookies.
 
@@ -341,7 +359,11 @@ class DaskGateway(Application):
 
     def init_web_proxy(self):
         self.web_proxy = self.web_proxy_class(
-            parent=self, log=self.log, public_url=self.public_url
+            parent=self,
+            log=self.log,
+            public_url=self.public_url,
+            tls_cert=self.tls_cert,
+            tls_key=self.tls_key,
         )
 
     def init_cluster_manager(self):

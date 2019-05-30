@@ -9,6 +9,7 @@ pip install \
     sqlalchemy \
     pytest \
     pytest-asyncio \
+    trustme \
     black \
     flake8
 

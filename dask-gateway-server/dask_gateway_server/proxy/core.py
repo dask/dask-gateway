@@ -88,25 +88,33 @@ class ProxyBase(LoggingConfigurable):
             token = uuid.uuid4().hex
         return token
 
+    def get_start_command(self, is_child_process=True):
+        address = urlparse(self.public_url).netloc
+        api_address = urlparse(self.api_url).netloc
+        out = [
+            _PROXY_EXE,
+            self._subcommand,
+            "-address",
+            address,
+            "-api-address",
+            api_address,
+            "-log-level",
+            self.log_level,
+        ]
+        if is_child_process:
+            out.append("-is-child-process")
+        return out
+
+    def get_start_env(self):
+        env = os.environ.copy()
+        env["DASK_GATEWAY_PROXY_TOKEN"] = self.auth_token
+        return env
+
     async def start(self):
         """Start the proxy."""
         if not self.externally_managed:
-            address = urlparse(self.public_url).netloc
-            api_address = urlparse(self.api_url).netloc
-            command = [
-                _PROXY_EXE,
-                self._subcommand,
-                "-address",
-                address,
-                "-api-address",
-                api_address,
-                "-log-level",
-                self.log_level,
-                "-is-child-process",
-            ]
-
-            env = os.environ.copy()
-            env["DASK_GATEWAY_PROXY_TOKEN"] = self.auth_token
+            command = self.get_start_command()
+            env = self.get_start_env()
             self.log.info("Starting the Dask gateway %s proxy...", self._subcommand)
             proc = subprocess.Popen(
                 command,
@@ -251,6 +259,23 @@ class WebProxy(ProxyBase):
 
     _subcommand = "web"
 
+    # Forwarded by the main application
+    tls_cert = Unicode()
+    tls_key = Unicode()
+
+    def get_start_command(self, is_child_process=True):
+        out = super().get_start_command(is_child_process=is_child_process)
+        if bool(self.tls_cert) != bool(self.tls_key):
+            raise ValueError("Must set both tls_cert and tls_key")
+        if self.tls_cert:
+            if urlparse(self.public_url).scheme != "https":
+                raise ValueError(
+                    "tls_cert & tls_key are set, but public_url doesn't have an "
+                    "https scheme"
+                )
+            out.extend(["-tls-cert", self.tls_cert, "-tls-key", self.tls_key])
+        return out
+
 
 class ProxyApp(Application):
     """Start a proxy application"""
@@ -268,33 +293,13 @@ class ProxyApp(Application):
         super().initialize(argv)
         self.parent.load_config_file(self.config_file)
 
-    def exec_args(self, proxy):
-        """Start the proxy."""
-        address = urlparse(proxy.public_url).netloc
-        api_address = urlparse(proxy.api_url).netloc
-        env = os.environ.copy()
-        env["DASK_GATEWAY_PROXY_TOKEN"] = proxy.auth_token
-
-        return (
-            _PROXY_EXE,
-            "dask-gateway-proxy",
-            proxy._subcommand,
-            "-address",
-            address,
-            "-api-address",
-            api_address,
-            "-log-level",
-            proxy.log_level,
-            env,
-        )
-
     def start(self):
-        public_url = getattr(self.parent, self.public_url_attr)
-        proxy = self.proxy_class(
-            parent=self.parent, log=self.parent.log, public_url=public_url
-        )
-        args = self.exec_args(proxy)
-        os.execle(*args)
+        proxy = self.make_proxy()
+        command = proxy.get_start_command(is_child_process=False)
+        env = proxy.get_start_env()
+        exe = command[0]
+        args = command[1:]
+        os.execle(exe, "dask-gateway-proxy", *args, env)
 
 
 class SchedulerProxyApp(ProxyApp):
@@ -307,8 +312,11 @@ class SchedulerProxyApp(ProxyApp):
 
         dask-gateway scheduler-proxy
     """
-    proxy_class = SchedulerProxy
-    public_url_attr = "gateway_url"
+
+    def make_proxy(self):
+        return SchedulerProxy(
+            parent=self.parent, log=self.parent.log, public_url=self.parent.gateway_url
+        )
 
 
 class WebProxyApp(ProxyApp):
@@ -321,5 +329,12 @@ class WebProxyApp(ProxyApp):
 
         dask-gateway web-proxy
     """
-    proxy_class = WebProxy
-    public_url_attr = "public_url"
+
+    def make_proxy(self):
+        return WebProxy(
+            parent=self.parent,
+            log=self.parent.log,
+            public_url=self.parent.public_url,
+            tls_cert=self.parent.tls_cert,
+            tls_key=self.parent.tls_key,
+        )

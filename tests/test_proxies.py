@@ -1,4 +1,5 @@
 import asyncio
+import ssl
 from contextlib import contextmanager
 
 import pytest
@@ -148,6 +149,64 @@ async def test_web_proxy_api_auth(web_proxy):
     web_proxy.auth_token = auth_token
     # Route not added
     assert not await web_proxy.get_all_routes()
+
+
+@pytest.fixture
+async def ca_and_tls_web_proxy(tmpdir_factory):
+    trustme = pytest.importorskip("trustme")
+    ca = trustme.CA()
+    cert = ca.issue_cert("127.0.0.1")
+
+    certdir = tmpdir_factory.mktemp("certs")
+    tls_key = str(certdir.join("key.pem"))
+    tls_cert = str(certdir.join("cert.pem"))
+
+    cert.private_key_pem.write_to_path(tls_key)
+    cert.cert_chain_pems[0].write_to_path(tls_cert)
+
+    public_url = "https://127.0.0.1:%s" % random_port()
+
+    proxy = WebProxy(public_url=public_url, tls_key=tls_key, tls_cert=tls_cert)
+    try:
+        await proxy.start()
+        yield ca, proxy
+    finally:
+        proxy.stop()
+
+
+@pytest.mark.asyncio
+async def test_web_proxy_public_tls(ca_and_tls_web_proxy):
+    ca, web_proxy = ca_and_tls_web_proxy
+
+    assert not await web_proxy.get_all_routes()
+
+    client = AsyncHTTPClient()
+
+    with hello_server() as addr:
+        # Add a route
+        await web_proxy.add_route("/hello", addr)
+        routes = await web_proxy.get_all_routes()
+        assert routes == {"/hello": addr}
+
+        # Proxy works
+        proxied_addr = web_proxy.public_url + "/hello"
+        ctx = ssl.create_default_context()
+        ca.configure_trust(ctx)
+        req = HTTPRequest(url=proxied_addr, ssl_options=ctx)
+        resp = await client.fetch(req)
+        assert resp.code == 200
+        assert b"Hello world" == resp.body
+
+        # Remove the route
+        await web_proxy.delete_route("/hello")
+        assert not await web_proxy.get_all_routes()
+        # Delete idempotent
+        await web_proxy.delete_route("/hello")
+
+        # Route no longer available
+        req = HTTPRequest(url=proxied_addr, ssl_options=ctx)
+        resp = await client.fetch(req, raise_error=False)
+        assert resp.code == 404
 
 
 @pytest.fixture

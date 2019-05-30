@@ -138,6 +138,8 @@ func webProxyMain(args []string) {
 		apiAddress     string
 		logLevelString string
 		isChildProcess bool
+		tlsCert        string
+		tlsKey         string
 	)
 
 	command := flag.NewFlagSet("dask-gateway-proxy web", flag.ExitOnError)
@@ -148,6 +150,8 @@ func webProxyMain(args []string) {
 		"The log level. One of {DEBUG, INFO, WARN, ERROR}")
 	command.BoolVar(&isChildProcess, "is-child-process", false,
 		"If set, will exit when stdin EOFs. Useful when running as a child process.")
+	command.StringVar(&tlsCert, "tls-cert", "", "TLS cert to use, if any.")
+	command.StringVar(&tlsKey, "tls-key", "", "TLS key to use, if any.")
 
 	command.Parse(args)
 
@@ -156,6 +160,10 @@ func webProxyMain(args []string) {
 		panic("DASK_GATEWAY_PROXY_TOKEN environment variable not set")
 	}
 	logLevel := ParseLevel(logLevelString)
+
+	if (tlsCert == "") != (tlsKey == "") {
+		panic("Both -tls-cert and -tls-key must be set to use HTTPS")
+	}
 
 	proxy := NewWebProxy(logLevel)
 
@@ -168,8 +176,13 @@ func webProxyMain(args []string) {
 	}
 	go serveAPI(proxy.routesHandler, apiAddress, token)
 
-	proxy.logger.Infof("Proxy serving at %s", address)
 	proxy.logger.Infof("API serving at %s", apiAddress)
 
-	server.ListenAndServe()
+	if tlsCert == "" {
+		proxy.logger.Infof("Proxy serving at http://%s", address)
+		server.ListenAndServe()
+	} else {
+		proxy.logger.Infof("Proxy serving at https://%s", address)
+		server.ListenAndServeTLS(tlsCert, tlsKey)
+	}
 }
