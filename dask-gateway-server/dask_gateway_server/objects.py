@@ -1,9 +1,11 @@
 import asyncio
+import base64
 import enum
 import json
 import time
 import uuid
 
+from cryptography.fernet import MultiFernet, Fernet
 from sqlalchemy import (
     MetaData,
     Table,
@@ -26,6 +28,25 @@ from .tls import new_keypair
 def timestamp():
     """An integer timestamp represented as milliseconds since the epoch UTC"""
     return int(time.time() * 1000)
+
+
+def normalize_encrypt_key(key):
+    if isinstance(key, str):
+        key = key.encode("ascii")
+
+    if len(key) == 44:
+        try:
+            key = base64.urlsafe_b64decode(key)
+        except ValueError:
+            pass
+
+    if len(key) == 32:
+        return base64.urlsafe_b64encode(key)
+
+    raise ValueError(
+        "All keys in `db_encrypt_keys`/`DASK_GATEWAY_ENCRYPT_KEYS` must be 32 "
+        "bytes, base64-encoded"
+    )
 
 
 class _EnumMixin(object):
@@ -111,8 +132,7 @@ clusters = Table(
     Column("scheduler_address", Unicode(255), nullable=False),
     Column("dashboard_address", Unicode(255), nullable=False),
     Column("api_address", Unicode(255), nullable=False),
-    Column("tls_cert", LargeBinary, nullable=False),
-    Column("tls_key", LargeBinary, nullable=False),
+    Column("tls_credentials", LargeBinary, nullable=False),
     Column("start_time", Integer, nullable=False),
     Column("stop_time", Integer, nullable=True),
 )
@@ -140,18 +160,25 @@ def register_foreign_keys(engine):
         cursor.close()
 
 
+def is_in_memory_db(url):
+    return url in ("sqlite://", "sqlite:///:memory:")
+
+
 class DataManager(object):
     """Holds the internal state for a single Dask Gateway.
 
     Keeps the memory representation in-sync with the database.
     """
 
-    def __init__(self, url="sqlite:///:memory:", **kwargs):
+    def __init__(self, url="sqlite:///:memory:", encrypt_keys=(), **kwargs):
         if url.startswith("sqlite"):
             kwargs["connect_args"] = {"check_same_thread": False}
 
-        if url.endswith(":memory:"):
+        if is_in_memory_db(url):
             kwargs["poolclass"] = StaticPool
+            self.fernet = None
+        else:
+            self.fernet = MultiFernet([Fernet(key) for key in encrypt_keys])
 
         engine = create_engine(url, **kwargs)
         if url.startswith("sqlite"):
@@ -166,10 +193,7 @@ class DataManager(object):
         self.token_to_cluster = {}
         self.id_to_cluster = {}
 
-        # Load state from database
-        self._init_from_database()
-
-    def _init_from_database(self):
+    def load_database_state(self):
         # Load all existing users into memory
         id_to_user = {}
         for u in self.db.execute(users.select()):
@@ -181,6 +205,7 @@ class DataManager(object):
         # Next load all existing clusters into memory
         for c in self.db.execute(clusters.select()):
             user = id_to_user[c.user_id]
+            tls_cert, tls_key = self.decode_tls_credentials(c.tls_credentials)
             cluster = Cluster(
                 id=c.id,
                 name=c.name,
@@ -191,8 +216,8 @@ class DataManager(object):
                 scheduler_address=c.scheduler_address,
                 dashboard_address=c.dashboard_address,
                 api_address=c.api_address,
-                tls_cert=c.tls_cert,
-                tls_key=c.tls_key,
+                tls_cert=tls_cert,
+                tls_key=tls_key,
                 start_time=c.start_time,
                 stop_time=c.stop_time,
             )
@@ -238,6 +263,20 @@ class DataManager(object):
 
         return len(to_delete)
 
+    def encrypt(self, b):
+        """Encrypt bytes ``b``. If encryption is disabled this is a no-op"""
+        return b if self.fernet is None else self.fernet.encrypt(b)
+
+    def decrypt(self, b):
+        """Decrypt bytes ``b``. If encryption is disabled this is a no-op"""
+        return b if self.fernet is None else self.fernet.decrypt(b)
+
+    def encode_tls_credentials(self, tls_cert, tls_key):
+        return self.encrypt(b";".join((tls_cert, tls_key)))
+
+    def decode_tls_credentials(self, data):
+        return self.decrypt(data).split(b";")
+
     def user_from_cookie(self, cookie):
         """Lookup a user from a cookie"""
         return self.cookie_to_user.get(cookie)
@@ -268,6 +307,8 @@ class DataManager(object):
         cluster_name = uuid.uuid4().hex
         token = uuid.uuid4().hex
         tls_cert, tls_key = new_keypair(cluster_name)
+        # Encode the tls credentials for storing in the database
+        tls_credentials = self.encode_tls_credentials(tls_cert, tls_key)
 
         common = {
             "name": cluster_name,
@@ -277,14 +318,22 @@ class DataManager(object):
             "scheduler_address": "",
             "dashboard_address": "",
             "api_address": "",
-            "tls_cert": tls_cert,
-            "tls_key": tls_key,
             "start_time": timestamp(),
         }
 
         with self.db.begin() as conn:
-            res = conn.execute(clusters.insert().values(user_id=user.id, **common))
-            cluster = Cluster(id=res.inserted_primary_key[0], user=user, **common)
+            res = conn.execute(
+                clusters.insert().values(
+                    user_id=user.id, tls_credentials=tls_credentials, **common
+                )
+            )
+            cluster = Cluster(
+                id=res.inserted_primary_key[0],
+                user=user,
+                tls_cert=tls_cert,
+                tls_key=tls_key,
+                **common,
+            )
             self.id_to_cluster[cluster.id] = cluster
             self.token_to_cluster[token] = cluster
             user.clusters[cluster_name] = cluster
