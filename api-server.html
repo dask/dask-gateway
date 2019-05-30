@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0+untagged.89.gbc2c8d3 documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0+untagged.90.g3c7d292 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -155,6 +155,20 @@ the directory doesn’t already exist, it will be created on startup and
 removed on shutdown.</p>
 <p>The default is to create a temporary directory
 <code class="docutils literal notranslate"><span class="pre">&quot;dask-gateway-&lt;UUID&gt;&quot;</span></code> in the system tmpdir default location.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.tls_cert = Unicode('')</code></dt>
+<dd><p>Path to TLS certificate file for the public url of the web proxy.</p>
+<p>When setting this, you should also set tls_key.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">config c.DaskGateway.tls_key = Unicode('')</code></dt>
+<dd><p>Path to TLS key file for the public url of the web proxy.</p>
+<p>When setting this, you should also set tls_cert.</p>
 </dd></dl>
 
 </dd></dl>
