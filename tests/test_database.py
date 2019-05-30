@@ -1,7 +1,9 @@
+import base64
 import time
 from collections import defaultdict
 
 import pytest
+from cryptography.fernet import Fernet
 
 from dask_gateway_server import objects
 
@@ -42,6 +44,7 @@ def check_consistency(db):
 @pytest.mark.asyncio
 async def test_cleanup_expired_clusters(monkeypatch):
     db = objects.DataManager()
+    db.load_database_state()
 
     alice = db.get_or_create_user("alice")
 
@@ -101,3 +104,68 @@ async def test_cleanup_expired_clusters(monkeypatch):
     assert n == 0
 
     check_consistency(db)
+
+
+@pytest.mark.asyncio
+async def test_encryption(tmpdir):
+    db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
+    encrypt_keys = [Fernet.generate_key() for i in range(3)]
+    db = objects.DataManager(url=db_url, encrypt_keys=encrypt_keys)
+    db.load_database_state()
+
+    assert db.fernet is not None
+
+    data = b"my secret data"
+    encrypted = db.encrypt(data)
+    assert encrypted != data
+
+    data2 = db.decrypt(encrypted)
+    assert data == data2
+
+    alice = db.get_or_create_user("alice")
+    c = db.create_cluster(alice)
+    assert c.tls_cert is not None
+    assert c.tls_key is not None
+
+    # Check database state is encrypted
+    with db.db.begin() as conn:
+        res = conn.execute(
+            objects.clusters.select(objects.clusters.c.id == c.id)
+        ).fetchone()
+    assert res.tls_credentials != b";".join((c.tls_cert, c.tls_key))
+    cert, key = db.decrypt(res.tls_credentials).split(b";")
+    assert cert == c.tls_cert
+    assert key == c.tls_key
+
+    # Check can reload database with keys
+    db2 = objects.DataManager(url=db_url, encrypt_keys=encrypt_keys)
+    db2.load_database_state()
+    c2 = db2.id_to_cluster[c.id]
+    assert c2.tls_cert == c.tls_cert
+    assert c2.tls_key == c.tls_key
+
+
+def test_normalize_encrypt_key():
+    key = Fernet.generate_key()
+    # b64 bytes
+    assert objects.normalize_encrypt_key(key) == key
+    # b64 string
+    assert objects.normalize_encrypt_key(key.decode()) == key
+    # raw bytes
+    raw = base64.urlsafe_b64decode(key)
+    assert objects.normalize_encrypt_key(raw) == key
+
+    # Too short
+    with pytest.raises(ValueError) as exc:
+        objects.normalize_encrypt_key(b"abcde")
+    assert "DASK_GATEWAY_ENCRYPT_KEYS" in str(exc.value)
+
+    # Too short decoded
+    with pytest.raises(ValueError) as exc:
+        objects.normalize_encrypt_key(b"\x00" * 43 + b"=")
+    assert "DASK_GATEWAY_ENCRYPT_KEYS" in str(exc.value)
+
+    # Invalid b64 encode
+    with pytest.raises(ValueError) as exc:
+        objects.normalize_encrypt_key(b"=" + b"a" * 43)
+    assert "DASK_GATEWAY_ENCRYPT_KEYS" in str(exc.value)

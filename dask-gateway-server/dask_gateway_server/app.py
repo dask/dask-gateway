@@ -22,7 +22,14 @@ from . import __version__ as VERSION
 from . import handlers
 from .cluster import ClusterManager
 from .auth import Authenticator
-from .objects import DataManager, WorkerStatus, ClusterStatus, timestamp
+from .objects import (
+    DataManager,
+    WorkerStatus,
+    ClusterStatus,
+    timestamp,
+    normalize_encrypt_key,
+    is_in_memory_db,
+)
 from .proxy import SchedulerProxy, WebProxy
 from .utils import cleanup_tmpdir, cancel_task
 
@@ -215,6 +222,15 @@ class DaskGateway(Application):
         config=True,
     )
 
+    @validate("stop_clusters_on_shutdown")
+    def _stop_clusters_on_shutdown_validate(self, proposal):
+        if not proposal.value and is_in_memory_db(self.db_url):
+            raise ValueError(
+                "When using an in-memory database, `stop_clusters_on_shutdown` "
+                "must be True"
+            )
+        return proposal.value
+
     check_cluster_timeout = Float(
         10,
         help="""
@@ -228,8 +244,49 @@ class DaskGateway(Application):
     )
 
     db_url = Unicode(
-        "sqlite:///dask_gateway.sqlite", help="The URL for the database.", config=True
+        "sqlite:///:memory:",
+        help="""
+        The URL for the database. Default is in-memory only.
+
+        If not in-memory, ``db_encrypt_keys`` must also be set.
+        """,
+        config=True,
     )
+
+    db_encrypt_keys = List(
+        help="""
+        A list of keys to use to encrypt private data in the database. Can also
+        be set by the environment variable ``DASK_GATEWAY_ENCRYPT_KEYS``, where
+        the value is a ``;`` delimited string of encryption keys.
+
+        Each key should be a base64-encoded 32 byte value, and should be
+        cryptographically random. Lacking other options, openssl can be used to
+        generate a single key via:
+
+        .. code-block:: shell
+
+            $ openssl rand -base64 32
+
+        A single key is valid, multiple keys can be used to support key rotation.
+        """,
+        config=True,
+    )
+
+    @default("db_encrypt_keys")
+    def _db_encrypt_keys_default(self):
+        keys = os.environb.get(b"DASK_GATEWAY_ENCRYPT_KEYS", b"").strip()
+        if not keys:
+            return []
+        return [normalize_encrypt_key(k) for k in keys.split(b";") if k.strip()]
+
+    @validate("db_encrypt_keys")
+    def _db_encrypt_keys_validate(self, proposal):
+        if not proposal.value and not is_in_memory_db(self.db_url):
+            raise ValueError(
+                "Must configure `db_encrypt_keys`/`DASK_GATEWAY_ENCRYPT_KEYS` "
+                "when not using an in-memory database"
+            )
+        return [normalize_encrypt_key(k) for k in proposal.value]
 
     db_debug = Bool(
         False, help="If True, all database operations will be logged", config=True
@@ -321,6 +378,7 @@ class DaskGateway(Application):
         self.init_web_proxy()
         self.init_cluster_manager()
         self.init_authenticator()
+        self.init_database()
         self.init_tornado_application()
 
     def init_logging(self):
@@ -374,6 +432,11 @@ class DaskGateway(Application):
     def init_authenticator(self):
         self.authenticator = self.authenticator_class(parent=self, log=self.log)
 
+    def init_database(self):
+        self.db = DataManager(
+            url=self.db_url, echo=self.db_debug, encrypt_keys=self.db_encrypt_keys
+        )
+
     def init_tornado_application(self):
         self.handlers = list(handlers.default_handlers)
         self.tornado_application = web.Application(
@@ -394,21 +457,13 @@ class DaskGateway(Application):
         await self.start_tornado_application()
 
     async def start_scheduler_proxy(self):
-        try:
-            await self.scheduler_proxy.start()
-        except Exception:
-            self.log.critical("Failed to start scheduler proxy", exc_info=True)
-            self.exit(1)
+        await self.scheduler_proxy.start()
 
     async def start_web_proxy(self):
-        try:
-            await self.web_proxy.start()
-        except Exception:
-            self.log.critical("Failed to start web proxy", exc_info=True)
-            self.exit(1)
+        await self.web_proxy.start()
 
     async def load_database_state(self):
-        self.db = DataManager(url=self.db_url, echo=self.db_debug)
+        self.db.load_database_state()
 
         active_clusters = list(self.db.active_clusters())
         if active_clusters:
@@ -501,12 +556,20 @@ class DaskGateway(Application):
         self.log.info("Gateway API listening on %s", self.private_url)
         await self.web_proxy.add_route("/gateway/", self.private_url)
 
+    async def start_or_exit(self):
+        try:
+            await self.start_async()
+        except Exception:
+            self.log.critical("Failed to start gateway, shutting down", exc_info=True)
+            await self.stop_async(stop_event_loop=False)
+            self.exit(1)
+
     def start(self):
         if self.subapp is not None:
             return self.subapp.start()
         AsyncIOMainLoop().install()
         loop = IOLoop.current()
-        loop.add_callback(self.start_async)
+        loop.add_callback(self.start_or_exit)
         try:
             loop.start()
         except KeyboardInterrupt:
@@ -521,7 +584,7 @@ class DaskGateway(Application):
         self.log.info("Received signal %s, initiating shutdown...", sig.name)
         asyncio.ensure_future(self.stop_async())
 
-    async def stop_async(self, timeout=5, stop_event_loop=True):
+    async def _stop_async(self, timeout=5):
         # Stop the server to prevent new requests
         if hasattr(self, "http_server"):
             self.http_server.stop()
@@ -571,6 +634,11 @@ class DaskGateway(Application):
         if hasattr(self, "web_proxy"):
             self.web_proxy.stop()
 
+    async def stop_async(self, timeout=5, stop_event_loop=True):
+        try:
+            await self._stop_async(timeout=timeout)
+        except Exception:
+            self.log.error("Error while shutting down:", exc_info=True)
         # Stop the event loop
         if stop_event_loop:
             IOLoop.current().stop()

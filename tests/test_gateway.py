@@ -3,9 +3,12 @@ import os
 import signal
 
 import pytest
+from cryptography.fernet import Fernet
 
 from dask_gateway import Gateway
+from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.cluster import ClusterManager
+from dask_gateway_server.utils import random_port
 
 from .utils import InProcessClusterManager, LocalTestingClusterManager, temp_gateway
 
@@ -67,6 +70,77 @@ class FailWorkerStartClusterManager(InProcessClusterManager):
 
     async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
         self.stop_worker_state = worker_state
+
+
+@pytest.mark.asyncio
+async def test_shutdown_on_startup_error(tmpdir):
+    # A configuration that will cause a failure at runtime (not init time)
+    gateway = DaskGateway(
+        gateway_url="tls://127.0.0.1:%d" % random_port(),
+        private_url="http://127.0.0.1:%d" % random_port(),
+        public_url="http://127.0.0.1:%d" % random_port(),
+        temp_dir=str(tmpdir.join("dask-gateway")),
+        tls_cert=str(tmpdir.join("tls_cert.pem")),
+        authenticator_class="dask_gateway_server.auth.DummyAuthenticator",
+    )
+    with pytest.raises(SystemExit) as exc:
+        gateway.initialize([])
+        await gateway.start_or_exit()
+    assert exc.value.code == 1
+
+
+def test_db_encrypt_keys_required(tmpdir):
+    with pytest.raises(ValueError) as exc:
+        gateway = DaskGateway(
+            gateway_url="tls://127.0.0.1:%d" % random_port(),
+            private_url="http://127.0.0.1:%d" % random_port(),
+            public_url="http://127.0.0.1:%d" % random_port(),
+            temp_dir=str(tmpdir.join("dask-gateway")),
+            db_url="sqlite:///%s" % tmpdir.join("dask_gateway.sqlite"),
+            authenticator_class="dask_gateway_server.auth.DummyAuthenticator",
+        )
+        gateway.initialize([])
+
+    assert "DASK_GATEWAY_ENCRYPT_KEYS" in str(exc.value)
+
+
+def test_db_encrypt_keys_invalid(tmpdir):
+    with pytest.raises(ValueError) as exc:
+        gateway = DaskGateway(
+            gateway_url="tls://127.0.0.1:%d" % random_port(),
+            private_url="http://127.0.0.1:%d" % random_port(),
+            public_url="http://127.0.0.1:%d" % random_port(),
+            temp_dir=str(tmpdir.join("dask-gateway")),
+            db_url="sqlite:///%s" % tmpdir.join("dask_gateway.sqlite"),
+            db_encrypt_keys=["abc"],
+            authenticator_class="dask_gateway_server.auth.DummyAuthenticator",
+        )
+        gateway.initialize([])
+
+    assert "DASK_GATEWAY_ENCRYPT_KEYS" in str(exc.value)
+
+
+def test_db_decrypt_keys_from_env(monkeypatch):
+    keys = [Fernet.generate_key(), Fernet.generate_key()]
+    val = b";".join(keys).decode()
+    monkeypatch.setenv("DASK_GATEWAY_ENCRYPT_KEYS", val)
+    gateway = DaskGateway()
+    assert gateway.db_encrypt_keys == keys
+
+
+def test_resume_clusters_forbid_in_memory_db(tmpdir):
+    with pytest.raises(ValueError) as exc:
+        DaskGateway(
+            gateway_url="tls://127.0.0.1:%d" % random_port(),
+            private_url="http://127.0.0.1:%d" % random_port(),
+            public_url="http://127.0.0.1:%d" % random_port(),
+            temp_dir=str(tmpdir.join("dask-gateway")),
+            db_url="sqlite://",
+            stop_clusters_on_shutdown=False,
+            authenticator_class="dask_gateway_server.auth.DummyAuthenticator",
+        )
+
+    assert "stop_clusters_on_shutdown" in str(exc.value)
 
 
 @pytest.mark.asyncio
@@ -307,11 +381,13 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
     os.mkdir(temp_dir, mode=0o700)
 
     db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
+    db_encrypt_keys = [Fernet.generate_key()]
 
     async with temp_gateway(
         cluster_manager_class=LocalTestingClusterManager,
         temp_dir=temp_dir,
         db_url=db_url,
+        db_encrypt_keys=db_encrypt_keys,
         stop_clusters_on_shutdown=False,
     ) as gateway_proc:
 
@@ -348,6 +424,7 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
         cluster_manager_class=LocalTestingClusterManager,
         temp_dir=temp_dir,
         db_url=db_url,
+        db_encrypt_keys=db_encrypt_keys,
         stop_clusters_on_shutdown=False,
         gateway_url=gateway_proc.gateway_url,
         private_url=gateway_proc.private_url,
