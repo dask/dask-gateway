@@ -25,7 +25,7 @@ def check_consistency(db):
     # Check cluster state
     for c in clusters:
         cluster = db.id_to_cluster[c.id]
-        assert db.token_to_cluster[c.token] is cluster
+        assert db.token_to_cluster[db.decode_token(c.token)] is cluster
         user = id_to_user[c.user_id]
         assert user.clusters[c.name] is cluster
     assert len(db.id_to_cluster) == len(clusters)
@@ -134,8 +134,10 @@ async def test_encryption(tmpdir):
         ).fetchone()
     assert res.tls_credentials != b";".join((c.tls_cert, c.tls_key))
     cert, key = db.decrypt(res.tls_credentials).split(b";")
+    token = db.decrypt(res.token).decode()
     assert cert == c.tls_cert
     assert key == c.tls_key
+    assert token == c.token
 
     # Check can reload database with keys
     db2 = objects.DataManager(url=db_url, encrypt_keys=encrypt_keys)
@@ -143,6 +145,7 @@ async def test_encryption(tmpdir):
     c2 = db2.id_to_cluster[c.id]
     assert c2.tls_cert == c.tls_cert
     assert c2.tls_key == c.tls_key
+    assert c2.token == c.token
 
 
 def test_normalize_encrypt_key():
