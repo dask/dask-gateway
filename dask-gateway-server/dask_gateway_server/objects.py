@@ -12,6 +12,7 @@ from sqlalchemy import (
     Column,
     Integer,
     Unicode,
+    BINARY,
     ForeignKey,
     LargeBinary,
     TypeDecorator,
@@ -128,7 +129,7 @@ clusters = Table(
     ),
     Column("status", IntEnum(ClusterStatus), nullable=False),
     Column("state", JSON, nullable=False),
-    Column("token", Unicode(32), nullable=False, unique=True),
+    Column("token", BINARY(140), nullable=False, unique=True),
     Column("scheduler_address", Unicode(255), nullable=False),
     Column("dashboard_address", Unicode(255), nullable=False),
     Column("api_address", Unicode(255), nullable=False),
@@ -206,11 +207,12 @@ class DataManager(object):
         for c in self.db.execute(clusters.select()):
             user = id_to_user[c.user_id]
             tls_cert, tls_key = self.decode_tls_credentials(c.tls_credentials)
+            token = self.decode_token(c.token)
             cluster = Cluster(
                 id=c.id,
                 name=c.name,
                 user=user,
-                token=c.token,
+                token=token,
                 status=c.status,
                 state=c.state,
                 scheduler_address=c.scheduler_address,
@@ -277,6 +279,12 @@ class DataManager(object):
     def decode_tls_credentials(self, data):
         return self.decrypt(data).split(b";")
 
+    def encode_token(self, token):
+        return self.encrypt(token.encode("utf8"))
+
+    def decode_token(self, data):
+        return self.decrypt(data).decode()
+
     def user_from_cookie(self, cookie):
         """Lookup a user from a cookie"""
         return self.cookie_to_user.get(cookie)
@@ -309,10 +317,10 @@ class DataManager(object):
         tls_cert, tls_key = new_keypair(cluster_name)
         # Encode the tls credentials for storing in the database
         tls_credentials = self.encode_tls_credentials(tls_cert, tls_key)
+        enc_token = self.encode_token(token)
 
         common = {
             "name": cluster_name,
-            "token": token,
             "status": ClusterStatus.STARTING,
             "state": {},
             "scheduler_address": "",
@@ -324,12 +332,16 @@ class DataManager(object):
         with self.db.begin() as conn:
             res = conn.execute(
                 clusters.insert().values(
-                    user_id=user.id, tls_credentials=tls_credentials, **common
+                    user_id=user.id,
+                    tls_credentials=tls_credentials,
+                    token=enc_token,
+                    **common,
                 )
             )
             cluster = Cluster(
                 id=res.inserted_primary_key[0],
                 user=user,
+                token=token,
                 tls_cert=tls_cert,
                 tls_key=tls_key,
                 **common,
