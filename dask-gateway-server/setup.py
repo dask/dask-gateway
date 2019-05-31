@@ -113,6 +113,8 @@ setup(
     package_data={"dask_gateway_server": ["proxy/dask-gateway-proxy"]},
     install_requires=install_requires,
     extras_require=extras_require,
-    entry_points={"console_scripts": ["dask-gateway = dask_gateway_server.app:main"]},
+    entry_points={
+        "console_scripts": ["dask-gateway-server = dask_gateway_server.app:main"]
+    },
     zip_safe=False,
 )

@@ -45,13 +45,13 @@ Application.log_format.default_value = (
 class GenerateConfig(Application):
     """Generate and write a default configuration file"""
 
-    name = "dask-gateway generate-config"
+    name = "dask-gateway-server generate-config"
     version = VERSION
     description = "Generate and write a default configuration file"
 
     examples = """
 
-        dask-gateway generate-config
+        dask-gateway-server generate-config
     """
 
     output = Unicode(
@@ -90,7 +90,7 @@ class GenerateConfig(Application):
 class DaskGateway(Application):
     """A gateway for managing dask clusters across multiple users"""
 
-    name = "dask-gateway"
+    name = "dask-gateway-server"
     version = VERSION
 
     description = """Start a Dask Gateway server"""
@@ -99,7 +99,7 @@ class DaskGateway(Application):
 
     Start the server on 10.0.1.2:8080:
 
-        dask-gateway --public-url 10.0.1.2:8080
+        dask-gateway-server --public-url 10.0.1.2:8080
     """
 
     subcommands = {

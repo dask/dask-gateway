@@ -6,8 +6,16 @@ c.DaskGateway.private_url = "http://127.0.0.1:8081"
 # Set the database location
 c.DaskGateway.db_url = "sqlite:////var/dask-gateway/dask_gateway.sqlite"
 
+# Set the encryption keys for the database. These should be randomly generated,
+# and probably set via the DASK_GATEWAY_ENCRYPT_KEYS environment variable
+# instead of stored in plaintext in the config.
+c.DaskGateway.db_encrypt_keys = [
+    b"z+hBxgauqbndqCZSqJMsKYI7FDMth6YYGqwnx7Ssqvg=",
+    b"2Ai+D94CX/47LiRv3TLWV+K18TQ3fB1nTz18zmALbc8=",
+]
+
 # Run the proxies separately from the gateway. The auth_tokens here should be
-# randomly generated, and probably stored set via the DASK_GATEWAY_PROXY_TOKEN
+# randomly generated, and probably set via the DASK_GATEWAY_PROXY_TOKEN
 # environment variable instead of stored in plaintext in the config.
 c.WebProxy.auth_token = "supersecret"
 c.WebProxy.externally_managed = True
