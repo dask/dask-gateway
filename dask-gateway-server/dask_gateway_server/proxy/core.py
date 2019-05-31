@@ -305,12 +305,12 @@ class ProxyApp(Application):
 class SchedulerProxyApp(ProxyApp):
     """Start the scheduler proxy"""
 
-    name = "dask-gateway scheduler-proxy"
+    name = "dask-gateway-server scheduler-proxy"
     description = "Start the scheduler proxy"
 
     examples = """
 
-        dask-gateway scheduler-proxy
+        dask-gateway-server scheduler-proxy
     """
 
     def make_proxy(self):
@@ -322,12 +322,12 @@ class SchedulerProxyApp(ProxyApp):
 class WebProxyApp(ProxyApp):
     """Start the web proxy"""
 
-    name = "dask-gateway scheduler-proxy"
+    name = "dask-gateway-server scheduler-proxy"
     description = "Start the web proxy"
 
     examples = """
 
-        dask-gateway web-proxy
+        dask-gateway-server web-proxy
     """
 
     def make_proxy(self):
