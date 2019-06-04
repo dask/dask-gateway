@@ -32,7 +32,7 @@ docker-machine IP address. This IP address can be found at:
 
 .. code-block:: shell
 
-    $ docker-machine inspect --format {{.Driver.IPAddress}})
+    $ docker-machine inspect --format {{.Driver.IPAddress}}
 
 For ease of use you may want to add ``master.example.com`` to your
 ``/etc/hosts`` file, rather than using the IP address above.
