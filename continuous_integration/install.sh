@@ -1,5 +1,7 @@
 set -xe
 
+npm install -g configurable-http-proxy
+
 pip install \
     dask \
     distributed \
@@ -10,6 +12,8 @@ pip install \
     pytest \
     pytest-asyncio \
     trustme \
+    jupyterhub \
+    notebook \
     black \
     flake8
 

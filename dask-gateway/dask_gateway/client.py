@@ -161,12 +161,23 @@ class ClusterReport(object):
         return "ClusterReport<name=%s, status=%s>" % (self.name, self.status.name)
 
     @classmethod
-    def _from_json(cls, msg):
+    def _from_json(cls, gateway_address, msg):
         start_time = datetime.fromtimestamp(msg.pop("start_time") / 1000)
         stop_time = msg.pop("stop_time")
         if stop_time is not None:
             stop_time = datetime.fromtimestamp(stop_time / 1000)
-        return cls(start_time=start_time, stop_time=stop_time, **msg)
+
+        dashboard_route = msg.pop("dashboard_route")
+        dashboard_address = (
+            gateway_address + dashboard_route if dashboard_route else None
+        )
+
+        return cls(
+            start_time=start_time,
+            stop_time=stop_time,
+            dashboard_address=dashboard_address,
+            **msg,
+        )
 
 
 class Gateway(object):
@@ -193,7 +204,7 @@ class Gateway(object):
             raise ValueError(
                 "No dask-gateway address provided or found in configuration"
             )
-        self.address = address
+        self.address = address.rstrip("/")
         self._auth = get_auth(auth)
         self._cookie_jar = CookieJar()
 
@@ -286,7 +297,10 @@ class Gateway(object):
         url = "%s/gateway/api/clusters/%s" % (self.address, query)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
-        return [ClusterReport._from_json(r) for r in json.loads(resp.body).values()]
+        return [
+            ClusterReport._from_json(self.address, r)
+            for r in json.loads(resp.body).values()
+        ]
 
     def list_clusters(self, status=None, **kwargs):
         """List clusters for this user.
@@ -335,7 +349,7 @@ class Gateway(object):
         url = "%s/gateway/api/clusters/%s%s" % (self.address, cluster_name, params)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
-        return ClusterReport(**json.loads(resp.body))
+        return ClusterReport._from_json(self.address, json.loads(resp.body))
 
     async def _connect(self, cluster_name):
         while True:

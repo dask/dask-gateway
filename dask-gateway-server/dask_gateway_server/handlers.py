@@ -1,6 +1,7 @@
 import asyncio
 import functools
 import json
+from inspect import isawaitable
 from urllib.parse import urlparse, unquote
 
 from tornado import web
@@ -16,11 +17,12 @@ def user_authenticated(method):
     """Ensure this method is authenticated via a user"""
 
     @functools.wraps(method)
-    def inner(self, *args, **kwargs):
-        # Trigger authentication mechanism
-        if self.current_user is None:
+    async def inner(self, *args, **kwargs):
+        username = await self.current_user_from_login()
+        if username is None:
             raise web.HTTPError(401)
-        return method(self, *args, **kwargs)
+        self.current_user = username
+        return await method(self, *args, **kwargs)
 
     return inner
 
@@ -30,7 +32,7 @@ def token_authenticated(method):
 
     @functools.wraps(method)
     def inner(self, *args, **kwargs):
-        username = self.get_current_user_from_token()
+        username = self.current_user_from_token()
         if username is None:
             raise web.HTTPError(401)
         self.current_user = username
@@ -66,7 +68,7 @@ class BaseHandler(web.RequestHandler):
         if self.dask_cluster.name != cluster_name:
             raise web.HTTPError(403)
 
-    def get_current_user_from_token(self):
+    def current_user_from_token(self):
         auth_header = self.request.headers.get("Authorization")
         if auth_header:
             auth_type, auth_key = auth_header.split(" ", 1)
@@ -84,7 +86,7 @@ class BaseHandler(web.RequestHandler):
                     )
         return None
 
-    def get_current_user(self):
+    async def current_user_from_login(self):
         cookie = self.get_secure_cookie(
             DASK_GATEWAY_COOKIE, max_age_days=self.cookie_max_age_days
         )
@@ -101,6 +103,8 @@ class BaseHandler(web.RequestHandler):
 
         # Finally, fall back to using the authenticator
         username = self.authenticator.authenticate(self)
+        if isawaitable(username):
+            username = await username
         user = self.gateway.db.get_or_create_user(username)
         self.set_secure_cookie(
             DASK_GATEWAY_COOKIE, user.cookie, expires_days=self.cookie_max_age_days
@@ -111,25 +115,32 @@ class BaseHandler(web.RequestHandler):
 
 
 def cluster_model(gateway, cluster, full=True):
-    if cluster.scheduler_address:
+    if cluster.status == ClusterStatus.RUNNING:
         scheduler = "gateway://%s/%s" % (
             urlparse(gateway.gateway_url).netloc,
             cluster.name,
         )
-        dashboard = "%s/gateway/clusters/%s" % (gateway.public_url, cluster.name)
+        dashboard = (
+            "/gateway/clusters/%s" % cluster.name if cluster.dashboard_address else ""
+        )
     else:
-        scheduler = dashboard = ""
+        scheduler = dashboard = None
     out = {
         "name": cluster.name,
-        "scheduler_address": scheduler or None,
-        "dashboard_address": dashboard or None,
+        "scheduler_address": scheduler,
+        "dashboard_route": dashboard,
         "status": cluster.status.name,
         "start_time": cluster.start_time,
         "stop_time": cluster.stop_time,
     }
     if full:
-        out["tls_cert"] = cluster.tls_cert.decode() or None
-        out["tls_key"] = cluster.tls_key.decode() or None
+        if cluster.status == ClusterStatus.RUNNING:
+            tls_cert = cluster.tls_cert.decode()
+            tls_key = cluster.tls_key.decode()
+        else:
+            tls_cert = tls_key = None
+        out["tls_cert"] = tls_cert
+        out["tls_key"] = tls_key
     return out
 
 

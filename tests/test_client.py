@@ -1,7 +1,7 @@
 import pytest
 
 import dask
-from dask_gateway.auth import get_auth, BasicAuth, KerberosAuth
+from dask_gateway.auth import get_auth, BasicAuth, KerberosAuth, JupyterHubAuth
 from dask_gateway.client import Gateway
 
 
@@ -50,6 +50,20 @@ def test_get_auth():
 
     with pytest.raises(ImportError):
         get_auth("not_a_real_module_name_foo_barrr")
+
+
+def test_jupyterhub_auth(monkeypatch):
+    with pytest.raises(ValueError) as exc:
+        get_auth("jupyterhub")
+    assert "JUPYTERHUB_API_TOKEN" in str(exc.value)
+
+    monkeypatch.setenv("JUPYTERHUB_API_TOKEN", "abcde")
+    auth = get_auth("jupyterhub")
+    assert auth.api_token == "abcde"
+    assert isinstance(auth, JupyterHubAuth)
+
+    # Parameters override environment variable
+    assert JupyterHubAuth(api_token="other").api_token == "other"
 
 
 def test_client_init():

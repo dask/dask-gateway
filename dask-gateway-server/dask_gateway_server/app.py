@@ -167,13 +167,15 @@ class DaskGateway(Application):
     )
 
     @validate("public_url", "gateway_url", "private_url")
-    def _resolve_hostname(self, proposal):
+    def _normalize_url(self, proposal):
         url = proposal.value
         parsed = urlparse(url)
         if parsed.hostname in {"", "0.0.0.0"}:
+            # Resolve hostname
             host = socket.gethostname()
             parsed = parsed._replace(netloc="%s:%i" % (host, parsed.port))
-            url = urlunparse(parsed)
+        # Ensure no trailing slash
+        url = urlunparse(parsed._replace(path=parsed.path.rstrip("/")))
         return url
 
     tls_key = Unicode(
@@ -360,6 +362,10 @@ class DaskGateway(Application):
     @property
     def api_url(self):
         return self.public_url + "/gateway/api"
+
+    @property
+    def public_url_prefix(self):
+        return urlparse(self.public_url).path
 
     def create_task(self, task):
         out = asyncio.ensure_future(task)
@@ -554,7 +560,9 @@ class DaskGateway(Application):
             private_url.port, address=private_url.hostname
         )
         self.log.info("Gateway API listening on %s", self.private_url)
-        await self.web_proxy.add_route("/gateway/", self.private_url)
+        await self.web_proxy.add_route(
+            self.public_url_prefix + "/gateway/", self.private_url
+        )
 
     async def start_or_exit(self):
         try:
@@ -713,9 +721,11 @@ class DaskGateway(Application):
         return True
 
     async def add_cluster_to_proxies(self, cluster):
-        await self.web_proxy.add_route(
-            "/gateway/clusters/" + cluster.name, cluster.dashboard_address
-        )
+        if cluster.dashboard_address:
+            await self.web_proxy.add_route(
+                self.public_url_prefix + "/gateway/clusters/" + cluster.name,
+                cluster.dashboard_address,
+            )
         await self.scheduler_proxy.add_route(
             "/" + cluster.name, cluster.scheduler_address
         )
