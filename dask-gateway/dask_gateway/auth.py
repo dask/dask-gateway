@@ -1,4 +1,5 @@
 import getpass
+import os
 import re
 from base64 import b64encode
 from urllib.parse import urlparse
@@ -6,7 +7,7 @@ from urllib.parse import urlparse
 import dask
 
 
-__all__ = ("GatewayAuth", "BasicAuth", "KerberosAuth", "get_auth")
+__all__ = ("GatewayAuth", "BasicAuth", "KerberosAuth", "JupyterHubAuth", "get_auth")
 
 
 def _import_object(name):
@@ -39,6 +40,8 @@ def get_auth(auth=None):
             auth = KerberosAuth
         elif auth == "basic":
             auth = BasicAuth
+        elif auth == "jupyterhub":
+            auth = JupyterHubAuth
         else:
             auth = _import_object(auth)
     elif not callable(auth):
@@ -144,3 +147,20 @@ class KerberosAuth(GatewayAuth):
         if not token:
             raise Exception("Kerberos negotiation failed")
         kerberos.authGSSClientStep(context, token)
+
+
+class JupyterHubAuth(GatewayAuth):
+    """Uses JupyterHub API tokens to authenticate"""
+
+    def __init__(self, api_token=None):
+        if api_token is None:
+            api_token = os.environ.get("JUPYTERHUB_API_TOKEN")
+            if api_token is None:
+                raise ValueError(
+                    "No JupyterHub API token provided, and JUPYTERHUB_API_TOKEN "
+                    "environment variable not found"
+                )
+        self.api_token = api_token
+
+    def pre_request(self, req, resp):
+        req.headers["Authorization"] = "jupyterhub " + self.api_token

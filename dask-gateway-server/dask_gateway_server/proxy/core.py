@@ -158,7 +158,7 @@ class ProxyBase(LoggingConfigurable):
                         "the proxy process and the gateway"
                         % (self._subcommand, self.api_url)
                     )
-                else:
+                elif e.code != 599:
                     raise RuntimeError(
                         "Error while connecting to %s proxy api at %s: %s"
                         % (self._subcommand, self.api_url, e)
