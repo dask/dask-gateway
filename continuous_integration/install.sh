@@ -12,8 +12,9 @@ pip install \
     pytest \
     pytest-asyncio \
     trustme \
-    black \
     jupyterhub \
+    notebook \
+    black \
     flake8
 
 pushd dask-gateway
