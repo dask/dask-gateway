@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Client API &#8212; Dask Gateway 0.1.0+1.g5284954 documentation</title>
+    <title>Client API &#8212; Dask Gateway 0.1.0+3.g637b17c documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -35,7 +35,7 @@
 <h1>Client API<a class="headerlink" href="#client-api" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="dask_gateway.Gateway">
-<em class="property">class </em><code class="descclassname">dask_gateway.</code><code class="descname">Gateway</code><span class="sig-paren">(</span><em>address=None</em>, <em>auth=None</em>, <em>asynchronous=False</em>, <em>loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">Gateway</code><span class="sig-paren">(</span><em class="sig-param">address=None</em>, <em class="sig-param">auth=None</em>, <em class="sig-param">asynchronous=False</em>, <em class="sig-param">loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway" title="Permalink to this definition">¶</a></dt>
 <dd><p>A client for a Dask Gateway Server.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -51,13 +51,13 @@ asynchronous mode, otherwise a background loop is started.</p></li>
 </dl>
 <dl class="method">
 <dt id="dask_gateway.Gateway.close">
-<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.close" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close this gateway client</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dask_gateway.Gateway.connect">
-<code class="descname">connect</code><span class="sig-paren">(</span><em>cluster_name</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.connect" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.connect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to a submitted cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -71,7 +71,7 @@ asynchronous mode, otherwise a background loop is started.</p></li>
 
 <dl class="method">
 <dt id="dask_gateway.Gateway.list_clusters">
-<code class="descname">list_clusters</code><span class="sig-paren">(</span><em>status=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.list_clusters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">list_clusters</code><span class="sig-paren">(</span><em class="sig-param">status=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.list_clusters" title="Permalink to this definition">¶</a></dt>
 <dd><p>List clusters for this user.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -91,7 +91,7 @@ By default selects active clusters (‘starting’, ‘started’,
 
 <dl class="method">
 <dt id="dask_gateway.Gateway.new_cluster">
-<code class="descname">new_cluster</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">new_cluster</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a new cluster to the gateway, and wait for it to be started.</p>
 <p>Same as calling <code class="docutils literal notranslate"><span class="pre">submit</span></code> and <code class="docutils literal notranslate"><span class="pre">connect</span></code> in one go.</p>
 <dl class="field-list simple">
@@ -106,7 +106,7 @@ By default selects active clusters (‘starting’, ‘started’,
 
 <dl class="method">
 <dt id="dask_gateway.Gateway.scale_cluster">
-<code class="descname">scale_cluster</code><span class="sig-paren">(</span><em>cluster_name</em>, <em>n</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.scale_cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">scale_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">n</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.scale_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scale a cluster to n workers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -120,7 +120,7 @@ By default selects active clusters (‘starting’, ‘started’,
 
 <dl class="method">
 <dt id="dask_gateway.Gateway.stop_cluster">
-<code class="descname">stop_cluster</code><span class="sig-paren">(</span><em>cluster_name</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.stop_cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stop_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.stop_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stop a cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -131,7 +131,7 @@ By default selects active clusters (‘starting’, ‘started’,
 
 <dl class="method">
 <dt id="dask_gateway.Gateway.submit">
-<code class="descname">submit</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.submit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">submit</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.submit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a new cluster to be started.</p>
 <p>This returns quickly with a <code class="docutils literal notranslate"><span class="pre">cluster_name</span></code>, which can later be used
 to connect to the cluster.</p>
@@ -149,19 +149,19 @@ to connect to the cluster.</p>
 
 <dl class="class">
 <dt id="dask_gateway.GatewayCluster">
-<em class="property">class </em><code class="descclassname">dask_gateway.</code><code class="descname">GatewayCluster</code><span class="sig-paren">(</span><em>gateway</em>, <em>report</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayCluster</code><span class="sig-paren">(</span><em class="sig-param">gateway</em>, <em class="sig-param">report</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dask-gateway cluster.</p>
 <p>Users should use <code class="docutils literal notranslate"><span class="pre">Gateway.new_cluster</span></code> or <code class="docutils literal notranslate"><span class="pre">Gateway.connect</span></code> instead of
 calling this class directly.</p>
 <dl class="method">
 <dt id="dask_gateway.GatewayCluster.close">
-<code class="descname">close</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.close" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shutdown this cluster, alias for <code class="docutils literal notranslate"><span class="pre">shutdown</span></code></p>
 </dd></dl>
 
 <dl class="method">
 <dt id="dask_gateway.GatewayCluster.get_client">
-<code class="descname">get_client</code><span class="sig-paren">(</span><em>set_as_default=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.get_client" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_client</code><span class="sig-paren">(</span><em class="sig-param">set_as_default=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.get_client" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a <code class="docutils literal notranslate"><span class="pre">Client</span></code> for this cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -175,7 +175,7 @@ calling this class directly.</p>
 
 <dl class="method">
 <dt id="dask_gateway.GatewayCluster.scale">
-<code class="descname">scale</code><span class="sig-paren">(</span><em>n</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.scale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">scale</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scale the cluster to <code class="docutils literal notranslate"><span class="pre">n</span></code> workers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -186,7 +186,7 @@ calling this class directly.</p>
 
 <dl class="method">
 <dt id="dask_gateway.GatewayCluster.shutdown">
-<code class="descname">shutdown</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.shutdown" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.shutdown" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shutdown this cluster.</p>
 </dd></dl>
 
@@ -243,10 +243,10 @@ calling this class directly.</p>
   Open an issue in the <a href="https://github.com/jcrist/dask-gateway/issues">issue tracker</a>.
 </p>
 <div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+  <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" aria-labelledby="searchlabel" />
       <input type="submit" value="Go" />
     </form>
     </div>
