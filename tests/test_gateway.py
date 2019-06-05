@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 
 from dask_gateway import Gateway
 from dask_gateway_server.app import DaskGateway
-from dask_gateway_server.cluster import ClusterManager
+from dask_gateway_server.managers import ClusterManager
 from dask_gateway_server.utils import random_port
 
 from .utils import InProcessClusterManager, LocalTestingClusterManager, temp_gateway

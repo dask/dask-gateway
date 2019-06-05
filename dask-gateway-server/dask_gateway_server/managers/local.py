@@ -8,7 +8,7 @@ import sys
 
 from traitlets import List, Unicode, Integer, default
 
-from .cluster import ClusterManager
+from .base import ClusterManager
 
 
 __all__ = ("LocalClusterManager", "UnsafeLocalClusterManager")

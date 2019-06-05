@@ -1,4 +1,4 @@
-from dask_gateway_server.local_cluster import is_running
+from dask_gateway_server.managers.local import is_running
 
 from .utils import ClusterManagerTests, LocalTestingClusterManager
 

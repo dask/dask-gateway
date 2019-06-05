@@ -26,7 +26,7 @@ from dask_gateway_server.objects import (
     ClusterStatus,
     WorkerStatus,
 )
-from dask_gateway_server.local_cluster import UnsafeLocalClusterManager
+from dask_gateway_server.managers.local import UnsafeLocalClusterManager
 
 
 _PIDS = set()

@@ -20,7 +20,7 @@ from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
 from . import handlers
-from .cluster import ClusterManager
+from .managers import ClusterManager
 from .auth import Authenticator
 from .objects import (
     DataManager,
@@ -144,8 +144,8 @@ class DaskGateway(Application):
     )
 
     cluster_manager_class = Type(
-        "dask_gateway_server.local_cluster.LocalClusterManager",
-        klass="dask_gateway_server.cluster.ClusterManager",
+        "dask_gateway_server.managers.local.LocalClusterManager",
+        klass="dask_gateway_server.managers.ClusterManager",
         help="The gateway cluster manager class to use",
         config=True,
     )

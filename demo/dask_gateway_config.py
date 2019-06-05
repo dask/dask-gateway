@@ -32,7 +32,7 @@ c.DaskGateway.authenticator_class = "dask_gateway_server.auth.DummyAuthenticator
 
 # Configure the gateway to use YARN as the cluster manager
 c.DaskGateway.cluster_manager_class = (
-    "dask_gateway_server.yarn_cluster.YarnClusterManager"
+    "dask_gateway_server.managers.yarn.YarnClusterManager"
 )
 
 c.YarnClusterManager.scheduler_cmd = "/opt/miniconda/bin/dask-gateway-scheduler"
