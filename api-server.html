@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0.1.0+3.g637b17c documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0.1.0+5.gf2a3b9f documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -48,7 +48,7 @@
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.DaskGateway.cluster_manager_class = Type('dask_gateway_server.local_cluster.LocalClusterManager')</code></dt>
+<code class="sig-name descname">config c.DaskGateway.cluster_manager_class = Type('dask_gateway_server.managers.local.LocalClusterManager')</code></dt>
 <dd><p>The gateway cluster manager class to use</p>
 </dd></dl>
 
@@ -334,8 +334,8 @@ external manager (e.g. supervisord).</p>
 <div class="section" id="local-processes">
 <h3>Local Processes<a class="headerlink" href="#local-processes" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="dask_gateway_server.local_cluster.LocalClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.local_cluster.</code><code class="sig-name descname">LocalClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.local_cluster.LocalClusterManager" title="Permalink to this definition">¶</a></dt>
+<dt id="dask_gateway_server.managers.local.LocalClusterManager">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.local.</code><code class="sig-name descname">LocalClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.local.LocalClusterManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>A cluster manager that launches local processes.</p>
 <p>Requires super-user permissions in order to run processes for the
 requesting username.</p>
@@ -466,8 +466,8 @@ following suffixes:</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="dask_gateway_server.local_cluster.UnsafeLocalClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.local_cluster.</code><code class="sig-name descname">UnsafeLocalClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.local_cluster.UnsafeLocalClusterManager" title="Permalink to this definition">¶</a></dt>
+<dt id="dask_gateway_server.managers.local.UnsafeLocalClusterManager">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.local.</code><code class="sig-name descname">UnsafeLocalClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.local.UnsafeLocalClusterManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>A version of LocalClusterManager that doesn’t set permissions.</p>
 <p>FOR TESTING ONLY! This provides no user separations - clusters run with the
 same level of permission as the gateway.</p>
@@ -601,8 +601,8 @@ following suffixes:</p>
 <div class="section" id="yarn">
 <h3>YARN<a class="headerlink" href="#yarn" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="dask_gateway_server.yarn_cluster.YarnClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.yarn_cluster.</code><code class="sig-name descname">YarnClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.yarn_cluster.YarnClusterManager" title="Permalink to this definition">¶</a></dt>
+<dt id="dask_gateway_server.managers.yarn.YarnClusterManager">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.yarn.</code><code class="sig-name descname">YarnClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.yarn.YarnClusterManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>A cluster manager for deploying Dask on a YARN cluster.</p>
 <dl class="attribute">
 <dt>
