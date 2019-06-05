@@ -6,7 +6,7 @@ skein = pytest.importorskip("skein")
 if not os.environ.get("TEST_DASK_GATEWAY_YARN"):
     pytest.skip("Not running YARN tests", allow_module_level=True)
 
-from dask_gateway_server.yarn_cluster import YarnClusterManager
+from dask_gateway_server.managers.yarn import YarnClusterManager
 
 from .utils import ClusterManagerTests
 

@@ -41,12 +41,12 @@ Cluster Managers
 Local Processes
 ^^^^^^^^^^^^^^^
 
-.. autoconfigurable:: dask_gateway_server.local_cluster.LocalClusterManager
+.. autoconfigurable:: dask_gateway_server.managers.local.LocalClusterManager
 
-.. autoconfigurable:: dask_gateway_server.local_cluster.UnsafeLocalClusterManager
+.. autoconfigurable:: dask_gateway_server.managers.local.UnsafeLocalClusterManager
 
 
 YARN
 ^^^^
 
-.. autoconfigurable:: dask_gateway_server.yarn_cluster.YarnClusterManager
+.. autoconfigurable:: dask_gateway_server.managers.yarn.YarnClusterManager

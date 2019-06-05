@@ -1,7 +1,7 @@
 from traitlets import Unicode, Float, Integer, Dict, Bool
 from traitlets.config import LoggingConfigurable
 
-from .utils import MemoryLimit
+from ..utils import MemoryLimit
 
 
 class ClusterManager(LoggingConfigurable):

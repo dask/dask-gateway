@@ -5,7 +5,7 @@ import skein
 from tornado import gen
 from traitlets import Unicode, Dict, Instance, default
 
-from .cluster import ClusterManager
+from .base import ClusterManager
 
 
 class YarnClusterManager(ClusterManager):
