@@ -5,8 +5,9 @@ import os
 import pwd
 import shutil
 import socket
+from weakref import WeakValueDictionary
 
-from traitlets import Unicode, Bool, default
+from traitlets import Float, Unicode, Bool, default
 
 from ..base import ClusterManager
 
@@ -99,6 +100,12 @@ class PBSClusterManager(ClusterManager):
         config=True,
     )
 
+    status_poll_interval = Float(
+        0.5,
+        help="The interval (in seconds) in which to poll for job statuses.",
+        config=True,
+    )
+
     # The following fields are configurable only for just-in-case reasons. The
     # defaults should be sufficient for most users.
 
@@ -136,6 +143,12 @@ class PBSClusterManager(ClusterManager):
     @default("cancel_command")
     def _default_cancel_command(self):
         return shutil.which("qdel") or "qdel"
+
+    status_command = Unicode(help="The path to the job status command", config=True)
+
+    @default("status_command")
+    def _default_status_command(self):
+        return shutil.which("qstat") or "qstat"
 
     def get_worker_args(self):
         return [
@@ -242,9 +255,6 @@ class PBSClusterManager(ClusterManager):
             raise Exception(result["error"])
         return result["returncode"], result["stdout"], result["stderr"]
 
-    def parse_job_id(self, stdout):
-        return stdout.strip()
-
     async def start_job(self, cluster_info, worker_name=None):
         cmd, env = self.get_submit_cmd_and_env(cluster_info, worker_name=worker_name)
         if not worker_name:
@@ -274,7 +284,7 @@ class PBSClusterManager(ClusterManager):
                 )
                 % (code, stdout, stderr)
             )
-        return self.parse_job_id(stdout)
+        return stdout.strip()
 
     async def stop_job(self, cluster_info, job_id, worker_name=None):
         cmd, env = self.get_stop_cmd_env(job_id)
@@ -296,9 +306,63 @@ class PBSClusterManager(ClusterManager):
                 "Failed to stop job_id %s" % (job_id, cluster_info.cluster_name)
             )
 
+    async def job_status_tracker(self):
+        while True:
+            if self.jobs_to_track:
+                self.log.debug("Polling status of %d jobs", len(self.jobs_to_track))
+                proc = await asyncio.create_subprocess_exec(
+                    self.status_command,
+                    "-x",
+                    *self.jobs_to_track,
+                    env={},
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, stderr = await proc.communicate()
+                stdout = stdout.decode("utf8", "replace")
+                if proc.returncode != 0:
+                    stderr = stderr.decode("utf8", "replace")
+                    self.log.warning(
+                        "Job status check failed with returncode %d, stderr: %s",
+                        proc.returncode,
+                        stderr,
+                    )
+
+                lines = stdout.splitlines()[2:]
+
+                for l in lines:
+                    parts = l.split()
+                    job_id = parts[0]
+                    status = parts[4]
+                    if status == "R":
+                        fut = self.jobs_to_track.pop(job_id, None)
+                        if fut:
+                            fut.set_result(True)
+                    elif status not in ("Q", "H"):
+                        fut = self.jobs_to_track.pop(job_id, None)
+                        if fut:
+                            fut.set_result(False)
+
+            await asyncio.sleep(self.status_poll_interval)
+
+    def is_job_running(self, job_id):
+        if not hasattr(self, "job_tracker"):
+            self.jobs_to_track = WeakValueDictionary()
+            self.job_tracker = self.parent.create_background_task(
+                self.job_status_tracker()
+            )
+
+        if job_id not in self.jobs_to_track:
+            loop = asyncio.get_running_loop()
+            fut = self.jobs_to_track[job_id] = loop.create_future()
+        else:
+            fut = self.jobs_to_track[job_id]
+        return fut
+
     async def start_cluster(self, cluster_info):
         job_id = await self.start_job(cluster_info)
         yield {"job_id": job_id}
+        await self.is_job_running(job_id)
 
     async def stop_cluster(self, cluster_info, cluster_state):
         job_id = cluster_state.get("job_id")
@@ -309,6 +373,7 @@ class PBSClusterManager(ClusterManager):
     async def start_worker(self, worker_name, cluster_info, cluster_state):
         job_id = await self.start_job(cluster_info, worker_name=worker_name)
         yield {"job_id": job_id}
+        await self.is_job_running(job_id)
 
     async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
         job_id = worker_state.get("job_id")

@@ -372,6 +372,11 @@ class DaskGateway(Application):
         self.pending_tasks.add(out)
         return out
 
+    def create_background_task(self, task):
+        out = asyncio.ensure_future(task)
+        self.background_tasks.add(out)
+        return out
+
     @catch_config_error
     def initialize(self, argv=None):
         super().initialize(argv)
@@ -454,6 +459,7 @@ class DaskGateway(Application):
             cookie_max_age_days=self.cookie_max_age_days,
         )
         self.pending_tasks = weakref.WeakSet()
+        self.background_tasks = weakref.WeakSet()
 
     async def start_async(self):
         self.init_signal()
@@ -496,7 +502,7 @@ class DaskGateway(Application):
                 n_clusters,
             )
 
-        self.db_cleanup_task = asyncio.ensure_future(self.cleanup_database())
+        self.create_background_task(self.cleanup_database())
 
     async def cleanup_database(self):
         while True:
@@ -597,9 +603,10 @@ class DaskGateway(Application):
         if hasattr(self, "http_server"):
             self.http_server.stop()
 
-        # Stop the db cleanup task if present
-        if hasattr(self, "db_cleanup_task"):
-            self.db_cleanup_task.cancel()
+        # Stop any background tasks
+        if hasattr(self, "background_tasks"):
+            for task in self.background_tasks:
+                task.cancel()
 
         # If requested, shutdown any active clusters
         if self.stop_clusters_on_shutdown:
