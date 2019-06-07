@@ -119,7 +119,13 @@ setup(
     extras_require=extras_require,
     python_requires=">=3.6",
     entry_points={
-        "console_scripts": ["dask-gateway-server = dask_gateway_server.app:main"]
+        "console_scripts": [
+            "dask-gateway-server = dask_gateway_server.app:main",
+            (
+                "dask-gateway-jobqueue-launcher = "
+                "dask_gateway_server.managers.jobqueue.launcher:main"
+            ),
+        ]
     },
     zip_safe=False,
 )

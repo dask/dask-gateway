@@ -31,7 +31,7 @@ from .objects import (
     is_in_memory_db,
 )
 from .proxy import SchedulerProxy, WebProxy
-from .utils import cleanup_tmpdir, cancel_task
+from .utils import cleanup_tmpdir, cancel_task, TaskPool
 
 
 # Override default values for logging
@@ -367,11 +367,6 @@ class DaskGateway(Application):
     def public_url_prefix(self):
         return urlparse(self.public_url).path
 
-    def create_task(self, task):
-        out = asyncio.ensure_future(task)
-        self.pending_tasks.add(out)
-        return out
-
     @catch_config_error
     def initialize(self, argv=None):
         super().initialize(argv)
@@ -380,6 +375,7 @@ class DaskGateway(Application):
         self.load_config_file(self.config_file)
         self.init_logging()
         self.init_tempdir()
+        self.init_asyncio()
         self.init_scheduler_proxy()
         self.init_web_proxy()
         self.init_cluster_manager()
@@ -416,6 +412,9 @@ class DaskGateway(Application):
             os.mkdir(self.temp_dir, mode=0o700)
             weakref.finalize(self, cleanup_tmpdir, self.log, self.temp_dir)
 
+    def init_asyncio(self):
+        self.task_pool = TaskPool()
+
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
             parent=self, log=self.log, public_url=self.gateway_url
@@ -432,7 +431,11 @@ class DaskGateway(Application):
 
     def init_cluster_manager(self):
         self.cluster_manager = self.cluster_manager_class(
-            parent=self, log=self.log, temp_dir=self.temp_dir, api_url=self.api_url
+            parent=self,
+            log=self.log,
+            task_pool=self.task_pool,
+            temp_dir=self.temp_dir,
+            api_url=self.api_url,
         )
 
     def init_authenticator(self):
@@ -453,7 +456,6 @@ class DaskGateway(Application):
             cookie_secret=self.cookie_secret,
             cookie_max_age_days=self.cookie_max_age_days,
         )
-        self.pending_tasks = weakref.WeakSet()
 
     async def start_async(self):
         self.init_signal()
@@ -496,7 +498,7 @@ class DaskGateway(Application):
                 n_clusters,
             )
 
-        self.db_cleanup_task = asyncio.ensure_future(self.cleanup_database())
+        self.task_pool.create_background_task(self.cleanup_database())
 
     async def cleanup_database(self):
         while True:
@@ -597,10 +599,6 @@ class DaskGateway(Application):
         if hasattr(self, "http_server"):
             self.http_server.stop()
 
-        # Stop the db cleanup task if present
-        if hasattr(self, "db_cleanup_task"):
-            self.db_cleanup_task.cancel()
-
         # If requested, shutdown any active clusters
         if self.stop_clusters_on_shutdown:
             tasks = {
@@ -624,17 +622,8 @@ class DaskGateway(Application):
         else:
             self.log.info("Leaving any active clusters running")
 
-        # Wait for a short period for any ongoing tasks to complete, before
-        # canceling them
-        try:
-            await asyncio.wait_for(
-                asyncio.gather(
-                    *getattr(self, "pending_tasks", ()), return_exceptions=True
-                ),
-                timeout,
-            )
-        except (asyncio.TimeoutError, asyncio.CancelledError):
-            pass
+        if hasattr(self, "task_pool"):
+            await self.task_pool.close(timeout=timeout)
 
         # Shutdown the proxies
         if hasattr(self, "scheduler_proxy"):
@@ -732,7 +721,7 @@ class DaskGateway(Application):
 
     def start_new_cluster(self, user):
         cluster = self.db.create_cluster(user)
-        f = self.create_task(self.start_cluster(cluster))
+        f = self.task_pool.create_task(self.start_cluster(cluster))
         f.add_done_callback(partial(self._monitor_start_cluster, cluster=cluster))
         cluster._start_future = f
         return cluster
@@ -781,7 +770,7 @@ class DaskGateway(Application):
         self.log.debug("Cluster %s stopped", cluster.name)
 
     def schedule_stop_cluster(self, cluster, failed=False):
-        self.create_task(self.stop_cluster(cluster, failed=failed))
+        self.task_pool.create_task(self.stop_cluster(cluster, failed=failed))
 
     async def scale(self, cluster, total):
         """Scale cluster to total workers"""
@@ -803,7 +792,7 @@ class DaskGateway(Application):
     async def scale_up(self, cluster, n_start):
         for _ in range(n_start):
             w = self.db.create_worker(cluster)
-            w._start_future = self.create_task(self.start_worker(cluster, w))
+            w._start_future = self.task_pool.create_task(self.start_worker(cluster, w))
             w._start_future.add_done_callback(
                 partial(self._monitor_start_worker, worker=w, cluster=cluster)
             )
@@ -911,7 +900,7 @@ class DaskGateway(Application):
         self.log.debug("Worker %s stopped", worker.name)
 
     def schedule_stop_worker(self, cluster, worker, failed=False):
-        self.create_task(self.stop_worker(cluster, worker, failed=failed))
+        self.task_pool.create_task(self.stop_worker(cluster, worker, failed=failed))
 
     def maybe_fail_worker(self, cluster, worker):
         # Ignore if cluster or worker isn't active (

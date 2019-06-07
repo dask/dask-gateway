@@ -1,8 +1,42 @@
 import asyncio
 import shutil
 import socket
+import weakref
 
 from traitlets import Integer, TraitError
+
+
+class TaskPool(object):
+    def __init__(self):
+        self.pending_tasks = weakref.WeakSet()
+        self.background_tasks = weakref.WeakSet()
+
+    def create_task(self, task):
+        out = asyncio.ensure_future(task)
+        self.pending_tasks.add(out)
+        return out
+
+    def create_background_task(self, task):
+        out = asyncio.ensure_future(task)
+        self.background_tasks.add(out)
+        return out
+
+    async def close(self, timeout=5):
+        # Cancel all background tasks
+        for task in self.background_tasks:
+            task.cancel()
+
+        # Wait for a short period for any ongoing tasks to complete, before
+        # canceling them
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(
+                    *getattr(self, "pending_tasks", ()), return_exceptions=True
+                ),
+                timeout,
+            )
+        except (asyncio.TimeoutError, asyncio.CancelledError):
+            pass
 
 
 def random_port():
