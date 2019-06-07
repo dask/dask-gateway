@@ -31,16 +31,17 @@ both the cluster backend and the authentication protocol are pluggable.
 
 **Cluster Backends**
 
-- YARN
+- `Hadoop/YARN <https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html>`__
 - Local Processes
-- Kubernetes (planned)
-- Job Queues (planned)
+- `PBS Job Queue <https://www.pbspro.org/>`__
+- Other Job Queues (planned)
+- `Kubernetes <https://kubernetes.io/>`__ (planned)
 
 **Authentication Methods**
 
-- Kerberos
-- Basic
-- JupyterHub (planned)
+- `Kerberos <https://en.wikipedia.org/wiki/Kerberos_(protocol)>`__
+- `JupyterHub service plugin <https://jupyterhub.readthedocs.io/en/stable/>`__
+- Basic (for testing only)
 
 
 .. toctree::
