@@ -1,7 +1,7 @@
-from traitlets import Unicode, Float, Integer, Dict, Bool
+from traitlets import Unicode, Float, Integer, Dict, Bool, Instance
 from traitlets.config import LoggingConfigurable
 
-from ..utils import MemoryLimit
+from ..utils import MemoryLimit, TaskPool
 
 
 class ClusterManager(LoggingConfigurable):
@@ -114,6 +114,7 @@ class ClusterManager(LoggingConfigurable):
     )
 
     # Parameters forwarded by gateway application
+    task_pool = Instance(TaskPool, args=())
     api_url = Unicode()
     temp_dir = Unicode()
 

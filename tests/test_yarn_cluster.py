@@ -67,14 +67,14 @@ class TestYarnClusterManager(ClusterManagerTests):
             **kwargs,
         )
 
-    def is_cluster_running(self, manager, cluster_info, cluster_state):
+    def cluster_is_running(self, manager, cluster_info, cluster_state):
         app_id = cluster_state.get("app_id")
         if not app_id:
             return False
         report = manager.skein_client.application_report(app_id)
         return report.state not in ("FINISHED", "FAILED", "KILLED")
 
-    def is_worker_running(self, manager, cluster_info, cluster_state, worker_state):
+    def worker_is_running(self, manager, cluster_info, cluster_state, worker_state):
         app_id = cluster_state.get("app_id")
         container_id = worker_state.get("container_id")
         if not app_id or not container_id:

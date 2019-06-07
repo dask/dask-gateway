@@ -15,11 +15,11 @@ class TestLocalClusterManager(ClusterManagerTests):
     def new_manager(self, **kwargs):
         return LocalTestingClusterManager(**kwargs)
 
-    def is_cluster_running(self, manager, cluster_info, cluster_state):
+    def cluster_is_running(self, manager, cluster_info, cluster_state):
         pid = cluster_state.get("pid")
         return is_running(pid) if pid is not None else False
 
-    def is_worker_running(self, manager, cluster_info, cluster_state, worker_state):
+    def worker_is_running(self, manager, cluster_info, cluster_state, worker_state):
         pid = worker_state.get("pid")
         return is_running(pid) if pid is not None else False
 

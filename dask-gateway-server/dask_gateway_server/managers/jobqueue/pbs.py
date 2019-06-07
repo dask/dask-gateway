@@ -348,7 +348,7 @@ class PBSClusterManager(ClusterManager):
     def is_job_running(self, job_id):
         if not hasattr(self, "job_tracker"):
             self.jobs_to_track = WeakValueDictionary()
-            self.job_tracker = self.parent.create_background_task(
+            self.job_tracker = self.task_pool.create_background_task(
                 self.job_status_tracker()
             )
 
