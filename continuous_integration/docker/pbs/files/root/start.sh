@@ -18,5 +18,6 @@ echo "\$usecp *:/ /" >> $MOM_CONF_FILE
 /opt/pbs/bin/qmgr -c "set server job_history_enable = True"
 /opt/pbs/bin/qmgr -c "set server job_history_duration = 24:00:00"
 /opt/pbs/bin/qmgr -c "set node pbs queue=workq"
+/opt/pbs/bin/qmgr -c "set server operators += dask@pbs"
 
 sleep infinity

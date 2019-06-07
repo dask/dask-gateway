@@ -46,6 +46,18 @@ jobs:
           script:
             - docker exec master /working/continuous_integration/docker/hadoop/script.sh
 
+        - if: (commit_message !~ skip-tests) AND (commit_message ~= test-pbs)
+          env:
+            - PBS-TESTS=true
+          services:
+            - docker
+          before_install:
+            - ./continuous_integration/docker/pbs/start.sh
+          install:
+            - docker exec pbs /working/continuous_integration/docker/pbs/install.sh
+          script:
+            - docker exec -u dask pbs /working/continuous_integration/docker/pbs/script.sh
+
         - env:
             - DOCS=true
           before_install:
