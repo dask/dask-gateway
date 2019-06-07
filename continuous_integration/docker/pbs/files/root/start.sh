@@ -6,8 +6,9 @@ HOSTNAME=$(hostname)
 
 # Configure PBS to run all on one node
 sed -i "s/PBS_SERVER=.*/PBS_SERVER=$HOSTNAME/" $PBS_CONF_FILE
-sed -i "s/\$clienthost .*/\$clienthost $HOSTNAME/" $MOM_CONF_FILE
 sed -i "s/PBS_START_MOM=.*/PBS_START_MOM=1/" $PBS_CONF_FILE
+sed -i "s/\$clienthost .*/\$clienthost $HOSTNAME/" $MOM_CONF_FILE
+echo "\$usecp *:/ /" >> $MOM_CONF_FILE
 
 # Start PBS
 /etc/init.d/pbs start

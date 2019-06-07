@@ -15,11 +15,28 @@ RUN yum install -y bzip2 \
     && yum clean all \
     && rm -rf /var/cache/yum
 
+# Install go
+RUN curl https://dl.google.com/go/go1.12.2.linux-amd64.tar.gz -o /tmp/go.tar.gz \
+    && tar -xzf /tmp/go.tar.gz -C /opt/ \
+    && rm /tmp/go.tar.gz
+
+# Make a few user accounts, and configure their bashrc files
+RUN useradd -m dask \
+    && useradd -m alice \
+    && useradd -m bob \
+    && groupadd dask_users \
+    && usermod -a -G dask_users alice \
+    && usermod -a -G dask_users bob \
+    && echo 'export PATH="/opt/go/bin:/opt/miniconda/bin:$PATH"' >> ~/.bashrc \
+    && echo 'export PATH="/opt/miniconda/bin:$PATH"' >> /home/dask/.bashrc \
+    && echo 'export PATH="/opt/miniconda/bin:$PATH"' >> /home/alice/.bashrc \
+    && echo 'export PATH="/opt/miniconda/bin:$PATH"' >> /home/bob/.bashrc
+
 # Install pbspro
 RUN yum install -y unzip \
     && curl -L -o /tmp/pbspro.zip https://github.com/PBSPro/pbspro/releases/download/v18.1.4/pbspro_1.8.4.centos7.zip \
     && unzip /tmp/pbspro.zip -d /tmp/pbspro \
-    && yum install -y /tmp/pbspro/pbspro*/pbspro-server-*.rpm \
+    && yum install -y sudo /tmp/pbspro/pbspro*/pbspro-server-*.rpm \
     && yum remove -y unzip \
     && yum clean all \
     && rm -rf /var/cache/yum
@@ -27,10 +44,6 @@ RUN yum install -y unzip \
 # Notify dask-gateway tests that PBS is available
 ENV TEST_DASK_GATEWAY_PBS true
 ENV PBS_MASTER pbs_master
-
-# Make a few user accounts
-RUN useradd -m alice
-RUN useradd -m bob
 
 # Copy over files
 COPY ./files /
