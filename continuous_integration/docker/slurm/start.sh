@@ -6,9 +6,7 @@ full_path_this_dir="$(cd "${this_dir}" && pwd)"
 git_root="$(cd "${full_path_this_dir}/../../.." && pwd)"
 
 docker run --rm -d \
-    --name pbs \
-    -h pbs \
+    --name slurm \
+    -h slurm \
     -v "$git_root":/working \
-    -p 8088:8088 \
-    --cap-add=SYS_RESOURCE \
-    jcrist/dask-gateway-testing-pbs
+    jcrist/dask-gateway-testing-slurm
