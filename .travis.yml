@@ -40,7 +40,7 @@ jobs:
           services:
             - docker
           before_install:
-            - ./continuous_integration/docker/hadoop/start-hadoop.sh
+            - ./continuous_integration/docker/hadoop/start.sh
           install:
             - docker exec master /working/continuous_integration/docker/hadoop/install.sh
           script:
