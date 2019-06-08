@@ -1,11 +1,13 @@
-FROM centos:centos7
+FROM jcrist/dask-gateway-testing-base:latest
 MAINTAINER jcrist
 
 # Install common utilities
-RUN yum install -y \
+RUN yum install -y epel-release \
+    && yum install -y \
         sudo \
         bzip2 \
         java-1.8.0-openjdk \
+        supervisor \
     && yum clean all \
     && rm -rf /var/cache/yum
 
@@ -30,37 +32,6 @@ RUN cd /etc/yum.repos.d/ && { curl -O https://archive.cloudera.com/cdh5/redhat/7
     && yum clean all \
     && rm -rf /var/cache/yum
 
-# Install supervisord
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
-    && python get-pip.py \
-    && pip install supervisor \
-    && rm get-pip.py
-
-# Make a few user accounts
-RUN useradd -m dask
-RUN useradd -m alice
-RUN useradd -m bob
-
-# Install miniconda
-RUN curl https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
-    && /bin/bash /tmp/miniconda.sh -b -p /opt/miniconda \
-    && rm /tmp/miniconda.sh \
-    && /opt/miniconda/bin/conda update conda -y \
-    && /opt/miniconda/bin/conda config --set always_yes yes --set changeps1 no \
-    && /opt/miniconda/bin/conda clean -a \
-    && find /opt/miniconda/ -type f -name '*.a' -delete \
-    && find /opt/miniconda/ -type f -name '*.js.map' -delete \
-    && find /opt/miniconda/ -type f -name '*.pyc' -delete \
-    && rm -rf /opt/miniconda/pkgs \
-    && find /opt/miniconda/ -type f -name '*.so' -exec strip --strip-all {} + || true
-
-# Install go
-RUN curl https://dl.google.com/go/go1.12.2.linux-amd64.tar.gz -o /tmp/go.tar.gz \
-    && tar -xzf /tmp/go.tar.gz -C /opt/ \
-    && rm /tmp/go.tar.gz
-
-RUN echo 'export PATH="/opt/go/bin:/opt/miniconda/bin:$PATH"' >> ~/.bashrc
-
 # Copy over files
 COPY ./files /
 
@@ -82,4 +53,4 @@ ENV HADOOP_YARN_HOME /usr/lib/hadoop-yarn
 ENV HADOOP_HDFS_HOME /usr/lib/hadoop-hdfs
 ENV TEST_DASK_GATEWAY_YARN true
 
-CMD ["supervisord", "--configuration", "/etc/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "--configuration", "/etc/supervisord.conf"]
