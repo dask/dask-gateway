@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0.1.0+10.gc456ad2 documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0.1.0+11.g2dce94a documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -333,6 +333,8 @@ external manager (e.g. supervisord).</p>
 <h2>Cluster Managers<a class="headerlink" href="#cluster-managers" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="local-processes">
 <h3>Local Processes<a class="headerlink" href="#local-processes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="localclustermanager">
+<h4>LocalClusterManager<a class="headerlink" href="#localclustermanager" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="dask_gateway_server.managers.local.LocalClusterManager">
 <em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.local.</code><code class="sig-name descname">LocalClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.local.LocalClusterManager" title="Permalink to this definition">¶</a></dt>
@@ -465,6 +467,9 @@ following suffixes:</p>
 
 </dd></dl>
 
+</div>
+<div class="section" id="unsafelocalclustermanager">
+<h4>UnsafeLocalClusterManager<a class="headerlink" href="#unsafelocalclustermanager" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="dask_gateway_server.managers.local.UnsafeLocalClusterManager">
 <em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.local.</code><code class="sig-name descname">UnsafeLocalClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.local.UnsafeLocalClusterManager" title="Permalink to this definition">¶</a></dt>
@@ -598,8 +603,11 @@ following suffixes:</p>
 </dd></dl>
 
 </div>
+</div>
 <div class="section" id="yarn">
 <h3>YARN<a class="headerlink" href="#yarn" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="yarnclustermanager">
+<h4>YarnClusterManager<a class="headerlink" href="#yarnclustermanager" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="dask_gateway_server.managers.yarn.YarnClusterManager">
 <em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.yarn.</code><code class="sig-name descname">YarnClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.yarn.YarnClusterManager" title="Permalink to this definition">¶</a></dt>
@@ -749,6 +757,386 @@ following suffixes:</p>
 
 </div>
 </div>
+<div class="section" id="job-queues">
+<h3>Job Queues<a class="headerlink" href="#job-queues" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="pbsclustermanager">
+<h4>PBSClusterManager<a class="headerlink" href="#pbsclustermanager" title="Permalink to this headline">¶</a></h4>
+<dl class="class">
+<dt id="dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.jobqueue.pbs.</code><code class="sig-name descname">PBSClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>A cluster manager for deploying Dask on a PBS cluster.</p>
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.account = Unicode('')</code></dt>
+<dd><p>Accounting string associated with each job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.cancel_command = Unicode('')</code></dt>
+<dd><p>The path to the job cancel command</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
+connecting to the gateway.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+<p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
+for the cluster to actually respond.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.dask_gateway_jobqueue_launcher = Unicode('')</code></dt>
+<dd><p>The path to the dask-gateway-jobqueue-launcher executable</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.environment = Dict('')</code></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.gateway_hostname = Unicode('')</code></dt>
+<dd><p>The hostname of the node running the gateway. Used for referencing the
+local host in PBS directives.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.project = Unicode('')</code></dt>
+<dd><p>Project associated with each job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.queue = Unicode('')</code></dt>
+<dd><p>The queue to submit jobs to.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.scheduler_cores = Int(1)</code></dt>
+<dd><p>Maximum number of cpu-cores a dask scheduler is allowed to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Maximum number of bytes a dask scheduler is allowed to use. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.scheduler_resource_list = Unicode('select=1:ncpus={cores}:mem={memory}')</code></dt>
+<dd><p>The resource list to use for the scheduler.</p>
+<p>This is a template, and receives the following fields:</p>
+<ul class="simple">
+<li><p>cores</p></li>
+<li><p>memory</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.scheduler_setup = Unicode('')</code></dt>
+<dd><p>Script to run before dask scheduler starts.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.staging_directory = Unicode('{home}/.dask-gateway/')</code></dt>
+<dd><p>The staging directory for storing files before the job starts.</p>
+<p>A subdirectory will be created for each new cluster which will store
+temporary files for that cluster. On cluster shutdown the subdirectory
+will be removed.</p>
+<p>This field can be a template, which recieves the following fields:</p>
+<ul class="simple">
+<li><p>home (the user’s home directory)</p></li>
+<li><p>username (the user’s name)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.status_command = Unicode('')</code></dt>
+<dd><p>The path to the job status command</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.status_poll_interval = Float(0.5)</code></dt>
+<dd><p>The interval (in seconds) in which to poll for job statuses.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.submit_command = Unicode('')</code></dt>
+<dd><p>The path to the job submit command</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.use_stagein = Bool(True)</code></dt>
+<dd><p>If true, the staging directory created above will be copied into the
+job working directories at runtime using the <code class="docutils literal notranslate"><span class="pre">-Wstagein</span></code> directive.</p>
+<p>If the staging directory is on a networked filesystem, you can set this
+to False and rely on the networked filesystem for access.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
+connecting to the scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.worker_cores = Int(1)</code></dt>
+<dd><p>Maximum number of cpu-cores a dask worker is allowed to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Maximum number of bytes a dask worker is allowed to use. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.worker_resource_list = Unicode('select=1:ncpus={cores}:mem={memory}')</code></dt>
+<dd><p>The resource list to use for the workers.</p>
+<p>This is a template, and receives the following fields:</p>
+<ul class="simple">
+<li><p>cores</p></li>
+<li><p>memory</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.worker_setup = Unicode('')</code></dt>
+<dd><p>Script to run before dask worker starts.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.worker_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="slurmclustermanager">
+<h4>SlurmClusterManager<a class="headerlink" href="#slurmclustermanager" title="Permalink to this headline">¶</a></h4>
+<dl class="class">
+<dt id="dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.jobqueue.slurm.</code><code class="sig-name descname">SlurmClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>A cluster manager for deploying Dask on a Slurm cluster.</p>
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.account = Unicode('')</code></dt>
+<dd><p>Account string associated with each job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.cancel_command = Unicode('')</code></dt>
+<dd><p>The path to the job cancel command</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
+connecting to the gateway.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+<p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
+for the cluster to actually respond.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.dask_gateway_jobqueue_launcher = Unicode('')</code></dt>
+<dd><p>The path to the dask-gateway-jobqueue-launcher executable</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.environment = Dict('')</code></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.partition = Unicode('')</code></dt>
+<dd><p>The partition to submit jobs to.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.qos = Unicode('')</code></dt>
+<dd><p>QOS string associated with each job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.scheduler_cores = Int(1)</code></dt>
+<dd><p>Maximum number of cpu-cores a dask scheduler is allowed to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Maximum number of bytes a dask scheduler is allowed to use. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.scheduler_setup = Unicode('')</code></dt>
+<dd><p>Script to run before dask scheduler starts.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.staging_directory = Unicode('{home}/.dask-gateway/')</code></dt>
+<dd><p>The staging directory for storing files before the job starts.</p>
+<p>A subdirectory will be created for each new cluster which will store
+temporary files for that cluster. On cluster shutdown the subdirectory
+will be removed.</p>
+<p>This field can be a template, which recieves the following fields:</p>
+<ul class="simple">
+<li><p>home (the user’s home directory)</p></li>
+<li><p>username (the user’s name)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.status_command = Unicode('')</code></dt>
+<dd><p>The path to the job status command</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.status_poll_interval = Float(0.5)</code></dt>
+<dd><p>The interval (in seconds) in which to poll for job statuses.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.submit_command = Unicode('')</code></dt>
+<dd><p>The path to the job submit command</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
+connecting to the scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.worker_cores = Int(1)</code></dt>
+<dd><p>Maximum number of cpu-cores a dask worker is allowed to use.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Maximum number of bytes a dask worker is allowed to use. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.worker_setup = Unicode('')</code></dt>
+<dd><p>Script to run before dask worker starts.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.worker_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
 </div>
 
 
@@ -803,8 +1191,20 @@ following suffixes:</p>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#cluster-managers">Cluster Managers</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#local-processes">Local Processes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#yarn">YARN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#local-processes">Local Processes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#localclustermanager">LocalClusterManager</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#unsafelocalclustermanager">UnsafeLocalClusterManager</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#yarn">YARN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#yarnclustermanager">YarnClusterManager</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#job-queues">Job Queues</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pbsclustermanager">PBSClusterManager</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slurmclustermanager">SlurmClusterManager</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

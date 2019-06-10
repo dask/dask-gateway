@@ -31,11 +31,10 @@ both the cluster backend and the authentication protocol are pluggable.
 
 **Cluster Backends**
 
-- `Hadoop/YARN <https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html>`__
+- `Hadoop/YARN`_
 - Local Processes
-- `PBS Job Queue <https://www.pbspro.org/>`__
-- Other Job Queues (planned)
-- `Kubernetes <https://kubernetes.io/>`__ (planned)
+- Job Queue Systems (PBS_, Slurm_, ...)
+- Kuberentes_ (planned)
 
 **Authentication Methods**
 
@@ -53,3 +52,7 @@ both the cluster backend and the authentication protocol are pluggable.
 .. _Dask: https://dask.org/
 .. _traitlets: https://traitlets.readthedocs.io/en/stable/
 .. _Jupyter: https://jupyter.org/
+.. _Hadoop/YARN: https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html
+.. _PBS: https://www.pbspro.org/
+.. _Slurm: https://slurm.schedmd.com/
+.. _Kuberentes: https://kubernetes.io/
