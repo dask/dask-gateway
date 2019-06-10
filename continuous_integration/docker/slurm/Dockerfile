@@ -36,8 +36,8 @@ RUN yum install -y epel-release \
     && yum clean all \
     && rm -rf /var/cache/yum
 
-# Install supervisor
-RUN yum install -y supervisor \
+# Install supervisor and sudo
+RUN yum install -y supervisor sudo \
     && yum clean all \
     && rm -rf /var/cache/yum
 

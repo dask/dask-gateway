@@ -1,0 +1,4 @@
+Cmnd_Alias DASK_GATEWAY_JOBQUEUE_LAUNCHER = /opt/miniconda/bin/dask-gateway-jobqueue-launcher
+
+%dask_users ALL=(dask) /usr/bin/sudo
+dask ALL=(%dask_users) NOPASSWD:DASK_GATEWAY_JOBQUEUE_LAUNCHER
