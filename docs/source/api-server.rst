@@ -41,7 +41,13 @@ Cluster Managers
 Local Processes
 ^^^^^^^^^^^^^^^
 
+LocalClusterManager
+~~~~~~~~~~~~~~~~~~~
+
 .. autoconfigurable:: dask_gateway_server.managers.local.LocalClusterManager
+
+UnsafeLocalClusterManager
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoconfigurable:: dask_gateway_server.managers.local.UnsafeLocalClusterManager
 
@@ -49,4 +55,21 @@ Local Processes
 YARN
 ^^^^
 
+YarnClusterManager
+~~~~~~~~~~~~~~~~~~
+
 .. autoconfigurable:: dask_gateway_server.managers.yarn.YarnClusterManager
+
+
+Job Queues
+^^^^^^^^^^
+
+PBSClusterManager
+~~~~~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager
+
+SlurmClusterManager
+~~~~~~~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager
