@@ -10,16 +10,23 @@ def finish(**kwargs):
     sys.stdout.flush()
 
 
-def run_command(cmd, env):
+def run_command(cmd, env, stdin=None):
+    if stdin is not None:
+        stdin = stdin.encode("utf8")
+        STDIN = subprocess.PIPE
+    else:
+        STDIN = None
+
     proc = subprocess.Popen(
         cmd,
         env=env,
         cwd=os.path.expanduser("~"),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        stdin=STDIN,
     )
 
-    stdout, stderr = proc.communicate()
+    stdout, stderr = proc.communicate(stdin)
 
     finish(
         ok=True,
@@ -29,7 +36,7 @@ def run_command(cmd, env):
     )
 
 
-def start(cmd, env, staging_dir=None, files=None):
+def start(cmd, env, stdin=None, staging_dir=None, files=None):
     if staging_dir:
         try:
             os.makedirs(staging_dir, mode=0o700, exist_ok=False)
@@ -42,7 +49,7 @@ def start(cmd, env, staging_dir=None, files=None):
                 error="Error setting up staging directory %s: %s" % (staging_dir, exc),
             )
             return
-    run_command(cmd, env)
+    run_command(cmd, env, stdin=stdin)
 
 
 def stop(cmd, env, staging_dir=None):
