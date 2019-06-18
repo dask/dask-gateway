@@ -61,6 +61,15 @@ YarnClusterManager
 .. autoconfigurable:: dask_gateway_server.managers.yarn.YarnClusterManager
 
 
+Kubernetes
+^^^^^^^^^^
+
+KubeClusterManager
+~~~~~~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.managers.kubernetes.KubeClusterManager
+
+
 Job Queues
 ^^^^^^^^^^
 
