@@ -214,19 +214,21 @@ class ClusterManagerTests(object):
         raise NotImplementedError
 
     def cluster_is_stopped(self, manager, cluster_info, cluster_state):
-        for i in range(50):
+        # Wait for 30 seconds, pinging every 1/4 second
+        for i in range(120):
             if not self.cluster_is_running(manager, cluster_info, cluster_state):
                 return True
-            time.sleep(0.2)
+            time.sleep(0.25)
         return False
 
     def worker_is_stopped(self, manager, cluster_info, cluster_state, worker_state):
-        for i in range(50):
+        # Wait for 30 seconds, pinging every 1/4 second
+        for i in range(120):
             if not self.worker_is_running(
                 manager, cluster_info, cluster_state, worker_state
             ):
                 return True
-            time.sleep(0.2)
+            time.sleep(0.25)
         return False
 
     @pytest.mark.asyncio
