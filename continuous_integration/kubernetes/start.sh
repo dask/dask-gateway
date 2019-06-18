@@ -9,31 +9,34 @@ git_root="$(cd "${full_path_this_dir}/../.." && pwd)"
 
 echo "Starting minikube"
 
-#if [[ "$TRAVIS" == "true" ]]; then
-    ## Start with no VM driver on Travis CI
-    #sudo CHANGE_MINIKUBE_NONE_USER=true minikube start \
-        #--kubernetes-version=v${KUBE_VERSION} \
-        #--extra-config=apiserver.authorization-mode=RBAC \
-        #--vm-driver=none
-    #DASK_GATEWAY_SOURCE="$git_root"
-#else
-    ## Mount the repo in minikube
-    #minikube start \
-        #--kubernetes-version=v${KUBE_VERSION} \
-        #--extra-config=apiserver.authorization-mode=RBAC \
-        #--mount-string "$git_root:/dask-gateway-host" \
-        #--mount
-    #DASK_GATEWAY_SOURCE="/dask-gateway-host"
-#fi
+if [[ "$TRAVIS" == "true" ]]; then
+    # Install minikube
+    $this_dir/install-minikube.sh
 
-#minikube update-context
+    # Start with no VM driver on Travis CI
+    sudo CHANGE_MINIKUBE_NONE_USER=true minikube start \
+        --kubernetes-version=v${KUBE_VERSION} \
+        --extra-config=apiserver.authorization-mode=RBAC \
+        --vm-driver=none
+    DASK_GATEWAY_SOURCE="$git_root"
+else
+    # Mount the repo in minikube
+    minikube start \
+        --kubernetes-version=v${KUBE_VERSION} \
+        --extra-config=apiserver.authorization-mode=RBAC \
+        --mount-string "$git_root:/dask-gateway-host" \
+        --mount
+    DASK_GATEWAY_SOURCE="/dask-gateway-host"
+fi
 
-#echo "Waiting for minikube..."
+minikube update-context
 
-#JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
-#until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do
-  #sleep 0.5
-#done
+echo "Waiting for minikube..."
+
+JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
+until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do
+  sleep 0.5
+done
 
 kubectl get nodes
 
@@ -97,3 +100,6 @@ spec:
         path: $DASK_GATEWAY_SOURCE
         type: Directory
 EOF
+
+echo "Waiting for testing pod to start"
+kubectl wait -n dask-gateway --for=condition=Ready pod/dask-gateway-tests
