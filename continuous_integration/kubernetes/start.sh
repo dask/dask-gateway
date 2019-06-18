@@ -18,6 +18,10 @@ if [[ "$TRAVIS" == "true" ]]; then
         --kubernetes-version=v${KUBE_VERSION} \
         --extra-config=apiserver.authorization-mode=RBAC \
         --vm-driver=none
+
+    # Ensure the travis user owns the minikube configuration directory
+    sudo chown -R travis: /home/travis/.minikube/
+
     DASK_GATEWAY_SOURCE="$git_root"
 else
     # Mount the repo in minikube
