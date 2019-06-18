@@ -52,6 +52,7 @@ jobs:
           services:
             - docker
           before_install:
+            - source continuous_integration/before_install.sh
             - ./continuous_integration/kubernetes/start.sh
           install:
             - ./continuous_integration/kubernetes/install.sh
