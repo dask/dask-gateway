@@ -58,8 +58,8 @@ class ClusterManager(LoggingConfigurable):
     worker_memory = MemoryLimit(
         "2 G",
         help="""
-        Maximum number of bytes a dask worker is allowed to use. Allows the
-        following suffixes:
+        Number of bytes available for a dask worker. Allows the following
+        suffixes:
 
         - K -> Kibibytes
         - M -> Mebibytes
@@ -73,7 +73,7 @@ class ClusterManager(LoggingConfigurable):
         1,
         min=1,
         help="""
-        Maximum number of cpu-cores a dask worker is allowed to use.
+        Number of cpu-cores available for a dask worker.
         """,
         config=True,
     )
@@ -81,8 +81,8 @@ class ClusterManager(LoggingConfigurable):
     scheduler_memory = MemoryLimit(
         "2 G",
         help="""
-        Maximum number of bytes a dask scheduler is allowed to use. Allows the
-        following suffixes:
+        Number of bytes available for a dask scheduler. Allows the following
+        suffixes:
 
         - K -> Kibibytes
         - M -> Mebibytes
@@ -96,7 +96,7 @@ class ClusterManager(LoggingConfigurable):
         1,
         min=1,
         help="""
-        Maximum number of cpu-cores a dask scheduler is allowed to use.
+        Number of cpu-cores available for a dask scheduler.
         """,
         config=True,
     )

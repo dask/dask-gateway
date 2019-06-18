@@ -77,7 +77,11 @@ class clean(_clean):
 
 install_requires = ["cryptography", "tornado", "traitlets", "sqlalchemy"]
 
-extras_require = {"kerberos": ["pykerberos"], "yarn": ["skein >= 0.7.3"]}
+extras_require = {
+    "kerberos": ["pykerberos"],
+    "kubernetes": ["kubernetes >= 9"],
+    "yarn": ["skein >= 0.7.3"],
+}
 
 # Due to quirks in setuptools/distutils dependency ordering, to get the go
 # source to build automatically in most cases, we need to check in multiple

@@ -46,6 +46,29 @@ def random_port():
         return sock.getsockname()[1]
 
 
+def get_ip():
+    try:
+        # Try resolving by hostname first
+        return socket.gethostbyname(socket.gethostname())
+    except Exception:
+        pass
+
+    # By using a UDP socket, we don't actually try to connect but
+    # simply select the local address through which *host* is reachable.
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # We use google's DNS server as a common public host to resolve the
+        # address. Any ip could go here.
+        sock.connect(("8.8.8.8", 80))
+        return sock.getsockname()[0]
+    except Exception:
+        pass
+    finally:
+        sock.close()
+
+    raise ValueError("Failed to determine local IP address")
+
+
 def cleanup_tmpdir(log, path):
     try:
         log.debug("Removing temporary directory %r", path)

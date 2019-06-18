@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import signal
-import socket
 import stat
 import tempfile
 import weakref
@@ -31,7 +30,7 @@ from .objects import (
     is_in_memory_db,
 )
 from .proxy import SchedulerProxy, WebProxy
-from .utils import cleanup_tmpdir, cancel_task, TaskPool
+from .utils import cleanup_tmpdir, cancel_task, TaskPool, get_ip
 
 
 # Override default values for logging
@@ -171,8 +170,8 @@ class DaskGateway(Application):
         url = proposal.value
         parsed = urlparse(url)
         if parsed.hostname in {"", "0.0.0.0"}:
-            # Resolve hostname
-            host = socket.gethostname()
+            # Resolve local ip address
+            host = get_ip()
             parsed = parsed._replace(netloc="%s:%i" % (host, parsed.port))
         # Ensure no trailing slash
         url = urlunparse(parsed._replace(path=parsed.path.rstrip("/")))
