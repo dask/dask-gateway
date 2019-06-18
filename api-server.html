@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0.1.0+13.g517dc59 documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0.1.0+14.g5c8b734 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -761,6 +761,187 @@ suffixes:</p>
 <h3>Kubernetes<a class="headerlink" href="#kubernetes" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="kubeclustermanager">
 <h4>KubeClusterManager<a class="headerlink" href="#kubeclustermanager" title="Permalink to this headline">¶</a></h4>
+<dl class="class">
+<dt id="dask_gateway_server.managers.kubernetes.KubeClusterManager">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.kubernetes.</code><code class="sig-name descname">KubeClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.kubernetes.KubeClusterManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>A cluster manager for deploying Dask on a Kubernetes cluster.</p>
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
+connecting to the gateway.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+<p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
+for the cluster to actually respond.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.common_annotations = Dict('')</code></dt>
+<dd><p>Kubernetes annotations to apply to all objects created by the gateway</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.common_labels = Dict('')</code></dt>
+<dd><p>Kubernetes labels to apply to all objects created by the gateway</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.environment = Dict('')</code></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.image = Unicode('jcrist/dask-gateway:latest')</code></dt>
+<dd><p>Docker image to use for running user’s containers.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.image_pull_policy = Unicode('IfNotPresent')</code></dt>
+<dd><p>The image pull policy of the docker image specified in <code class="docutils literal notranslate"><span class="pre">image</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.image_pull_secrets = List('')</code></dt>
+<dd><p>A list of secrets to use for pulling images from a private repository.</p>
+<p>See <a class="reference external" href="https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod">the Kubernetes documentation</a>
+for more information.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.namespace = Unicode('default')</code></dt>
+<dd><p>Kubernetes namespace to launch pods in.</p>
+<p>If running inside a kubernetes cluster with service accounts enabled,
+defaults to the current namespace. If not, defaults to <cite>default</cite></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.scheduler_cores = Float(1)</code></dt>
+<dd><p>Number of cpu-cores available for a dask scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.scheduler_cores_limit = Float(0.0)</code></dt>
+<dd><p>Maximum number of cpu-cores available for a dask scheduler.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">scheduler_cores</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Number of bytes available for a dask scheduler. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.scheduler_memory_limit = MemoryLimit(0)</code></dt>
+<dd><p>Maximum number of bytes available for a dask scheduler. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">scheduler_memory</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
+<p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
+connecting to the scheduler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_cores = Float(1)</code></dt>
+<dd><p>Number of cpu-cores available for a dask worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_cores_limit = Float(0.0)</code></dt>
+<dd><p>Maximum number of cpu-cores available for a dask worker.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
+<dd><p>Number of bytes available for a dask worker. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_memory_limit = MemoryLimit(0)</code></dt>
+<dd><p>Maximum number of bytes available for a dask worker. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_memory</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_start_timeout = Float(60)</code></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.working_dir = Unicode('')</code></dt>
+<dd><p>The working directory where the command will be run inside the
+container. Default is the working directory defined in the Dockerfile.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="job-queues">
