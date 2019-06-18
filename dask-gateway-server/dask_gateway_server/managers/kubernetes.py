@@ -38,9 +38,6 @@ def configure_kubernetes_clients():
         kubernetes.config.load_kube_config()
 
 
-configure_kubernetes_clients()
-
-
 class KubeClusterManager(ClusterManager):
     """A cluster manager for deploying Dask on a Kubernetes cluster."""
 
@@ -202,7 +199,12 @@ class KubeClusterManager(ClusterManager):
         return self.scheduler_memory
 
     # Internal fields
-    kube_client = Instance(kubernetes.client.CoreV1Api, args=())
+    kube_client = Instance(kubernetes.client.CoreV1Api)
+
+    @default("kube_client")
+    def _default_kube_client(self):
+        configure_kubernetes_clients()
+        return kubernetes.client.CoreV1Api()
 
     def get_tls_paths(self, cluster_info):
         """Get the absolute paths to the tls cert and key files."""

@@ -89,7 +89,7 @@ jobs:
             - source continuous_integration/before_install.sh
           install:
             - source continuous_integration/install.sh
-            - pip install skein sphinx doctr
+            - pip install kubernetes skein sphinx doctr
           script:
             - |
               set -xe
