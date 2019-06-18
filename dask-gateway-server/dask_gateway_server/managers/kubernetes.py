@@ -42,6 +42,7 @@ configure_kubernetes_clients()
 
 
 class KubeClusterManager(ClusterManager):
+    """A cluster manager for deploying Dask on a Kubernetes cluster."""
 
     namespace = Unicode(
         "default",
