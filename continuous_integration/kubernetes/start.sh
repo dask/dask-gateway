@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-KUBE_VERSION=1.14.2
+KUBE_VERSION=1.13.0
 
 this_dir="$(dirname "${BASH_SOURCE[0]}")"
 full_path_this_dir="$(cd "${this_dir}" && pwd)"

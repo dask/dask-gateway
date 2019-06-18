@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-KUBE_VERSION=1.14.2
-MINIKUBE_VERSION=0.28.0
+KUBE_VERSION=1.13.0
+MINIKUBE_VERSION=0.35.0
 
 # Install kubectl
 curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v${KUBE_VERSION}/bin/linux/amd64/kubectl \
