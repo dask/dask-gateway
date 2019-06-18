@@ -2,11 +2,13 @@ import asyncio
 import os
 import pytest
 
-import kubernetes.client
-from kubernetes.client.rest import ApiException
-
 if not os.environ.get("TEST_DASK_GATEWAY_KUBE"):
     pytest.skip("Not running Kubernetes tests", allow_module_level=True)
+
+pytest.importorskip("kubernetes")
+
+import kubernetes.client
+from kubernetes.client.rest import ApiException
 
 from dask_gateway_server.managers.kubernetes import KubeClusterManager
 
