@@ -34,7 +34,7 @@ both the cluster backend and the authentication protocol are pluggable.
 - `Hadoop/YARN`_
 - Local Processes
 - Job Queue Systems (PBS_, Slurm_, ...)
-- Kuberentes_
+- Kubernetes_
 
 **Authentication Methods**
 
@@ -55,4 +55,4 @@ both the cluster backend and the authentication protocol are pluggable.
 .. _Hadoop/YARN: https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html
 .. _PBS: https://www.pbspro.org/
 .. _Slurm: https://slurm.schedmd.com/
-.. _Kuberentes: https://kubernetes.io/
+.. _Kubernetes: https://kubernetes.io/
