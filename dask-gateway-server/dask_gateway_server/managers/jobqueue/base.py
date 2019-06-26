@@ -236,17 +236,19 @@ class JobQueueClusterManager(ClusterManager):
                 self.job_states.update(finished_states)
                 self.jobs_to_track.difference_update(finished_states)
 
-            await asyncio.sleep(self.status_poll_interval)
+            await asyncio.sleep(self.job_status_period)
 
     def track_job(self, job_id):
         self.jobs_to_track.add(job_id)
+        # Indicate present but not finished. Stopped ids are deleted once their
+        # state is retrieved - missing records are always considered stopped.
+        self.job_states[job_id] = None
 
     def untrack_job(self, job_id):
         self.jobs_to_track.discard(job_id)
-        self.job_states.pop(job_id, None)
 
-    def get_job_state(self, job_id):
-        return self.job_states.get(job_id)
+    def discard_job_state(self, job_id):
+        self.job_states.pop(job_id, None)
 
     async def cluster_status(self, cluster_info, cluster_state):
         self.log.debug("cluster_status for %s", cluster_info.cluster_name)
@@ -255,11 +257,14 @@ class JobQueueClusterManager(ClusterManager):
         if job_id is None:
             return False, None
 
-        state = self.get_job_state(job_id)
-        if state is not None:
-            self.untrack_job(job_id)
-            return False, "Job %s completed with state %s" % (job_id, state)
-        return True, None
+        if job_id in self.job_states:
+            state = self.job_states[job_id]
+            if state is not None:
+                self.untrack_job(job_id)
+                return False, "Job %s completed with state %s" % (job_id, state)
+            return True, None
+        # Job already deleted from tracker
+        return False, None
 
     async def start_cluster(self, cluster_info):
         job_id = await self.start_job(cluster_info)
@@ -271,6 +276,7 @@ class JobQueueClusterManager(ClusterManager):
         if job_id is None:
             return
         self.untrack_job(job_id)
+        self.discard_job_state(job_id)
         await self.stop_job(cluster_info, job_id)
 
     async def start_worker(self, worker_name, cluster_info, cluster_state):
