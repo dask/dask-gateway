@@ -93,13 +93,10 @@ class SlurmClusterManager(JobQueueClusterManager):
         return stdout.strip()
 
     def parse_job_states(self, stdout):
-        running = []
-        failed = []
+        finished = {}
 
         for l in stdout.splitlines():
             job_id, state = l.split()
-            if state in ("R", "CG"):
-                running.append(job_id)
-            elif state not in ("PD", "CF"):
-                failed.append(job_id)
-        return running, failed
+            if state not in ("R", "CG", "PD", "CF"):
+                finished[job_id] = state
+        return finished

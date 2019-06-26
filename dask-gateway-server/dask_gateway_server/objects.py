@@ -452,6 +452,7 @@ class Cluster(object):
         self.lock = asyncio.Lock(loop=loop)
         self._start_future = loop.create_future()
         self._connect_future = loop.create_future()
+        self._status_monitor = None
         if status >= ClusterStatus.RUNNING:
             # Already running, create finished futures to mark
             self._start_future.set_result(True)

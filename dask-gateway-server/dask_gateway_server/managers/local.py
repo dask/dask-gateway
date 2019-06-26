@@ -260,6 +260,12 @@ class LocalClusterManager(ClusterManager):
         )
         yield {"pid": pid}
 
+    async def cluster_status(self, cluster_info, cluster_state):
+        pid = cluster_state.get("pid")
+        if pid is not None:
+            return is_running(pid)
+        return False
+
     async def stop_cluster(self, cluster_info, cluster_state):
         pid = cluster_state.get("pid")
         if pid is not None:

@@ -231,11 +231,22 @@ class ClusterManagerTests(object):
             time.sleep(0.25)
         return False
 
+    async def cluster_status(self, manager, cluster):
+        out = await manager.cluster_status(cluster.info, cluster.state)
+        if isinstance(out, tuple):
+            res, msg = out
+            assert isinstance(msg, str) or msg is None
+        else:
+            res = out
+        return res
+
     @pytest.mark.asyncio
     @gateway_test
     async def test_start_stop_cluster(self, gateway, manager):
         # Create a new cluster
         cluster = gateway.new_cluster()
+
+        assert not await self.cluster_status(manager, cluster)
 
         # Start the cluster
         async for state in manager.start_cluster(cluster.info):
@@ -244,10 +255,13 @@ class ClusterManagerTests(object):
         # Wait for connection
         await asyncio.wait_for(cluster._connect_future, manager.cluster_connect_timeout)
         assert self.cluster_is_running(manager, cluster.info, cluster.state)
+        assert await self.cluster_status(manager, cluster)
 
         # Stop the cluster
         await manager.stop_cluster(cluster.info, cluster.state)
         assert self.cluster_is_stopped(manager, cluster.info, cluster.state)
+        assert not await self.cluster_status(manager, cluster)
+
         gateway.mark_cluster_stopped(cluster.name)
 
     async def check_cancel_during_cluster_startup(self, gateway, manager, fail_stage):
@@ -266,6 +280,9 @@ class ClusterManagerTests(object):
 
         # Cleanup cancelled async generator
         await start_task.athrow(GeneratorExit)
+
+        # Assert not running
+        assert not await self.cluster_status(manager, cluster)
 
         # Stop the cluster
         await manager.stop_cluster(cluster.info, cluster.state)
@@ -291,6 +308,7 @@ class ClusterManagerTests(object):
         # Wait for connection
         await asyncio.wait_for(cluster._connect_future, manager.cluster_connect_timeout)
         assert self.cluster_is_running(manager, cluster.info, cluster.state)
+        assert await self.cluster_status(manager, cluster)
 
         # Create a new worker
         worker = gateway.new_worker(cluster.name)
@@ -332,6 +350,7 @@ class ClusterManagerTests(object):
         # Wait for connection
         await asyncio.wait_for(cluster._connect_future, manager.cluster_connect_timeout)
         assert self.cluster_is_running(manager, cluster.info, cluster.state)
+        assert await self.cluster_status(manager, cluster)
 
         # Create a new worker
         worker = gateway.new_worker(cluster.name)

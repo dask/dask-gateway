@@ -549,6 +549,9 @@ class DaskGateway(Application):
 
             tasks = (self.stop_worker(cluster, w, failed=True) for w in to_stop)
             await asyncio.gather(*tasks, return_exceptions=False)
+
+            # Start the periodic monitor
+            self.start_cluster_status_monitor(cluster)
         else:
             # Cluster is not available, shut it down
             await self.stop_cluster(cluster, failed=True)
@@ -639,6 +642,43 @@ class DaskGateway(Application):
         if stop_event_loop:
             IOLoop.current().stop()
 
+    def start_cluster_status_monitor(self, cluster):
+        cluster._status_monitor = self.task_pool.create_background_task(
+            self._cluster_status_monitor(cluster)
+        )
+
+    def stop_cluster_status_monitor(self, cluster):
+        if cluster._status_monitor is not None:
+            cluster._status_monitor.cancel()
+            cluster._status_monitor = None
+
+    async def _cluster_status_monitor(self, cluster):
+        while True:
+            try:
+                res = await self.cluster_manager.cluster_status(
+                    cluster.info, cluster.state
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                self.log.error(
+                    "Error while checking cluster %s status", cluster.name, exc_info=exc
+                )
+            else:
+                running, msg = res if isinstance(res, tuple) else (res, None)
+                if not running:
+                    if msg:
+                        self.log.warning(
+                            "Cluster %s stopped unexpectedly: %s", cluster.name, msg
+                        )
+                    else:
+                        self.log.warning(
+                            "Cluster %s stopped unexpectedly", cluster.name
+                        )
+                    self.schedule_stop_cluster(cluster, failed=True)
+                    return
+            await asyncio.sleep(self.cluster_manager.cluster_status_period)
+
     async def _start_cluster(self, cluster):
         self.log.debug("Cluster %s is starting...", cluster.name)
 
@@ -677,6 +717,8 @@ class DaskGateway(Application):
             return False
 
         self.log.debug("Cluster %s has started, waiting for connection", cluster.name)
+
+        self.start_cluster_status_monitor(cluster)
 
         try:
             addresses = await asyncio.wait_for(
@@ -742,6 +784,9 @@ class DaskGateway(Application):
 
     async def stop_cluster(self, cluster, failed=False):
         self.log.debug("Cluster %s is stopping...", cluster.name)
+
+        # Stop the periodic monitor, if present
+        self.stop_cluster_status_monitor(cluster)
 
         # If running, cancel running start task
         await cancel_task(cluster._start_future)

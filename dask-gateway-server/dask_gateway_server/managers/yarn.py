@@ -1,11 +1,39 @@
+import asyncio
 import os
+from collections import OrderedDict
 from contextlib import contextmanager
 
 import skein
-from tornado import gen
-from traitlets import Unicode, Dict, Instance, default
+from traitlets import Unicode, Dict, Integer, Instance, default
 
 from .base import ClusterManager
+
+
+class LRUCache(object):
+    def __init__(self, max_size):
+        self.max_size = max_size
+        self.cache = OrderedDict()
+
+    def get(self, key):
+        """Get an item from the cache. Returns None if not present"""
+        try:
+            self.cache.move_to_end(key)
+            return self.cache[key]
+        except KeyError:
+            return None
+
+    def put(self, key, value):
+        """Add an item to the cache"""
+        self.cache[key] = value
+        if len(self.cache) > self.max_size:
+            self.cache.popitem(False)
+
+    def discard(self, key):
+        """Remove an item from the cache. No-op if not present."""
+        try:
+            del self.cache[key]
+        except KeyError:
+            pass
 
 
 class YarnClusterManager(ClusterManager):
@@ -44,13 +72,14 @@ class YarnClusterManager(ClusterManager):
 
         .. code::
 
-            c.YarnSpawner.localize_files = {
+            c.YarnClusterManager.localize_files = {
                 'environment': {
                     'source': 'hdfs:///path/to/archived/environment.tar.gz',
                     'visibility': 'public'
                 }
             }
-            c.YarnSpawner.prologue = 'source environment/bin/activate'
+            c.YarnClusterManager.scheduler_setup = 'source environment/bin/activate'
+            c.YarnClusterManager.worker_setup = 'source environment/bin/activate'
 
         These archives are usually created using either ``conda-pack`` or
         ``venv-pack``. For more information on distributing files, see
@@ -67,6 +96,17 @@ class YarnClusterManager(ClusterManager):
         "", help="Script to run before dask scheduler starts.", config=True
     )
 
+    application_client_cache_size = Integer(
+        10,
+        help="""
+        The size of the cache for application clients.
+
+        A larger cache will result in improved performance, but will also use
+        more resources.
+        """,
+        config=True,
+    )
+
     supports_bulk_shutdown = True
 
     skein_client = Instance(klass="skein.Client", help="The skein client to use")
@@ -79,18 +119,35 @@ class YarnClusterManager(ClusterManager):
             security=skein.Security.new_credentials(),
         )
 
+    client_cache = Instance(klass=LRUCache, help="A cache of ApplicationClients")
+
+    @default("client_cache")
+    def _default_client_cache(self):
+        return LRUCache(self.application_client_cache_size)
+
+    app_address_cache = Dict(help="A cache of application master addresses")
+
     def _get_security(self, cluster_info):
         return skein.Security(
             cert_bytes=cluster_info.tls_cert, key_bytes=cluster_info.tls_key
         )
 
     def _get_app_client(self, cluster_info, cluster_state):
-        # TODO: maybe keep an LRU cache of these?
-        return skein.ApplicationClient(
-            cluster_state["app_address"],
-            cluster_state["app_id"],
-            security=self._get_security(cluster_info),
-        )
+        out = self.client_cache.get(cluster_info.cluster_name)
+        if out is None:
+            app_id = cluster_state["app_id"]
+            security = self._get_security(cluster_info)
+            address = self.app_address_cache.get(cluster_info.cluster_name)
+            if address is None:
+                # Lookup and cache the application address
+                report = self.skein_client.application_report(app_id)
+                if report.state != "RUNNING":  # pragma: nocover
+                    raise ValueError("Application %s is not running" % app_id)
+                address = "%s:%d" % (report.host, report.port)
+                self.app_address_cache[cluster_info.cluster_name] = address
+            out = skein.ApplicationClient(address, app_id, security=security)
+            self.client_cache.put(cluster_info.cluster_name, out)
+        return out
 
     @contextmanager
     def temp_write_credentials(self, cluster_info):
@@ -186,7 +243,7 @@ class YarnClusterManager(ClusterManager):
         )
 
     async def start_cluster(self, cluster_info):
-        loop = gen.IOLoop.current()
+        loop = asyncio.get_running_loop()
 
         with self.temp_write_credentials(cluster_info) as (cert_path, key_path):
             spec = self._build_specification(cluster_info, cert_path, key_path)
@@ -194,32 +251,29 @@ class YarnClusterManager(ClusterManager):
 
         yield {"app_id": app_id}
 
-        # Wait for application to start
-        while True:
-            report = await loop.run_in_executor(
-                None, self.skein_client.application_report, app_id
-            )
-            state = str(report.state)
-            if state in {"FAILED", "KILLED", "FINISHED"}:
-                raise Exception(
-                    "Application %s failed to start, check "
-                    "application logs for more information" % app_id
-                )
-            elif state == "RUNNING":
-                app_address = "%s:%d" % (report.host, report.port)
-                break
-            else:
-                await gen.sleep(1)
+    async def cluster_status(self, cluster_info, cluster_state):
+        app_id = cluster_state.get("app_id")
+        if app_id is None:
+            return False, None
 
-        yield {"app_id": app_id, "app_address": app_address}
+        report = await asyncio.get_running_loop().run_in_executor(
+            None, self.skein_client.application_report, app_id
+        )
+        state = str(report.state)
+        if state in {"FAILED", "KILLED", "FINISHED"}:
+            msg = "%s ended with exit state %s" % (app_id, state)
+            return False, msg
+        return True, None
 
     async def stop_cluster(self, cluster_info, cluster_state):
         app_id = cluster_state.get("app_id")
         if app_id is None:
             return
-        await gen.IOLoop.current().run_in_executor(
+        await asyncio.get_running_loop().run_in_executor(
             None, self.skein_client.kill_application, app_id
         )
+        self.app_address_cache.pop(cluster_info.cluster_name, None)
+        self.client_cache.discard(cluster_info.cluster_name)
 
     def _start_worker(self, worker_name, cluster_info, cluster_state):
         app = self._get_app_client(cluster_info, cluster_state)
@@ -228,14 +282,10 @@ class YarnClusterManager(ClusterManager):
         )
 
     async def start_worker(self, worker_name, cluster_info, cluster_state):
-        container = await gen.IOLoop.current().run_in_executor(
+        container = await asyncio.get_running_loop().run_in_executor(
             None, self._start_worker, worker_name, cluster_info, cluster_state
         )
         yield {"container_id": container.id}
-        # TODO: wait for worker to start before returning. To reduce costs,
-        # should have a single periodic task per application that fetches
-        # container states for if there are pending workers and notifies the
-        # corresponding `start_worker` coroutine of any updates.
 
     def _stop_worker(self, container_id, cluster_info, cluster_state):
         app = self._get_app_client(cluster_info, cluster_state)
@@ -248,6 +298,6 @@ class YarnClusterManager(ClusterManager):
         container_id = worker_state.get("container_id")
         if container_id is None:
             return
-        return await gen.IOLoop.current().run_in_executor(
+        return await asyncio.get_running_loop().run_in_executor(
             None, self._stop_worker, container_id, cluster_info, cluster_state
         )

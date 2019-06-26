@@ -38,6 +38,12 @@ class InProcessClusterManager(UnsafeLocalClusterManager):
         self.active_schedulers[cluster_info.cluster_name] = scheduler
         yield {}
 
+    async def cluster_status(self, cluster_info, cluster_state):
+        scheduler = self.active_schedulers.get(cluster_info.cluster_name)
+        if scheduler is None:
+            return False
+        return not scheduler.status.startswith("clos")
+
     async def stop_cluster(self, cluster_info, cluster_state):
         scheduler = self.active_schedulers.pop(cluster_info.cluster_name, None)
         if scheduler is None:
