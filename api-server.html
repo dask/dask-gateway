@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0.1.0+15.gbd7e5a6 documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0.1.0+16.g210ce7b documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -359,6 +359,15 @@ for the cluster to actually respond.</p>
 
 <dl class="attribute">
 <dt>
+<code class="sig-name descname">config c.LocalClusterManager.cluster_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
 <code class="sig-name descname">config c.LocalClusterManager.clusters_directory = Unicode('')</code></dt>
 <dd><p>The base directory for cluster working directories.</p>
 <p>A subdirectory will be created for each new cluster which will serve as
@@ -494,6 +503,15 @@ for the cluster to actually respond.</p>
 
 <dl class="attribute">
 <dt>
+<code class="sig-name descname">config c.UnsafeLocalClusterManager.cluster_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
 <code class="sig-name descname">config c.UnsafeLocalClusterManager.clusters_directory = Unicode('')</code></dt>
 <dd><p>The base directory for cluster working directories.</p>
 <p>A subdirectory will be created for each new cluster which will serve as
@@ -614,6 +632,14 @@ suffixes:</p>
 <dd><p>A cluster manager for deploying Dask on a YARN cluster.</p>
 <dl class="attribute">
 <dt>
+<code class="sig-name descname">config c.YarnClusterManager.application_client_cache_size = Int(10)</code></dt>
+<dd><p>The size of the cache for application clients.</p>
+<p>A larger cache will result in improved performance, but will also use
+more resources.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
 <code class="sig-name descname">config c.YarnClusterManager.cluster_connect_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
@@ -626,6 +652,15 @@ connecting to the gateway.</p>
 <dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
 <p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
 for the cluster to actually respond.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.YarnClusterManager.cluster_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -651,13 +686,14 @@ directory <code class="docutils literal notranslate"><span class="pre">local-nam
 specified as <code class="docutils literal notranslate"><span class="pre">skein.File</span></code> objects, or their <code class="docutils literal notranslate"><span class="pre">dict</span></code> equivalents.</p>
 <p>This can be used to distribute conda/virtual environments by
 configuring the following:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">YarnSpawner</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;hdfs:///path/to/archived/environment.tar.gz&#39;</span><span class="p">,</span>
         <span class="s1">&#39;visibility&#39;</span><span class="p">:</span> <span class="s1">&#39;public&#39;</span>
     <span class="p">}</span>
 <span class="p">}</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnSpawner</span><span class="o">.</span><span class="n">prologue</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
 </pre></div>
 </div>
 <p>These archives are usually created using either <code class="docutils literal notranslate"><span class="pre">conda-pack</span></code> or
@@ -763,7 +799,7 @@ suffixes:</p>
 <h4>KubeClusterManager<a class="headerlink" href="#kubeclustermanager" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="dask_gateway_server.managers.kubernetes.KubeClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.kubernetes.</code><code class="sig-name descname">KubeClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.kubernetes.KubeClusterManager" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.kubernetes.</code><code class="sig-name descname">KubeClusterManager</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.kubernetes.KubeClusterManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>A cluster manager for deploying Dask on a Kubernetes cluster.</p>
 <dl class="attribute">
 <dt>
@@ -779,6 +815,15 @@ connecting to the gateway.</p>
 <dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
 <p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
 for the cluster to actually respond.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.cluster_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -950,7 +995,7 @@ container. Default is the working directory defined in the Dockerfile.</p>
 <h4>PBSClusterManager<a class="headerlink" href="#pbsclustermanager" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.jobqueue.pbs.</code><code class="sig-name descname">PBSClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.jobqueue.pbs.</code><code class="sig-name descname">PBSClusterManager</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>A cluster manager for deploying Dask on a PBS cluster.</p>
 <dl class="attribute">
 <dt>
@@ -982,6 +1027,15 @@ for the cluster to actually respond.</p>
 
 <dl class="attribute">
 <dt>
+<code class="sig-name descname">config c.PBSClusterManager.cluster_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
 <code class="sig-name descname">config c.PBSClusterManager.dask_gateway_jobqueue_launcher = Unicode('')</code></dt>
 <dd><p>The path to the dask-gateway-jobqueue-launcher executable</p>
 </dd></dl>
@@ -997,6 +1051,14 @@ for the cluster to actually respond.</p>
 <code class="sig-name descname">config c.PBSClusterManager.gateway_hostname = Unicode('')</code></dt>
 <dd><p>The hostname of the node running the gateway. Used for referencing the
 local host in PBS directives.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.job_status_period = Float(0.0)</code></dt>
+<dd><p>Time (in seconds) between job status checks.</p>
+<p>This should be &lt;= <code class="docutils literal notranslate"><span class="pre">cluster_status_period</span></code>. The default is
+<code class="docutils literal notranslate"><span class="pre">cluster_status_period</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1071,12 +1133,6 @@ will be removed.</p>
 <dt>
 <code class="sig-name descname">config c.PBSClusterManager.status_command = Unicode('')</code></dt>
 <dd><p>The path to the job status command</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.status_poll_interval = Float(0.5)</code></dt>
-<dd><p>The interval (in seconds) in which to poll for job statuses.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1157,7 +1213,7 @@ suffixes:</p>
 <h4>SlurmClusterManager<a class="headerlink" href="#slurmclustermanager" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.jobqueue.slurm.</code><code class="sig-name descname">SlurmClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.jobqueue.slurm.</code><code class="sig-name descname">SlurmClusterManager</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>A cluster manager for deploying Dask on a Slurm cluster.</p>
 <dl class="attribute">
 <dt>
@@ -1189,6 +1245,15 @@ for the cluster to actually respond.</p>
 
 <dl class="attribute">
 <dt>
+<code class="sig-name descname">config c.SlurmClusterManager.cluster_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
 <code class="sig-name descname">config c.SlurmClusterManager.dask_gateway_jobqueue_launcher = Unicode('')</code></dt>
 <dd><p>The path to the dask-gateway-jobqueue-launcher executable</p>
 </dd></dl>
@@ -1197,6 +1262,14 @@ for the cluster to actually respond.</p>
 <dt>
 <code class="sig-name descname">config c.SlurmClusterManager.environment = Dict('')</code></dt>
 <dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.job_status_period = Float(0.0)</code></dt>
+<dd><p>Time (in seconds) between job status checks.</p>
+<p>This should be &lt;= <code class="docutils literal notranslate"><span class="pre">cluster_status_period</span></code>. The default is
+<code class="docutils literal notranslate"><span class="pre">cluster_status_period</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1260,12 +1333,6 @@ will be removed.</p>
 <dt>
 <code class="sig-name descname">config c.SlurmClusterManager.status_command = Unicode('')</code></dt>
 <dd><p>The path to the job status command</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.status_poll_interval = Float(0.5)</code></dt>
-<dd><p>The interval (in seconds) in which to poll for job statuses.</p>
 </dd></dl>
 
 <dl class="attribute">
