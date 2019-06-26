@@ -34,7 +34,7 @@ jobs:
               go test
               popd
 
-        - if: (commit_message !~ skip-tests) AND (commit_message ~= test-yarn)
+        - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-yarn))
           env:
             - YARN-TESTS=true
           services:
@@ -46,7 +46,7 @@ jobs:
           script:
             - docker exec master /working/continuous_integration/docker/hadoop/script.sh
 
-        - if: (commit_message !~ skip-tests) AND (commit_message ~= test-kube)
+        - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-kube))
           env:
             - KUBERNETES-TESTS=true
           services:
@@ -59,7 +59,7 @@ jobs:
           script:
             - ./continuous_integration/kubernetes/script.sh
 
-        - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-jobqueue) OR (commit_message ~= test-pbs))
+        - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-jobqueue) OR (commit_message ~= test-pbs))
           env:
             - PBS-TESTS=true
           services:
@@ -71,7 +71,7 @@ jobs:
           script:
             - docker exec -u dask pbs /working/continuous_integration/docker/pbs/script.sh
 
-        - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-jobqueue) OR (commit_message ~= test-slurm))
+        - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-jobqueue) OR (commit_message ~= test-slurm))
           env:
             - SLURM-TESTS=true
           services:
