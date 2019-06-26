@@ -260,7 +260,15 @@ class ClusterManagerTests(object):
         # Stop the cluster
         await manager.stop_cluster(cluster.info, cluster.state)
         assert self.cluster_is_stopped(manager, cluster.info, cluster.state)
-        assert not await self.cluster_status(manager, cluster)
+
+        # Check cluster status, allowing for a period between stopping and
+        # status update for backends that cache their statuses
+        for i in range(20):
+            if not await self.cluster_status(manager, cluster):
+                break
+            await asyncio.sleep(0.25)
+        else:
+            assert False, "cluster_status didn't return False in time"
 
         gateway.mark_cluster_stopped(cluster.name)
 

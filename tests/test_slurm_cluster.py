@@ -80,6 +80,7 @@ class TestSlurmClusterManager(ClusterManagerTests):
             scheduler_cores=1,
             worker_cores=1,
             cluster_start_timeout=30,
+            job_status_period=0.5,
             **kwargs,
         )
 
