@@ -6,7 +6,7 @@ skein = pytest.importorskip("skein")
 if not os.environ.get("TEST_DASK_GATEWAY_YARN"):
     pytest.skip("Not running YARN tests", allow_module_level=True)
 
-from dask_gateway_server.managers.yarn import YarnClusterManager
+from dask_gateway_server.managers.yarn import YarnClusterManager, LRUCache
 
 from .utils import ClusterManagerTests
 
@@ -88,7 +88,39 @@ class TestYarnClusterManager(ClusterManagerTests):
         return container_id in [c.id for c in active]
 
     def num_start_cluster_stages(self):
-        return 2
+        return 1
 
     def num_start_worker_stages(self):
         return 1
+
+
+def test_lru_cache():
+    cache = LRUCache(3)
+
+    # Item not in cache returns None
+    assert cache.get("missing") is None
+
+    # Fill cache
+    for v, k in enumerate("abc"):
+        cache.put(k, v)
+    assert len(cache.cache) == 3
+
+    # Add new item, oldest evicted
+    cache.put("d", 3)
+    assert len(cache.cache) == 3
+    assert cache.get("a") is None
+
+    # Getting an item moves it to end
+    assert list(cache.cache) == ["b", "c", "d"]
+    assert cache.get("b") == 1
+    assert list(cache.cache) == ["c", "d", "b"]
+    assert cache.get("c") == 2
+    assert list(cache.cache) == ["d", "b", "c"]
+
+    # Discard an item removes it
+    cache.discard("d")
+    assert list(cache.cache) == ["b", "c"]
+
+    # Discard again is a no-op
+    cache.discard("d")
+    assert list(cache.cache) == ["b", "c"]

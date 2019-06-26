@@ -36,6 +36,18 @@ class ClusterManager(LoggingConfigurable):
         config=True,
     )
 
+    cluster_status_period = Float(
+        30,
+        help="""
+        Time (in seconds) between cluster status checks.
+
+        A smaller period will detect failed clusters sooner, but will use more
+        resources. A larger period will provide slower feedback in the presence
+        of failures.
+        """,
+        config=True,
+    )
+
     worker_start_timeout = Float(
         60,
         help="""
@@ -170,6 +182,27 @@ class ClusterManager(LoggingConfigurable):
             multiple stages, can iteratively yield state updates to be
             checkpointed. If an error occurs at any time, the last yielded
             state will be used when calling ``stop_cluster``.
+        """
+        raise NotImplementedError
+
+    async def cluster_status(self, cluster_info, cluster_state):
+        """Check the status of a cluster.
+
+        Called periodically to check the status of a cluster.
+
+        Parameters
+        ----------
+        cluster_info : ClusterInfo
+            Information about the cluster.
+        cluster_state : dict
+            Any additional state returned from ``start_cluster``.
+
+        Returns
+        -------
+        running : bool
+            Whether the cluster is running.
+        msg : str, optional
+            If not running, an optional message describing the exit condition.
         """
         raise NotImplementedError
 

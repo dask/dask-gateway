@@ -157,15 +157,13 @@ class PBSClusterManager(JobQueueClusterManager):
 
     def parse_job_states(self, stdout):
         lines = stdout.splitlines()[2:]
-        running = []
-        failed = []
+
+        finished = {}
 
         for l in lines:
             parts = l.split()
             job_id = parts[0]
             status = parts[4]
-            if status == "R":
-                running.append(job_id)
-            elif status not in ("Q", "H"):
-                failed.append(job_id)
-        return running, failed
+            if status not in ("R", "Q", "H"):
+                finished[job_id] = status
+        return finished

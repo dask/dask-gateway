@@ -3,7 +3,6 @@ import json
 import os
 import pwd
 import shutil
-from weakref import WeakValueDictionary
 
 from traitlets import Float, Unicode, default
 
@@ -41,11 +40,19 @@ class JobQueueClusterManager(ClusterManager):
         config=True,
     )
 
-    status_poll_interval = Float(
-        0.5,
-        help="The interval (in seconds) in which to poll for job statuses.",
+    job_status_period = Float(
+        help="""
+        Time (in seconds) between job status checks.
+
+        This should be <= ``cluster_status_period``. The default is
+        ``cluster_status_period``.
+        """,
         config=True,
     )
+
+    @default("job_status_period")
+    def _default_job_status_period(self):
+        return self.cluster_status_period
 
     # The following fields are configurable only for just-in-case reasons. The
     # defaults should be sufficient for most users.
@@ -66,6 +73,16 @@ class JobQueueClusterManager(ClusterManager):
     cancel_command = Unicode(help="The path to the job cancel command", config=True)
 
     status_command = Unicode(help="The path to the job status command", config=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Initialize the background status task
+        self.jobs_to_track = set()
+        self.job_states = {}
+        self.job_tracker = self.task_pool.create_background_task(
+            self.job_state_tracker()
+        )
 
     def get_worker_args(self):
         return [
@@ -215,56 +232,56 @@ class JobQueueClusterManager(ClusterManager):
                         stderr,
                     )
 
-                running, failed = self.parse_job_states(stdout)
+                finished_states = self.parse_job_states(stdout)
+                self.job_states.update(finished_states)
+                self.jobs_to_track.difference_update(finished_states)
 
-                for job_id in running:
-                    fut = self.jobs_to_track.pop(job_id, None)
-                    if fut:
-                        fut.set_result(True)
-                for job_id in failed:
-                    fut = self.jobs_to_track.pop(job_id, None)
-                    if fut:
-                        fut.set_result(False)
+            await asyncio.sleep(self.job_status_period)
 
-            await asyncio.sleep(self.status_poll_interval)
+    def track_job(self, job_id):
+        self.jobs_to_track.add(job_id)
+        # Indicate present but not finished. Stopped ids are deleted once their
+        # state is retrieved - missing records are always considered stopped.
+        self.job_states[job_id] = None
 
-    def is_job_running(self, job_id):
-        if not hasattr(self, "job_tracker"):
-            self.jobs_to_track = WeakValueDictionary()
-            self.job_tracker = self.task_pool.create_background_task(
-                self.job_state_tracker()
-            )
+    def untrack_job(self, job_id):
+        self.jobs_to_track.discard(job_id)
 
-        if job_id not in self.jobs_to_track:
-            loop = asyncio.get_running_loop()
-            fut = self.jobs_to_track[job_id] = loop.create_future()
-        else:
-            fut = self.jobs_to_track[job_id]
-        return fut
+    def discard_job_state(self, job_id):
+        self.job_states.pop(job_id, None)
+
+    async def cluster_status(self, cluster_info, cluster_state):
+        self.log.debug("cluster_status for %s", cluster_info.cluster_name)
+
+        job_id = cluster_state.get("job_id")
+        if job_id is None:
+            return False, None
+
+        if job_id in self.job_states:
+            state = self.job_states[job_id]
+            if state is not None:
+                self.untrack_job(job_id)
+                return False, "Job %s completed with state %s" % (job_id, state)
+            return True, None
+        # Job already deleted from tracker
+        return False, None
 
     async def start_cluster(self, cluster_info):
         job_id = await self.start_job(cluster_info)
         yield {"job_id": job_id}
-        if not await self.is_job_running(job_id):
-            raise Exception(
-                "Job %s for cluster %s failed, see logs for more information"
-                % (job_id, cluster_info.cluster_name)
-            )
+        self.track_job(job_id)
 
     async def stop_cluster(self, cluster_info, cluster_state):
         job_id = cluster_state.get("job_id")
         if job_id is None:
             return
+        self.untrack_job(job_id)
+        self.discard_job_state(job_id)
         await self.stop_job(cluster_info, job_id)
 
     async def start_worker(self, worker_name, cluster_info, cluster_state):
         job_id = await self.start_job(cluster_info, worker_name=worker_name)
         yield {"job_id": job_id}
-        if not await self.is_job_running(job_id):
-            raise Exception(
-                "Job %s for worker %s failed, see logs for more information"
-                % (job_id, worker_name)
-            )
 
     async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
         job_id = worker_state.get("job_id")

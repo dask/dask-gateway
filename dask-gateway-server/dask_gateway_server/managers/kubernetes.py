@@ -1,10 +1,14 @@
 import asyncio
 import os
+import threading
+import time
 
-from traitlets import Float, List, Dict, Unicode, Instance, default
+from traitlets import Int, Float, List, Dict, Unicode, Instance, default
+from traitlets.config import LoggingConfigurable
 
 import kubernetes.client
 import kubernetes.config
+import kubernetes.watch
 from kubernetes.client.models import (
     V1Container,
     V1EnvVar,
@@ -18,6 +22,7 @@ from kubernetes.client.models import (
     V1VolumeMount,
     V1SecretVolumeSource,
 )
+from urllib3.exceptions import ReadTimeoutError
 
 from .base import ClusterManager
 from .. import __version__ as VERSION
@@ -36,6 +41,120 @@ def configure_kubernetes_clients():
         kubernetes.config.load_incluster_config()
     except kubernetes.config.ConfigException:
         kubernetes.config.load_kube_config()
+
+
+class PodReflector(LoggingConfigurable):
+    request_timeout = Float(
+        60,
+        help="""
+        Network timeout for kubernetes watch.
+
+        Trigger watch reconnect when a given request is taking too long,
+        which can indicate network issues.
+        """,
+        config=True,
+    )
+
+    timeout_seconds = Int(
+        10,
+        help="""
+        Timeout (in seconds) for kubernetes watch.
+
+        Trigger watch reconnect when no watch event has been received.
+        This will cause a full reload of the currently existing resources
+        from the API server.
+        """,
+        config=True,
+    )
+
+    restart_seconds = Float(
+        30, help="Maximum time (in seconds) before restarting a watch.", config=True
+    )
+
+    kube_client = Instance(kubernetes.client.CoreV1Api)
+    label_selector = Unicode()
+    namespace = Unicode()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.first_load_future = asyncio.get_running_loop().create_future()
+        self.stopped = False
+
+    def __del__(self):
+        self.stop()
+
+    def _list_and_update(self):
+        initial_resources = self.kube_client.list_namespaced_pod(
+            self.namespace,
+            label_selector=self.label_selector,
+            _request_timeout=self.request_timeout,
+        )
+        self.pods = {p.metadata.name: p for p in initial_resources.items}
+        # return the resource version so we can hook up a watch
+        return initial_resources.metadata.resource_version
+
+    def _watch_and_update(self):
+        self.log.info("Starting pod watcher...")
+        cur_delay = 0.1
+        while not self.stopped:
+            start = time.monotonic()
+            watch = kubernetes.watch.Watch()
+            try:
+                resource_version = self._list_and_update()
+                if not self.first_load_future.done():
+                    # signal that we've loaded our initial data
+                    self.first_load_future.set_result(None)
+                kwargs = {
+                    "namespace": self.namespace,
+                    "label_selector": self.label_selector,
+                    "resource_version": resource_version,
+                    "_request_timeout": self.request_timeout,
+                    "timeout_seconds": self.timeout_seconds,
+                }
+                for ev in watch.stream(self.kube_client.list_namespaced_pod, **kwargs):
+                    cur_delay = 0.1
+                    pod = ev["object"]
+                    if ev["type"] == "DELETED":
+                        self.pods.pop(pod.metadata.name, None)
+                    else:
+                        self.pods[pod.metadata.name] = pod
+                    if self.stopped:
+                        # Check in inner loop to provide faster shutdown
+                        break
+                    watch_duration = time.monotonic() - start
+                    if watch_duration >= self.restart_seconds:
+                        self.log.debug(
+                            "Restarting pod watcher after %.1f seconds", watch_duration
+                        )
+                        break
+            except ReadTimeoutError:
+                # network read time out, just continue and restart the watch
+                # this could be due to a network problem or just low activity
+                self.log.warning("Read timeout watching pods, reconnecting")
+                continue
+            except Exception as exc:
+                if cur_delay < 30:
+                    cur_delay = cur_delay * 2
+                self.log.error(
+                    "Error when watching pods, retrying in %.1f seconds...",
+                    cur_delay,
+                    exc_info=exc,
+                )
+                time.sleep(cur_delay)
+                continue
+            else:
+                # no events on watch, reconnect
+                self.log.debug("Pod watcher timeout, restarting")
+            finally:
+                watch.stop()
+        self.log.debug("Pod watcher stopped")
+
+    def start(self):
+        self.watch_thread = threading.Thread(target=self._watch_and_update, daemon=True)
+        self.watch_thread.start()
+
+    def stop(self):
+        self.stopped = True
 
 
 class KubeClusterManager(ClusterManager):
@@ -206,6 +325,16 @@ class KubeClusterManager(ClusterManager):
         configure_kubernetes_clients()
         return kubernetes.client.CoreV1Api()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pod_reflector = PodReflector(
+            parent=self,
+            kube_client=self.kube_client,
+            namespace=self.namespace,
+            label_selector=self.pod_label_selector,
+        )
+        self.pod_reflector.start()
+
     def get_tls_paths(self, cluster_info):
         """Get the absolute paths to the tls cert and key files."""
         return "/etc/dask-credentials/dask.crt", "/etc/dask-credentials/dask.pem"
@@ -225,6 +354,11 @@ class KubeClusterManager(ClusterManager):
     def scheduler_command(self):
         """The full command (with args) to launch a dask scheduler"""
         return [self.scheduler_cmd]
+
+    @property
+    def pod_label_selector(self):
+        """A label selector for all pods started by dask-gateway"""
+        return ",".join("%s=%s" % (k, v) for k, v in self.common_labels.items())
 
     def get_labels_for(self, cluster_info, component, worker_name=None):
         labels = self.common_labels.copy()
@@ -347,6 +481,33 @@ class KubeClusterManager(ClusterManager):
         )
 
         yield {"secret_name": secret_name, "pod_name": pod.metadata.name}
+
+    async def cluster_status(self, cluster_info, cluster_state):
+        pod_name = cluster_state.get("pod_name")
+        if pod_name is None:
+            return
+
+        # Ensure initial data already loaded
+        if not self.pod_reflector.first_load_future.done():
+            await self.pod_reflector.first_load_future
+
+        pod = self.pod_reflector.pods.get(pod_name)
+        if pod is not None:
+            if pod.status.phase == "Pending":
+                return True
+            if pod.status.container_statuses is None:
+                return False
+            for c in pod.status.container_statuses:
+                if c.name == "dask-gateway-scheduler":
+                    if c.state.terminated:
+                        msg = (
+                            "Container stopped with exit code %d"
+                            % c.state.terminated.exit_code
+                        )
+                        return False, msg
+                    return True
+        # pod doesn't exist or has been deleted
+        return False, ("Pod %s already deleted" % pod_name)
 
     async def stop_cluster(self, cluster_info, cluster_state):
         loop = asyncio.get_running_loop()

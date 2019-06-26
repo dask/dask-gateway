@@ -4,6 +4,7 @@ import signal
 
 import pytest
 from cryptography.fernet import Fernet
+from traitlets.config import Config
 
 from dask_gateway import Gateway
 from dask_gateway_server.app import DaskGateway
@@ -44,6 +45,34 @@ class FailStartClusterManager(ClusterManager):
 
     async def stop_cluster(self, cluster_info, cluster_state):
         self.stop_cluster_state = cluster_state
+
+
+class DelayedFailureClusterManager(InProcessClusterManager):
+    fail_after = 0.5
+
+    async def start_cluster(self, cluster_info):
+        # Initiate state
+        loop = asyncio.get_running_loop()
+        self.failed = loop.create_future()
+        self.stop_cluster_called = loop.create_future()
+        # Start the cluster
+        async for state in super().start_cluster(cluster_info):
+            yield state
+        # Launch a task to kill the cluster soon
+        self.task_pool.create_task(self.delay_fail_cluster())
+
+    async def delay_fail_cluster(self):
+        await asyncio.sleep(self.fail_after)
+        self.failed.set_result(True)
+
+    async def cluster_status(self, cluster_info, cluster_state):
+        if self.failed.done():
+            return False
+        return await super().cluster_status(cluster_info, cluster_state)
+
+    async def stop_cluster(self, cluster_info, cluster_state):
+        await super().stop_cluster(cluster_info, cluster_state)
+        self.stop_cluster_called.set_result(True)
 
 
 class SlowWorkerStartClusterManager(InProcessClusterManager):
@@ -220,6 +249,29 @@ async def test_failing_cluster_start(tmpdir, fail_stage):
             # Stop cluster called with last reported state
             res = {} if fail_stage == 0 else {"i": fail_stage - 1}
             assert gateway_proc.cluster_manager.stop_cluster_state == res
+
+
+@pytest.mark.asyncio
+async def test_cluster_fails_after_starting(tmpdir):
+    config = Config()
+    config.DaskGateway.cluster_manager_class = DelayedFailureClusterManager
+    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DelayedFailureClusterManager.cluster_status_period = 0.25
+
+    async with temp_gateway(config=config) as gateway_proc:
+        async with Gateway(
+            address=gateway_proc.public_url, asynchronous=True
+        ) as gateway:
+
+            # Cluster starts successfully
+            cluster_id = await gateway.submit()
+            await gateway.connect(cluster_id)
+
+            # Wait for cluster to fail while running
+            await asyncio.wait_for(gateway_proc.cluster_manager.failed, 3)
+
+            # Stop cluster called to cleanup after failure
+            await asyncio.wait_for(gateway_proc.cluster_manager.stop_cluster_called, 3)
 
 
 @pytest.mark.asyncio
