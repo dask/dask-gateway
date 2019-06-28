@@ -240,6 +240,17 @@ class ClusterManagerTests(object):
             res = out
         return res
 
+    async def worker_status(self, manager, worker, cluster):
+        out = await manager.worker_status(
+            worker.name, worker.state, cluster.info, cluster.state
+        )
+        if isinstance(out, tuple):
+            res, msg = out
+            assert isinstance(msg, str) or msg is None
+        else:
+            res = out
+        return res
+
     @pytest.mark.asyncio
     @gateway_test
     async def test_start_stop_cluster(self, gateway, manager):
@@ -321,6 +332,8 @@ class ClusterManagerTests(object):
         # Create a new worker
         worker = gateway.new_worker(cluster.name)
 
+        assert not await self.worker_status(manager, worker, cluster)
+
         # Start the worker
         async for state in manager.start_worker(
             worker.name, cluster.info, cluster.state
@@ -331,6 +344,11 @@ class ClusterManagerTests(object):
         await asyncio.wait_for(worker._connect_future, manager.worker_connect_timeout)
         assert self.worker_is_running(
             manager, cluster.info, cluster.state, worker.state
+        )
+        assert await self.worker_status(manager, worker, cluster)
+        # Run the callback
+        manager.on_worker_running(
+            worker.name, worker.state, cluster.info, cluster.state
         )
 
         # Stop the worker
@@ -363,6 +381,8 @@ class ClusterManagerTests(object):
         # Create a new worker
         worker = gateway.new_worker(cluster.name)
 
+        assert not await self.worker_status(manager, worker, cluster)
+
         # Start the worker
         start_task = manager.start_worker(worker.name, cluster.info, cluster.state)
         if fail_stage > 0:
@@ -375,6 +395,9 @@ class ClusterManagerTests(object):
 
         # Cleanup cancelled async generator
         await start_task.athrow(GeneratorExit)
+
+        # Assert not running
+        assert not await self.worker_status(manager, worker, cluster)
 
         # Stop the worker
         await manager.stop_worker(

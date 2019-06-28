@@ -67,6 +67,18 @@ class ClusterManager(LoggingConfigurable):
         config=True,
     )
 
+    worker_status_period = Float(
+        30,
+        help="""
+        Time (in seconds) between worker status checks.
+
+        A smaller period will detect failed workers sooner, but will use more
+        resources. A larger period will provide slower feedback in the presence
+        of failures.
+        """,
+        config=True,
+    )
+
     worker_memory = MemoryLimit(
         "2 G",
         help="""
@@ -242,6 +254,53 @@ class ClusterManager(LoggingConfigurable):
             state will be used when calling ``stop_worker``.
         """
         raise NotImplementedError
+
+    async def worker_status(
+        self, worker_name, worker_state, cluster_info, cluster_state
+    ):
+        """Check the status of a worker.
+
+        Called periodically to check the status of a worker. Once a worker is
+        running this method will no longer be called.
+
+        Parameters
+        ---------
+        worker_name : str
+            The worker name.
+        worker_state : dict
+            Any additional worker state returned from ``start_worker``.
+        cluster_info : ClusterInfo
+            Information about the cluster.
+        cluster_state : dict
+            Any additional state returned from ``start_cluster``.
+
+        Returns
+        -------
+        running : bool
+            Whether the worker is running.
+        msg : str, optional
+            If not running, an optional message describing the exit condition.
+        """
+        raise NotImplementedError
+
+    def on_worker_running(self, worker_name, worker_state, cluster_info, cluster_state):
+        """Called when a worker is marked as running.
+
+        Optional callback, useful for cluster managers that track worker state
+        in background tasks.
+
+        Parameters
+        ---------
+        worker_name : str
+            The worker name.
+        worker_state : dict
+            Any additional worker state returned from ``start_worker``.
+        cluster_info : ClusterInfo
+            Information about the cluster.
+        cluster_state : dict
+            Any additional state returned from ``start_cluster``.
+        """
+        pass
 
     async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
         """Remove a worker.

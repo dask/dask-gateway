@@ -482,8 +482,7 @@ class KubeClusterManager(ClusterManager):
 
         yield {"secret_name": secret_name, "pod_name": pod.metadata.name}
 
-    async def cluster_status(self, cluster_info, cluster_state):
-        pod_name = cluster_state.get("pod_name")
+    async def pod_status(self, pod_name, container_name):
         if pod_name is None:
             return
 
@@ -498,7 +497,7 @@ class KubeClusterManager(ClusterManager):
             if pod.status.container_statuses is None:
                 return False
             for c in pod.status.container_statuses:
-                if c.name == "dask-gateway-scheduler":
+                if c.name == container_name:
                     if c.state.terminated:
                         msg = (
                             "Container stopped with exit code %d"
@@ -508,6 +507,18 @@ class KubeClusterManager(ClusterManager):
                     return True
         # pod doesn't exist or has been deleted
         return False, ("Pod %s already deleted" % pod_name)
+
+    async def cluster_status(self, cluster_info, cluster_state):
+        return await self.pod_status(
+            cluster_state.get("pod_name"), "dask-gateway-scheduler"
+        )
+
+    async def worker_status(
+        self, worker_name, worker_state, cluster_info, cluster_state
+    ):
+        return await self.pod_status(
+            worker_state.get("pod_name"), "dask-gateway-worker"
+        )
 
     async def stop_cluster(self, cluster_info, cluster_state):
         loop = asyncio.get_running_loop()

@@ -61,6 +61,14 @@ class InProcessClusterManager(UnsafeLocalClusterManager):
         self.active_workers[worker_name] = worker
         yield {}
 
+    async def worker_status(
+        self, worker_name, worker_state, cluster_info, cluster_state
+    ):
+        worker = self.active_workers.get(worker_name)
+        if worker is None:
+            return False
+        return not worker.status.startswith("clos")
+
     async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
         worker = self.active_workers.pop(worker_name, None)
         if worker is None:

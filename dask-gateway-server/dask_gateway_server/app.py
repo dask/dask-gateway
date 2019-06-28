@@ -487,7 +487,7 @@ class DaskGateway(Application):
             for c, r in zip(active_clusters, results):
                 if isinstance(r, Exception):
                     self.log.error(
-                        "Error while checking status of cluster %d", c, exc_info=r
+                        "Error while checking status of cluster %s", c.name, exc_info=r
                     )
                 elif r:
                     n_clusters += 1
@@ -702,7 +702,7 @@ class DaskGateway(Application):
             )
         except asyncio.TimeoutError:
             self.log.warning(
-                "Cluster %s startup timed out after %d seconds",
+                "Cluster %s startup timed out after %.1f seconds",
                 cluster.name,
                 self.cluster_manager.cluster_start_timeout,
             )
@@ -728,7 +728,7 @@ class DaskGateway(Application):
             scheduler_address, dashboard_address, api_address = addresses
         except asyncio.TimeoutError:
             self.log.warning(
-                "Cluster %s failed to connect after %d seconds",
+                "Cluster %s failed to connect after %.1f seconds",
                 cluster.name,
                 self.cluster_manager.cluster_connect_timeout,
             )
@@ -804,7 +804,10 @@ class DaskGateway(Application):
             await asyncio.gather(*tasks, return_exceptions=True)
 
         # Shutdown the cluster
-        await self.cluster_manager.stop_cluster(cluster.info, cluster.state)
+        try:
+            await self.cluster_manager.stop_cluster(cluster.info, cluster.state)
+        except Exception as exc:
+            self.log.error("Failed to shutdown cluster %s", cluster.name, exc_info=exc)
 
         # Update the cluster status
         status = ClusterStatus.FAILED if failed else ClusterStatus.STOPPED
@@ -853,6 +856,24 @@ class DaskGateway(Application):
         # Move worker to started
         self.db.update_worker(worker, status=WorkerStatus.STARTED)
 
+    async def _worker_status_monitor(self, cluster, worker):
+        while True:
+            try:
+                res = await self.cluster_manager.worker_status(
+                    worker.name, worker.state, cluster.info, cluster.state
+                )
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                self.log.error(
+                    "Error while checking worker %s status", worker.name, exc_info=exc
+                )
+            else:
+                running, msg = res if isinstance(res, tuple) else (res, None)
+                if not running:
+                    return msg
+            await asyncio.sleep(self.cluster_manager.worker_status_period)
+
     async def start_worker(self, cluster, worker):
         try:
             await asyncio.wait_for(
@@ -861,7 +882,7 @@ class DaskGateway(Application):
             )
         except asyncio.TimeoutError:
             self.log.warning(
-                "Worker %s startup timed out after %d seconds",
+                "Worker %s startup timed out after %.1f seconds",
                 worker.name,
                 self.cluster_manager.worker_start_timeout,
             )
@@ -875,18 +896,42 @@ class DaskGateway(Application):
 
         self.log.debug("Worker %s has started, waiting for connection", worker.name)
 
+        # Wait for the worker to connect, periodically checking its status
+        worker_status_monitor = asyncio.ensure_future(
+            self._worker_status_monitor(cluster, worker)
+        )
+
         try:
-            await asyncio.wait_for(
-                worker._connect_future,
+            done, pending = await asyncio.wait(
+                (worker_status_monitor, worker._connect_future),
                 timeout=self.cluster_manager.worker_connect_timeout,
+                return_when=asyncio.FIRST_COMPLETED,
             )
-        except asyncio.TimeoutError:
-            self.log.warning(
-                "Worker %s failed to connect after %d seconds",
-                worker.name,
-                self.cluster_manager.worker_connect_timeout,
-            )
+        except asyncio.CancelledError:
+            # Start cancelled, cancel the status monitor then reraise
+            worker_status_monitor.cancel()
+            raise
+
+        if worker_status_monitor in done:
+            # Failure occurred
+            msg = worker_status_monitor.result()
+            if msg:
+                self.log.warning(
+                    "Worker %s failed during startup: %s", worker.name, msg
+                )
+            else:
+                self.log.warning("Worker %s failed during startup", worker.name)
             return False
+        else:
+            worker_status_monitor.cancel()
+            if not done:
+                # Timeout
+                self.log.warning(
+                    "Worker %s failed to connect after %.1f seconds",
+                    worker.name,
+                    self.cluster_manager.worker_connect_timeout,
+                )
+                return False
 
         self.log.debug("Worker %s connected to cluster %s", worker.name, cluster.name)
 
@@ -897,6 +942,9 @@ class DaskGateway(Application):
 
     def mark_worker_running(self, cluster, worker):
         if worker.status != WorkerStatus.RUNNING:
+            self.cluster_manager.on_worker_running(
+                worker.name, worker.state, cluster.info, cluster.state
+            )
             self.db.update_worker(worker, status=WorkerStatus.RUNNING)
             cluster.pending.discard(worker.name)
 
@@ -935,7 +983,12 @@ class DaskGateway(Application):
                 worker.name, worker.state, cluster.info, cluster.state
             )
         except Exception as exc:
-            self.log.error("Failed to shutdown worker %s for cluster %s", exc_info=exc)
+            self.log.error(
+                "Failed to shutdown worker %s for cluster %s",
+                worker.name,
+                cluster.name,
+                exc_info=exc,
+            )
 
         # Update the worker status
         status = WorkerStatus.FAILED if failed else WorkerStatus.STOPPED

@@ -367,7 +367,7 @@ async def start_worker(
 
     worker = typ(
         scheduler,
-        ncores=nthreads,
+        nthreads=nthreads,
         loop=loop,
         memory_limit=memory_limit,
         security=security,
