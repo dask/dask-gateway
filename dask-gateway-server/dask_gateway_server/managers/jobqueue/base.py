@@ -250,21 +250,32 @@ class JobQueueClusterManager(ClusterManager):
     def discard_job_state(self, job_id):
         self.job_states.pop(job_id, None)
 
-    async def cluster_status(self, cluster_info, cluster_state):
-        self.log.debug("cluster_status for %s", cluster_info.cluster_name)
-
-        job_id = cluster_state.get("job_id")
+    def job_status(self, job_id):
         if job_id is None:
             return False, None
 
         if job_id in self.job_states:
             state = self.job_states[job_id]
             if state is not None:
-                self.untrack_job(job_id)
                 return False, "Job %s completed with state %s" % (job_id, state)
             return True, None
         # Job already deleted from tracker
         return False, None
+
+    async def cluster_status(self, cluster_info, cluster_state):
+        return self.job_status(cluster_state.get("job_id"))
+
+    async def worker_status(
+        self, worker_name, worker_state, cluster_info, cluster_state
+    ):
+        return self.job_status(worker_state.get("job_id"))
+
+    def on_worker_running(self, worker_name, worker_state, cluster_info, cluster_state):
+        job_id = worker_state.get("job_id")
+        if job_id is None:
+            return
+        self.untrack_job(job_id)
+        self.discard_job_state(job_id)
 
     async def start_cluster(self, cluster_info):
         job_id = await self.start_job(cluster_info)
@@ -282,9 +293,12 @@ class JobQueueClusterManager(ClusterManager):
     async def start_worker(self, worker_name, cluster_info, cluster_state):
         job_id = await self.start_job(cluster_info, worker_name=worker_name)
         yield {"job_id": job_id}
+        self.track_job(job_id)
 
     async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
         job_id = worker_state.get("job_id")
         if job_id is None:
             return
+        self.untrack_job(job_id)
+        self.discard_job_state(job_id)
         await self.stop_job(cluster_info, job_id, worker_name=worker_name)

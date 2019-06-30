@@ -53,7 +53,6 @@ class TestKubeClusterManager(ClusterManagerTests):
             worker_memory="256M",
             scheduler_cores=0.1,
             worker_cores=0.1,
-            cluster_start_timeout=30,
             **kwargs,
         )
 

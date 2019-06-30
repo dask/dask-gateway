@@ -5,16 +5,18 @@ import json
 import logging
 import os
 import sys
+from distutils.version import LooseVersion
 from urllib.parse import urlparse, quote
 
 from tornado import gen, web
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.ioloop import IOLoop, TimeoutError
+
+import distributed
 from distributed import Scheduler, Worker, Nanny
 from distributed.security import Security
 from distributed.utils import ignoring
 from distributed.cli.utils import install_signal_handlers
-
 from distributed.proctitle import (
     enable_proctitle_on_children,
     enable_proctitle_on_current,
@@ -365,14 +367,19 @@ async def start_worker(
 
     typ = Nanny if nanny else Worker
 
+    if LooseVersion(distributed.__version__) >= "2.0.0":
+        kwargs = {"nthreads": nthreads}
+    else:
+        kwargs = {"ncores": nthreads}
+
     worker = typ(
         scheduler,
-        ncores=nthreads,
         loop=loop,
         memory_limit=memory_limit,
         security=security,
         name=worker_name,
         local_dir=local_dir,
+        **kwargs,
     )
 
     if nanny:

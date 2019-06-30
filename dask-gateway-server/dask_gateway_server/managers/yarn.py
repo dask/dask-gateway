@@ -1,12 +1,13 @@
 import asyncio
 import os
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from contextlib import contextmanager
 
 import skein
-from traitlets import Unicode, Dict, Integer, Instance, default
+from traitlets import Unicode, Dict, Integer, Float, Instance, default
 
 from .base import ClusterManager
+from ..utils import cancel_task
 
 
 class LRUCache(object):
@@ -107,6 +108,20 @@ class YarnClusterManager(ClusterManager):
         config=True,
     )
 
+    container_status_period = Float(
+        help="""
+        Time (in seconds) between application container status checks.
+
+        This should be <= ``worker_status_period``. The default is
+        ``worker_status_period``.
+        """,
+        config=True,
+    )
+
+    @default("container_status_period")
+    def _default_container_status_period(self):
+        return self.worker_status_period
+
     supports_bulk_shutdown = True
 
     skein_client = Instance(klass="skein.Client", help="The skein client to use")
@@ -119,13 +134,18 @@ class YarnClusterManager(ClusterManager):
             security=skein.Security.new_credentials(),
         )
 
-    client_cache = Instance(klass=LRUCache, help="A cache of ApplicationClients")
-
-    @default("client_cache")
-    def _default_client_cache(self):
-        return LRUCache(self.application_client_cache_size)
-
-    app_address_cache = Dict(help="A cache of application master addresses")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.client_cache = LRUCache(self.application_client_cache_size)
+        self.app_address_cache = {}
+        # A map of container_name => set of pending worker container ids
+        # - Pending workers are added to this set in `start_worker`.
+        # - Upon connection, they are removed from this set.
+        # - Every `container_status_period`, any pending workers have their
+        #   status requested from their application, and the any stopped
+        #   workers are removed from this set.
+        self._pending_workers = defaultdict(set)
+        self._status_monitors = {}
 
     def _get_security(self, cluster_info):
         return skein.Security(
@@ -272,6 +292,13 @@ class YarnClusterManager(ClusterManager):
         await asyncio.get_running_loop().run_in_executor(
             None, self.skein_client.kill_application, app_id
         )
+        # Stop the status monitor
+        monitor = self._status_monitors.pop(cluster_info.cluster_name, None)
+        if monitor:
+            await cancel_task(monitor)
+        # Remove internal worker statuses
+        self._pending_workers.pop(cluster_info.cluster_name, None)
+        # Remove cluster from caches
         self.app_address_cache.pop(cluster_info.cluster_name, None)
         self.client_cache.discard(cluster_info.cluster_name)
 
@@ -285,9 +312,11 @@ class YarnClusterManager(ClusterManager):
         container = await asyncio.get_running_loop().run_in_executor(
             None, self._start_worker, worker_name, cluster_info, cluster_state
         )
+        self._track_container(container.id, cluster_info, cluster_state)
         yield {"container_id": container.id}
 
     def _stop_worker(self, container_id, cluster_info, cluster_state):
+        self._untrack_container(container_id, cluster_info)
         app = self._get_app_client(cluster_info, cluster_state)
         try:
             app.kill_container(container_id)
@@ -301,3 +330,50 @@ class YarnClusterManager(ClusterManager):
         return await asyncio.get_running_loop().run_in_executor(
             None, self._stop_worker, container_id, cluster_info, cluster_state
         )
+
+    def _get_done_workers(self, cluster_info, cluster_state):
+        app = self._get_app_client(cluster_info, cluster_state)
+        try:
+            containers = app.get_containers(
+                services=("dask.worker",), states=("SUCCEEDED", "FAILED", "KILLED")
+            )
+        except Exception as exc:
+            self.log.warning(
+                "Error getting worker statuses for cluster %s",
+                cluster_info.cluster_name,
+                exc_info=exc,
+            )
+            return set()
+        return {c.id for c in containers}
+
+    async def _status_monitor(self, cluster_info, cluster_state):
+        loop = asyncio.get_running_loop()
+        active = self._pending_workers[cluster_info.cluster_name]
+        while True:
+            if active:
+                done = await loop.run_in_executor(
+                    None, self._get_done_workers, cluster_info, cluster_state
+                )
+                active.difference_update(done)
+            await asyncio.sleep(self.container_status_period)
+
+    def _track_container(self, container_id, cluster_info, cluster_state):
+        self._pending_workers[cluster_info.cluster_name].add(container_id)
+        # Ensure a status monitor is running
+        if cluster_info.cluster_name not in self._status_monitors:
+            monitor = self.task_pool.create_background_task(
+                self._status_monitor(cluster_info, cluster_state)
+            )
+            self._status_monitors[cluster_info.cluster_name] = monitor
+
+    def _untrack_container(self, container_id, cluster_info):
+        self._pending_workers[cluster_info.cluster_name].discard(container_id)
+
+    def on_worker_running(self, worker_name, worker_state, cluster_info, cluster_state):
+        self._untrack_container(worker_state.get("container_id"), cluster_info)
+
+    async def worker_status(
+        self, worker_name, worker_state, cluster_info, cluster_state
+    ):
+        c_id = worker_state.get("container_id")
+        return c_id and c_id in self._pending_workers[cluster_info.cluster_name]
