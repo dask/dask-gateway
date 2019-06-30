@@ -1,3 +1,4 @@
+import errno
 import os
 import subprocess
 import sys
@@ -30,7 +31,20 @@ class build_go(Command):
         # Compile the go code and copy the executable to dask_gateway_server/proxy/
         # This will be picked up as package_data later
         self.mkpath(PROXY_TGT_DIR)
-        code = subprocess.call(["go", "build", "-o", PROXY_TGT_EXE], cwd=PROXY_SRC_DIR)
+        try:
+            code = subprocess.call(
+                ["go", "build", "-o", PROXY_TGT_EXE], cwd=PROXY_SRC_DIR
+            )
+        except OSError as exc:
+            if exc.errno == errno.ENOENT:
+                self.warn(
+                    "Building dask-gateway-server requires a go compiler, "
+                    "which wasn't found in your environment. Please install "
+                    "go using a package manager (e.g. apt, brew, conda, etc...), "
+                    "or download from https://golang.org/dl/."
+                )
+                sys.exit(1)
+            raise
         if code:
             sys.exit(code)
 
