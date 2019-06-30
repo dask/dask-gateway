@@ -5,7 +5,7 @@ import json
 import logging
 import os
 import sys
-from disutils.version import LooseVersion
+from distutils.version import LooseVersion
 from urllib.parse import urlparse, quote
 
 from tornado import gen, web
