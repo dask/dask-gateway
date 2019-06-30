@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0.1.0+17.g4d58669 documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0.1.0+18.g377be39 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -343,7 +343,7 @@ external manager (e.g. supervisord).</p>
 requesting username.</p>
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.LocalClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.LocalClusterManager.cluster_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
 connecting to the gateway.</p>
@@ -351,7 +351,7 @@ connecting to the gateway.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.LocalClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.LocalClusterManager.cluster_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
 <p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
 for the cluster to actually respond.</p>
@@ -443,7 +443,7 @@ the process is deemed a zombie process.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.LocalClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.LocalClusterManager.worker_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
 connecting to the scheduler.</p>
@@ -470,8 +470,17 @@ suffixes:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.LocalClusterManager.worker_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.LocalClusterManager.worker_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.LocalClusterManager.worker_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
 </dd></dl>
 
 </dd></dl>
@@ -487,7 +496,7 @@ suffixes:</p>
 same level of permission as the gateway.</p>
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.UnsafeLocalClusterManager.cluster_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
 connecting to the gateway.</p>
@@ -495,7 +504,7 @@ connecting to the gateway.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.UnsafeLocalClusterManager.cluster_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
 <p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
 for the cluster to actually respond.</p>
@@ -587,7 +596,7 @@ the process is deemed a zombie process.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.UnsafeLocalClusterManager.worker_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
 connecting to the scheduler.</p>
@@ -614,8 +623,17 @@ suffixes:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.worker_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.UnsafeLocalClusterManager.worker_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.UnsafeLocalClusterManager.worker_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
 </dd></dl>
 
 </dd></dl>
@@ -628,7 +646,7 @@ suffixes:</p>
 <h4>YarnClusterManager<a class="headerlink" href="#yarnclustermanager" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="dask_gateway_server.managers.yarn.YarnClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.yarn.</code><code class="sig-name descname">YarnClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.yarn.YarnClusterManager" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.yarn.</code><code class="sig-name descname">YarnClusterManager</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.yarn.YarnClusterManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>A cluster manager for deploying Dask on a YARN cluster.</p>
 <dl class="attribute">
 <dt>
@@ -640,7 +658,7 @@ more resources.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.YarnClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.YarnClusterManager.cluster_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
 connecting to the gateway.</p>
@@ -648,7 +666,7 @@ connecting to the gateway.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.YarnClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.YarnClusterManager.cluster_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
 <p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
 for the cluster to actually respond.</p>
@@ -661,6 +679,14 @@ for the cluster to actually respond.</p>
 <p>A smaller period will detect failed clusters sooner, but will use more
 resources. A larger period will provide slower feedback in the presence
 of failures.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.YarnClusterManager.container_status_period = Float(0.0)</code></dt>
+<dd><p>Time (in seconds) between application container status checks.</p>
+<p>This should be &lt;= <code class="docutils literal notranslate"><span class="pre">worker_status_period</span></code>. The default is
+<code class="docutils literal notranslate"><span class="pre">worker_status_period</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -752,7 +778,7 @@ suffixes:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.YarnClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.YarnClusterManager.worker_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
 connecting to the scheduler.</p>
@@ -785,8 +811,17 @@ suffixes:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.YarnClusterManager.worker_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.YarnClusterManager.worker_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.YarnClusterManager.worker_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
 </dd></dl>
 
 </dd></dl>
@@ -803,7 +838,7 @@ suffixes:</p>
 <dd><p>A cluster manager for deploying Dask on a Kubernetes cluster.</p>
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.KubeClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.KubeClusterManager.cluster_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
 connecting to the gateway.</p>
@@ -811,7 +846,7 @@ connecting to the gateway.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.KubeClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.KubeClusterManager.cluster_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
 <p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
 for the cluster to actually respond.</p>
@@ -926,7 +961,7 @@ following suffixes:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
 connecting to the scheduler.</p>
@@ -974,8 +1009,17 @@ following suffixes:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1011,7 +1055,7 @@ container. Default is the working directory defined in the Dockerfile.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.PBSClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.PBSClusterManager.cluster_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
 connecting to the gateway.</p>
@@ -1019,7 +1063,7 @@ connecting to the gateway.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.PBSClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.PBSClusterManager.cluster_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
 <p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
 for the cluster to actually respond.</p>
@@ -1158,7 +1202,7 @@ to False and rely on the networked filesystem for access.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.PBSClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.PBSClusterManager.worker_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
 connecting to the scheduler.</p>
@@ -1202,8 +1246,17 @@ suffixes:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.PBSClusterManager.worker_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.PBSClusterManager.worker_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.PBSClusterManager.worker_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1229,7 +1282,7 @@ suffixes:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.SlurmClusterManager.cluster_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.SlurmClusterManager.cluster_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask cluster to connect to the gateway.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> completing and the scheduler
 connecting to the gateway.</p>
@@ -1237,7 +1290,7 @@ connecting to the gateway.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.SlurmClusterManager.cluster_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.SlurmClusterManager.cluster_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
 <p>Note that this is the time for <code class="docutils literal notranslate"><span class="pre">start_cluster</span></code> to run, not the time
 for the cluster to actually respond.</p>
@@ -1349,7 +1402,7 @@ will be removed.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.SlurmClusterManager.worker_connect_timeout = Float(30)</code></dt>
+<code class="sig-name descname">config c.SlurmClusterManager.worker_connect_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) for a started dask worker to connect to the scheduler.</p>
 <p>This is the time between <code class="docutils literal notranslate"><span class="pre">start_worker</span></code> completing and the worker
 connecting to the scheduler.</p>
@@ -1382,8 +1435,17 @@ suffixes:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.SlurmClusterManager.worker_start_timeout = Float(60)</code></dt>
+<code class="sig-name descname">config c.SlurmClusterManager.worker_start_timeout = Float(30)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.worker_status_period = Float(30)</code></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
 </dd></dl>
 
 </dd></dl>
