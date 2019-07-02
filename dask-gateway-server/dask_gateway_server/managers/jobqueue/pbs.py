@@ -4,10 +4,10 @@ import socket
 
 from traitlets import Unicode, Bool, default
 
-from .base import JobQueueClusterManager
+from .base import JobQueueClusterManager, JobQueueStatusTracker
 
 
-__all__ = ("PBSClusterManager",)
+__all__ = ("PBSClusterManager", "PBSStatusTracker")
 
 
 def qsub_format_memory(n):
@@ -19,6 +19,32 @@ def qsub_format_memory(n):
     if n >= 10 * 1024:
         return "%dkB" % math.ceil(n / 1024)
     return "%dB" % n
+
+
+class PBSStatusTracker(JobQueueStatusTracker):
+    """A tracker for all PBS jobs submitted by the gateway"""
+
+    @default("status_command")
+    def _default_status_command(self):
+        return shutil.which("qstat") or "qstat"
+
+    def get_status_cmd_env(self, job_ids):
+        out = [self.status_command, "-x"]
+        out.extend(job_ids)
+        return out, {}
+
+    def parse_job_states(self, stdout):
+        lines = stdout.splitlines()[2:]
+
+        finished = {}
+
+        for l in lines:
+            parts = l.split()
+            job_id = parts[0]
+            status = parts[4]
+            if status not in ("R", "Q", "H"):
+                finished[job_id] = status
+        return finished
 
 
 class PBSClusterManager(JobQueueClusterManager):
@@ -93,22 +119,18 @@ class PBSClusterManager(JobQueueClusterManager):
     def _default_cancel_command(self):
         return shutil.which("qdel") or "qdel"
 
-    @default("status_command")
-    def _default_status_command(self):
-        return shutil.which("qstat") or "qstat"
-
     def format_resource_list(self, template, cores, memory):
         return template.format(cores=cores, memory=qsub_format_memory(memory))
 
-    def get_tls_paths(self, cluster_info):
+    def get_tls_paths(self):
         """Get the absolute paths to the tls cert and key files."""
         if self.use_stagein:
             return "dask.crt", "dask.pem"
         else:
-            return super().get_tls_paths(cluster_info)
+            return super().get_tls_paths()
 
-    def get_submit_cmd_env_stdin(self, cluster_info, worker_name=None):
-        env = self.get_env(cluster_info)
+    def get_submit_cmd_env_stdin(self, worker_name=None):
+        env = self.get_env()
 
         cmd = [self.submit_command]
         cmd.extend(["-N", "dask-gateway"])
@@ -121,7 +143,7 @@ class PBSClusterManager(JobQueueClusterManager):
         cmd.extend(["-j", "eo", "-R", "eo", "-Wsandbox=PRIVATE"])
 
         if self.use_stagein:
-            staging_dir = self.get_staging_directory(cluster_info)
+            staging_dir = self.get_staging_directory()
             cmd.append("-Wstagein=.@%s:%s/*" % (self.gateway_hostname, staging_dir))
 
         if worker_name:
@@ -147,23 +169,10 @@ class PBSClusterManager(JobQueueClusterManager):
     def get_stop_cmd_env(self, job_id):
         return [self.cancel_command, job_id], {}
 
-    def get_status_cmd_env(self, job_ids):
-        out = [self.status_command, "-x"]
-        out.extend(job_ids)
-        return out, {}
-
     def parse_job_id(self, stdout):
         return stdout.strip()
 
-    def parse_job_states(self, stdout):
-        lines = stdout.splitlines()[2:]
-
-        finished = {}
-
-        for l in lines:
-            parts = l.split()
-            job_id = parts[0]
-            status = parts[4]
-            if status not in ("R", "Q", "H"):
-                finished[job_id] = status
-        return finished
+    def get_status_tracker(self):
+        return PBSStatusTracker.instance(
+            parent=self.parent or self, task_pool=self.task_pool
+        )

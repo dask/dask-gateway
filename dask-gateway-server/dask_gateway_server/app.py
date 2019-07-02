@@ -377,7 +377,6 @@ class DaskGateway(Application):
         self.init_asyncio()
         self.init_scheduler_proxy()
         self.init_web_proxy()
-        self.init_cluster_manager()
         self.init_authenticator()
         self.init_database()
         self.init_tornado_application()
@@ -428,15 +427,6 @@ class DaskGateway(Application):
             tls_key=self.tls_key,
         )
 
-    def init_cluster_manager(self):
-        self.cluster_manager = self.cluster_manager_class(
-            parent=self,
-            log=self.log,
-            task_pool=self.task_pool,
-            temp_dir=self.temp_dir,
-            api_url=self.api_url,
-        )
-
     def init_authenticator(self):
         self.authenticator = self.authenticator_class(parent=self, log=self.log)
 
@@ -468,6 +458,20 @@ class DaskGateway(Application):
 
     async def start_web_proxy(self):
         await self.web_proxy.start()
+
+    def create_cluster_manager(self, cluster):
+        cluster.manager = self.cluster_manager_class(
+            parent=self,
+            log=self.log,
+            task_pool=self.task_pool,
+            temp_dir=self.temp_dir,
+            api_url=self.api_url,
+            username=cluster.user.name,
+            cluster_name=cluster.name,
+            api_token=cluster.token,
+            tls_cert=cluster.tls_cert,
+            tls_key=cluster.tls_key,
+        )
 
     async def load_database_state(self):
         self.db.load_database_state()
@@ -512,6 +516,8 @@ class DaskGateway(Application):
             await asyncio.sleep(self.db_cleanup_period)
 
     async def check_cluster(self, cluster):
+        self.create_cluster_manager(cluster)
+
         if cluster.status == ClusterStatus.RUNNING:
             client = AsyncHTTPClient()
             url = "%s/api/status" % cluster.api_address
@@ -655,9 +661,7 @@ class DaskGateway(Application):
     async def _cluster_status_monitor(self, cluster):
         while True:
             try:
-                res = await self.cluster_manager.cluster_status(
-                    cluster.info, cluster.state
-                )
+                res = await cluster.manager.cluster_status(cluster.state)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
@@ -677,13 +681,13 @@ class DaskGateway(Application):
                         )
                     self.schedule_stop_cluster(cluster, failed=True)
                     return
-            await asyncio.sleep(self.cluster_manager.cluster_status_period)
+            await asyncio.sleep(cluster.manager.cluster_status_period)
 
     async def _start_cluster(self, cluster):
         self.log.debug("Cluster %s is starting...", cluster.name)
 
         # Walk through the startup process, saving state as updates occur
-        async for state in self.cluster_manager.start_cluster(cluster.info):
+        async for state in cluster.manager.start_cluster():
             self.log.debug("State update for cluster %s", cluster.name)
             self.db.update_cluster(cluster, state=state)
 
@@ -698,13 +702,13 @@ class DaskGateway(Application):
         try:
             await asyncio.wait_for(
                 self._start_cluster(cluster),
-                timeout=self.cluster_manager.cluster_start_timeout,
+                timeout=cluster.manager.cluster_start_timeout,
             )
         except asyncio.TimeoutError:
             self.log.warning(
                 "Cluster %s startup timed out after %.1f seconds",
                 cluster.name,
-                self.cluster_manager.cluster_start_timeout,
+                cluster.manager.cluster_start_timeout,
             )
             return False
         except asyncio.CancelledError:
@@ -722,15 +726,14 @@ class DaskGateway(Application):
 
         try:
             addresses = await asyncio.wait_for(
-                cluster._connect_future,
-                timeout=self.cluster_manager.cluster_connect_timeout,
+                cluster._connect_future, timeout=cluster.manager.cluster_connect_timeout
             )
             scheduler_address, dashboard_address, api_address = addresses
         except asyncio.TimeoutError:
             self.log.warning(
                 "Cluster %s failed to connect after %.1f seconds",
                 cluster.name,
-                self.cluster_manager.cluster_connect_timeout,
+                cluster.manager.cluster_connect_timeout,
             )
             return False
 
@@ -762,6 +765,7 @@ class DaskGateway(Application):
 
     def start_new_cluster(self, user):
         cluster = self.db.create_cluster(user)
+        self.create_cluster_manager(cluster)
         f = self.task_pool.create_task(self.start_cluster(cluster))
         f.add_done_callback(partial(self._monitor_start_cluster, cluster=cluster))
         cluster._start_future = f
@@ -799,13 +803,13 @@ class DaskGateway(Application):
         await self.scheduler_proxy.delete_route("/" + cluster.name)
 
         # Shutdown individual workers if no bulk shutdown supported
-        if not self.cluster_manager.supports_bulk_shutdown:
+        if not cluster.manager.supports_bulk_shutdown:
             tasks = (self.stop_worker(cluster, w) for w in cluster.active_workers)
             await asyncio.gather(*tasks, return_exceptions=True)
 
         # Shutdown the cluster
         try:
-            await self.cluster_manager.stop_cluster(cluster.info, cluster.state)
+            await cluster.manager.stop_cluster(cluster.state)
         except Exception as exc:
             self.log.error("Failed to shutdown cluster %s", cluster.name, exc_info=exc)
 
@@ -848,9 +852,7 @@ class DaskGateway(Application):
         self.log.debug("Starting worker %r for cluster %r", worker.name, cluster.name)
 
         # Walk through the startup process, saving state as updates occur
-        async for state in self.cluster_manager.start_worker(
-            worker.name, cluster.info, cluster.state
-        ):
+        async for state in cluster.manager.start_worker(worker.name, cluster.state):
             self.db.update_worker(worker, state=state)
 
         # Move worker to started
@@ -859,8 +861,8 @@ class DaskGateway(Application):
     async def _worker_status_monitor(self, cluster, worker):
         while True:
             try:
-                res = await self.cluster_manager.worker_status(
-                    worker.name, worker.state, cluster.info, cluster.state
+                res = await cluster.manager.worker_status(
+                    worker.name, worker.state, cluster.state
                 )
             except asyncio.CancelledError:
                 raise
@@ -872,19 +874,19 @@ class DaskGateway(Application):
                 running, msg = res if isinstance(res, tuple) else (res, None)
                 if not running:
                     return msg
-            await asyncio.sleep(self.cluster_manager.worker_status_period)
+            await asyncio.sleep(cluster.manager.worker_status_period)
 
     async def start_worker(self, cluster, worker):
         try:
             await asyncio.wait_for(
                 self._start_worker(cluster, worker),
-                timeout=self.cluster_manager.worker_start_timeout,
+                timeout=cluster.manager.worker_start_timeout,
             )
         except asyncio.TimeoutError:
             self.log.warning(
                 "Worker %s startup timed out after %.1f seconds",
                 worker.name,
-                self.cluster_manager.worker_start_timeout,
+                cluster.manager.worker_start_timeout,
             )
             return False
         except asyncio.CancelledError:
@@ -904,7 +906,7 @@ class DaskGateway(Application):
         try:
             done, pending = await asyncio.wait(
                 (worker_status_monitor, worker._connect_future),
-                timeout=self.cluster_manager.worker_connect_timeout,
+                timeout=cluster.manager.worker_connect_timeout,
                 return_when=asyncio.FIRST_COMPLETED,
             )
         except asyncio.CancelledError:
@@ -929,7 +931,7 @@ class DaskGateway(Application):
                 self.log.warning(
                     "Worker %s failed to connect after %.1f seconds",
                     worker.name,
-                    self.cluster_manager.worker_connect_timeout,
+                    cluster.manager.worker_connect_timeout,
                 )
                 return False
 
@@ -942,9 +944,7 @@ class DaskGateway(Application):
 
     def mark_worker_running(self, cluster, worker):
         if worker.status != WorkerStatus.RUNNING:
-            self.cluster_manager.on_worker_running(
-                worker.name, worker.state, cluster.info, cluster.state
-            )
+            cluster.manager.on_worker_running(worker.name, worker.state, cluster.state)
             self.db.update_worker(worker, status=WorkerStatus.RUNNING)
             cluster.pending.discard(worker.name)
 
@@ -979,9 +979,7 @@ class DaskGateway(Application):
 
         # Shutdown the worker
         try:
-            await self.cluster_manager.stop_worker(
-                worker.name, worker.state, cluster.info, cluster.state
-            )
+            await cluster.manager.stop_worker(worker.name, worker.state, cluster.state)
         except Exception as exc:
             self.log.error(
                 "Failed to shutdown worker %s for cluster %s",

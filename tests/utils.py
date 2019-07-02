@@ -3,7 +3,6 @@ import atexit
 import json
 import os
 import signal
-import time
 import uuid
 
 import pytest
@@ -12,7 +11,7 @@ from tornado import web
 from traitlets.config import Config
 
 from dask_gateway_server.app import DaskGateway
-from dask_gateway_server.utils import random_port, get_ip
+from dask_gateway_server.utils import random_port, get_ip, TaskPool
 from dask_gateway_server.tls import new_keypair
 from dask_gateway_server.objects import (
     Cluster,
@@ -54,8 +53,31 @@ class LocalTestingClusterManager(UnsafeLocalClusterManager):
 
 
 class MockGateway(object):
-    def __init__(self):
+    def __init__(self, host, port, temp_dir):
         self.clusters = {}
+        self.host = host
+        self.port = port
+        self.temp_dir = temp_dir
+        self.task_pool = TaskPool()
+        self.app = web.Application(
+            [
+                (
+                    "/clusters/([a-zA-Z0-9-_.]*)/workers/([a-zA-Z0-9-_.]*)",
+                    ClusterWorkersHandler,
+                ),
+                ("/clusters/([a-zA-Z0-9-_.]*)/addresses", ClusterRegistrationHandler),
+            ],
+            gateway=self,
+        )
+
+    async def __aenter__(self):
+        self.server = self.app.listen(self.port, address=self.host)
+        return self
+
+    async def __aexit__(self, *args):
+        if hasattr(self, "server"):
+            self.server.stop()
+        await self.task_pool.close()
 
     def new_cluster(self):
         cluster_name = uuid.uuid4().hex
@@ -102,7 +124,7 @@ class MockGateway(object):
 
     def mark_worker_stopped(self, cluster_name, worker_name):
         cluster = self.get_cluster(cluster_name)
-        cluster.workers.pop(worker_name)
+        cluster.workers.pop(worker_name, None)
 
 
 class BaseHandler(web.RequestHandler):
@@ -122,7 +144,7 @@ class BaseHandler(web.RequestHandler):
         assert auth_header
         auth_type, auth_key = auth_header.split(" ", 1)
         assert auth_type == "token"
-        assert auth_key == cluster.info.api_token
+        assert auth_key == cluster.token
 
 
 class ClusterRegistrationHandler(BaseHandler):
@@ -156,32 +178,15 @@ def gateway_test(func):
     async def inner(self, tmpdir):
         port = random_port()
         host = get_ip()
-        api_url = "http://%s:%d" % (host, port)
-        gateway = MockGateway()
-        app = web.Application(
-            [
-                (
-                    "/clusters/([a-zA-Z0-9-_.]*)/workers/([a-zA-Z0-9-_.]*)",
-                    ClusterWorkersHandler,
-                ),
-                ("/clusters/([a-zA-Z0-9-_.]*)/addresses", ClusterRegistrationHandler),
-            ],
-            gateway=gateway,
-        )
-        manager = self.new_manager(api_url=api_url, temp_dir=str(tmpdir))
-        server = None
-        try:
-            server = app.listen(port, address=host)
-            await func(self, gateway, manager)
-        finally:
-            if server is not None:
-                server.stop()
-            for cluster in gateway.clusters.values():
-                worker_states = [w.state for w in cluster.workers.values()]
-                await self.cleanup_cluster(
-                    manager, cluster.info, cluster.state, worker_states
-                )
-            await manager.task_pool.close()
+        async with MockGateway(host, port, str(tmpdir)) as gateway:
+            try:
+                await func(self, gateway)
+            finally:
+                for cluster in gateway.clusters.values():
+                    worker_states = [w.state for w in cluster.workers.values()]
+                    await self.cleanup_cluster(
+                        cluster.manager, cluster.state, worker_states
+                    )
 
         # Only raise if test didn't fail earlier
         if gateway.clusters:
@@ -193,18 +198,16 @@ def gateway_test(func):
 
 
 class ClusterManagerTests(object):
-    async def cleanup_cluster(
-        self, manager, cluster_info, cluster_state, worker_states
-    ):
+    async def cleanup_cluster(self, manager, cluster_state, worker_states):
         raise NotImplementedError
 
     def new_manager(self, **kwargs):
         raise NotImplementedError
 
-    def cluster_is_running(self, manager, cluster_info, cluster_state):
+    async def cluster_is_running(self, manager, cluster_state):
         raise NotImplementedError
 
-    def worker_is_running(self, manager, cluster_info, cluster_state, worker_state):
+    async def worker_is_running(self, manager, cluster_state, worker_state):
         raise NotImplementedError
 
     def num_start_cluster_stages(self):
@@ -213,26 +216,26 @@ class ClusterManagerTests(object):
     def num_start_worker_stages(self):
         raise NotImplementedError
 
-    def cluster_is_stopped(self, manager, cluster_info, cluster_state):
+    async def cluster_is_stopped(self, cluster):
         # Wait for 30 seconds, pinging every 1/4 second
         for i in range(120):
-            if not self.cluster_is_running(manager, cluster_info, cluster_state):
+            if not await self.cluster_is_running(cluster.manager, cluster.state):
                 return True
-            time.sleep(0.25)
+            await asyncio.sleep(0.25)
         return False
 
-    def worker_is_stopped(self, manager, cluster_info, cluster_state, worker_state):
+    async def worker_is_stopped(self, cluster, worker):
         # Wait for 30 seconds, pinging every 1/4 second
         for i in range(120):
-            if not self.worker_is_running(
-                manager, cluster_info, cluster_state, worker_state
+            if not await self.worker_is_running(
+                cluster.manager, cluster.state, worker.state
             ):
                 return True
-            time.sleep(0.25)
+            await asyncio.sleep(0.25)
         return False
 
-    async def cluster_status(self, manager, cluster):
-        out = await manager.cluster_status(cluster.info, cluster.state)
+    async def cluster_status(self, cluster):
+        out = await cluster.manager.cluster_status(cluster.state)
         if isinstance(out, tuple):
             res, msg = out
             assert isinstance(msg, str) or msg is None
@@ -240,9 +243,9 @@ class ClusterManagerTests(object):
             res = out
         return res
 
-    async def worker_status(self, manager, worker, cluster):
-        out = await manager.worker_status(
-            worker.name, worker.state, cluster.info, cluster.state
+    async def worker_status(self, worker, cluster):
+        out = await cluster.manager.worker_status(
+            worker.name, worker.state, cluster.state
         )
         if isinstance(out, tuple):
             res, msg = out
@@ -251,31 +254,47 @@ class ClusterManagerTests(object):
             res = out
         return res
 
+    def new_cluster(self, gateway):
+        cluster = gateway.new_cluster()
+        cluster.manager = self.new_manager(
+            api_url="http://%s:%d" % (gateway.host, gateway.port),
+            temp_dir=gateway.temp_dir,
+            task_pool=gateway.task_pool,
+            username=cluster.user.name,
+            cluster_name=cluster.name,
+            api_token=cluster.token,
+            tls_cert=cluster.tls_cert,
+            tls_key=cluster.tls_key,
+        )
+        return cluster
+
     @pytest.mark.asyncio
     @gateway_test
-    async def test_start_stop_cluster(self, gateway, manager):
+    async def test_start_stop_cluster(self, gateway):
         # Create a new cluster
-        cluster = gateway.new_cluster()
+        cluster = self.new_cluster(gateway)
 
-        assert not await self.cluster_status(manager, cluster)
+        assert not await self.cluster_status(cluster)
 
         # Start the cluster
-        async for state in manager.start_cluster(cluster.info):
+        async for state in cluster.manager.start_cluster():
             cluster.state = state
 
         # Wait for connection
-        await asyncio.wait_for(cluster._connect_future, manager.cluster_connect_timeout)
-        assert self.cluster_is_running(manager, cluster.info, cluster.state)
-        assert await self.cluster_status(manager, cluster)
+        await asyncio.wait_for(
+            cluster._connect_future, cluster.manager.cluster_connect_timeout
+        )
+        assert await self.cluster_is_running(cluster.manager, cluster.state)
+        assert await self.cluster_status(cluster)
 
         # Stop the cluster
-        await manager.stop_cluster(cluster.info, cluster.state)
-        assert self.cluster_is_stopped(manager, cluster.info, cluster.state)
+        await cluster.manager.stop_cluster(cluster.state)
+        assert await self.cluster_is_stopped(cluster)
 
         # Check cluster status, allowing for a period between stopping and
         # status update for backends that cache their statuses
         for i in range(20):
-            if not await self.cluster_status(manager, cluster):
+            if not await self.cluster_status(cluster):
                 break
             await asyncio.sleep(0.25)
         else:
@@ -283,12 +302,12 @@ class ClusterManagerTests(object):
 
         gateway.mark_cluster_stopped(cluster.name)
 
-    async def check_cancel_during_cluster_startup(self, gateway, manager, fail_stage):
+    async def check_cancel_during_cluster_startup(self, gateway, fail_stage):
         # Create a new cluster
-        cluster = gateway.new_cluster()
+        cluster = self.new_cluster(gateway)
 
         # Start the cluster
-        start_task = manager.start_cluster(cluster.info)
+        start_task = cluster.manager.start_cluster()
         if fail_stage > 0:
             i = 1
             async for state in start_task:
@@ -301,90 +320,88 @@ class ClusterManagerTests(object):
         await start_task.athrow(GeneratorExit)
 
         # Assert not running
-        assert not await self.cluster_status(manager, cluster)
+        assert not await self.cluster_status(cluster)
 
         # Stop the cluster
-        await manager.stop_cluster(cluster.info, cluster.state)
-        assert self.cluster_is_stopped(manager, cluster.info, cluster.state)
+        await cluster.manager.stop_cluster(cluster.state)
+        assert await self.cluster_is_stopped(cluster)
         gateway.mark_cluster_stopped(cluster.name)
 
     @pytest.mark.asyncio
     @gateway_test
-    async def test_cancel_during_cluster_startup(self, gateway, manager):
+    async def test_cancel_during_cluster_startup(self, gateway):
         for fail_stage in range(self.num_start_cluster_stages()):
-            await self.check_cancel_during_cluster_startup(gateway, manager, fail_stage)
+            await self.check_cancel_during_cluster_startup(gateway, fail_stage)
 
     @pytest.mark.asyncio
     @gateway_test
-    async def test_start_stop_worker(self, gateway, manager):
+    async def test_start_stop_worker(self, gateway):
         # Create a new cluster
-        cluster = gateway.new_cluster()
+        cluster = self.new_cluster(gateway)
 
         # Start the cluster
-        async for state in manager.start_cluster(cluster.info):
+        async for state in cluster.manager.start_cluster():
             cluster.state = state
 
         # Wait for connection
-        await asyncio.wait_for(cluster._connect_future, manager.cluster_connect_timeout)
-        assert self.cluster_is_running(manager, cluster.info, cluster.state)
-        assert await self.cluster_status(manager, cluster)
+        await asyncio.wait_for(
+            cluster._connect_future, cluster.manager.cluster_connect_timeout
+        )
+        assert await self.cluster_is_running(cluster.manager, cluster.state)
+        assert await self.cluster_status(cluster)
 
         # Create a new worker
         worker = gateway.new_worker(cluster.name)
 
-        assert not await self.worker_status(manager, worker, cluster)
+        assert not await self.worker_status(worker, cluster)
 
         # Start the worker
-        async for state in manager.start_worker(
-            worker.name, cluster.info, cluster.state
-        ):
+        async for state in cluster.manager.start_worker(worker.name, cluster.state):
             worker.state = state
 
         # Wait for worker to connect
-        await asyncio.wait_for(worker._connect_future, manager.worker_connect_timeout)
-        assert self.worker_is_running(
-            manager, cluster.info, cluster.state, worker.state
+        await asyncio.wait_for(
+            worker._connect_future, cluster.manager.worker_connect_timeout
         )
-        assert await self.worker_status(manager, worker, cluster)
+        assert await self.worker_is_running(
+            cluster.manager, cluster.state, worker.state
+        )
+        assert await self.worker_status(worker, cluster)
         # Run the callback
-        manager.on_worker_running(
-            worker.name, worker.state, cluster.info, cluster.state
-        )
+        cluster.manager.on_worker_running(worker.name, worker.state, cluster.state)
 
         # Stop the worker
-        await manager.stop_worker(
-            worker.name, worker.state, cluster.info, cluster.state
-        )
-        assert self.worker_is_stopped(
-            manager, cluster.info, cluster.state, worker.state
-        )
+        await cluster.manager.stop_worker(worker.name, worker.state, cluster.state)
+        assert await self.worker_is_stopped(cluster, worker)
         gateway.mark_worker_stopped(cluster.name, worker.name)
 
         # Stop the cluster
-        await manager.stop_cluster(cluster.info, cluster.state)
-        assert self.cluster_is_stopped(manager, cluster.info, cluster.state)
+        await cluster.manager.stop_cluster(cluster.state)
+        assert await self.cluster_is_stopped(cluster)
         gateway.mark_cluster_stopped(cluster.name)
 
-    async def check_cancel_during_worker_startup(self, gateway, manager, fail_stage):
+    async def check_cancel_during_worker_startup(self, gateway, fail_stage):
         # Create a new cluster
-        cluster = gateway.new_cluster()
+        cluster = self.new_cluster(gateway)
 
         # Start the cluster
-        async for state in manager.start_cluster(cluster.info):
+        async for state in cluster.manager.start_cluster():
             cluster.state = state
 
         # Wait for connection
-        await asyncio.wait_for(cluster._connect_future, manager.cluster_connect_timeout)
-        assert self.cluster_is_running(manager, cluster.info, cluster.state)
-        assert await self.cluster_status(manager, cluster)
+        await asyncio.wait_for(
+            cluster._connect_future, cluster.manager.cluster_connect_timeout
+        )
+        assert await self.cluster_is_running(cluster.manager, cluster.state)
+        assert await self.cluster_status(cluster)
 
         # Create a new worker
         worker = gateway.new_worker(cluster.name)
 
-        assert not await self.worker_status(manager, worker, cluster)
+        assert not await self.worker_status(worker, cluster)
 
         # Start the worker
-        start_task = manager.start_worker(worker.name, cluster.info, cluster.state)
+        start_task = cluster.manager.start_worker(worker.name, cluster.state)
         if fail_stage > 0:
             i = 1
             async for state in start_task:
@@ -397,27 +414,24 @@ class ClusterManagerTests(object):
         await start_task.athrow(GeneratorExit)
 
         # Assert not running
-        assert not await self.worker_status(manager, worker, cluster)
+        assert not await self.worker_status(worker, cluster)
 
         # Stop the worker
-        await manager.stop_worker(
-            worker.name, worker.state, cluster.info, cluster.state
-        )
-        assert self.worker_is_stopped(
-            manager, cluster.info, cluster.state, worker.state
-        )
+        await cluster.manager.stop_worker(worker.name, worker.state, cluster.state)
+        assert await self.worker_is_stopped(cluster, worker)
+
         gateway.mark_worker_stopped(cluster.name, worker.name)
 
         # Stop the cluster
-        await manager.stop_cluster(cluster.info, cluster.state)
-        assert self.cluster_is_stopped(manager, cluster.info, cluster.state)
+        await cluster.manager.stop_cluster(cluster.state)
+        assert await self.cluster_is_stopped(cluster)
         gateway.mark_cluster_stopped(cluster.name)
 
     @pytest.mark.asyncio
     @gateway_test
-    async def test_cancel_during_worker_startup(self, gateway, manager):
+    async def test_cancel_during_worker_startup(self, gateway):
         for fail_stage in range(self.num_start_worker_stages()):
-            await self.check_cancel_during_worker_startup(gateway, manager, fail_stage)
+            await self.check_cancel_during_worker_startup(gateway, fail_stage)
 
 
 class temp_gateway(object):

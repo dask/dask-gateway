@@ -2,12 +2,14 @@ import os
 import subprocess
 
 import pytest
+from traitlets.config import Config
 
 if not os.environ.get("TEST_DASK_GATEWAY_PBS"):
     pytest.skip("Not running PBS tests", allow_module_level=True)
 
 from dask_gateway_server.managers.jobqueue.pbs import (
     PBSClusterManager,
+    PBSStatusTracker,
     qsub_format_memory,
 )
 
@@ -54,41 +56,39 @@ class PBSTestingClusterManager(PBSClusterManager):
             JOBIDS.add(state["job_id"])
             yield state
 
-    async def stop_cluster(self, cluster_info, cluster_state):
+    async def stop_cluster(self, cluster_state):
         job_id = cluster_state.get("job_id")
-        await super().stop_cluster(cluster_info, cluster_state)
+        await super().stop_cluster(cluster_state)
         JOBIDS.discard(job_id)
 
 
 class TestPBSClusterManager(ClusterManagerTests):
-    async def cleanup_cluster(
-        self, manager, cluster_info, cluster_state, worker_states
-    ):
+    async def cleanup_cluster(self, manager, cluster_state, worker_states):
         job_id = cluster_state.get("job_id")
         if job_id:
             kill_job(job_id)
 
     def new_manager(self, **kwargs):
-        return PBSTestingClusterManager(
-            scheduler_cmd="/opt/miniconda/bin/dask-gateway-scheduler",
-            worker_cmd="/opt/miniconda/bin/dask-gateway-worker",
-            scheduler_memory="512M",
-            worker_memory="512M",
-            scheduler_cores=1,
-            worker_cores=1,
-            cluster_start_timeout=30,
-            job_status_period=0.5,
-            use_stagein=True,
-            **kwargs,
-        )
+        PBSStatusTracker.clear_instance()
+        c = Config()
+        c.PBSClusterManager.scheduler_cmd = "/opt/miniconda/bin/dask-gateway-scheduler"
+        c.PBSClusterManager.worker_cmd = "/opt/miniconda/bin/dask-gateway-worker"
+        c.PBSClusterManager.scheduler_memory = "512M"
+        c.PBSClusterManager.worker_memory = "512M"
+        c.PBSClusterManager.scheduler_cores = 1
+        c.PBSClusterManager.worker_cores = 1
+        c.PBSClusterManager.cluster_start_timeout = 30
+        c.PBSClusterManager.use_stagein = True
+        c.PBSStatusTracker.query_period = 0.5
+        return PBSTestingClusterManager(config=c, **kwargs)
 
-    def cluster_is_running(self, manager, cluster_info, cluster_state):
+    async def cluster_is_running(self, manager, cluster_state):
         job_id = cluster_state.get("job_id")
         if not job_id:
             return False
         return is_job_running(job_id)
 
-    def worker_is_running(self, manager, cluster_info, cluster_state, worker_state):
+    async def worker_is_running(self, manager, cluster_state, worker_state):
         job_id = worker_state.get("job_id")
         if not job_id:
             return False

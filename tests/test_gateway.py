@@ -4,10 +4,12 @@ import signal
 
 import pytest
 from cryptography.fernet import Fernet
+from traitlets import Integer, Float
 from traitlets.config import Config
 
 from dask_gateway import Gateway
 from dask_gateway_server.app import DaskGateway
+from dask_gateway_server.objects import ClusterStatus
 from dask_gateway_server.managers import ClusterManager
 from dask_gateway_server.managers.inprocess import InProcessClusterManager
 from dask_gateway_server.utils import random_port
@@ -16,73 +18,69 @@ from .utils import LocalTestingClusterManager, temp_gateway
 
 
 class SlowStartClusterManager(ClusterManager):
+    pause_time = Float(0.2, config=True)
+
     state_1 = {"state_1": 1}
     state_2 = {"state_2": 2}
     state_3 = {"state_3": 3}
-    pause_time = 0.2
     stop_cluster_state = None
+    running = False
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.clusters = set()
-
-    async def start_cluster(self, cluster_info):
+    async def start_cluster(self):
+        self.running = True
         yield self.state_1
         await asyncio.sleep(self.pause_time)
         yield self.state_2
         await asyncio.sleep(self.pause_time)
         yield self.state_3
-        self.clusters.add(cluster_info.cluster_name)
 
-    async def cluster_status(self, cluster_info, cluster_state):
-        return cluster_info.cluster_name in self.clusters
+    async def cluster_status(self, cluster_state):
+        return self.running
 
-    async def stop_cluster(self, cluster_info, cluster_state):
+    async def stop_cluster(self, cluster_state):
         self.stop_cluster_state = cluster_state
-        self.clusters.discard(cluster_info.cluster_name)
+        self.running = False
 
 
 class ClusterFailsDuringStart(ClusterManager):
-    fail_stage = 1
+    fail_stage = Integer(1, config=True)
+
     stop_cluster_state = None
 
-    async def start_cluster(self, cluster_info):
+    async def start_cluster(self):
         for i in range(3):
             if i == self.fail_stage:
                 raise ValueError("Oh No")
             yield {"i": i}
 
-    async def stop_cluster(self, cluster_info, cluster_state):
+    async def stop_cluster(self, cluster_state):
         self.stop_cluster_state = cluster_state
 
 
 class ClusterFailsBetweenStartAndConnect(InProcessClusterManager):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.failed_clusters = set()
-        self.stopped_clusters = set()
+    status = "starting"
 
-    async def start_cluster(self, cluster_info):
+    async def start_cluster(self):
         yield {"foo": "bar"}
-        self.failed_clusters.add(cluster_info.cluster_name)
+        self.status = "failed"
 
-    async def cluster_status(self, cluster_info, cluster_state):
-        return cluster_info.cluster_name not in self.failed_clusters
+    async def cluster_status(self, cluster_state):
+        return self.status not in ("failed", "stopped")
 
-    async def stop_cluster(self, cluster_info, cluster_state):
-        self.stopped_clusters.add(cluster_info.cluster_name)
+    async def stop_cluster(self, cluster_state):
+        self.status = "stopped"
 
 
 class ClusterFailsAfterConnect(InProcessClusterManager):
     fail_after = 0.5
 
-    async def start_cluster(self, cluster_info):
+    async def start_cluster(self):
         # Initiate state
         loop = asyncio.get_running_loop()
         self.failed = loop.create_future()
         self.stop_cluster_called = loop.create_future()
         # Start the cluster
-        async for state in super().start_cluster(cluster_info):
+        async for state in super().start_cluster():
             yield state
         # Launch a task to kill the cluster soon
         self.task_pool.create_task(self.delay_fail_cluster())
@@ -91,67 +89,62 @@ class ClusterFailsAfterConnect(InProcessClusterManager):
         await asyncio.sleep(self.fail_after)
         self.failed.set_result(True)
 
-    async def cluster_status(self, cluster_info, cluster_state):
+    async def cluster_status(self, cluster_state):
         if self.failed.done():
             return False
-        return await super().cluster_status(cluster_info, cluster_state)
+        return await super().cluster_status(cluster_state)
 
-    async def stop_cluster(self, cluster_info, cluster_state):
-        await super().stop_cluster(cluster_info, cluster_state)
+    async def stop_cluster(self, cluster_state):
+        await super().stop_cluster(cluster_state)
         self.stop_cluster_called.set_result(True)
 
 
 class SlowWorkerStartClusterManager(InProcessClusterManager):
-    pause_time = 0.2
+    pause_time = Float(0.2, config=True)
+
     stop_worker_state = None
 
-    async def start_worker(self, worker_name, cluster_info, cluster_state):
+    async def start_worker(self, worker_name, cluster_state):
         for i in range(3):
             yield {"i": i}
             await asyncio.sleep(self.pause_time)
-        self.active_workers[worker_name] = None
+        self.workers[worker_name] = None
 
-    async def worker_status(
-        self, worker_name, worker_state, cluster_info, cluster_state
-    ):
-        return worker_name in self.active_workers
+    async def worker_status(self, worker_name, worker_state, cluster_state):
+        return worker_name in self.workers
 
-    async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
+    async def stop_worker(self, worker_name, worker_state, cluster_state):
         self.stop_worker_state = worker_state
-        self.active_workers.pop(worker_name, None)
+        self.workers.pop(worker_name, None)
 
 
 class WorkerFailsDuringStart(InProcessClusterManager):
-    fail_stage = 1
+    fail_stage = Integer(1, config=True)
+
     stop_worker_state = None
 
-    async def start_worker(self, worker_name, cluster_info, cluster_state):
+    async def start_worker(self, worker_name, cluster_state):
         for i in range(3):
             if i == self.fail_stage:
                 raise ValueError("Oh No")
             yield {"i": i}
 
-    async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
+    async def stop_worker(self, worker_name, worker_state, cluster_state):
         self.stop_worker_state = worker_state
 
 
 class WorkerFailsBetweenStartAndConnect(InProcessClusterManager):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.failed_workers = set()
-        self.stopped_workers = set()
+    status = "starting"
 
-    async def start_worker(self, worker_name, cluster_info, cluster_state):
+    async def start_worker(self, worker_name, cluster_state):
         yield {"foo": "bar"}
-        self.failed_workers.add(worker_name)
+        self.status = "failed"
 
-    async def worker_status(
-        self, worker_name, worker_state, cluster_info, cluster_state
-    ):
-        return worker_name not in self.failed_workers
+    async def worker_status(self, worker_name, worker_state, cluster_state):
+        return self.status not in ("failed", "stopped")
 
-    async def stop_worker(self, worker_name, worker_state, cluser_info, cluster_state):
-        self.stopped_workers.add(worker_name)
+    async def stop_worker(self, worker_name, worker_state, cluster_state):
+        self.status = "stopped"
 
 
 class WorkerFailsAfterConnect(InProcessClusterManager):
@@ -245,12 +238,12 @@ def test_resume_clusters_forbid_in_memory_db(tmpdir):
 @pytest.mark.parametrize("start_timeout,state", [(0.1, "state_1"), (0.25, "state_2")])
 async def test_slow_cluster_start(tmpdir, start_timeout, state):
 
-    async with temp_gateway(
-        cluster_manager_class=SlowStartClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
-    ) as gateway_proc:
+    config = Config()
+    config.DaskGateway.cluster_manager_class = SlowStartClusterManager
+    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.SlowStartClusterManager.cluster_start_timeout = start_timeout
 
-        gateway_proc.cluster_manager.cluster_start_timeout = start_timeout
+    async with temp_gateway(config=config) as gateway_proc:
 
         async with Gateway(
             address=gateway_proc.public_url, asynchronous=True
@@ -262,21 +255,23 @@ async def test_slow_cluster_start(tmpdir, start_timeout, state):
                 await gateway.connect(cluster_id)
             assert cluster_id in str(exc.value)
 
+            cluster = gateway_proc.db.cluster_from_name(cluster_id)
+
             # Stop cluster called with last reported state
-            res = getattr(gateway_proc.cluster_manager, state)
-            assert gateway_proc.cluster_manager.stop_cluster_state == res
+            res = getattr(cluster.manager, state)
+            assert cluster.manager.stop_cluster_state == res
 
 
 @pytest.mark.asyncio
 async def test_slow_cluster_connect(tmpdir):
 
-    async with temp_gateway(
-        cluster_manager_class=SlowStartClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
-    ) as gateway_proc:
+    config = Config()
+    config.DaskGateway.cluster_manager_class = SlowStartClusterManager
+    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.SlowStartClusterManager.cluster_connect_timeout = 0.1
+    config.SlowStartClusterManager.pause_time = 0
 
-        gateway_proc.cluster_manager.cluster_connect_timeout = 0.1
-        gateway_proc.cluster_manager.pause_time = 0
+    async with temp_gateway(config=config) as gateway_proc:
 
         async with Gateway(
             address=gateway_proc.public_url, asynchronous=True
@@ -288,21 +283,23 @@ async def test_slow_cluster_connect(tmpdir):
                 await gateway.connect(cluster_id)
             assert cluster_id in str(exc.value)
 
+            cluster = gateway_proc.db.cluster_from_name(cluster_id)
+
             # Stop cluster called with last reported state
-            res = gateway_proc.cluster_manager.state_3
-            assert gateway_proc.cluster_manager.stop_cluster_state == res
+            res = cluster.manager.state_3
+            assert cluster.manager.stop_cluster_state == res
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("fail_stage", [0, 1])
 async def test_cluster_fails_during_start(tmpdir, fail_stage):
 
-    async with temp_gateway(
-        cluster_manager_class=ClusterFailsDuringStart,
-        temp_dir=str(tmpdir.join("dask-gateway")),
-    ) as gateway_proc:
+    config = Config()
+    config.DaskGateway.cluster_manager_class = ClusterFailsDuringStart
+    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.ClusterFailsDuringStart.fail_stage = fail_stage
 
-        gateway_proc.cluster_manager.fail_stage = fail_stage
+    async with temp_gateway(config=config) as gateway_proc:
 
         async with Gateway(
             address=gateway_proc.public_url, asynchronous=True
@@ -314,9 +311,11 @@ async def test_cluster_fails_during_start(tmpdir, fail_stage):
                 await gateway.connect(cluster_id)
             assert cluster_id in str(exc.value)
 
+            cluster = gateway_proc.db.cluster_from_name(cluster_id)
+
             # Stop cluster called with last reported state
             res = {} if fail_stage == 0 else {"i": fail_stage - 1}
-            assert gateway_proc.cluster_manager.stop_cluster_state == res
+            assert cluster.manager.stop_cluster_state == res
 
 
 @pytest.mark.asyncio
@@ -334,10 +333,12 @@ async def test_cluster_fails_between_start_and_connect(tmpdir):
             # Submit cluster
             cluster_id = await gateway.submit()
 
+            cluster = gateway_proc.db.cluster_from_name(cluster_id)
+
             # Wait for cluster failure and stop_cluster called
             timeout = 5
             while timeout > 0:
-                if cluster_id in gateway_proc.cluster_manager.stopped_clusters:
+                if cluster.manager.status == "stopped":
                     break
                 await asyncio.sleep(0.1)
                 timeout -= 0.1
@@ -359,36 +360,38 @@ async def test_cluster_fails_after_connect(tmpdir):
 
             # Cluster starts successfully
             cluster_id = await gateway.submit()
+
+            cluster = gateway_proc.db.cluster_from_name(cluster_id)
+
             await gateway.connect(cluster_id)
 
             # Wait for cluster to fail while running
-            await asyncio.wait_for(gateway_proc.cluster_manager.failed, 3)
+            await asyncio.wait_for(cluster.manager.failed, 3)
 
             # Stop cluster called to cleanup after failure
-            await asyncio.wait_for(gateway_proc.cluster_manager.stop_cluster_called, 3)
+            await asyncio.wait_for(cluster.manager.stop_cluster_called, 3)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("start_timeout,state", [(0.1, 0), (0.25, 1)])
 async def test_slow_worker_start(tmpdir, start_timeout, state):
+    config = Config()
+    config.DaskGateway.cluster_manager_class = SlowWorkerStartClusterManager
+    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.SlowWorkerStartClusterManager.worker_start_timeout = start_timeout
 
-    async with temp_gateway(
-        cluster_manager_class=SlowWorkerStartClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
-    ) as gateway_proc:
-
-        gateway_proc.cluster_manager.worker_start_timeout = start_timeout
-
+    async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_url, asynchronous=True
         ) as gateway:
             cluster = await gateway.new_cluster()
             await cluster.scale(1)
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
 
             # Wait for worker failure
             timeout = 5
             while timeout > 0:
-                if gateway_proc.cluster_manager.stop_worker_state is not None:
+                if cluster_obj.manager.stop_worker_state is not None:
                     break
                 await asyncio.sleep(0.1)
                 timeout -= 0.1
@@ -396,7 +399,7 @@ async def test_slow_worker_start(tmpdir, start_timeout, state):
                 assert False, "Operation timed out"
 
             # Stop worker called with last reported state
-            assert gateway_proc.cluster_manager.stop_worker_state == {"i": state}
+            assert cluster_obj.manager.stop_worker_state == {"i": state}
 
             # Stop the cluster
             await cluster.shutdown()
@@ -404,25 +407,24 @@ async def test_slow_worker_start(tmpdir, start_timeout, state):
 
 @pytest.mark.asyncio
 async def test_slow_worker_connect(tmpdir):
+    config = Config()
+    config.DaskGateway.cluster_manager_class = SlowWorkerStartClusterManager
+    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.SlowWorkerStartClusterManager.worker_connect_timeout = 0.1
+    config.SlowWorkerStartClusterManager.pause_time = 0
 
-    async with temp_gateway(
-        cluster_manager_class=SlowWorkerStartClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
-    ) as gateway_proc:
-
-        gateway_proc.cluster_manager.worker_connect_timeout = 0.1
-        gateway_proc.cluster_manager.pause_time = 0
-
+    async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_url, asynchronous=True
         ) as gateway:
             cluster = await gateway.new_cluster()
             await cluster.scale(1)
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
 
             # Wait for worker failure
             timeout = 5
             while timeout > 0:
-                if gateway_proc.cluster_manager.stop_worker_state is not None:
+                if cluster_obj.manager.stop_worker_state is not None:
                     break
                 await asyncio.sleep(0.1)
                 timeout -= 0.1
@@ -430,7 +432,7 @@ async def test_slow_worker_connect(tmpdir):
                 assert False, "Operation timed out"
 
             # Stop worker called with last reported state
-            assert gateway_proc.cluster_manager.stop_worker_state == {"i": 2}
+            assert cluster_obj.manager.stop_worker_state == {"i": 2}
 
             # Stop the cluster
             await cluster.shutdown()
@@ -439,24 +441,23 @@ async def test_slow_worker_connect(tmpdir):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("fail_stage", [0, 1])
 async def test_worker_fails_during_start(tmpdir, fail_stage):
+    config = Config()
+    config.DaskGateway.cluster_manager_class = WorkerFailsDuringStart
+    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.WorkerFailsDuringStart.fail_stage = fail_stage
 
-    async with temp_gateway(
-        cluster_manager_class=WorkerFailsDuringStart,
-        temp_dir=str(tmpdir.join("dask-gateway")),
-    ) as gateway_proc:
-
-        gateway_proc.cluster_manager.fail_stage = fail_stage
-
+    async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_url, asynchronous=True
         ) as gateway:
             cluster = await gateway.new_cluster()
             await cluster.scale(1)
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
 
             # Wait for worker failure
             timeout = 5
             while timeout > 0:
-                if gateway_proc.cluster_manager.stop_worker_state is not None:
+                if cluster_obj.manager.stop_worker_state is not None:
                     break
                 await asyncio.sleep(0.1)
                 timeout -= 0.1
@@ -465,7 +466,7 @@ async def test_worker_fails_during_start(tmpdir, fail_stage):
 
             # Stop worker called with last reported state
             res = {} if fail_stage == 0 else {"i": fail_stage - 1}
-            assert gateway_proc.cluster_manager.stop_worker_state == res
+            assert cluster_obj.manager.stop_worker_state == res
 
             # Stop the cluster
             await cluster.shutdown()
@@ -484,11 +485,12 @@ async def test_worker_fails_between_start_and_connect(tmpdir):
         ) as gateway:
             cluster = await gateway.new_cluster()
             await cluster.scale(1)
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
 
             # Wait for worker failure and stop_worker called
             timeout = 5
             while timeout > 0:
-                if gateway_proc.cluster_manager.stopped_workers:
+                if cluster_obj.manager.status == "stopped":
                     break
                 await asyncio.sleep(0.1)
                 timeout -= 0.1
@@ -512,16 +514,17 @@ async def test_worker_fails_after_connect(tmpdir):
 
             cluster = await gateway.new_cluster()
             await cluster.scale(1)
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
 
             # Wait for worker to connect
-            await asyncio.wait_for(gateway_proc.cluster_manager.worker_connected, 30)
+            await asyncio.wait_for(cluster_obj.manager.worker_connected, 30)
 
             # Close the worker
-            worker = list(gateway_proc.cluster_manager.active_workers.values())[0]
+            worker = list(cluster_obj.manager.workers.values())[0]
             await worker.close(1)
 
             # Stop cluster called to cleanup after failure
-            await asyncio.wait_for(gateway_proc.cluster_manager.stop_worker_called, 30)
+            await asyncio.wait_for(cluster_obj.manager.stop_worker_called, 30)
 
             await cluster.shutdown()
 
@@ -559,22 +562,24 @@ async def test_gateway_stop_clusters_on_shutdown(tmpdir):
         cluster_manager_class=InProcessClusterManager,
         temp_dir=str(tmpdir.join("dask-gateway")),
     ) as gateway_proc:
-
-        manager = gateway_proc.cluster_manager
-
         async with Gateway(
             address=gateway_proc.public_url, asynchronous=True
         ) as gateway:
 
-            await gateway.new_cluster()
+            cluster = await gateway.new_cluster()
             cluster2 = await gateway.new_cluster()
             await cluster2.shutdown()
 
-            # There are active clusters
-            assert manager.active_schedulers
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
+            cluster_obj2 = gateway_proc.db.cluster_from_name(cluster2.name)
+
+            # There is an active cluster
+            assert cluster_obj.manager.scheduler is not None
 
     # Active clusters are stopped on shutdown
-    assert not manager.active_schedulers
+    for c in [cluster_obj, cluster_obj2]:
+        assert c.manager.scheduler is None
+        assert c.status >= ClusterStatus.STOPPED
 
 
 @pytest.mark.asyncio

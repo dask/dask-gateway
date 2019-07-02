@@ -11,7 +11,6 @@ from dask_gateway_server.utils import random_port
 
 from .utils import temp_gateway
 
-
 try:
     import kerberos
 
@@ -20,6 +19,11 @@ try:
     requires_kerberos = pytest.mark.skipif(skip, reason="No kerberos server running")
 except ImportError:
     requires_kerberos = pytest.mark.skipif(True, reason="Cannot import kerberos")
+
+try:
+    import jupyterhub.tests.mocking as hub_mocking
+except ImportError:
+    hub_mocking = None
 
 
 KEYTAB_PATH = "/home/dask/dask.keytab"
@@ -124,9 +128,9 @@ class temp_hub(object):
         type(self.hub).clear_instance()
 
 
+@pytest.mark.skipif(not hub_mocking, reason="JupyterHub not installed")
 @pytest.mark.asyncio
 async def test_jupyterhub_auth(tmpdir, monkeypatch):
-    hub_mocking = pytest.importorskip("jupyterhub.tests.mocking")
     from jupyterhub.tests.utils import add_user
 
     gateway_address = "http://127.0.0.1:%d" % random_port()

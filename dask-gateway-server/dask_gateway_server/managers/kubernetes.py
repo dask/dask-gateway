@@ -4,7 +4,7 @@ import threading
 import time
 
 from traitlets import Int, Float, List, Dict, Unicode, Instance, default
-from traitlets.config import LoggingConfigurable
+from traitlets.config import SingletonConfigurable
 
 import kubernetes.client
 import kubernetes.config
@@ -43,7 +43,7 @@ def configure_kubernetes_clients():
         kubernetes.config.load_kube_config()
 
 
-class PodReflector(LoggingConfigurable):
+class PodReflector(SingletonConfigurable):
     request_timeout = Float(
         60,
         help="""
@@ -79,6 +79,7 @@ class PodReflector(LoggingConfigurable):
         super().__init__(*args, **kwargs)
         self.first_load_future = asyncio.get_running_loop().create_future()
         self.stopped = False
+        self.start()
 
     def __del__(self):
         self.stop()
@@ -327,15 +328,15 @@ class KubeClusterManager(ClusterManager):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.pod_reflector = PodReflector(
-            parent=self,
+        # Starts the pod reflector for the first instance only
+        self.pod_reflector = PodReflector.instance(
+            parent=self.parent or self,
             kube_client=self.kube_client,
             namespace=self.namespace,
             label_selector=self.pod_label_selector,
         )
-        self.pod_reflector.start()
 
-    def get_tls_paths(self, cluster_info):
+    def get_tls_paths(self):
         """Get the absolute paths to the tls cert and key files."""
         return "/etc/dask-credentials/dask.crt", "/etc/dask-credentials/dask.pem"
 
@@ -360,45 +361,43 @@ class KubeClusterManager(ClusterManager):
         """A label selector for all pods started by dask-gateway"""
         return ",".join("%s=%s" % (k, v) for k, v in self.common_labels.items())
 
-    def get_labels_for(self, cluster_info, component, worker_name=None):
+    def get_labels_for(self, component, worker_name=None):
         labels = self.common_labels.copy()
         labels.update(
             {
                 "app.kubernetes.io/component": component,
-                "cluster-name": cluster_info.cluster_name,
+                "cluster-name": self.cluster_name,
             }
         )
         if worker_name:
             labels["worker-name"] = worker_name
         return labels
 
-    def make_secret_spec(self, cluster_info):
-        name = "dask-gateway-tls-%s" % cluster_info.cluster_name
-        labels = self.get_labels_for(cluster_info, "dask-gateway-tls")
+    def make_secret_spec(self):
+        name = "dask-gateway-tls-%s" % self.cluster_name
+        labels = self.get_labels_for("dask-gateway-tls")
         annotations = self.common_annotations
 
         secret = V1Secret(
             kind="Secret",
             api_version="v1",
             string_data={
-                "dask.crt": cluster_info.tls_cert.decode(),
-                "dask.pem": cluster_info.tls_key.decode(),
+                "dask.crt": self.tls_cert.decode(),
+                "dask.pem": self.tls_key.decode(),
             },
             metadata=V1ObjectMeta(name=name, labels=labels, annotations=annotations),
         )
         return secret
 
-    def make_pod_spec(self, cluster_info, tls_secret, worker_name=None):
+    def make_pod_spec(self, tls_secret, worker_name=None):
         annotations = self.common_annotations
-        env = self.get_env(cluster_info)
+        env = self.get_env()
 
         if worker_name is not None:
             # Worker
             name = "dask-gateway-worker-%s" % worker_name
             container_name = "dask-gateway-worker"
-            labels = self.get_labels_for(
-                cluster_info, "dask-gateway-worker", worker_name=worker_name
-            )
+            labels = self.get_labels_for("dask-gateway-worker", worker_name=worker_name)
             mem_req = self.worker_memory
             mem_lim = self.worker_memory_limit
             cpu_req = self.worker_cores
@@ -407,9 +406,9 @@ class KubeClusterManager(ClusterManager):
             cmd = self.worker_command
         else:
             # Scheduler
-            name = "dask-gateway-scheduler-%s" % cluster_info.cluster_name
+            name = "dask-gateway-scheduler-%s" % self.cluster_name
             container_name = "dask-gateway-scheduler"
-            labels = self.get_labels_for(cluster_info, "dask-gateway-scheduler")
+            labels = self.get_labels_for("dask-gateway-scheduler")
             mem_req = self.scheduler_memory
             mem_lim = self.scheduler_memory_limit
             cpu_req = self.scheduler_cores
@@ -459,8 +458,8 @@ class KubeClusterManager(ClusterManager):
 
         return pod
 
-    async def start_cluster(self, cluster_info):
-        tls_secret = self.make_secret_spec(cluster_info)
+    async def start_cluster(self):
+        tls_secret = self.make_secret_spec()
 
         secret_name = tls_secret.metadata.name
 
@@ -472,7 +471,7 @@ class KubeClusterManager(ClusterManager):
         )
         yield {"secret_name": secret_name}
 
-        pod = self.make_pod_spec(cluster_info, secret_name)
+        pod = self.make_pod_spec(secret_name)
 
         self.log.debug("Starting pod %s", pod.metadata.name)
 
@@ -508,19 +507,17 @@ class KubeClusterManager(ClusterManager):
         # pod doesn't exist or has been deleted
         return False, ("Pod %s already deleted" % pod_name)
 
-    async def cluster_status(self, cluster_info, cluster_state):
+    async def cluster_status(self, cluster_state):
         return await self.pod_status(
             cluster_state.get("pod_name"), "dask-gateway-scheduler"
         )
 
-    async def worker_status(
-        self, worker_name, worker_state, cluster_info, cluster_state
-    ):
+    async def worker_status(self, worker_name, worker_state, cluster_state):
         return await self.pod_status(
             worker_state.get("pod_name"), "dask-gateway-worker"
         )
 
-    async def stop_cluster(self, cluster_info, cluster_state):
+    async def stop_cluster(self, cluster_state):
         loop = asyncio.get_running_loop()
 
         pod_name = cluster_state.get("pod_name")
@@ -538,10 +535,10 @@ class KubeClusterManager(ClusterManager):
                 self.namespace,
             )
 
-    async def start_worker(self, worker_name, cluster_info, cluster_state):
+    async def start_worker(self, worker_name, cluster_state):
         secret_name = cluster_state["secret_name"]
 
-        pod = self.make_pod_spec(cluster_info, secret_name, worker_name)
+        pod = self.make_pod_spec(secret_name, worker_name)
 
         self.log.debug("Starting pod %s", pod.metadata.name)
 
@@ -552,7 +549,7 @@ class KubeClusterManager(ClusterManager):
 
         yield {"pod_name": pod.metadata.name}
 
-    async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
+    async def stop_worker(self, worker_name, worker_state, cluster_state):
         pod_name = worker_state.get("pod_name")
         if pod_name is not None:
             loop = asyncio.get_running_loop()

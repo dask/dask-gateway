@@ -10,7 +10,7 @@ pytest.importorskip("kubernetes")
 import kubernetes.client
 from kubernetes.client.rest import ApiException
 
-from dask_gateway_server.managers.kubernetes import KubeClusterManager
+from dask_gateway_server.managers.kubernetes import KubeClusterManager, PodReflector
 
 from .utils import ClusterManagerTests
 
@@ -47,6 +47,7 @@ def cleanup_applications():
 
 class TestKubeClusterManager(ClusterManagerTests):
     def new_manager(self, **kwargs):
+        PodReflector.clear_instance()
         return KubeClusterManager(
             namespace=NAMESPACE,
             scheduler_memory="256M",
@@ -56,9 +57,7 @@ class TestKubeClusterManager(ClusterManagerTests):
             **kwargs,
         )
 
-    async def cleanup_cluster(
-        self, manager, cluster_info, cluster_state, worker_states
-    ):
+    async def cleanup_cluster(self, manager, cluster_state, worker_states):
         for state in worker_states + [cluster_state]:
             await self.delete_pod(manager, state.get("pod_name"))
 
@@ -103,10 +102,10 @@ class TestKubeClusterManager(ClusterManagerTests):
             raise
         return pod.status.phase.lower() in ("pending", "running")
 
-    def cluster_is_running(self, manager, cluster_info, cluster_state):
+    async def cluster_is_running(self, manager, cluster_state):
         return self.pod_is_running(manager, cluster_state.get("pod_name"))
 
-    def worker_is_running(self, manager, cluster_info, cluster_state, worker_state):
+    async def worker_is_running(self, manager, cluster_state, worker_state):
         return self.pod_is_running(manager, worker_state.get("pod_name"))
 
     def num_start_cluster_stages(self):
