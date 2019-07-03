@@ -6,7 +6,7 @@ skein = pytest.importorskip("skein")
 if not os.environ.get("TEST_DASK_GATEWAY_YARN"):
     pytest.skip("Not running YARN tests", allow_module_level=True)
 
-from dask_gateway_server.managers.yarn import YarnClusterManager, LRUCache
+from dask_gateway_server.managers.yarn import YarnClusterManager, YarnAppClientCache
 
 from .utils import ClusterManagerTests
 
@@ -39,19 +39,18 @@ class YarnTestingClusterManager(YarnClusterManager):
             _APPIDS.add(state["app_id"])
             yield state
 
-    async def stop_cluster(self, cluster_info, cluster_state):
+    async def stop_cluster(self, cluster_state):
         appid = cluster_state.get("app_id")
-        await super().stop_cluster(cluster_info, cluster_state)
+        await super().stop_cluster(cluster_state)
         _APPIDS.discard(appid)
 
 
 class TestYarnClusterManager(ClusterManagerTests):
-    async def cleanup_cluster(
-        self, manager, cluster_info, cluster_state, worker_states
-    ):
+    async def cleanup_cluster(self, manager, cluster_state, worker_states):
         app_id = cluster_state.get("app_id")
         if app_id is not None:
-            manager.skein_client.kill_application(app_id)
+            skein_client = await manager._get_skein_client()
+            skein_client.kill_application(app_id)
 
     def new_manager(self, **kwargs):
         return YarnTestingClusterManager(
@@ -68,20 +67,21 @@ class TestYarnClusterManager(ClusterManagerTests):
             **kwargs,
         )
 
-    def cluster_is_running(self, manager, cluster_info, cluster_state):
+    async def cluster_is_running(self, manager, cluster_state):
         app_id = cluster_state.get("app_id")
         if not app_id:
             return False
-        report = manager.skein_client.application_report(app_id)
+        skein_client = await manager._get_skein_client()
+        report = skein_client.application_report(app_id)
         return report.state not in ("FINISHED", "FAILED", "KILLED")
 
-    def worker_is_running(self, manager, cluster_info, cluster_state, worker_state):
+    async def worker_is_running(self, manager, cluster_state, worker_state):
         app_id = cluster_state.get("app_id")
         container_id = worker_state.get("container_id")
         if not app_id or not container_id:
             return False
 
-        app = manager._get_app_client(cluster_info, cluster_state)
+        app = await manager._get_app_client(cluster_state)
 
         active = app.get_containers(
             services=["dask.worker"], states=["WAITING", "REQUESTED", "RUNNING"]
@@ -96,7 +96,7 @@ class TestYarnClusterManager(ClusterManagerTests):
 
 
 def test_lru_cache():
-    cache = LRUCache(3)
+    cache = YarnAppClientCache(max_size=3)
 
     # Item not in cache returns None
     assert cache.get("missing") is None

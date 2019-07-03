@@ -192,6 +192,7 @@ class DataManager(object):
         self.username_to_user = {}
         self.cookie_to_user = {}
         self.token_to_cluster = {}
+        self.name_to_cluster = {}
         self.id_to_cluster = {}
 
     def load_database_state(self):
@@ -225,6 +226,7 @@ class DataManager(object):
             )
             self.id_to_cluster[cluster.id] = cluster
             self.token_to_cluster[cluster.token] = cluster
+            self.name_to_cluster[cluster.name] = cluster
             user.clusters[cluster.name] = cluster
 
         # Next load all existing workers into memory
@@ -261,6 +263,7 @@ class DataManager(object):
                 for i in to_delete:
                     cluster = self.id_to_cluster.pop(i)
                     del self.token_to_cluster[cluster.token]
+                    del self.name_to_cluster[cluster.name]
                     del cluster.user.clusters[cluster.name]
 
         return len(to_delete)
@@ -303,6 +306,10 @@ class DataManager(object):
     def cluster_from_token(self, token):
         """Lookup a cluster from a token"""
         return self.token_to_cluster.get(token)
+
+    def cluster_from_name(self, name):
+        """Lookup a cluster by name"""
+        return self.name_to_cluster.get(name)
 
     def active_clusters(self):
         for user in self.username_to_user.values():
@@ -348,6 +355,7 @@ class DataManager(object):
             )
             self.id_to_cluster[cluster.id] = cluster
             self.token_to_cluster[token] = cluster
+            self.name_to_cluster[cluster_name] = cluster
             user.clusters[cluster_name] = cluster
 
         return cluster
@@ -398,22 +406,6 @@ class User(object):
         self.clusters = {}
 
 
-class ClusterInfo(object):
-    """Public Information about a cluster.
-
-    This object is passed to methods in the ``ClusterManager`` interface.
-    """
-
-    __slots__ = ("username", "cluster_name", "api_token", "tls_cert", "tls_key")
-
-    def __init__(self, username, cluster_name, api_token, tls_cert, tls_key):
-        self.username = username
-        self.cluster_name = cluster_name
-        self.api_token = api_token
-        self.tls_cert = tls_cert
-        self.tls_key = tls_key
-
-
 class Cluster(object):
     def __init__(
         self,
@@ -448,6 +440,9 @@ class Cluster(object):
         self.pending = set()
         self.workers = {}
 
+        # The cluster manager instance
+        self.manager = None
+
         loop = asyncio.get_running_loop()
         self.lock = asyncio.Lock(loop=loop)
         self._start_future = loop.create_future()
@@ -464,16 +459,6 @@ class Cluster(object):
 
     def is_active(self):
         return self.status < ClusterStatus.STOPPING
-
-    @property
-    def info(self):
-        return ClusterInfo(
-            username=self.user.name,
-            cluster_name=self.name,
-            api_token=self.token,
-            tls_cert=self.tls_cert,
-            tls_key=self.tls_key,
-        )
 
 
 class Worker(object):

@@ -115,8 +115,8 @@ class LocalClusterManager(ClusterManager):
     def _default_clusters_directory(self):
         return os.path.join(self.temp_dir, "clusters")
 
-    def get_working_directory(self, cluster_info):
-        return os.path.join(self.clusters_directory, cluster_info.cluster_name)
+    def get_working_directory(self):
+        return os.path.join(self.clusters_directory, self.cluster_name)
 
     def get_certs_directory(self, workdir):
         return os.path.join(workdir, ".certs")
@@ -124,20 +124,20 @@ class LocalClusterManager(ClusterManager):
     def get_logs_directory(self, workdir):
         return os.path.join(workdir, "logs")
 
-    def get_env(self, cluster_info):
-        env = super().get_env(cluster_info)
+    def get_env(self):
+        env = super().get_env()
         for key in self.inherited_environment:
             if key in os.environ:
                 env[key] = os.environ[key]
-        env["USER"] = cluster_info.username
+        env["USER"] = self.username
         return env
 
-    def create_working_directory(self, cluster_info):  # pragma: nocover
-        user = pwd.getpwnam(cluster_info.username)
+    def create_working_directory(self):  # pragma: nocover
+        user = pwd.getpwnam(self.username)
         uid = user.pw_uid
         gid = user.pw_gid
 
-        workdir = self.get_working_directory(cluster_info)
+        workdir = self.get_working_directory()
         certsdir = self.get_certs_directory(workdir)
         logsdir = self.get_logs_directory(workdir)
 
@@ -145,18 +145,15 @@ class LocalClusterManager(ClusterManager):
             os.makedirs(path, 0o700, exist_ok=True)
             os.chown(path, uid, gid)
 
-        cert_path, key_path = self.get_tls_paths(cluster_info)
+        cert_path, key_path = self.get_tls_paths()
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-        for path, data in [
-            (cert_path, cluster_info.tls_cert),
-            (key_path, cluster_info.tls_key),
-        ]:
+        for path, data in [(cert_path, self.tls_cert), (key_path, self.tls_key)]:
             with os.fdopen(os.open(path, flags, 0o600), "wb") as fil:
                 fil.write(data)
             os.chown(path, uid, gid)
 
-    def remove_working_directory(self, cluster_info):
-        workdir = self.get_working_directory(cluster_info)
+    def remove_working_directory(self):
+        workdir = self.get_working_directory()
         if not os.path.exists(workdir):
             return
         try:
@@ -164,24 +161,24 @@ class LocalClusterManager(ClusterManager):
         except Exception:  # pragma: nocover
             self.log.warn("Failed to remove working directory %r", workdir)
 
-    def get_tls_paths(self, cluster_info):
+    def get_tls_paths(self):
         """Get the absolute paths to the tls cert and key files."""
-        workdir = self.get_working_directory(cluster_info)
+        workdir = self.get_working_directory()
         certsdir = self.get_certs_directory(workdir)
         cert_path = os.path.join(certsdir, "dask.crt")
         key_path = os.path.join(certsdir, "dask.pem")
         return cert_path, key_path
 
-    def make_preexec_fn(self, cluster_info):  # pragma: nocover
+    def make_preexec_fn(self):  # pragma: nocover
         # Borrowed and modified from jupyterhub/spawner.py
         import grp
         import pwd
 
-        user = pwd.getpwnam(cluster_info.username)
+        user = pwd.getpwnam(self.username)
         uid = user.pw_uid
         gid = user.pw_gid
-        groups = [g.gr_gid for g in grp.getgrall() if cluster_info.username in g.gr_mem]
-        workdir = self.get_working_directory(cluster_info)
+        groups = [g.gr_gid for g in grp.getgrall() if self.username in g.gr_mem]
+        workdir = self.get_working_directory()
 
         def preexec():
             os.setgid(gid)
@@ -212,8 +209,8 @@ class LocalClusterManager(ClusterManager):
         """The full command (with args) to launch a dask scheduler"""
         return self.scheduler_cmd
 
-    async def start_process(self, cmd, env, name, cluster_info):
-        workdir = self.get_working_directory(cluster_info)
+    async def start_process(self, cmd, env, name):
+        workdir = self.get_working_directory()
         logsdir = self.get_logs_directory(workdir)
         log_path = os.path.join(logsdir, name + ".log")
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
@@ -222,7 +219,7 @@ class LocalClusterManager(ClusterManager):
             fd = os.open(log_path, flags, 0o755)
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
-                preexec_fn=self.make_preexec_fn(cluster_info),
+                preexec_fn=self.make_preexec_fn(),
                 start_new_session=True,
                 env=env,
                 stdout=fd,
@@ -250,46 +247,39 @@ class LocalClusterManager(ClusterManager):
             # all attempts failed, zombie process
             self.log.warn("Failed to stop process %d", pid)
 
-    async def start_cluster(self, cluster_info):
-        self.create_working_directory(cluster_info)
+    async def start_cluster(self):
+        self.create_working_directory()
         pid = await self.start_process(
-            self.scheduler_command.split(),
-            self.get_env(cluster_info),
-            "scheduler",
-            cluster_info,
+            self.scheduler_command.split(), self.get_env(), "scheduler"
         )
         yield {"pid": pid}
 
-    async def cluster_status(self, cluster_info, cluster_state):
+    async def cluster_status(self, cluster_state):
         pid = cluster_state.get("pid")
         if pid is not None:
             return is_running(pid)
         return False
 
-    async def stop_cluster(self, cluster_info, cluster_state):
+    async def stop_cluster(self, cluster_state):
         pid = cluster_state.get("pid")
         if pid is not None:
             await self.stop_process(pid)
-        self.remove_working_directory(cluster_info)
+        self.remove_working_directory()
 
-    async def start_worker(self, worker_name, cluster_info, cluster_state):
+    async def start_worker(self, worker_name, cluster_state):
         cmd = self.worker_command.split()
-        env = self.get_env(cluster_info)
+        env = self.get_env()
         env["DASK_GATEWAY_WORKER_NAME"] = worker_name
-        pid = await self.start_process(
-            cmd, env, "worker-%s" % worker_name, cluster_info
-        )
+        pid = await self.start_process(cmd, env, "worker-%s" % worker_name)
         yield {"pid": pid}
 
-    async def worker_status(
-        self, worker_name, worker_state, cluster_info, cluster_state
-    ):
+    async def worker_status(self, worker_name, worker_state, cluster_state):
         pid = worker_state.get("pid")
         if pid is not None:
             return is_running(pid)
         return False
 
-    async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
+    async def stop_worker(self, worker_name, worker_state, cluster_state):
         pid = worker_state.get("pid")
         if pid is None:
             return
@@ -303,27 +293,24 @@ class UnsafeLocalClusterManager(LocalClusterManager):
     same level of permission as the gateway.
     """
 
-    def make_preexec_fn(self, cluster_info):
-        workdir = self.get_working_directory(cluster_info)
+    def make_preexec_fn(self):
+        workdir = self.get_working_directory()
 
         def preexec():  # pragma: nocover
             os.chdir(workdir)
 
         return preexec
 
-    def create_working_directory(self, cluster_info):
-        workdir = self.get_working_directory(cluster_info)
+    def create_working_directory(self):
+        workdir = self.get_working_directory()
         certsdir = self.get_certs_directory(workdir)
         logsdir = self.get_logs_directory(workdir)
 
         for path in [workdir, certsdir, logsdir]:
             os.makedirs(path, 0o700, exist_ok=True)
 
-        cert_path, key_path = self.get_tls_paths(cluster_info)
+        cert_path, key_path = self.get_tls_paths()
         flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-        for path, data in [
-            (cert_path, cluster_info.tls_cert),
-            (key_path, cluster_info.tls_key),
-        ]:
+        for path, data in [(cert_path, self.tls_cert), (key_path, self.tls_key)]:
             with os.fdopen(os.open(path, flags, 0o600), "wb") as fil:
                 fil.write(data)

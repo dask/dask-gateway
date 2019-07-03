@@ -4,10 +4,10 @@ import shutil
 
 from traitlets import Unicode, default
 
-from .base import JobQueueClusterManager
+from .base import JobQueueClusterManager, JobQueueStatusTracker
 
 
-__all__ = ("SlurmClusterManager",)
+__all__ = ("SlurmClusterManager", "SlurmStatusTracker")
 
 
 def slurm_format_memory(n):
@@ -19,6 +19,27 @@ def slurm_format_memory(n):
     if n >= 10 * 1024:
         return "%dK" % math.ceil(n / 1024)
     return "1K"
+
+
+class SlurmStatusTracker(JobQueueStatusTracker):
+    """A tracker for all Slurm jobs submitted by the gateway"""
+
+    @default("status_command")
+    def _default_status_command(self):
+        return shutil.which("squeue") or "squeue"
+
+    def get_status_cmd_env(self, job_ids):
+        cmd = [self.status_command, "-h", "--job=%s" % ",".join(job_ids), "-o", "%i %t"]
+        return cmd, {}
+
+    def parse_job_states(self, stdout):
+        finished = {}
+
+        for l in stdout.splitlines():
+            job_id, state = l.split()
+            if state not in ("R", "CG", "PD", "CF"):
+                finished[job_id] = state
+        return finished
 
 
 class SlurmClusterManager(JobQueueClusterManager):
@@ -38,12 +59,8 @@ class SlurmClusterManager(JobQueueClusterManager):
     def _default_cancel_command(self):
         return shutil.which("scancel") or "scancel"
 
-    @default("status_command")
-    def _default_status_command(self):
-        return shutil.which("squeue") or "squeue"
-
-    def get_submit_cmd_env_stdin(self, cluster_info, worker_name=None):
-        env = self.get_env(cluster_info)
+    def get_submit_cmd_env_stdin(self, worker_name=None):
+        env = self.get_env()
 
         cmd = [self.submit_command, "--parsable"]
         cmd.append("--job-name=dask-gateway")
@@ -63,12 +80,12 @@ class SlurmClusterManager(JobQueueClusterManager):
         else:
             cpus = self.scheduler_cores
             mem = slurm_format_memory(self.scheduler_memory)
-            log_file = "dask-scheduler-%s.log" % cluster_info.cluster_name
+            log_file = "dask-scheduler-%s.log" % self.cluster_name
             script = "\n".join(
                 ["#!/bin/sh", self.scheduler_setup, self.scheduler_command]
             )
 
-        staging_dir = self.get_staging_directory(cluster_info)
+        staging_dir = self.get_staging_directory()
 
         cmd.extend(
             [
@@ -85,18 +102,10 @@ class SlurmClusterManager(JobQueueClusterManager):
     def get_stop_cmd_env(self, job_id):
         return [self.cancel_command, job_id], {}
 
-    def get_status_cmd_env(self, job_ids):
-        cmd = [self.status_command, "-h", "--job=%s" % ",".join(job_ids), "-o", "%i %t"]
-        return cmd, {}
-
     def parse_job_id(self, stdout):
         return stdout.strip()
 
-    def parse_job_states(self, stdout):
-        finished = {}
-
-        for l in stdout.splitlines():
-            job_id, state = l.split()
-            if state not in ("R", "CG", "PD", "CF"):
-                finished[job_id] = state
-        return finished
+    def get_status_tracker(self):
+        return SlurmStatusTracker.instance(
+            parent=self.parent or self, task_pool=self.task_pool
+        )

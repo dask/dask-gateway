@@ -2,12 +2,14 @@ import os
 import subprocess
 
 import pytest
+from traitlets.config import Config
 
 if not os.environ.get("TEST_DASK_GATEWAY_SLURM"):
     pytest.skip("Not running Slurm tests", allow_module_level=True)
 
 from dask_gateway_server.managers.jobqueue.slurm import (
     SlurmClusterManager,
+    SlurmStatusTracker,
     slurm_format_memory,
 )
 
@@ -57,40 +59,40 @@ class SlurmTestingClusterManager(SlurmClusterManager):
             JOBIDS.add(state["job_id"])
             yield state
 
-    async def stop_cluster(self, cluster_info, cluster_state):
+    async def stop_cluster(self, cluster_state):
         job_id = cluster_state.get("job_id")
-        await super().stop_cluster(cluster_info, cluster_state)
+        await super().stop_cluster(cluster_state)
         JOBIDS.discard(job_id)
 
 
 class TestSlurmClusterManager(ClusterManagerTests):
-    async def cleanup_cluster(
-        self, manager, cluster_info, cluster_state, worker_states
-    ):
+    async def cleanup_cluster(self, manager, cluster_state, worker_states):
         job_id = cluster_state.get("job_id")
         if job_id:
             kill_job(job_id)
 
     def new_manager(self, **kwargs):
-        return SlurmTestingClusterManager(
-            scheduler_cmd="/opt/miniconda/bin/dask-gateway-scheduler",
-            worker_cmd="/opt/miniconda/bin/dask-gateway-worker",
-            scheduler_memory="512M",
-            worker_memory="512M",
-            scheduler_cores=1,
-            worker_cores=1,
-            cluster_start_timeout=30,
-            job_status_period=0.5,
-            **kwargs,
+        SlurmStatusTracker.clear_instance()
+        c = Config()
+        c.SlurmClusterManager.scheduler_cmd = (
+            "/opt/miniconda/bin/dask-gateway-scheduler"
         )
+        c.SlurmClusterManager.worker_cmd = "/opt/miniconda/bin/dask-gateway-worker"
+        c.SlurmClusterManager.scheduler_memory = "512M"
+        c.SlurmClusterManager.worker_memory = "512M"
+        c.SlurmClusterManager.scheduler_cores = 1
+        c.SlurmClusterManager.worker_cores = 1
+        c.SlurmClusterManager.cluster_start_timeout = 30
+        c.SlurmStatusTracker.query_period = 0.5
+        return SlurmTestingClusterManager(config=c, **kwargs)
 
-    def cluster_is_running(self, manager, cluster_info, cluster_state):
+    async def cluster_is_running(self, manager, cluster_state):
         job_id = cluster_state.get("job_id")
         if not job_id:
             return False
         return is_job_running(job_id)
 
-    def worker_is_running(self, manager, cluster_info, cluster_state, worker_state):
+    async def worker_is_running(self, manager, cluster_state, worker_state):
         job_id = worker_state.get("job_id")
         if not job_id:
             return False

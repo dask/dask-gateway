@@ -30,12 +30,17 @@ class TaskPool(object):
         # canceling them
         try:
             await asyncio.wait_for(
-                asyncio.gather(
-                    *getattr(self, "pending_tasks", ()), return_exceptions=True
-                ),
-                timeout,
+                asyncio.gather(*self.pending_tasks, return_exceptions=True), timeout
             )
         except (asyncio.TimeoutError, asyncio.CancelledError):
+            pass
+
+        # Now wait for all tasks to be actually completed
+        try:
+            await asyncio.gather(
+                *self.pending_tasks, *self.background_tasks, return_exceptions=True
+            )
+        except asyncio.CancelledError:
             pass
 
 

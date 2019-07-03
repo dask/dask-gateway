@@ -1,4 +1,4 @@
-from traitlets import Unicode, Float, Integer, Dict, Bool, Instance
+from traitlets import Bytes, Unicode, Float, Integer, Dict, Bool, Instance
 from traitlets.config import LoggingConfigurable
 
 from ..utils import MemoryLimit, TaskPool
@@ -137,25 +137,32 @@ class ClusterManager(LoggingConfigurable):
         config=True,
     )
 
-    # Parameters forwarded by gateway application
+    # Cluster-specific parameters forwarded by gateway application
+    username = Unicode()
+    cluster_name = Unicode()
+    api_token = Unicode()
+    tls_cert = Bytes()
+    tls_key = Bytes()
+
+    # Common parameters forwarded by gateway application
     task_pool = Instance(TaskPool, args=())
     api_url = Unicode()
     temp_dir = Unicode()
 
-    def get_tls_paths(self, cluster_info):
+    def get_tls_paths(self):
         """Get the absolute paths to the tls cert and key files."""
         return "dask.crt", "dask.pem"
 
-    def get_env(self, cluster_info):
+    def get_env(self):
         """Get a dict of environment variables to set for the process"""
         out = dict(self.environment)
-        tls_cert_path, tls_key_path = self.get_tls_paths(cluster_info)
+        tls_cert_path, tls_key_path = self.get_tls_paths()
         # Set values that dask-gateway needs to run
         out.update(
             {
                 "DASK_GATEWAY_API_URL": self.api_url,
-                "DASK_GATEWAY_CLUSTER_NAME": cluster_info.cluster_name,
-                "DASK_GATEWAY_API_TOKEN": cluster_info.api_token,
+                "DASK_GATEWAY_CLUSTER_NAME": self.cluster_name,
+                "DASK_GATEWAY_API_TOKEN": self.api_token,
                 "DASK_GATEWAY_TLS_CERT": tls_cert_path,
                 "DASK_GATEWAY_TLS_KEY": tls_key_path,
             }
@@ -175,16 +182,11 @@ class ClusterManager(LoggingConfigurable):
         """,
     )
 
-    async def start_cluster(self, cluster_info):
+    async def start_cluster(self):
         """Start a new cluster.
 
         This should do any initialization for the whole dask cluster
         application, and then start the scheduler.
-
-        Parameters
-        ----------
-        cluster_info : ClusterInfo
-            Information about the cluster to be started.
 
         Yields
         ------
@@ -197,15 +199,13 @@ class ClusterManager(LoggingConfigurable):
         """
         raise NotImplementedError
 
-    async def cluster_status(self, cluster_info, cluster_state):
+    async def cluster_status(self, cluster_state):
         """Check the status of a cluster.
 
         Called periodically to check the status of a cluster.
 
         Parameters
         ----------
-        cluster_info : ClusterInfo
-            Information about the cluster.
         cluster_state : dict
             Any additional state returned from ``start_cluster``.
 
@@ -218,19 +218,17 @@ class ClusterManager(LoggingConfigurable):
         """
         raise NotImplementedError
 
-    async def stop_cluster(self, cluster_info, cluster_state):
+    async def stop_cluster(self, cluster_state):
         """Stop the cluster.
 
         Parameters
         ----------
-        cluster_info : ClusterInfo
-            Information about the cluster.
         cluster_state : dict
             Any additional state returned from ``start_cluster``.
         """
         raise NotImplementedError
 
-    async def start_worker(self, worker_name, cluster_info, cluster_state):
+    async def start_worker(self, worker_name, cluster_state):
         """Start a new worker.
 
         Parameters
@@ -239,8 +237,6 @@ class ClusterManager(LoggingConfigurable):
             The worker name, should be passed to ``dask-gateway-worker`` via
             the ``--name`` flag, or set as the ``DASK_GATEWAY_WORKER_NAME``
             environment variable.
-        cluster_info : ClusterInfo
-            Information about the cluster.
         cluster_state : dict
             Any additional state returned from ``start_cluster``.
 
@@ -255,9 +251,7 @@ class ClusterManager(LoggingConfigurable):
         """
         raise NotImplementedError
 
-    async def worker_status(
-        self, worker_name, worker_state, cluster_info, cluster_state
-    ):
+    async def worker_status(self, worker_name, worker_state, cluster_state):
         """Check the status of a worker.
 
         Called periodically to check the status of a worker. Once a worker is
@@ -269,8 +263,6 @@ class ClusterManager(LoggingConfigurable):
             The worker name.
         worker_state : dict
             Any additional worker state returned from ``start_worker``.
-        cluster_info : ClusterInfo
-            Information about the cluster.
         cluster_state : dict
             Any additional state returned from ``start_cluster``.
 
@@ -283,7 +275,7 @@ class ClusterManager(LoggingConfigurable):
         """
         raise NotImplementedError
 
-    def on_worker_running(self, worker_name, worker_state, cluster_info, cluster_state):
+    def on_worker_running(self, worker_name, worker_state, cluster_state):
         """Called when a worker is marked as running.
 
         Optional callback, useful for cluster managers that track worker state
@@ -295,14 +287,12 @@ class ClusterManager(LoggingConfigurable):
             The worker name.
         worker_state : dict
             Any additional worker state returned from ``start_worker``.
-        cluster_info : ClusterInfo
-            Information about the cluster.
         cluster_state : dict
             Any additional state returned from ``start_cluster``.
         """
         pass
 
-    async def stop_worker(self, worker_name, worker_state, cluster_info, cluster_state):
+    async def stop_worker(self, worker_name, worker_state, cluster_state):
         """Remove a worker.
 
         Parameters
@@ -311,8 +301,6 @@ class ClusterManager(LoggingConfigurable):
             The worker name.
         worker_state : dict
             Any additional worker state returned from ``start_worker``.
-        cluster_info : ClusterInfo
-            Information about the cluster.
         cluster_state : dict
             Any additional state returned from ``start_cluster``.
         """
