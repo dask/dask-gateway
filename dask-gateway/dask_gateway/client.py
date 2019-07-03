@@ -108,6 +108,8 @@ class ClusterReport(object):
     ----------
     name : str
         The cluster's name, a unique id.
+    options : dict
+        User provided configuration for this cluster.
     status : ClusterStatus
         The cluster's status.
     scheduler_address : str or None
@@ -128,6 +130,7 @@ class ClusterReport(object):
 
     __slots__ = (
         "name",
+        "options",
         "status",
         "scheduler_address",
         "dashboard_address",
@@ -140,6 +143,7 @@ class ClusterReport(object):
     def __init__(
         self,
         name,
+        options,
         status,
         scheduler_address,
         dashboard_address,
@@ -149,6 +153,7 @@ class ClusterReport(object):
         tls_key=None,
     ):
         self.name = name
+        self.options = options
         self.status = ClusterStatus._create(status)
         self.scheduler_address = scheduler_address
         self.dashboard_address = dashboard_address
@@ -319,12 +324,29 @@ class Gateway(object):
         """
         return self.sync(self._clusters, status=status, **kwargs)
 
-    async def _submit(self):
+    async def _cluster_options(self, **options):
+        url = "%s/gateway/api/clusters/options" % self.address
+        req = HTTPRequest(url=url, method="GET")
+        resp = await self._fetch(req)
+        data = json.loads(resp.body)
+        return data["cluster_options"]
+
+    def cluster_options(self, **kwargs):
+        """Get the available cluster configuration options.
+
+        Returns
+        -------
+        cluster_options : dict
+            A dict of cluster options.
+        """
+        return self.sync(self._cluster_options, **kwargs)
+
+    async def _submit(self, **options):
         url = "%s/gateway/api/clusters/" % self.address
         req = HTTPRequest(
             url=url,
             method="POST",
-            body=json.dumps({}),
+            body=json.dumps({"cluster_options": options}),
             headers=HTTPHeaders({"Content-type": "application/json"}),
         )
         resp = await self._fetch(req)
@@ -336,6 +358,13 @@ class Gateway(object):
 
         This returns quickly with a ``cluster_name``, which can later be used
         to connect to the cluster.
+
+        Parameters
+        ----------
+        **kwargs :
+            Cluster configuration options. These are specific to each
+            deployment of dask-gateway, see ``cluster_options`` for more
+            information.
 
         Returns
         -------
@@ -398,6 +427,13 @@ class Gateway(object):
         """Submit a new cluster to the gateway, and wait for it to be started.
 
         Same as calling ``submit`` and ``connect`` in one go.
+
+        Parameters
+        ----------
+        **kwargs :
+            Cluster configuration options. These are specific to each
+            deployment of dask-gateway, see ``cluster_options`` for more
+            information.
 
         Returns
         -------

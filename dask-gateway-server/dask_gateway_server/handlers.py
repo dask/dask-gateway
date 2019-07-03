@@ -132,6 +132,7 @@ def cluster_model(gateway, cluster, full=True):
         "status": cluster.status.name,
         "start_time": cluster.start_time,
         "stop_time": cluster.stop_time,
+        "options": cluster.options,
     }
     if full:
         if cluster.status == ClusterStatus.RUNNING:
@@ -144,6 +145,13 @@ def cluster_model(gateway, cluster, full=True):
     return out
 
 
+class ClusterOptionsHandler(BaseHandler):
+    @user_authenticated
+    async def get(self):
+        spec = self.gateway.cluster_manager_options.get_specification()
+        self.write({"cluster_options": spec})
+
+
 class ClustersHandler(BaseHandler):
     @user_authenticated
     async def post(self, cluster_name):
@@ -151,8 +159,19 @@ class ClustersHandler(BaseHandler):
         if cluster_name:
             raise web.HTTPError(405)
 
-        # Launch the start task to run in the background
-        cluster = self.gateway.start_new_cluster(self.dask_user)
+        request = self.json_data.get("cluster_options") or {}
+
+        try:
+            # Launch the start task to run in the background
+            cluster = self.gateway.start_new_cluster(self.dask_user, request)
+        except Exception as exc:
+            reason = str(exc)
+            self.log.warning(
+                "Error creating new cluster for user %s: %s",
+                self.dask_user.name,
+                reason,
+            )
+            raise web.HTTPError(422, reason=reason)
 
         # Return the cluster id, to be used in future requests
         self.write({"name": cluster.name})
@@ -289,6 +308,7 @@ class ClusterWorkersHandler(BaseHandler):
 
 
 default_handlers = [
+    ("/api/clusters/options", ClusterOptionsHandler),
     (
         "/api/clusters/([a-zA-Z0-9-_.]*)/workers/([a-zA-Z0-9-_.]*)",
         ClusterWorkersHandler,

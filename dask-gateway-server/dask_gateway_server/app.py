@@ -14,7 +14,17 @@ from tornado.log import LogFormatter
 from tornado.gen import IOLoop
 from tornado.platform.asyncio import AsyncIOMainLoop
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
-from traitlets import Unicode, Bool, Type, Bytes, Float, default, validate, List
+from traitlets import (
+    Unicode,
+    Bool,
+    Type,
+    Bytes,
+    Float,
+    List,
+    Instance,
+    default,
+    validate,
+)
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
@@ -29,6 +39,7 @@ from .objects import (
     normalize_encrypt_key,
     is_in_memory_db,
 )
+from .options import Options
 from .proxy import SchedulerProxy, WebProxy
 from .utils import cleanup_tmpdir, cancel_task, TaskPool, get_ip
 
@@ -146,6 +157,18 @@ class DaskGateway(Application):
         "dask_gateway_server.managers.local.LocalClusterManager",
         klass="dask_gateway_server.managers.ClusterManager",
         help="The gateway cluster manager class to use",
+        config=True,
+    )
+
+    cluster_manager_options = Instance(
+        Options,
+        args=(),
+        help="""
+        User options for configuring the cluster manager.
+
+        Allows users to specify configuration overrides when creating a new
+        cluster manager. See the documentation for more information.
+        """,
         config=True,
     )
 
@@ -460,6 +483,7 @@ class DaskGateway(Application):
         await self.web_proxy.start()
 
     def create_cluster_manager(self, cluster):
+        config = self.cluster_manager_options.get_configuration(cluster.options)
         cluster.manager = self.cluster_manager_class(
             parent=self,
             log=self.log,
@@ -471,6 +495,7 @@ class DaskGateway(Application):
             api_token=cluster.token,
             tls_cert=cluster.tls_cert,
             tls_key=cluster.tls_key,
+            **config,
         )
 
     async def load_database_state(self):
@@ -763,8 +788,10 @@ class DaskGateway(Application):
             "/" + cluster.name, cluster.scheduler_address
         )
 
-    def start_new_cluster(self, user):
-        cluster = self.db.create_cluster(user)
+    def start_new_cluster(self, user, request):
+        # Process the user provided options
+        options = self.cluster_manager_options.parse_options(request)
+        cluster = self.db.create_cluster(user, options)
         self.create_cluster_manager(cluster)
         f = self.task_pool.create_task(self.start_cluster(cluster))
         f.add_done_callback(partial(self._monitor_start_cluster, cluster=cluster))
