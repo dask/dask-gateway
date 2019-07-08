@@ -1,16 +1,9 @@
+import textwrap
 from collections import OrderedDict
 from keyword import iskeyword
 
 
-__all__ = ("Options", "String", "Bool", "Integer", "Float", "MemoryLimit", "Select")
-
-
-# A singleton indicating no default value
-no_default = type(
-    "no_default",
-    (object,),
-    dict.fromkeys(["__repr__", "__reduce__"], lambda s: "no_default"),
-)()
+__all__ = ("Options", "String", "Bool", "Integer", "Float", "Select")
 
 
 class AttrDict(dict):
@@ -60,16 +53,14 @@ class Options(object):
         # Check for extra fields
         extra = set(request).difference(f.field for f in self.fields)
         if extra:
-            raise ValueError("Unknown fields %r" % extra)
+            raise ValueError("Unknown fields %r" % sorted(extra))
         # Validate and normalize options
         options = {}
         for f in self.fields:
             if f.field in request:
                 options[f.field] = f.validate(request[f.field])
-            elif f.default is not no_default:
-                options[f.field] = f.default
             else:
-                raise ValueError("must specify value for %r" % f.field)
+                options[f.field] = f.validate(f.default)
         return options
 
     def get_configuration(self, options):
@@ -78,23 +69,53 @@ class Options(object):
         return self.handler(AttrDict(options))
 
 
+_field_doc_template = """\
+{description}
+
+Parameters
+----------
+field : str
+    The field name to use. Must be a valid Python variable name. This will
+    be the keyword user's use to set this field programmatically (e.g.
+    ``"worker_cores"``).
+{params}
+label : str, optional
+    A human readable label that will be used in GUI representations (e.g.
+    ``"Worker Cores"``). If not provided, ``field`` will be used.
+target : str, optional
+    The target parameter to set in the processed options dict. Must be a
+    valid Python variable name. If not provided, ``field`` will be used.
+"""
+
+
+def field_doc(description, params):
+    def inner(cls):
+        cls.__doc__ = _field_doc_template.format(
+            description=description,
+            params=textwrap.dedent(params.strip("\n")).strip("\n"),
+        )
+        return cls
+
+    return inner
+
+
 class Field(object):
-    def __init__(self, field, default=no_default, target=None, label=None):
+    def __init__(self, field, default=None, target=None, label=None):
         self.field = field
-        if default is not no_default:
-            default = self.validate(default)
+        # Validate the default
+        self.validate(default)
         self.default = default
+
         if target is None:
             target = field
         self.target = target
+
+        if label is None:
+            label = field
         self.label = label
 
     def json_spec(self):
-        out = {"field": self.field}
-        if self.default is not no_default:
-            out["default"] = self.default
-        if self.label is not None:
-            out["label"] = self.label
+        out = {"field": self.field, "label": self.label, "default": self.default}
         out["spec"] = self.json_type_spec()
         return out
 
@@ -105,7 +126,17 @@ class Field(object):
         raise NotImplementedError
 
 
+@field_doc(
+    description="A string option field.",
+    params="""
+    default : str, optional
+        The default value. Default is the empty string (``""``).
+    """,
+)
 class String(Field):
+    def __init__(self, field, default="", label=None, target=None):
+        super().__init__(field, default=default, label=label, target=target)
+
     def validate(self, x):
         if not isinstance(x, str):
             raise TypeError("%s must be a string, got %r" % (self.field, x))
@@ -115,9 +146,16 @@ class String(Field):
         return {"type": "string"}
 
 
+@field_doc(
+    description="A boolean option field.",
+    params="""
+    default : bool, optional
+        The default value. Default is False.
+    """,
+)
 class Bool(Field):
-    def __init__(self, field, default=False, label=None):
-        super().__init__(field, default=default, label=label)
+    def __init__(self, field, default=False, label=None, target=None):
+        super().__init__(field, default=default, label=label, target=target)
 
     def validate(self, x):
         if not isinstance(x, bool):
@@ -129,14 +167,14 @@ class Bool(Field):
 
 
 class Number(Field):
-    def __init__(self, field, default=no_default, label=None, min=None, max=None):
+    def __init__(self, field, default=0, min=None, max=None, label=None, target=None):
         # Temporarily set to allow `validate` to work
         self.min = self.max = None
         if min is not None:
             self.min = self.validate(min)
         if max is not None:
             self.max = self.validate(max)
-        super().__init__(field, default=default, label=label)
+        super().__init__(field, default=default, label=label, target=target)
 
     def validate(self, x):
         if self.min is not None and x < self.min:
@@ -146,6 +184,17 @@ class Number(Field):
         return x
 
 
+@field_doc(
+    description="An integer option field.",
+    params="""
+    default : int, optional
+        The default value. Default is 0.
+    min : int, optional
+        The minimum valid value (inclusive). Unbounded if not set.
+    max : int, optional
+        The maximum valid value (inclusive). Unbounded if not set.
+    """,
+)
 class Integer(Number):
     def validate(self, x):
         if not isinstance(x, int):
@@ -156,6 +205,17 @@ class Integer(Number):
         return {"type": "int", "min": self.min, "max": self.max}
 
 
+@field_doc(
+    description="A float option field.",
+    params="""
+    default : float, optional
+        The default value. Default is 0.
+    min : float, optional
+        The minimum valid value (inclusive). Unbounded if not set.
+    max : float, optional
+        The maximum valid value (inclusive). Unbounded if not set.
+    """,
+)
 class Float(Number):
     def validate(self, x):
         if isinstance(x, int):
@@ -168,63 +228,42 @@ class Float(Number):
         return {"type": "float", "min": self.min, "max": self.max}
 
 
-class MemoryLimit(Integer):
-    """A specification of a memory limit, with optional units.
-
-    Supported units are:
-      - K -> Kibibytes
-      - M -> Mebibytes
-      - G -> Gibibytes
-      - T -> Tebibytes
-    """
-
-    UNIT_SUFFIXES = {"K": 2 ** 10, "M": 2 ** 20, "G": 2 ** 30, "T": 2 ** 40}
-
-    _error_template = (
-        "{field} must be a valid memory specification, got {value}. Expected an "
-        "int or a string with suffix K, M, G, T"
-    )
-
-    def validate(self, value):
-        if isinstance(value, (int, float)):
-            return int(value)
-
-        try:
-            num = float(value[:-1])
-        except ValueError:
-            raise ValueError(self._error_template.format(field=self.field, value=value))
-        suffix = value[-1]
-
-        if suffix not in self.UNIT_SUFFIXES:
-            raise ValueError(self._error_template.format(field=self.field, value=value))
-        return int(float(num) * self.UNIT_SUFFIXES[suffix])
-
-    def json_type_spec(self):
-        return {"type": "memory", "min": self.min, "max": self.max}
-
-
+@field_doc(
+    description="An option field asking users to select between a few choices.",
+    params="""
+    options : list
+        A list of valid options. Elements may be a tuple of ``(label, value)``,
+        or just ``label`` (in which case the value is the same as the label).
+        Values may be any Python object, labels must be strings.
+    default : str, optional
+        The label for the default option. Defaults to the first listed option.
+    """,
+)
 class Select(Field):
-    def __init__(self, field, options=None, default=no_default, label=None):
-        if options is None:
-            raise ValueError("Must provide at least one option")
-        elif not isinstance(options, list):
+    def __init__(self, field, options, default=None, label=None, target=None):
+        if not isinstance(options, list):
             raise TypeError("options must be a list")
         options_map = OrderedDict()
         for value in options:
             if isinstance(value, tuple):
                 label, value = value
-                label = str(label)
             else:
                 label = str(value)
+            if not isinstance(label, str):
+                raise TypeError("Select labels must be strings, got %r" % label)
             options_map[label] = value
 
-        if default is not no_default:
-            default = str(default)
+        if default is not None:
+            if not isinstance(default, str):
+                raise TypeError("Select default must be a string, got %r" % label)
             if default not in self.options_map:
                 raise ValueError("default %r not in options" % default)
+        else:
+            # Default to the first option
+            default = list(self.options_map)[0]
 
         self.options = options_map
-        super().__init__(field, default=default, label=label)
+        super().__init__(field, default=default, label=label, target=target)
 
     def validate(self, x):
         if not isinstance(x, str):

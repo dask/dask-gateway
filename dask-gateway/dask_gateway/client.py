@@ -20,6 +20,7 @@ from .cookiejar import CookieJar
 # Register gateway protocol
 from . import comm
 from .auth import get_auth
+from .options import Options
 
 del comm
 
@@ -324,12 +325,12 @@ class Gateway(object):
         """
         return self.sync(self._clusters, status=status, **kwargs)
 
-    async def _cluster_options(self, **options):
+    async def _cluster_options(self):
         url = "%s/gateway/api/clusters/options" % self.address
         req = HTTPRequest(url=url, method="GET")
         resp = await self._fetch(req)
         data = json.loads(resp.body)
-        return data["cluster_options"]
+        return Options._from_spec(data["cluster_options"])
 
     def cluster_options(self, **kwargs):
         """Get the available cluster configuration options.
@@ -341,8 +342,18 @@ class Gateway(object):
         """
         return self.sync(self._cluster_options, **kwargs)
 
-    async def _submit(self, **options):
+    async def _submit(self, cluster_options=None, **kwargs):
         url = "%s/gateway/api/clusters/" % self.address
+        if cluster_options is not None:
+            if not isinstance(cluster_options, Options):
+                raise TypeError(
+                    "cluster_options must be an `Options`, got %r"
+                    % type(cluster_options).__name__
+                )
+            options = dict(cluster_options)
+            options.update(kwargs)
+        else:
+            options = kwargs
         req = HTTPRequest(
             url=url,
             method="POST",
@@ -353,7 +364,7 @@ class Gateway(object):
         data = json.loads(resp.body)
         return data["name"]
 
-    def submit(self, **kwargs):
+    def submit(self, cluster_options=None, **kwargs):
         """Submit a new cluster to be started.
 
         This returns quickly with a ``cluster_name``, which can later be used
@@ -361,10 +372,13 @@ class Gateway(object):
 
         Parameters
         ----------
+        cluster_options : Options, optional
+            An ``Options`` object describing the desired cluster configuration.
         **kwargs :
-            Cluster configuration options. These are specific to each
-            deployment of dask-gateway, see ``cluster_options`` for more
-            information.
+            Additional cluster configuration options. If ``cluster_options`` is
+            provided, these are applied afterwards as overrides. Available
+            options are specific to each deployment of dask-gateway, see
+            ``cluster_options`` for more information.
 
         Returns
         -------
@@ -423,23 +437,26 @@ class Gateway(object):
             await self._stop_cluster(cluster_name)
             raise
 
-    def new_cluster(self, **kwargs):
+    def new_cluster(self, cluster_options=None, **kwargs):
         """Submit a new cluster to the gateway, and wait for it to be started.
 
         Same as calling ``submit`` and ``connect`` in one go.
 
         Parameters
         ----------
+        cluster_options : Options, optional
+            An ``Options`` object describing the desired cluster configuration.
         **kwargs :
-            Cluster configuration options. These are specific to each
-            deployment of dask-gateway, see ``cluster_options`` for more
-            information.
+            Additional cluster configuration options. If ``cluster_options`` is
+            provided, these are applied afterwards as overrides. Available
+            options are specific to each deployment of dask-gateway, see
+            ``cluster_options`` for more information.
 
         Returns
         -------
         cluster : GatewayCluster
         """
-        return self.sync(self._new_cluster, **kwargs)
+        return self.sync(self._new_cluster, cluster_options=cluster_options, **kwargs)
 
     async def _stop_cluster(self, cluster_name):
         url = "%s/gateway/api/clusters/%s" % (self.address, cluster_name)
