@@ -232,11 +232,11 @@ class Float(Number):
     description="An option field asking users to select between a few choices.",
     params="""
     options : list
-        A list of valid options. Elements may be a tuple of ``(label, value)``,
-        or just ``label`` (in which case the value is the same as the label).
-        Values may be any Python object, labels must be strings.
+        A list of valid options. Elements may be a tuple of ``(key, value)``,
+        or just ``key`` (in which case the value is the same as the key).
+        Values may be any Python object, keys must be strings.
     default : str, optional
-        The label for the default option. Defaults to the first listed option.
+        The key for the default option. Defaults to the first listed option.
     """,
 )
 class Select(Field):
@@ -246,21 +246,15 @@ class Select(Field):
         options_map = OrderedDict()
         for value in options:
             if isinstance(value, tuple):
-                label, value = value
+                key, value = value
             else:
-                label = str(value)
-            if not isinstance(label, str):
-                raise TypeError("Select labels must be strings, got %r" % label)
-            options_map[label] = value
+                key = str(value)
+            if not isinstance(key, str):
+                raise TypeError("Select keys must be strings, got %r" % key)
+            options_map[key] = value
 
-        if default is not None:
-            if not isinstance(default, str):
-                raise TypeError("Select default must be a string, got %r" % label)
-            if default not in self.options_map:
-                raise ValueError("default %r not in options" % default)
-        else:
-            # Default to the first option
-            default = list(self.options_map)[0]
+        if default is None:
+            default = list(options_map)[0]
 
         self.options = options_map
         super().__init__(field, default=default, label=label, target=target)
