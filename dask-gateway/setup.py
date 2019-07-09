@@ -3,7 +3,7 @@ from setuptools import setup
 
 import versioneer
 
-install_requires = ["tornado", "dask", "distributed"]
+install_requires = ["tornado", "dask>=2.0.0", "distributed>=2.0.0"]
 
 extras_require = {"kerberos": ["pykerberos"]}
 

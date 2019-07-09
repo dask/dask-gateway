@@ -280,11 +280,10 @@ class Float(Number):
         import ipywidgets
 
         if self.min is None and self.max is None:
-            return ipywidgets.FloatText(value=self.value, step=0.1)
+            return ipywidgets.FloatText(value=self.value)
         else:
             return ipywidgets.BoundedFloatText(
                 value=self.value,
-                step=0.1,
                 min=self.min or float("-inf"),
                 max=self.max or float("inf"),
             )

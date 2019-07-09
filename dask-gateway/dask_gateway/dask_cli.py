@@ -5,14 +5,12 @@ import json
 import logging
 import os
 import sys
-from distutils.version import LooseVersion
 from urllib.parse import urlparse, quote
 
 from tornado import gen, web
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.ioloop import IOLoop, TimeoutError
 
-import distributed
 from distributed import Scheduler, Worker, Nanny
 from distributed.security import Security
 from distributed.utils import ignoring
@@ -305,11 +303,7 @@ async def start_scheduler(gateway, security, exit_on_failure=True):
     services = {("gateway", 0): (GatewaySchedulerService, {"plugin": plugin})}
     bokeh = False
     with ignoring(ImportError):
-        try:
-            from distributed.dashboard.scheduler import BokehScheduler
-        except ImportError:
-            # Old import location
-            from distributed.bokeh.scheduler import BokehScheduler
+        from distributed.dashboard.scheduler import BokehScheduler
 
         services[("bokeh", 0)] = (BokehScheduler, {})
         bokeh = True
@@ -367,19 +361,14 @@ async def start_worker(
 
     typ = Nanny if nanny else Worker
 
-    if LooseVersion(distributed.__version__) >= "2.0.0":
-        kwargs = {"nthreads": nthreads}
-    else:
-        kwargs = {"ncores": nthreads}
-
     worker = typ(
         scheduler,
         loop=loop,
+        nthreads=nthreads,
         memory_limit=memory_limit,
         security=security,
         name=worker_name,
         local_dir=local_dir,
-        **kwargs,
     )
 
     if nanny:

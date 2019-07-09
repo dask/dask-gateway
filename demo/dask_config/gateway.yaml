@@ -1,0 +1,7 @@
+gateway:
+  address: "http://master.example.com:8787"
+
+  auth:
+    type: basic
+    kwargs:
+      username: alice
