@@ -1,6 +1,8 @@
+from dask_gateway_server.options import Options, Integer, Float, Select
+
 # Configure the 3 main addresses
-c.DaskGateway.gateway_url = "tls://0.0.0.0:8786"
-c.DaskGateway.public_url = "http://0.0.0.0:8787"
+c.DaskGateway.gateway_url = "tls://master.example.com:8786"
+c.DaskGateway.public_url = "http://master.example.com:8787"
 c.DaskGateway.private_url = "http://127.0.0.1:8081"
 
 # Set the database location
@@ -44,3 +46,22 @@ c.YarnClusterManager.worker_memory = "512M"
 c.YarnClusterManager.scheduler_cores = 1
 c.YarnClusterManager.worker_cores = 2
 c.YarnClusterManager.cluster_start_timeout = 30
+
+# Set a few user-configurable options. These are parameters that users can fill
+# in when creating a new cluster. Here we'll allow users to configure worker
+# cores and memory, as well as the application queue. We define a handler
+# function to convert from the user values to cluster configuration.
+def option_handler(options):
+    return {
+        "worker_cores": options.worker_cores,
+        "worker_memory": "%fG" % options.worker_memory,
+        "queue": options.queue,
+    }
+
+
+c.DaskGateway.cluster_manager_options = Options(
+    Integer("worker_cores", 1, min=1, max=2, label="Worker Cores"),
+    Float("worker_memory", 0.5, min=0.25, max=1, label="Worker Memory (GiB)"),
+    Select("queue", options=["default", "apples", "bananas", "oranges"], label="Queue"),
+    handler=option_handler,
+)

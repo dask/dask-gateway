@@ -608,7 +608,7 @@ class GatewayCluster(object):
                 return None
         else:
             n_workers = len(workers)
-            cores = sum(w["ncores"] for w in workers.values())
+            cores = sum(w["nthreads"] for w in workers.values())
             memory = sum(w["memory_limit"] for w in workers.values())
 
             return _widget_status_template % (n_workers, cores, format_bytes(memory))
