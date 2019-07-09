@@ -13,6 +13,7 @@ from dask_gateway_server.objects import ClusterStatus
 from dask_gateway_server.managers import ClusterManager
 from dask_gateway_server.managers.inprocess import InProcessClusterManager
 from dask_gateway_server.utils import random_port
+from dask_gateway_server import options
 
 from .utils import LocalTestingClusterManager, temp_gateway
 
@@ -554,6 +555,63 @@ async def test_successful_cluster(tmpdir):
                 assert res == 2
 
             await cluster.shutdown()
+
+
+class ClusterOptionsManager(InProcessClusterManager):
+    option_two = Float(config=True)
+    option_one_b = Integer(config=True)
+
+
+@pytest.mark.asyncio
+async def test_cluster_manager_options(tmpdir):
+    async with temp_gateway(
+        cluster_manager_class=ClusterOptionsManager,
+        cluster_manager_options=options.Options(
+            options.Integer(
+                "option_one", default=1, min=1, max=4, target="option_one_b"
+            ),
+            options.Select("option_two", options=[("small", 1.5), ("large", 15)]),
+        ),
+        temp_dir=str(tmpdir.join("dask-gateway")),
+    ) as gateway_proc:
+
+        async with Gateway(
+            address=gateway_proc.public_url, asynchronous=True
+        ) as gateway:
+
+            # Create with no parameters
+            cluster = await gateway.new_cluster()
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
+            assert cluster_obj.manager.option_one_b == 1
+            assert cluster_obj.manager.option_two == 1.5
+            assert cluster_obj.options == {"option_one": 1, "option_two": "small"}
+            await cluster.shutdown()
+
+            # Create with parameters
+            cluster = await gateway.new_cluster(option_two="large")
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
+            assert cluster_obj.manager.option_one_b == 1
+            assert cluster_obj.manager.option_two == 15
+            assert cluster_obj.options == {"option_one": 1, "option_two": "large"}
+            await cluster.shutdown()
+
+            # With options object
+            opts = await gateway.cluster_options()
+            opts.option_one = 2
+            cluster = await gateway.new_cluster(opts, option_two="large")
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
+            assert cluster_obj.manager.option_one_b == 2
+            assert cluster_obj.manager.option_two == 15
+            assert cluster_obj.options == {"option_one": 2, "option_two": "large"}
+            await cluster.shutdown()
+
+            # Bad parameters
+            with pytest.raises(TypeError):
+                await gateway.new_cluster(cluster_options=10)
+
+            with pytest.raises(ValueError) as exc:
+                await gateway.new_cluster(option_two="medium")
+            assert "option_two" in str(exc.value)
 
 
 @pytest.mark.asyncio

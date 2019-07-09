@@ -1,5 +1,6 @@
 from .client import Gateway, GatewayCluster
 from .auth import KerberosAuth, BasicAuth
+from .options import Options
 
 # Load configuration
 from . import config

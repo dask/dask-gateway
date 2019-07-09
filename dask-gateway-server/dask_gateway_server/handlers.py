@@ -48,6 +48,9 @@ class BaseHandler(web.RequestHandler):
         else:
             self.json_data = None
 
+    def write_error(self, status_code, **kwargs):
+        self.finish({"error": self._reason})
+
     @property
     def authenticator(self):
         return self.settings.get("authenticator")
@@ -132,6 +135,7 @@ def cluster_model(gateway, cluster, full=True):
         "status": cluster.status.name,
         "start_time": cluster.start_time,
         "stop_time": cluster.stop_time,
+        "options": cluster.options,
     }
     if full:
         if cluster.status == ClusterStatus.RUNNING:
@@ -144,6 +148,13 @@ def cluster_model(gateway, cluster, full=True):
     return out
 
 
+class ClusterOptionsHandler(BaseHandler):
+    @user_authenticated
+    async def get(self):
+        spec = self.gateway.cluster_manager_options.get_specification()
+        self.write({"cluster_options": spec})
+
+
 class ClustersHandler(BaseHandler):
     @user_authenticated
     async def post(self, cluster_name):
@@ -151,8 +162,19 @@ class ClustersHandler(BaseHandler):
         if cluster_name:
             raise web.HTTPError(405)
 
-        # Launch the start task to run in the background
-        cluster = self.gateway.start_new_cluster(self.dask_user)
+        request = self.json_data.get("cluster_options") or {}
+
+        try:
+            # Launch the start task to run in the background
+            cluster = self.gateway.start_new_cluster(self.dask_user, request)
+        except Exception as exc:
+            reason = str(exc)
+            self.log.warning(
+                "Error creating new cluster for user %s: %s",
+                self.dask_user.name,
+                reason,
+            )
+            raise web.HTTPError(422, reason=reason)
 
         # Return the cluster id, to be used in future requests
         self.write({"name": cluster.name})
@@ -168,7 +190,7 @@ class ClustersHandler(BaseHandler):
                 try:
                     statuses = [ClusterStatus.from_name(k) for k in status.split(",")]
                 except Exception as exc:
-                    raise web.HTTPError(405, reason=str(exc))
+                    raise web.HTTPError(422, reason=str(exc))
                 select = lambda x: x.status in statuses
             out = {
                 k: cluster_model(self.gateway, v, full=False)
@@ -255,7 +277,7 @@ class ClusterScaleHandler(BaseHandler):
         try:
             total = self.json_data["worker_count"]
         except (TypeError, KeyError):
-            raise web.HTTPError(405)
+            raise web.HTTPError(422, reason="Malformed request body")
         await self.gateway.scale(cluster, total)
 
 
@@ -289,6 +311,7 @@ class ClusterWorkersHandler(BaseHandler):
 
 
 default_handlers = [
+    ("/api/clusters/options", ClusterOptionsHandler),
     (
         "/api/clusters/([a-zA-Z0-9-_.]*)/workers/([a-zA-Z0-9-_.]*)",
         ClusterWorkersHandler,

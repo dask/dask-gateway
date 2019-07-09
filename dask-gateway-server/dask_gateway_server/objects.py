@@ -128,6 +128,7 @@ clusters = Table(
         "user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     ),
     Column("status", IntEnum(ClusterStatus), nullable=False),
+    Column("options", JSON, nullable=False),
     Column("state", JSON, nullable=False),
     Column("token", BINARY(140), nullable=False, unique=True),
     Column("scheduler_address", Unicode(255), nullable=False),
@@ -214,6 +215,7 @@ class DataManager(object):
                 name=c.name,
                 user=user,
                 token=token,
+                options=c.options,
                 status=c.status,
                 state=c.state,
                 scheduler_address=c.scheduler_address,
@@ -317,7 +319,7 @@ class DataManager(object):
                 if cluster.is_active():
                     yield cluster
 
-    def create_cluster(self, user):
+    def create_cluster(self, user, options):
         """Create a new cluster for a user"""
         cluster_name = uuid.uuid4().hex
         token = uuid.uuid4().hex
@@ -328,6 +330,7 @@ class DataManager(object):
 
         common = {
             "name": cluster_name,
+            "options": options,
             "status": ClusterStatus.STARTING,
             "state": {},
             "scheduler_address": "",
@@ -413,6 +416,7 @@ class Cluster(object):
         name=None,
         user=None,
         token=None,
+        options=None,
         status=None,
         state=None,
         scheduler_address="",
@@ -427,6 +431,7 @@ class Cluster(object):
         self.name = name
         self.user = user
         self.token = token
+        self.options = options
         self.status = status
         self.state = state
         self.scheduler_address = scheduler_address

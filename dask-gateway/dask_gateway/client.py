@@ -12,7 +12,7 @@ from distributed import Client
 from distributed.security import Security
 from distributed.utils import LoopRunner, sync, thread_state, format_bytes, log_errors
 from tornado import gen
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.httputil import HTTPHeaders
 
 from .cookiejar import CookieJar
@@ -20,6 +20,7 @@ from .cookiejar import CookieJar
 # Register gateway protocol
 from . import comm
 from .auth import get_auth
+from .options import Options
 
 del comm
 
@@ -108,6 +109,8 @@ class ClusterReport(object):
     ----------
     name : str
         The cluster's name, a unique id.
+    options : dict
+        User provided configuration for this cluster.
     status : ClusterStatus
         The cluster's status.
     scheduler_address : str or None
@@ -128,6 +131,7 @@ class ClusterReport(object):
 
     __slots__ = (
         "name",
+        "options",
         "status",
         "scheduler_address",
         "dashboard_address",
@@ -140,6 +144,7 @@ class ClusterReport(object):
     def __init__(
         self,
         name,
+        options,
         status,
         scheduler_address,
         dashboard_address,
@@ -149,6 +154,7 @@ class ClusterReport(object):
         tls_key=None,
     ):
         self.name = name
+        self.options = options
         self.status = ClusterStatus._create(status)
         self.scheduler_address = scheduler_address
         self.dashboard_address = dashboard_address
@@ -272,7 +278,7 @@ class Gateway(object):
         else:
             return sync(self.loop, func, *args, **kwargs)
 
-    async def _fetch(self, req, raise_error=True):
+    async def _fetch(self, req):
         self._cookie_jar.pre_request(req)
         resp = await self._http_client.fetch(req, raise_error=False)
         if resp.code == 401:
@@ -280,8 +286,13 @@ class Gateway(object):
             resp = await self._http_client.fetch(req, raise_error=False)
             self._auth.post_response(req, resp, context)
         self._cookie_jar.post_response(resp)
-        if raise_error:
-            resp.rethrow()
+        if resp.error:
+            if resp.code in {404, 409, 422}:
+                raise ValueError(json.loads(resp.body)["error"])
+            elif resp.code == 599:
+                raise TimeoutError("Request timed out")
+            else:
+                resp.rethrow()
         return resp
 
     async def _clusters(self, status=None):
@@ -319,23 +330,60 @@ class Gateway(object):
         """
         return self.sync(self._clusters, status=status, **kwargs)
 
-    async def _submit(self):
+    async def _cluster_options(self):
+        url = "%s/gateway/api/clusters/options" % self.address
+        req = HTTPRequest(url=url, method="GET")
+        resp = await self._fetch(req)
+        data = json.loads(resp.body)
+        return Options._from_spec(data["cluster_options"])
+
+    def cluster_options(self, **kwargs):
+        """Get the available cluster configuration options.
+
+        Returns
+        -------
+        cluster_options : Options
+            A dict of cluster options.
+        """
+        return self.sync(self._cluster_options, **kwargs)
+
+    async def _submit(self, cluster_options=None, **kwargs):
         url = "%s/gateway/api/clusters/" % self.address
+        if cluster_options is not None:
+            if not isinstance(cluster_options, Options):
+                raise TypeError(
+                    "cluster_options must be an `Options`, got %r"
+                    % type(cluster_options).__name__
+                )
+            options = dict(cluster_options)
+            options.update(kwargs)
+        else:
+            options = kwargs
         req = HTTPRequest(
             url=url,
             method="POST",
-            body=json.dumps({}),
+            body=json.dumps({"cluster_options": options}),
             headers=HTTPHeaders({"Content-type": "application/json"}),
         )
         resp = await self._fetch(req)
         data = json.loads(resp.body)
         return data["name"]
 
-    def submit(self, **kwargs):
+    def submit(self, cluster_options=None, **kwargs):
         """Submit a new cluster to be started.
 
         This returns quickly with a ``cluster_name``, which can later be used
         to connect to the cluster.
+
+        Parameters
+        ----------
+        cluster_options : Options, optional
+            An ``Options`` object describing the desired cluster configuration.
+        **kwargs :
+            Additional cluster configuration options. If ``cluster_options`` is
+            provided, these are applied afterwards as overrides. Available
+            options are specific to each deployment of dask-gateway, see
+            ``cluster_options`` for more information.
 
         Returns
         -------
@@ -355,14 +403,9 @@ class Gateway(object):
         while True:
             try:
                 report = await self._cluster_report(cluster_name, wait=True)
-            except HTTPError as exc:
-                if exc.code == 404:
-                    raise Exception("Unknown cluster %r" % cluster_name)
-                elif exc.code == 599:
-                    # Timeout, ignore
-                    pass
-                else:
-                    raise
+            except TimeoutError:
+                # Timeout, ignore
+                pass
             else:
                 if report.status is ClusterStatus.RUNNING:
                     return GatewayCluster(self, report)
@@ -394,16 +437,26 @@ class Gateway(object):
             await self._stop_cluster(cluster_name)
             raise
 
-    def new_cluster(self, **kwargs):
+    def new_cluster(self, cluster_options=None, **kwargs):
         """Submit a new cluster to the gateway, and wait for it to be started.
 
         Same as calling ``submit`` and ``connect`` in one go.
+
+        Parameters
+        ----------
+        cluster_options : Options, optional
+            An ``Options`` object describing the desired cluster configuration.
+        **kwargs :
+            Additional cluster configuration options. If ``cluster_options`` is
+            provided, these are applied afterwards as overrides. Available
+            options are specific to each deployment of dask-gateway, see
+            ``cluster_options`` for more information.
 
         Returns
         -------
         cluster : GatewayCluster
         """
-        return self.sync(self._new_cluster, **kwargs)
+        return self.sync(self._new_cluster, cluster_options=cluster_options, **kwargs)
 
     async def _stop_cluster(self, cluster_name):
         url = "%s/gateway/api/clusters/%s" % (self.address, cluster_name)
@@ -428,12 +481,7 @@ class Gateway(object):
             body=json.dumps({"worker_count": n}),
             headers=HTTPHeaders({"Content-type": "application/json"}),
         )
-        try:
-            await self._fetch(req)
-        except HTTPError as exc:
-            if exc.code == 409:
-                raise Exception("Cluster %r is not running" % cluster_name)
-            raise
+        await self._fetch(req)
 
     def scale_cluster(self, cluster_name, n, **kwargs):
         """Scale a cluster to n workers.
