@@ -7,6 +7,22 @@ Gateway
 .. autoconfigurable:: dask_gateway_server.app.DaskGateway
 
 
+Cluster Manager Options
+-----------------------
+
+.. autoclass:: dask_gateway_server.options.Options
+
+.. autoclass:: dask_gateway_server.options.Integer
+
+.. autoclass:: dask_gateway_server.options.Float
+
+.. autoclass:: dask_gateway_server.options.String
+
+.. autoclass:: dask_gateway_server.options.Bool
+
+.. autoclass:: dask_gateway_server.options.Select
+
+
 Proxies
 -------
 

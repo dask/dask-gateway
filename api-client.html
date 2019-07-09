@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Client API &#8212; Dask Gateway 0.1.0+19.gb06b30c documentation</title>
+    <title>Client API &#8212; Dask Gateway 0.1.0+20.g056cb4f documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -33,6 +33,8 @@
             
   <div class="section" id="client-api">
 <h1>Client API<a class="headerlink" href="#client-api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="gateway">
+<h2>Gateway<a class="headerlink" href="#gateway" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="dask_gateway.Gateway">
 <em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">Gateway</code><span class="sig-paren">(</span><em class="sig-param">address=None</em>, <em class="sig-param">auth=None</em>, <em class="sig-param">asynchronous=False</em>, <em class="sig-param">loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway" title="Permalink to this definition">¶</a></dt>
@@ -53,6 +55,20 @@ asynchronous mode, otherwise a background loop is started.</p></li>
 <dt id="dask_gateway.Gateway.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close this gateway client</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.Gateway.cluster_options">
+<code class="sig-name descname">cluster_options</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.cluster_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the available cluster configuration options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>cluster_options</strong> – A dict of cluster options.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#dask_gateway.options.Options" title="dask_gateway.options.Options">Options</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -91,15 +107,24 @@ By default selects active clusters (‘starting’, ‘started’,
 
 <dl class="method">
 <dt id="dask_gateway.Gateway.new_cluster">
-<code class="sig-name descname">new_cluster</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">new_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_options=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a new cluster to the gateway, and wait for it to be started.</p>
 <p>Same as calling <code class="docutils literal notranslate"><span class="pre">submit</span></code> and <code class="docutils literal notranslate"><span class="pre">connect</span></code> in one go.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>cluster</strong></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_options</strong> (<a class="reference internal" href="#dask_gateway.options.Options" title="dask_gateway.options.Options"><em>Options</em></a><em>, </em><em>optional</em>) – An <code class="docutils literal notranslate"><span class="pre">Options</span></code> object describing the desired cluster configuration.</p></li>
+<li><p><strong>**kwargs</strong> – Additional cluster configuration options. If <code class="docutils literal notranslate"><span class="pre">cluster_options</span></code> is
+provided, these are applied afterwards as overrides. Available
+options are specific to each deployment of dask-gateway, see
+<code class="docutils literal notranslate"><span class="pre">cluster_options</span></code> for more information.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster">GatewayCluster</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>cluster</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster">GatewayCluster</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -131,22 +156,34 @@ By default selects active clusters (‘starting’, ‘started’,
 
 <dl class="method">
 <dt id="dask_gateway.Gateway.submit">
-<code class="sig-name descname">submit</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.submit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">submit</code><span class="sig-paren">(</span><em class="sig-param">cluster_options=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.submit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a new cluster to be started.</p>
 <p>This returns quickly with a <code class="docutils literal notranslate"><span class="pre">cluster_name</span></code>, which can later be used
 to connect to the cluster.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>cluster_name</strong> – The cluster name.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_options</strong> (<a class="reference internal" href="#dask_gateway.options.Options" title="dask_gateway.options.Options"><em>Options</em></a><em>, </em><em>optional</em>) – An <code class="docutils literal notranslate"><span class="pre">Options</span></code> object describing the desired cluster configuration.</p></li>
+<li><p><strong>**kwargs</strong> – Additional cluster configuration options. If <code class="docutils literal notranslate"><span class="pre">cluster_options</span></code> is
+provided, these are applied afterwards as overrides. Available
+options are specific to each deployment of dask-gateway, see
+<code class="docutils literal notranslate"><span class="pre">cluster_options</span></code> for more information.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>str</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>cluster_name</strong> – The cluster name.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
+</div>
+<div class="section" id="gatewaycluster">
+<h2>GatewayCluster<a class="headerlink" href="#gatewaycluster" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="dask_gateway.GatewayCluster">
 <em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayCluster</code><span class="sig-paren">(</span><em class="sig-param">gateway</em>, <em class="sig-param">report</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
@@ -193,6 +230,44 @@ calling this class directly.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="options">
+<h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dask_gateway.options.Options">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.options.</code><code class="sig-name descname">Options</code><span class="sig-paren">(</span><em class="sig-param">*fields</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.options.Options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Options to submit to dask-gateway.</p>
+<p>A mutable-mapping that describes all cluster options available for user’s
+to set. Options can be modified programatically, or via a widget when using
+a web interface (e.g. Jupyter Notebooks) with <code class="docutils literal notranslate"><span class="pre">ipywidgets</span></code> installed.</p>
+<p class="rubric">Examples</p>
+<p>Options objects are normally created via the <code class="docutils literal notranslate"><span class="pre">Gateway.cluster_options</span></code>
+method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">cluster_options</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
+</pre></div>
+</div>
+<p>Available options can then be accessed or set via attribute or key:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;worker_cores&quot;</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>Accessing invalid options error appropriately:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">not_a_valid_option</span> <span class="o">=</span> <span class="s1">&#39;myvalue&#39;</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gt">Traceback (most recent call last):</span>
+    <span class="o">...</span>
+<span class="gr">AttributeError</span>: <span class="n">No option &#39;not_a_valid_option&#39; available</span>
+</pre></div>
+</div>
+<p>Errors are also raised if values being set are invalid (e.g. wrong type,
+out-of-bounds, etc…).</p>
+</dd></dl>
+
+</div>
+</div>
 
 
           </div>
@@ -234,7 +309,12 @@ calling this class directly.</p>
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration API</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Client API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Client API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#gateway">Gateway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gatewaycluster">GatewayCluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#options">Options</a></li>
+</ul>
+</li>
 </ul>
 
 <h3>Need help?</h3>
