@@ -342,7 +342,7 @@ class Gateway(object):
 
         Returns
         -------
-        cluster_options : dict
+        cluster_options : Options
             A dict of cluster options.
         """
         return self.sync(self._cluster_options, **kwargs)

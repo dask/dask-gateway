@@ -13,6 +13,7 @@ pip install \
     pytest-asyncio \
     trustme \
     jupyterhub \
+    ipywidgets \
     notebook \
     black \
     flake8
