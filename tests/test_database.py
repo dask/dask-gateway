@@ -26,9 +26,11 @@ def check_consistency(db):
     for c in clusters:
         cluster = db.id_to_cluster[c.id]
         assert db.token_to_cluster[db.decode_token(c.token)] is cluster
+        assert db.name_to_cluster[c.name] is cluster
         user = id_to_user[c.user_id]
         assert user.clusters[c.name] is cluster
     assert len(db.id_to_cluster) == len(clusters)
+    assert len(db.name_to_cluster) == len(clusters)
     assert len(db.token_to_cluster) == len(clusters)
 
     # Check worker state
@@ -58,7 +60,7 @@ async def test_cleanup_expired_clusters(monkeypatch):
     monkeypatch.setattr(time, "time", mytime)
 
     def add_cluster(stop=True):
-        c = db.create_cluster(alice)
+        c = db.create_cluster(alice, {})
         for _ in range(5):
             w = db.create_worker(c)
             if stop:
@@ -123,7 +125,7 @@ async def test_encryption(tmpdir):
     assert data == data2
 
     alice = db.get_or_create_user("alice")
-    c = db.create_cluster(alice)
+    c = db.create_cluster(alice, {})
     assert c.tls_cert is not None
     assert c.tls_key is not None
 

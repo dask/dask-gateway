@@ -12,7 +12,7 @@ from distributed import Client
 from distributed.security import Security
 from distributed.utils import LoopRunner, sync, thread_state, format_bytes, log_errors
 from tornado import gen
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.httputil import HTTPHeaders
 
 from .cookiejar import CookieJar
@@ -278,7 +278,7 @@ class Gateway(object):
         else:
             return sync(self.loop, func, *args, **kwargs)
 
-    async def _fetch(self, req, raise_error=True):
+    async def _fetch(self, req):
         self._cookie_jar.pre_request(req)
         resp = await self._http_client.fetch(req, raise_error=False)
         if resp.code == 401:
@@ -286,8 +286,13 @@ class Gateway(object):
             resp = await self._http_client.fetch(req, raise_error=False)
             self._auth.post_response(req, resp, context)
         self._cookie_jar.post_response(resp)
-        if raise_error:
-            resp.rethrow()
+        if resp.error:
+            if resp.code in {404, 409, 422}:
+                raise ValueError(json.loads(resp.body)["error"])
+            elif resp.code == 599:
+                raise TimeoutError("Request timed out")
+            else:
+                resp.rethrow()
         return resp
 
     async def _clusters(self, status=None):
@@ -398,14 +403,9 @@ class Gateway(object):
         while True:
             try:
                 report = await self._cluster_report(cluster_name, wait=True)
-            except HTTPError as exc:
-                if exc.code == 404:
-                    raise Exception("Unknown cluster %r" % cluster_name)
-                elif exc.code == 599:
-                    # Timeout, ignore
-                    pass
-                else:
-                    raise
+            except TimeoutError:
+                # Timeout, ignore
+                pass
             else:
                 if report.status is ClusterStatus.RUNNING:
                     return GatewayCluster(self, report)
@@ -481,12 +481,7 @@ class Gateway(object):
             body=json.dumps({"worker_count": n}),
             headers=HTTPHeaders({"Content-type": "application/json"}),
         )
-        try:
-            await self._fetch(req)
-        except HTTPError as exc:
-            if exc.code == 409:
-                raise Exception("Cluster %r is not running" % cluster_name)
-            raise
+        await self._fetch(req)
 
     def scale_cluster(self, cluster_name, n, **kwargs):
         """Scale a cluster to n workers.

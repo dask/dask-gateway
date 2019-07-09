@@ -48,6 +48,9 @@ class BaseHandler(web.RequestHandler):
         else:
             self.json_data = None
 
+    def write_error(self, status_code, **kwargs):
+        self.finish({"error": self._reason})
+
     @property
     def authenticator(self):
         return self.settings.get("authenticator")
@@ -187,7 +190,7 @@ class ClustersHandler(BaseHandler):
                 try:
                     statuses = [ClusterStatus.from_name(k) for k in status.split(",")]
                 except Exception as exc:
-                    raise web.HTTPError(405, reason=str(exc))
+                    raise web.HTTPError(422, reason=str(exc))
                 select = lambda x: x.status in statuses
             out = {
                 k: cluster_model(self.gateway, v, full=False)
@@ -274,7 +277,7 @@ class ClusterScaleHandler(BaseHandler):
         try:
             total = self.json_data["worker_count"]
         except (TypeError, KeyError):
-            raise web.HTTPError(405)
+            raise web.HTTPError(422, reason="Malformed request body")
         await self.gateway.scale(cluster, total)
 
 

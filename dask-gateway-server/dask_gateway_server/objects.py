@@ -215,6 +215,7 @@ class DataManager(object):
                 name=c.name,
                 user=user,
                 token=token,
+                options=c.options,
                 status=c.status,
                 state=c.state,
                 scheduler_address=c.scheduler_address,

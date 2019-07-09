@@ -1,21 +1,10 @@
 import weakref
 from collections import OrderedDict
-from collections.abc import MutableMapping
+from collections.abc import MutableMapping, Sequence
 from keyword import iskeyword
 
 
 __all__ = ("Options",)
-
-
-_field_types = {}
-
-
-def register_field_type(name):
-    def inner(cls):
-        _field_types[name] = cls
-        return cls
-
-    return inner
 
 
 class Options(MutableMapping):
@@ -58,16 +47,7 @@ class Options(MutableMapping):
 
     @classmethod
     def _from_spec(cls, spec):
-        fields = []
-        for item in spec:
-            field = item["field"]
-            default = item["default"]
-            label = item.get("label")
-            spec = item["spec"]
-            typ = spec.pop("type")
-
-            fields.append(_field_types[typ](field, default, label=label, **spec))
-        return cls(*fields)
+        return cls(*(Field._from_spec(s) for s in spec))
 
     def _widget(self):
         if not hasattr(self, "_cached_widget"):
@@ -135,6 +115,8 @@ class Options(MutableMapping):
     def __delitem__(self, key):
         raise TypeError("Cannot delete fields")
 
+    __delattr__ = __delitem__
+
     def __iter__(self):
         return iter(self._fields)
 
@@ -148,8 +130,18 @@ class Options(MutableMapping):
         return list(o)
 
 
+def register_field_type(name):
+    def inner(cls):
+        Field._field_types[name] = cls
+        return cls
+
+    return inner
+
+
 class Field(object):
     """A single option field"""
+
+    _field_types = {}
 
     def __init__(self, field, default, label=None):
         self.field = field
@@ -157,6 +149,15 @@ class Field(object):
         self.label = label or field
 
         self._widgets = weakref.WeakSet()
+
+    @classmethod
+    def _from_spec(cls, spec):
+        field = spec["field"]
+        default = spec["default"]
+        label = spec["label"]
+        type_spec = dict(spec["spec"])
+        typ = type_spec.pop("type")
+        return cls._field_types[typ](field, default, label=label, **type_spec)
 
     def validate(self, x):
         raise NotImplementedError
@@ -294,14 +295,14 @@ class Select(Field):
     """A select option field"""
 
     def __init__(self, field, default, label=None, options=None):
-        if options is None:
-            raise ValueError("Must provide at least one option")
-        elif not isinstance(options, list):
-            raise TypeError("options must be a list")
+        if not isinstance(options, Sequence):
+            raise TypeError("options must be a sequence")
+        elif not len(options):
+            raise ValueError("There must be at least one option")
         for o in options:
             if not isinstance(o, str):
-                raise TypeError("options must be strings")
-        self.options = options
+                raise TypeError("Select options must be strings, got %r" % o)
+        self.options = tuple(options)
         self._options_set = set(options)
         super().__init__(field, default, label=label)
 

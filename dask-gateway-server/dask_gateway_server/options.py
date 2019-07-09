@@ -1,21 +1,36 @@
 import textwrap
 from collections import OrderedDict
+from collections.abc import Sequence, Mapping
 from keyword import iskeyword
 
 
 __all__ = ("Options", "String", "Bool", "Integer", "Float", "Select")
 
 
-class AttrDict(dict):
+class FrozenAttrDict(Mapping):
     """A dict that also allows attribute access for keys"""
 
+    __slots__ = ("_mapping",)
+
+    def __init__(self, mapping):
+        self._mapping = mapping
+
     def __getattr__(self, k):
-        if k in self:
-            return self[k]
+        if k in self._mapping:
+            return self._mapping[k]
         raise AttributeError(k)
 
+    def __getitem__(self, k):
+        return self._mapping[k]
+
+    def __iter__(self):
+        return iter(self._mapping)
+
+    def __len__(self):
+        return len(self._mapping)
+
     def __dir__(self):
-        out = set(type(self))
+        out = set(dir(type(self)))
         out.update(k for k in self if k.isidentifier() and not iskeyword(k))
         return list(out)
 
@@ -54,19 +69,21 @@ class Options(object):
         extra = set(request).difference(f.field for f in self.fields)
         if extra:
             raise ValueError("Unknown fields %r" % sorted(extra))
-        # Validate and normalize options
-        options = {}
-        for f in self.fields:
-            if f.field in request:
-                options[f.field] = f.validate(request[f.field])
-            else:
-                options[f.field] = f.validate(f.default)
-        return options
+        # Validate options
+        return {
+            f.field: f.validate(request.get(f.field, f.default)) for f in self.fields
+        }
+
+    def transform_options(self, options):
+        return {
+            f.target: f.transform(options.get(f.field, f.default)) for f in self.fields
+        }
 
     def get_configuration(self, options):
+        options = self.transform_options(options)
         if self.handler is None:
             return options
-        return self.handler(AttrDict(options))
+        return self.handler(FrozenAttrDict(options))
 
 
 _field_doc_template = """\
@@ -105,25 +122,31 @@ class Field(object):
         # Validate the default
         self.validate(default)
         self.default = default
-
-        if target is None:
-            target = field
-        self.target = target
-
-        if label is None:
-            label = field
-        self.label = label
+        self.target = target or field
+        self.label = label or field
 
     def json_spec(self):
-        out = {"field": self.field, "label": self.label, "default": self.default}
-        out["spec"] = self.json_type_spec()
-        return out
+        return {
+            "field": self.field,
+            "label": self.label,
+            "default": self.default,
+            "spec": self.json_type_spec(),
+        }
 
     def json_type_spec(self):
         raise NotImplementedError
 
     def validate(self, x):
+        """Check that x is valid, and do any normalization.
+
+        The output of this method must be serializable as json."""
         raise NotImplementedError
+
+    def transform(self, x):
+        """Transform a valid x into the desired output type.
+
+        This may return any Python object."""
+        return x
 
 
 @field_doc(
@@ -241,14 +264,16 @@ class Float(Number):
 )
 class Select(Field):
     def __init__(self, field, options, default=None, label=None, target=None):
-        if not isinstance(options, list):
-            raise TypeError("options must be a list")
+        if not isinstance(options, Sequence):
+            raise TypeError("options must be a sequence")
+        elif not len(options):
+            raise ValueError("There must be at least one option")
         options_map = OrderedDict()
         for value in options:
             if isinstance(value, tuple):
                 key, value = value
             else:
-                key = str(value)
+                key = value
             if not isinstance(key, str):
                 raise TypeError("Select keys must be strings, got %r" % key)
             options_map[key] = value
@@ -262,10 +287,13 @@ class Select(Field):
     def validate(self, x):
         if not isinstance(x, str):
             raise TypeError("%s must be a string, got %r" % (self.field, x))
-        try:
-            return self.options[x]
-        except KeyError:
+        if x not in self.options:
             raise ValueError("%r is not a valid option for %s" % (x, self.field))
+        return x
+
+    def transform(self, x):
+        self.validate(x)
+        return self.options[x]
 
     def json_type_spec(self):
         return {"type": "select", "options": list(self.options)}
