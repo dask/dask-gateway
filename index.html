@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Dask Gateway &#8212; Dask Gateway 0.1.0+21.g943d1af documentation</title>
+    <title>Dask Gateway &#8212; Dask Gateway 0.2.0+1.g34d913d documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -36,8 +36,25 @@
 <p>Dask Gateway provides a secure, multi-tenant server for managing <a class="reference external" href="https://dask.org/">Dask</a>
 clusters.  It allows users to launch and use Dask clusters in a shared,
 centrally managed cluster environment, without requiring users have direct
-access to the underlying cluster backend (e.g. Kubernetes, YARN, Job queues,
-etc…).</p>
+access to the underlying cluster backend (e.g. Kubernetes, Hadoop/YARN, HPC Job
+queues, etc…).</p>
+<div class="section" id="highlights">
+<h2>Highlights<a class="headerlink" href="#highlights" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Centrally Managed</strong>: Administrators do the heavy lifting of configuring the
+Gateway, users only have to connect to get a new cluster. Eases deployment,
+and allows enforcing consistent configuration across all users.</p></li>
+<li><p><strong>Secure by Default</strong>: Cluster communication is automatically encrypted with
+TLS. All operations are authenticated with a configurable protocol, allowing
+you to use what makes sense for your organization.</p></li>
+<li><p><strong>Flexible</strong>: The gateway is designed to support multiple backends, and runs
+equally well in the cloud as on-premise. Natively supports Kubernetes,
+Hadoop/YARN, and HPC Job Queueing systems.</p></li>
+<li><p><strong>Robust to Failure</strong>: The gateway can be restarted or failover without
+losing existing clusters. Allows for seemless upgrades and restarts without
+disrupting users.</p></li>
+</ul>
+</div>
 <div class="section" id="architecture-overview">
 <h2>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Permalink to this headline">¶</a></h2>
 <p>Dask Gateway is divided into four separate components:</p>
@@ -55,10 +72,10 @@ and their respective scheduler</p></li>
 both the cluster backend and the authentication protocol are pluggable.</p>
 <p><strong>Cluster Backends</strong></p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html">Hadoop/YARN</a></p></li>
-<li><p>Local Processes</p></li>
-<li><p>Job Queue Systems (<a class="reference external" href="https://www.pbspro.org/">PBS</a>, <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a>, …)</p></li>
 <li><p><a class="reference external" href="https://kubernetes.io/">Kubernetes</a></p></li>
+<li><p><a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html">Hadoop/YARN</a></p></li>
+<li><p>Job Queue Systems (<a class="reference external" href="https://www.pbspro.org/">PBS</a>, <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a>, …)</p></li>
+<li><p>Local Processes</p></li>
 </ul>
 <p><strong>Authentication Methods</strong></p>
 <ul class="simple">
