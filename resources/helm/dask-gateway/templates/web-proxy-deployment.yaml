@@ -32,7 +32,7 @@ spec:
           resources:
             {{- .Values.webProxy.resources | toYaml | trimSuffix "\n" | nindent 12 }}
           volumeMounts:
-            - mountPath: /etc/dask-gateway/config/
+            - mountPath: /etc/dask-gateway/
               name: config
           env:
             - name: DASK_GATEWAY_PROXY_TOKEN
