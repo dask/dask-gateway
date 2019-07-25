@@ -16,6 +16,9 @@ spec:
         {{- include "dask-gateway.labels" . | nindent 8 }}
         app.kubernetes.io/component: gateway
     spec:
+      {{- if .Values.rbac.enabled }}
+      serviceAccountName: gateway
+      {{- end }}
       volumes:
         - name: config
           configMap:

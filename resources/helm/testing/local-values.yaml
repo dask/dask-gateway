@@ -1,0 +1,15 @@
+gateway:
+  proxyToken: "0fd8ff0259f6ced7fc27bb5ebcad307dacd4e3685e3ca24d46856c73cc113981"
+
+  clusterManager:
+    scheduler:
+      cores:
+        request: 0.1
+      memory:
+        request: 256M
+
+    worker:
+      cores:
+        request: 0.1
+      memory:
+        request: 256M

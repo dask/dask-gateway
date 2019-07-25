@@ -23,8 +23,40 @@ data:
             value = value[key2]
         return value
 
-    # Expose the gateway api outside the gateway container
+    # Extract address information about the other services
+    if os.environ.get("DASK_GATEWAY_PROXY_CONTAINER", False):
+        scheduler_proxy_public_host = scheduler_proxy_api_host = ""
+        web_proxy_public_host = web_proxy_api_host = ""
+        web_proxy_public_port = 8000
+    else:
+        scheduler_proxy_public_host = os.environ["SCHEDULER_PROXY_PUBLIC_SERVICE_HOST"]
+        scheduler_proxy_api_host = os.environ["SCHEDULER_PROXY_API_SERVICE_HOST"]
+        web_proxy_public_host = os.environ["WEB_PROXY_PUBLIC_SERVICE_HOST"]
+        web_proxy_api_host = os.environ["WEB_PROXY_API_SERVICE_HOST"]
+        web_proxy_public_port = int(os.environ["WEB_PROXY_PUBLIC_SERVICE_PORT"])
+
+    scheduler_proxy_public_port = int(os.environ["SCHEDULER_PROXY_PUBLIC_SERVICE_PORT"])
+    scheduler_proxy_api_port = int(os.environ["SCHEDULER_PROXY_API_SERVICE_PORT"])
+    web_proxy_api_port = int(os.environ["WEB_PROXY_API_SERVICE_PORT"])
+
+    # Configure the various addresses
     c.DaskGateway.private_url = "http://0.0.0.0:8001"
+    c.DaskGateway.public_url = "http://%s:%d" % (
+        web_proxy_public_host, web_proxy_public_port
+    )
+    c.DaskGateway.gateway_url = "tls://%s:%d" % (
+        scheduler_proxy_public_host, scheduler_proxy_public_port
+    )
+    c.SchedulerProxy.api_url = "http://%s:%d" % (
+        scheduler_proxy_api_host, scheduler_proxy_api_port
+    )
+    c.WebProxy.api_url = "http://%s:%d" % (
+        web_proxy_api_host, web_proxy_api_port
+    )
+
+    # Schedulers aren't managed by the gateway
+    c.SchedulerProxy.externally_managed = True
+    c.WebProxy.externally_managed = True
 
     # Configure the cluster manager
     c.DaskGateway.cluster_manager_class = (
@@ -67,17 +99,3 @@ data:
 
     # Authentication
     c.DaskGateway.authenticator_class = "dask_gateway_server.auth.DummyAuthenticator"
-
-    # Proxies
-    if os.environ.get("DASK_GATEWAY_PROXY_CONTAINER", False):
-        scheduler_proxy_host = web_proxy_host = ""
-    else:
-        scheduler_proxy_host = os.environ["SCHEDULER_PROXY_API_SERVICE_HOST"]
-        web_proxy_host = os.environ["WEB_PROXY_API_SERVICE_HOST"]
-    scheduler_proxy_port = int(os.environ["SCHEDULER_PROXY_API_SERVICE_PORT"])
-    web_proxy_port = int(os.environ["WEB_PROXY_API_SERVICE_PORT"])
-
-    c.SchedulerProxy.api_url = "http://%s:%d" % (scheduler_proxy_host, scheduler_proxy_port)
-    c.WebProxy.api_url = "http://%s:%d" % (web_proxy_host, web_proxy_port)
-    c.SchedulerProxy.externally_managed = True
-    c.WebProxy.externally_managed = True

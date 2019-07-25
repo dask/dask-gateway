@@ -1,3 +1,6 @@
+rbac:
+  enabled: true
+
 gateway:
   annotations: {}
   labels: {}
