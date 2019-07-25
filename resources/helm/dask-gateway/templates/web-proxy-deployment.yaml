@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-proxy
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "dask-gateway.labels" . | nindent 6 }}
+      app.kubernetes.io/component: web-proxy
+  template:
+    metadata:
+      labels:
+        {{- include "dask-gateway.labels" . | nindent 8 }}
+        app.kubernetes.io/component: web-proxy
+    spec:
+      volumes:
+        - name: config
+          configMap:
+            name: gateway-config
+      containers:
+        - name: web-proxy
+          image: {{ .Values.webProxy.image.name }}:{{ .Values.webProxy.image.tag }}
+          imagePullPolicy: {{ .Values.webProxy.image.pullPolicy }}
+          command:
+            - dask-gateway-server
+            - web-proxy
+            - --config
+            - /etc/dask-gateway/dask_gateway_config.py
+          resources:
+            {{- .Values.webProxy.resources | toYaml | trimSuffix "\n" | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/dask-gateway/config/
+              name: config
+          env:
+            - name: DASK_GATEWAY_PROXY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secret
+                  key: proxy-token
+            - name: DASK_GATEWAY_PROXY_CONTAINER
+              value: "true"
+          ports:
+            - containerPort: 8001
+              name: api
+            - containerPort: 8000
+              name: public

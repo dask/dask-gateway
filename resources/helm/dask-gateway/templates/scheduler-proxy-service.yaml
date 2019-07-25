@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: scheduler-proxy-api
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+    app.kubernetes.io/component: scheduler-proxy
+spec:
+  selector:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+    app.kubernetes.io/component: scheduler-proxy
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scheduler-proxy-public
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+    app.kubernetes.io/component: scheduler-proxy
+spec:
+  selector:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+    app.kubernetes.io/component: scheduler-proxy
+  ports:
+    - protocol: TCP
+      port: 8786
+      targetPort: 8786
+  type: LoadBalancer

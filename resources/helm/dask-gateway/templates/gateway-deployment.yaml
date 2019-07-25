@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "dask-gateway.labels" . | nindent 6 }}
+      app.kubernetes.io/component: gateway
+  template:
+    metadata:
+      labels:
+        {{- include "dask-gateway.labels" . | nindent 8 }}
+        app.kubernetes.io/component: gateway
+    spec:
+      volumes:
+        - name: config
+          configMap:
+            name: gateway-config
+      containers:
+        - name: gateway
+          image: {{ .Values.gateway.image.name }}:{{ .Values.gateway.image.tag }}
+          imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
+          command:
+            - dask-gateway-server
+            - --config
+            - /etc/dask-gateway/dask_gateway_config.py
+          resources:
+            {{- .Values.gateway.resources | toYaml | trimSuffix "\n" | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/dask-gateway/config/
+              name: config
+          env:
+            - name: DASK_GATEWAY_PROXY_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secret
+                  key: proxy-token
+            {{- if .Values.gateway.cookieSecret }}
+            - name: DASK_GATEWAY_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gateway-secret
+                  key: cookie-secret
+            {{- end }}
+          ports:
+            - containerPort: 8001
+              name: api
