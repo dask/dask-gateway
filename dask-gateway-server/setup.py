@@ -5,7 +5,7 @@ import sys
 from distutils.command.build import build as _build
 from distutils.command.clean import clean as _clean
 
-from setuptools import setup, Command
+from setuptools import setup, find_packages, Command
 from setuptools.command.develop import develop as _develop
 from setuptools.command.install import install as _install
 
@@ -127,11 +127,7 @@ setup(
         open("README.rst").read() if os.path.exists("README.rst") else ""
     ),
     url="http://github.com/jcrist/dask-gateway/",
-    packages=[
-        "dask_gateway_server",
-        "dask_gateway_server.proxy",
-        "dask_gateway_server.managers",
-    ],
+    packages=find_packages(),
     package_data={"dask_gateway_server": ["proxy/dask-gateway-proxy"]},
     install_requires=install_requires,
     extras_require=extras_require,

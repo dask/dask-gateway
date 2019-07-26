@@ -1,11 +1,16 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 import versioneer
 
 install_requires = ["tornado", "dask>=2.0.0", "distributed>=2.0.0"]
 
-extras_require = {"kerberos": ["pykerberos"]}
+extras_require = {
+    "kerberos": [
+        'pykerberos;platform_system!="Windows"',
+        'winkerberos;platform_system=="Windows"',
+    ]
+}
 
 setup(
     name="dask-gateway",
@@ -19,7 +24,7 @@ setup(
         open("README.rst").read() if os.path.exists("README.rst") else ""
     ),
     url="http://github.com/jcrist/dask-gateway/",
-    packages=["dask_gateway"],
+    packages=find_packages(),
     package_data={"dask_gateway": ["*.yaml"]},
     install_requires=install_requires,
     extras_require=extras_require,
