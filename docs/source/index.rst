@@ -7,7 +7,7 @@ centrally managed cluster environment, without requiring users have direct
 access to the underlying cluster backend (e.g. Kubernetes, Hadoop/YARN, HPC Job
 queues, etc...).
 
-For installation, see the install guide (I dont remember how to do document links)
+For installation, see the :doc:`install guide <installation>`.
 
 
 Highlights
