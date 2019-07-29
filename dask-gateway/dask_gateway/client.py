@@ -59,7 +59,7 @@ class GatewaySecurity(Security):
         return {"ssl_context": ctx}
 
 
-class _EnumMixin(object):
+class _IntEnum(enum.IntEnum):
     @classmethod
     def _create(cls, x):
         return x if isinstance(x, cls) else cls.from_name(x)
@@ -74,7 +74,7 @@ class _EnumMixin(object):
         raise ValueError("%r is not a valid %s" % (name, cls.__name__))
 
 
-class ClusterStatus(_EnumMixin, enum.IntEnum):
+class ClusterStatus(_IntEnum):
     """The cluster's status.
 
     Attributes

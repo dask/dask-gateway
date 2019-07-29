@@ -23,6 +23,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.pool import StaticPool
 
+from .compat import get_running_loop
 from .tls import new_keypair
 
 
@@ -50,7 +51,7 @@ def normalize_encrypt_key(key):
     )
 
 
-class _EnumMixin(object):
+class _IntEnum(enum.IntEnum):
     @classmethod
     def from_name(cls, name):
         """Create an enum value from a name"""
@@ -61,7 +62,7 @@ class _EnumMixin(object):
         raise ValueError("%r is not a valid %s" % (name, cls.__name__))
 
 
-class ClusterStatus(_EnumMixin, enum.IntEnum):
+class ClusterStatus(_IntEnum):
     STARTING = 1
     STARTED = 2
     RUNNING = 3
@@ -70,7 +71,7 @@ class ClusterStatus(_EnumMixin, enum.IntEnum):
     FAILED = 6
 
 
-class WorkerStatus(_EnumMixin, enum.IntEnum):
+class WorkerStatus(_IntEnum):
     STARTING = 1
     STARTED = 2
     RUNNING = 3
@@ -448,7 +449,7 @@ class Cluster(object):
         # The cluster manager instance
         self.manager = None
 
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         self.lock = asyncio.Lock(loop=loop)
         self._start_future = loop.create_future()
         self._connect_future = loop.create_future()
@@ -485,7 +486,7 @@ class Worker(object):
         self.start_time = start_time
         self.stop_time = stop_time
 
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
 
         self._start_future = loop.create_future()
         self._connect_future = loop.create_future()

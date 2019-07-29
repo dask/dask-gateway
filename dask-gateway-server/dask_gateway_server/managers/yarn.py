@@ -8,6 +8,7 @@ from traitlets import Unicode, Dict, Set, Integer, Instance, Any
 from traitlets.config import SingletonConfigurable
 
 from .base import ClusterManager
+from ..compat import get_running_loop
 from ..utils import cancel_task
 
 
@@ -30,9 +31,7 @@ async def skein_client(principal=None, keytab=None):
             keytab=keytab,
             security=skein.Security.new_credentials(),
         )
-        fut = asyncio.get_running_loop().run_in_executor(
-            None, lambda: skein.Client(**kwargs)
-        )
+        fut = get_running_loop().run_in_executor(None, lambda: skein.Client(**kwargs))
         # Save the future first so any concurrent calls will wait on the same
         # future for generating the client
         _skein_client_cache[key] = fut
@@ -275,7 +274,7 @@ class YarnClusterManager(ClusterManager):
         )
 
     async def start_cluster(self):
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
 
         with self.temp_write_credentials() as (cert_path, key_path):
             spec = self._build_specification(cert_path, key_path)
@@ -291,7 +290,7 @@ class YarnClusterManager(ClusterManager):
 
         skein_client = await self._get_skein_client()
 
-        report = await asyncio.get_running_loop().run_in_executor(
+        report = await get_running_loop().run_in_executor(
             None, skein_client.application_report, app_id
         )
         state = str(report.state)
@@ -307,7 +306,7 @@ class YarnClusterManager(ClusterManager):
 
         skein_client = await self._get_skein_client()
 
-        await asyncio.get_running_loop().run_in_executor(
+        await get_running_loop().run_in_executor(
             None, skein_client.kill_application, app_id
         )
         # Stop the status monitor
@@ -323,7 +322,7 @@ class YarnClusterManager(ClusterManager):
 
     async def start_worker(self, worker_name, cluster_state):
         app = await self._get_app_client(cluster_state)
-        container = await asyncio.get_running_loop().run_in_executor(
+        container = await get_running_loop().run_in_executor(
             None, self._start_worker, app, worker_name
         )
         self._track_container(container.id, cluster_state)
@@ -343,7 +342,7 @@ class YarnClusterManager(ClusterManager):
 
         app = await self._get_app_client(cluster_state)
 
-        return await asyncio.get_running_loop().run_in_executor(
+        return await get_running_loop().run_in_executor(
             None, self._stop_worker, app, container_id
         )
 
@@ -362,7 +361,7 @@ class YarnClusterManager(ClusterManager):
         return {c.id for c in containers}
 
     async def _status_monitor(self, cluster_state):
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         while True:
             if self.pending_workers:
                 app = await self._get_app_client(cluster_state)

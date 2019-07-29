@@ -9,6 +9,7 @@ from traitlets.config import Config
 
 from dask_gateway import Gateway
 from dask_gateway_server.app import DaskGateway
+from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.objects import ClusterStatus
 from dask_gateway_server.managers import ClusterManager
 from dask_gateway_server.managers.inprocess import InProcessClusterManager
@@ -77,7 +78,7 @@ class ClusterFailsAfterConnect(InProcessClusterManager):
 
     async def start_cluster(self):
         # Initiate state
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         self.failed = loop.create_future()
         self.stop_cluster_called = loop.create_future()
         # Start the cluster
@@ -151,7 +152,7 @@ class WorkerFailsBetweenStartAndConnect(InProcessClusterManager):
 class WorkerFailsAfterConnect(InProcessClusterManager):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         self.stop_worker_called = loop.create_future()
         self.worker_connected = loop.create_future()
 

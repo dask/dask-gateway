@@ -1,4 +1,3 @@
-import asyncio
 import os
 import pytest
 
@@ -10,6 +9,7 @@ pytest.importorskip("kubernetes")
 import kubernetes.client
 from kubernetes.client.rest import ApiException
 
+from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.managers.kubernetes import KubeClusterManager, PodReflector
 
 from .utils import ClusterManagerTests
@@ -64,7 +64,7 @@ class TestKubeClusterManager(ClusterManagerTests):
         secret_name = cluster_state.get("secret_name")
         if secret_name is not None:
             try:
-                loop = asyncio.get_running_loop()
+                loop = get_running_loop()
                 await loop.run_in_executor(
                     None,
                     manager.kube_client.delete_namespaced_secret,
@@ -77,7 +77,7 @@ class TestKubeClusterManager(ClusterManagerTests):
                 raise
 
     async def delete_pod(self, manager, pod_name):
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         if pod_name is not None:
             try:
                 await loop.run_in_executor(
