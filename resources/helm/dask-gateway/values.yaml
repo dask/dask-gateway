@@ -1,6 +1,13 @@
 rbac:
   enabled: true
 
+ingress:
+  enabled: false
+  annotations: {}
+  hosts: []
+  tls: []
+  path: /
+
 gateway:
   annotations: {}
   labels: {}
