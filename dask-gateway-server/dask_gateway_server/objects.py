@@ -23,6 +23,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.pool import StaticPool
 
+from .compat import get_running_loop
 from .tls import new_keypair
 
 
@@ -448,7 +449,7 @@ class Cluster(object):
         # The cluster manager instance
         self.manager = None
 
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         self.lock = asyncio.Lock(loop=loop)
         self._start_future = loop.create_future()
         self._connect_future = loop.create_future()
@@ -485,7 +486,7 @@ class Worker(object):
         self.start_time = start_time
         self.stop_time = stop_time
 
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
 
         self._start_future = loop.create_future()
         self._connect_future = loop.create_future()

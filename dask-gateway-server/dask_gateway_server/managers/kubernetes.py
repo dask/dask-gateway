@@ -1,4 +1,3 @@
-import asyncio
 import os
 import threading
 import time
@@ -26,6 +25,7 @@ from urllib3.exceptions import ReadTimeoutError
 
 from .base import ClusterManager
 from .. import __version__ as VERSION
+from ..compat import get_running_loop
 from ..utils import MemoryLimit
 
 
@@ -77,7 +77,7 @@ class PodReflector(SingletonConfigurable):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.first_load_future = asyncio.get_running_loop().create_future()
+        self.first_load_future = get_running_loop().create_future()
         self.stopped = False
         self.start()
 
@@ -465,7 +465,7 @@ class KubeClusterManager(ClusterManager):
 
         self.log.debug("Creating secret %s", secret_name)
 
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         await loop.run_in_executor(
             None, self.kube_client.create_namespaced_secret, self.namespace, tls_secret
         )
@@ -518,7 +518,7 @@ class KubeClusterManager(ClusterManager):
         )
 
     async def stop_cluster(self, cluster_state):
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
 
         pod_name = cluster_state.get("pod_name")
         if pod_name is not None:
@@ -542,7 +542,7 @@ class KubeClusterManager(ClusterManager):
 
         self.log.debug("Starting pod %s", pod.metadata.name)
 
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         await loop.run_in_executor(
             None, self.kube_client.create_namespaced_pod, self.namespace, pod
         )
@@ -552,7 +552,7 @@ class KubeClusterManager(ClusterManager):
     async def stop_worker(self, worker_name, worker_state, cluster_state):
         pod_name = worker_state.get("pod_name")
         if pod_name is not None:
-            loop = asyncio.get_running_loop()
+            loop = get_running_loop()
             await loop.run_in_executor(
                 None, self.kube_client.delete_namespaced_pod, pod_name, self.namespace
             )
