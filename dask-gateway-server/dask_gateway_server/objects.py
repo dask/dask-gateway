@@ -50,7 +50,7 @@ def normalize_encrypt_key(key):
     )
 
 
-class _EnumMixin(object):
+class _IntEnum(enum.IntEnum):
     @classmethod
     def from_name(cls, name):
         """Create an enum value from a name"""
@@ -61,7 +61,7 @@ class _EnumMixin(object):
         raise ValueError("%r is not a valid %s" % (name, cls.__name__))
 
 
-class ClusterStatus(_EnumMixin, enum.IntEnum):
+class ClusterStatus(_IntEnum):
     STARTING = 1
     STARTED = 2
     RUNNING = 3
@@ -70,7 +70,7 @@ class ClusterStatus(_EnumMixin, enum.IntEnum):
     FAILED = 6
 
 
-class WorkerStatus(_EnumMixin, enum.IntEnum):
+class WorkerStatus(_IntEnum):
     STARTING = 1
     STARTED = 2
     RUNNING = 3
