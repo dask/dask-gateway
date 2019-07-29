@@ -9,7 +9,7 @@ from traitlets.config import Config
 
 from dask_gateway import Gateway
 from dask_gateway_server.app import DaskGateway
-from dsak_gateway_server.compat import get_running_loop
+from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.objects import ClusterStatus
 from dask_gateway_server.managers import ClusterManager
 from dask_gateway_server.managers.inprocess import InProcessClusterManager

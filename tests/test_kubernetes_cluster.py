@@ -9,7 +9,7 @@ pytest.importorskip("kubernetes")
 import kubernetes.client
 from kubernetes.client.rest import ApiException
 
-from dsak_gateway_server.compat import get_running_loop
+from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.managers.kubernetes import KubeClusterManager, PodReflector
 
 from .utils import ClusterManagerTests
