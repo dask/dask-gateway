@@ -7,6 +7,8 @@ centrally managed cluster environment, without requiring users have direct
 access to the underlying cluster backend (e.g. Kubernetes, Hadoop/YARN, HPC Job
 queues, etc...).
 
+For installation, see the install guide (I dont remember how to do document links)
+
 
 Highlights
 ----------
@@ -69,6 +71,7 @@ both the cluster backend and the authentication protocol are pluggable.
 
     api-server
     api-client
+    installation
 
 .. _Dask: https://dask.org/
 .. _traitlets: https://traitlets.readthedocs.io/en/stable/
