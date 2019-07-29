@@ -317,7 +317,10 @@ class ClusterManagerTests(object):
                 i += 1
 
         # Cleanup cancelled async generator
-        await start_task.athrow(GeneratorExit)
+        try:
+            await start_task.athrow(GeneratorExit)
+        except GeneratorExit:
+            pass
 
         # Assert not running
         assert not await self.cluster_status(cluster)
@@ -411,7 +414,10 @@ class ClusterManagerTests(object):
                 i += 1
 
         # Cleanup cancelled async generator
-        await start_task.athrow(GeneratorExit)
+        try:
+            await start_task.athrow(GeneratorExit)
+        except GeneratorExit:
+            pass
 
         # Assert not running
         assert not await self.worker_status(worker, cluster)
