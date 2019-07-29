@@ -5,6 +5,17 @@ import time
 from traitlets import Int, Float, List, Dict, Unicode, Instance, default
 from traitlets.config import SingletonConfigurable
 
+try:
+    import kubernetes
+except ImportError:
+    raise ImportError(
+        "'%s.KubeClusterManager' requires 'kubernetes' as a dependency. "
+        "To install required dependencies, use:\n"
+        "  $ pip install dask-gateway-server[kubernetes]\n"
+        "or\n"
+        "  $ conda install dask-gateway-server-kubernetes -c conda-forge\n" % __name__
+    )
+
 import kubernetes.client
 import kubernetes.config
 import kubernetes.watch

@@ -14,17 +14,7 @@ from tornado.log import LogFormatter
 from tornado.gen import IOLoop
 from tornado.platform.asyncio import AsyncIOMainLoop
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
-from traitlets import (
-    Unicode,
-    Bool,
-    Type,
-    Bytes,
-    Float,
-    List,
-    Instance,
-    default,
-    validate,
-)
+from traitlets import Unicode, Bool, Bytes, Float, List, Instance, default, validate
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
@@ -41,7 +31,7 @@ from .objects import (
 )
 from .options import Options
 from .proxy import SchedulerProxy, WebProxy
-from .utils import cleanup_tmpdir, cancel_task, TaskPool, get_ip
+from .utils import cleanup_tmpdir, cancel_task, TaskPool, Type, get_ip
 
 
 # Override default values for logging

@@ -3,7 +3,7 @@ import shutil
 import socket
 import weakref
 
-from traitlets import Integer, TraitError
+from traitlets import Integer, TraitError, Type as _Type
 
 
 class TaskPool(object):
@@ -122,3 +122,18 @@ class MemoryLimit(Integer):
                 "a string with suffix K, M, G, T".format(val=value)
             )
         return int(float(num) * self.UNIT_SUFFIXES[suffix])
+
+
+class Type(_Type):
+    """An implementation of `Type` with better errors"""
+
+    def validate(self, obj, value):
+        if isinstance(value, str):
+            try:
+                value = self._resolve_string(value)
+            except ImportError as exc:
+                raise TraitError(
+                    "Failed to import %r for trait '%s.%s':\n\n%s"
+                    % (value, type(obj).__name__, self.name, exc)
+                )
+        return super().validate(obj, value)
