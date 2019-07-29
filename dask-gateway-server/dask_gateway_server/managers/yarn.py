@@ -3,7 +3,18 @@ import os
 from collections import OrderedDict
 from contextlib import contextmanager
 
-import skein
+try:
+    import skein
+except ImportError:
+    raise ImportError(
+        "'%s.YarnClusterManager' requires 'skein' as a dependency. "
+        "To install required dependencies, use:\n"
+        "  $ pip install dask-gateway-server[yarn]\n"
+        "or\n"
+        "  $ conda install dask-gateway-server-yarn -c conda-forge\n" % __name__
+    )
+
+
 from traitlets import Unicode, Dict, Set, Integer, Instance, Any
 from traitlets.config import SingletonConfigurable
 
