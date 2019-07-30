@@ -12,7 +12,7 @@ from distributed import Client
 from distributed.security import Security
 from distributed.utils import LoopRunner, sync, thread_state, format_bytes, log_errors
 from tornado import gen
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 from tornado.httputil import HTTPHeaders
 
 from .cookiejar import CookieJar
@@ -279,20 +279,27 @@ class Gateway(object):
             return sync(self.loop, func, *args, **kwargs)
 
     async def _fetch(self, req):
-        self._cookie_jar.pre_request(req)
-        resp = await self._http_client.fetch(req, raise_error=False)
-        if resp.code == 401:
-            context = self._auth.pre_request(req, resp)
+        try:
+            self._cookie_jar.pre_request(req)
             resp = await self._http_client.fetch(req, raise_error=False)
-            self._auth.post_response(req, resp, context)
-        self._cookie_jar.post_response(resp)
-        if resp.error:
-            if resp.code in {404, 409, 422}:
-                raise ValueError(json.loads(resp.body)["error"])
-            elif resp.code == 599:
+            if resp.code == 401:
+                context = self._auth.pre_request(req, resp)
+                resp = await self._http_client.fetch(req, raise_error=False)
+                self._auth.post_response(req, resp, context)
+            self._cookie_jar.post_response(resp)
+            if resp.error:
+                if resp.code in {404, 409, 422}:
+                    raise ValueError(json.loads(resp.body)["error"])
+                elif resp.code == 599:
+                    raise TimeoutError("Request timed out")
+                else:
+                    resp.rethrow()
+        except HTTPError as exc:
+            # Tornado 6 still raises these above with raise_error=False
+            if exc.code == 599:
                 raise TimeoutError("Request timed out")
-            else:
-                resp.rethrow()
+            # Should never get here!
+            raise
         return resp
 
     async def _clusters(self, status=None):
