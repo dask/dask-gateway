@@ -1,7 +1,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: gateway-config
+  name: {{ include "dask-gateway.fullname" . }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 data:
@@ -25,34 +25,28 @@ data:
 
     # Extract address information about the other services
     if os.environ.get("DASK_GATEWAY_PROXY_CONTAINER", False):
-        scheduler_proxy_public_host = scheduler_proxy_api_host = ""
-        web_proxy_public_host = web_proxy_api_host = ""
-        web_proxy_public_port = 8000
+        scheduler_proxy_public = "tls://0.0.0.0:8786"
+        scheduler_proxy_api = "tls://0.0.0.0:8001"
+        web_proxy_public = "http://0.0.0.0:8000"
+        web_proxy_api = "http://0.0.0.0:8001"
     else:
-        scheduler_proxy_public_host = os.environ["SCHEDULER_PROXY_PUBLIC_SERVICE_HOST"]
-        scheduler_proxy_api_host = os.environ["SCHEDULER_PROXY_API_SERVICE_HOST"]
-        web_proxy_public_host = os.environ["WEB_PROXY_PUBLIC_SERVICE_HOST"]
-        web_proxy_api_host = os.environ["WEB_PROXY_API_SERVICE_HOST"]
-        web_proxy_public_port = int(os.environ["WEB_PROXY_PUBLIC_SERVICE_PORT"])
+        def _make_addr(scheme, name):
+            name = os.environ[name].replace("-", "_").upper()
+            host = os.environ[name + "_SERVICE_HOST"]
+            port = int(os.environ[name + "_SERVICE_PORT"])
+            return "%s://%s:%d" % (scheme, host, port)
 
-    scheduler_proxy_public_port = int(os.environ["SCHEDULER_PROXY_PUBLIC_SERVICE_PORT"])
-    scheduler_proxy_api_port = int(os.environ["SCHEDULER_PROXY_API_SERVICE_PORT"])
-    web_proxy_api_port = int(os.environ["WEB_PROXY_API_SERVICE_PORT"])
+        scheduler_proxy_public = _make_addr("tls", "SCHEDULER_PROXY_PUBLIC_SERVICE_NAME")
+        scheduler_proxy_api = _make_addr("http", "SCHEDULER_PROXY_API_SERVICE_NAME")
+        web_proxy_public = _make_addr("http", "WEB_PROXY_PUBLIC_SERVICE_NAME")
+        web_proxy_api = _make_addr("http", "WEB_PROXY_API_SERVICE_NAME")
 
     # Configure the various addresses
     c.DaskGateway.private_url = "http://0.0.0.0:8001"
-    c.DaskGateway.public_url = "http://%s:%d" % (
-        web_proxy_public_host, web_proxy_public_port
-    )
-    c.DaskGateway.gateway_url = "tls://%s:%d" % (
-        scheduler_proxy_public_host, scheduler_proxy_public_port
-    )
-    c.SchedulerProxy.api_url = "http://%s:%d" % (
-        scheduler_proxy_api_host, scheduler_proxy_api_port
-    )
-    c.WebProxy.api_url = "http://%s:%d" % (
-        web_proxy_api_host, web_proxy_api_port
-    )
+    c.DaskGateway.public_url = web_proxy_public
+    c.DaskGateway.gateway_url = scheduler_proxy_public
+    c.WebProxy.api_url = web_proxy_api
+    c.SchedulerProxy.api_url = scheduler_proxy_api
 
     # Schedulers aren't managed by the gateway
     c.SchedulerProxy.externally_managed = True

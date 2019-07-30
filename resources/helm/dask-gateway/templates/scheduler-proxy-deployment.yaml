@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: scheduler-proxy
+  name: {{ include "dask-gateway.fullname" . | printf "scheduler-proxy-%s" | trunc 63 | trimSuffix "-" }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 spec:
@@ -17,9 +17,9 @@ spec:
         app.kubernetes.io/component: scheduler-proxy
     spec:
       volumes:
-        - name: config
+        - name: configmap
           configMap:
-            name: gateway-config
+            name: {{ include "dask-gateway.fullname" . }}
       containers:
         - name: scheduler-proxy
           image: {{ .Values.schedulerProxy.image.name }}:{{ .Values.schedulerProxy.image.tag }}
@@ -33,12 +33,12 @@ spec:
             {{- .Values.schedulerProxy.resources | toYaml | trimSuffix "\n" | nindent 12 }}
           volumeMounts:
             - mountPath: /etc/dask-gateway/
-              name: config
+              name: configmap
           env:
             - name: DASK_GATEWAY_PROXY_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: gateway-secret
+                  name: {{ include "dask-gateway.fullname" . }}
                   key: proxy-token
             - name: DASK_GATEWAY_PROXY_CONTAINER
               value: "true"

@@ -2,14 +2,14 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: gateway
+  name: {{ include "dask-gateway.fullname" . }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: gateway
+  name: {{ include "dask-gateway.fullname" . }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 rules:
@@ -20,15 +20,15 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: gateway
+  name: {{ include "dask-gateway.fullname" . }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 subjects:
   - kind: ServiceAccount
-    name: gateway
+    name: {{ include "dask-gateway.fullname" . }}
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
-  name: gateway
+  name: {{ include "dask-gateway.fullname" . }}
   apiGroup: rbac.authorization.k8s.io
 {{- end }}

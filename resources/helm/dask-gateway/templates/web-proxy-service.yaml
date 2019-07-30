@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: web-proxy-api
+  name: {{ include "dask-gateway.fullname" . | printf "web-api-%s" | trunc 63 | trimSuffix "-" }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
     app.kubernetes.io/component: web-proxy
@@ -17,7 +17,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: web-proxy-public
+  name: {{ include "dask-gateway.fullname" . | printf "web-public-%s" | trunc 63 | trimSuffix "-" }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
     app.kubernetes.io/component: web-proxy
