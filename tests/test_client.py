@@ -8,6 +8,8 @@ from dask_gateway_server.utils import random_port
 from tornado import web
 from tornado.httpclient import HTTPRequest
 
+from .utils import temp_gateway
+
 
 def test_get_auth():
     # Pass through existing auth objects
@@ -139,3 +141,27 @@ async def test_client_fetch_timeout():
         gateway = Gateway(server.address, auth=BasicAuth("alice"))
         with pytest.raises(TimeoutError):
             await gateway._fetch(HTTPRequest(url=server.address, request_timeout=1))
+
+
+@pytest.mark.asyncio
+async def test_client_reprs(tmpdir):
+    async with temp_gateway(temp_dir=str(tmpdir.join("dask-gateway"))) as gateway_proc:
+        async with Gateway(
+            address=gateway_proc.public_url, asynchronous=True
+        ) as gateway:
+            cluster = await gateway.new_cluster()
+
+            # Plain repr
+            assert cluster.name in repr(cluster)
+
+            # HTML repr with dashboard
+            cluster.dashboard_link = "%s/gateway/clusters/%s/status" % (
+                gateway_proc.public_url,
+                cluster.name,
+            )
+            assert cluster.name in cluster._repr_html_()
+            assert cluster.dashboard_link in cluster._repr_html_()
+
+            # HTML repr with no dashboard
+            cluster.dashboard_link = None
+            assert "Not Available" in cluster._repr_html_()
