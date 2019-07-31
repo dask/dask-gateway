@@ -4,7 +4,11 @@ metadata:
   name: {{ include "dask-gateway.fullname" . | printf "web-api-%s" | trunc 63 | trimSuffix "-" }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
-    app.kubernetes.io/component: web-proxy
+    app.kubernetes.io/component: web-proxy-api
+  {{- with .Values.webProxy.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   selector:
     {{- include "dask-gateway.labels" . | nindent 4 }}
@@ -20,7 +24,11 @@ metadata:
   name: {{ include "dask-gateway.fullname" . | printf "web-public-%s" | trunc 63 | trimSuffix "-" }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
-    app.kubernetes.io/component: web-proxy
+    app.kubernetes.io/component: web-proxy-public
+  {{- with .Values.webProxy.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   selector:
     {{- include "dask-gateway.labels" . | nindent 4 }}
@@ -29,4 +37,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8000
-  type: LoadBalancer
+  type: {{ .Values.webProxy.service.type }}

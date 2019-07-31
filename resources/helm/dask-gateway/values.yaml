@@ -10,7 +10,6 @@ ingress:
 
 gateway:
   annotations: {}
-  labels: {}
 
   cookieSecret: null
   proxyToken: null
@@ -48,7 +47,6 @@ gateway:
 
 schedulerProxy:
   annotations: {}
-  labels: {}
 
   resources: {}
 
@@ -56,10 +54,13 @@ schedulerProxy:
     name: jcrist/dask-gateway-server
     tag: 0.2.0
     pullPolicy: IfNotPresent
+
+  service:
+    type: LoadBalancer
+    annotations: {}
 
 webProxy:
   annotations: {}
-  labels: {}
 
   resources: {}
 
@@ -67,3 +68,7 @@ webProxy:
     name: jcrist/dask-gateway-server
     tag: 0.2.0
     pullPolicy: IfNotPresent
+
+  service:
+    type: LoadBalancer
+    annotations: {}

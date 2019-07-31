@@ -4,6 +4,10 @@ metadata:
   name: {{ include "dask-gateway.fullname" . | printf "gateway-%s" | trunc 63 | trimSuffix "-" }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
+  {{- with .Values.gateway.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: 1
   selector:
