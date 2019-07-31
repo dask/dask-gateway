@@ -1,0 +1,95 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "dask-gateway.fullname" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+data:
+  dask_gateway_config.py: |-
+    {{/* Remove secrets before forwarding configuration */}}
+    {{- $values := pick .Values "gateway" "schedulerProxy" "webProxy" }}
+    {{- $_ := set $values "gateway" (omit $values.gateway "cookieSecret" "proxyToken") }}
+    import os
+    import json
+
+    _PROPERTIES = json.loads({{- $values | toJson | quote }})
+
+    def get_property(key, default=None):
+        """Read a property from the configured helm values."""
+        value = _PROPERTIES
+        for key2 in key.split("."):
+            if not isinstance(value, dict) or key2 not in value:
+                return default
+            value = value[key2]
+        return value
+
+    # Extract address information about the other services
+    if os.environ.get("DASK_GATEWAY_PROXY_CONTAINER", False):
+        scheduler_proxy_public = "tls://0.0.0.0:8786"
+        scheduler_proxy_api = "tls://0.0.0.0:8001"
+        web_proxy_public = "http://0.0.0.0:8000"
+        web_proxy_api = "http://0.0.0.0:8001"
+    else:
+        def _make_addr(scheme, name):
+            name = os.environ[name].replace("-", "_").upper()
+            host = os.environ[name + "_SERVICE_HOST"]
+            port = int(os.environ[name + "_SERVICE_PORT"])
+            return "%s://%s:%d" % (scheme, host, port)
+
+        scheduler_proxy_public = _make_addr("tls", "SCHEDULER_PROXY_PUBLIC_SERVICE_NAME")
+        scheduler_proxy_api = _make_addr("http", "SCHEDULER_PROXY_API_SERVICE_NAME")
+        web_proxy_public = _make_addr("http", "WEB_PROXY_PUBLIC_SERVICE_NAME")
+        web_proxy_api = _make_addr("http", "WEB_PROXY_API_SERVICE_NAME")
+
+    # Configure the various addresses
+    c.DaskGateway.private_url = "http://0.0.0.0:8001"
+    c.DaskGateway.public_url = web_proxy_public
+    c.DaskGateway.gateway_url = scheduler_proxy_public
+    c.WebProxy.api_url = web_proxy_api
+    c.SchedulerProxy.api_url = scheduler_proxy_api
+
+    # Schedulers aren't managed by the gateway
+    c.SchedulerProxy.externally_managed = True
+    c.WebProxy.externally_managed = True
+
+    # Configure the cluster manager
+    c.DaskGateway.cluster_manager_class = (
+        "dask_gateway_server.managers.kubernetes.KubeClusterManager"
+    )
+    if "POD_NAMESPACE" in os.environ:
+        c.KubeClusterManager.namespace = os.environ["POD_NAMESPACE"]
+
+    # Configure the cluster manager image
+    image_name = get_property("gateway.clusterManager.image.name")
+    if image_name:
+        image_tag = get_property("gateway.clusterManager.image.tag")
+        c.KubeClusterManager.image = (
+            "%s:%s" % (image_name, image_tag) if image_tag else image_name
+        )
+
+    # Forward cluster manager configuration
+    for field, prop_name in [
+        # Scheduler resources
+        ("scheduler_cores", "scheduler.cores.request"),
+        ("scheduler_core_limit", "scheduler.cores.limit"),
+        ("scheduler_memory", "scheduler.memory.request"),
+        ("scheduler_memory_limit", "scheduler.memory.limit"),
+        # Worker resources
+        ("worker_cores", "worker.cores.request"),
+        ("worker_core_limit", "worker.cores.limit"),
+        ("worker_memory", "worker.memory.request"),
+        ("worker_memory_limit", "worker.memory.limit"),
+        # Additional fields
+        ("image_pull_policy", "image.pullPolicy"),
+        ("environment", "environment"),
+        ("cluster_start_timeout", "clusterStartTimeout"),
+        ("cluster_connect_timeout", "clusterConnectTimeout"),
+        ("worker_start_timeout", "workerStartTimeout"),
+        ("worker_connect_timeout", "workerConnectTimeout"),
+    ]:
+        value = get_property("gateway.clusterManager." + prop_name)
+        if value is not None:
+            setattr(c.KubeClusterManager, field, value)
+
+    # Authentication
+    c.DaskGateway.authenticator_class = "dask_gateway_server.auth.DummyAuthenticator"

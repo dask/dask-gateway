@@ -1,0 +1,13 @@
+You've installed Dask-Gateway version {{ .Chart.AppVersion }}, from chart
+version {{ .Chart.Version }}!
+
+Your release is named {{ .Release.Name | quote }} and installed into the
+namespace {{ .Release.Namespace | quote }}.
+
+You can find the public address of Dask-Gateway at:
+
+  $ kubectl --namespace={{ .Release.Namespace }} get service web-proxy-public
+
+Likewise, the public address of for the scheduler proxy is at:
+
+  $ kubectl --namespace={{ .Release.Namespace }} get service scheduler-proxy-public

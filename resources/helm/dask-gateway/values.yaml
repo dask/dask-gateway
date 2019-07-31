@@ -1,0 +1,74 @@
+rbac:
+  enabled: true
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts: []
+  tls: []
+  path: /
+
+gateway:
+  annotations: {}
+
+  cookieSecret: null
+  proxyToken: null
+
+  resources: {}
+
+  image:
+    name: jcrist/dask-gateway-server
+    tag: 0.2.0
+    pullPolicy: IfNotPresent
+
+  clusterManager:
+    clusterStartTimeout: null
+    clusterConnectTimeout: null
+    workerStartTimeout: null
+    workerConnectTimeout: null
+
+    environment: null
+
+    scheduler:
+      cores:
+        request: null
+        limit: null
+      memory:
+        request: null
+        limit: null
+
+    worker:
+      cores:
+        request: null
+        limit: null
+      memory:
+        request: null
+        limit: null
+
+schedulerProxy:
+  annotations: {}
+
+  resources: {}
+
+  image:
+    name: jcrist/dask-gateway-server
+    tag: 0.2.0
+    pullPolicy: IfNotPresent
+
+  service:
+    type: LoadBalancer
+    annotations: {}
+
+webProxy:
+  annotations: {}
+
+  resources: {}
+
+  image:
+    name: jcrist/dask-gateway-server
+    tag: 0.2.0
+    pullPolicy: IfNotPresent
+
+  service:
+    type: LoadBalancer
+    annotations: {}
