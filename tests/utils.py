@@ -451,6 +451,9 @@ class temp_gateway(object):
             "public_url": "http://127.0.0.1:%d" % random_port(),
             "db_url": "sqlite:///:memory:",
             "authenticator_class": "dask_gateway_server.auth.DummyAuthenticator",
+            "cluster_manager_class": (
+                "dask_gateway_server.managers.inprocess.InProcessClusterManager"
+            ),
         }
         options.update(kwargs)
         config["DaskGateway"].update(options)

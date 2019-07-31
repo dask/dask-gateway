@@ -711,4 +711,26 @@ class GatewayCluster(object):
         widget = self._widget()
         if widget is not None:
             return widget._ipython_display_(**kwargs)
-        print(self)
+        else:
+            from IPython.display import display
+
+            data = {"text/plain": repr(self), "text/html": self._repr_html_()}
+            display(data, raw=True)
+
+    def _repr_html_(self):
+        if self.dashboard_link is not None:
+            dashboard = "<a href='{0}' target='_blank'>{0}</a>".format(
+                self.dashboard_link
+            )
+        else:
+            dashboard = "Not Available"
+        return (
+            "<div style='background-color: #f2f2f2; display: inline-block; "
+            "padding: 10px; border: 1px solid #999999;'>\n"
+            "  <h3>GatewayCluster</h3>\n"
+            "  <ul>\n"
+            "    <li><b>Name: </b>{name}\n"
+            "    <li><b>Dashboard: </b>{dashboard}\n"
+            "  </ul>\n"
+            "</div>\n"
+        ).format(name=self.name, dashboard=dashboard)
