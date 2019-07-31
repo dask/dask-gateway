@@ -211,7 +211,8 @@ class ClustersHandler(BaseHandler):
             try:
                 await self.waiter
             except asyncio.CancelledError:
-                return
+                if self.waiter is None:
+                    return
         self.write(cluster_model(self.gateway, cluster, full=True))
 
     @user_authenticated
@@ -229,6 +230,7 @@ class ClustersHandler(BaseHandler):
     def on_connection_close(self):
         if hasattr(self, "waiter"):
             self.waiter.cancel()
+            self.waiter = None
 
 
 class ClusterRegistrationHandler(BaseHandler):

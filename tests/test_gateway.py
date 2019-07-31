@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 from traitlets import Integer, Float
 from traitlets.config import Config
 
-from dask_gateway import Gateway
+from dask_gateway import Gateway, GatewayClusterError
 from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.objects import ClusterStatus
@@ -253,7 +253,7 @@ async def test_slow_cluster_start(tmpdir, start_timeout, state):
 
             # Submission fails due to start timeout
             cluster_id = await gateway.submit()
-            with pytest.raises(Exception) as exc:
+            with pytest.raises(GatewayClusterError) as exc:
                 await gateway.connect(cluster_id)
             assert cluster_id in str(exc.value)
 
@@ -281,7 +281,7 @@ async def test_slow_cluster_connect(tmpdir):
 
             # Submission fails due to connect timeout
             cluster_id = await gateway.submit()
-            with pytest.raises(Exception) as exc:
+            with pytest.raises(GatewayClusterError) as exc:
                 await gateway.connect(cluster_id)
             assert cluster_id in str(exc.value)
 
@@ -309,15 +309,15 @@ async def test_cluster_fails_during_start(tmpdir, fail_stage):
 
             # Submission fails due to error during start
             cluster_id = await gateway.submit()
-            with pytest.raises(Exception) as exc:
+            with pytest.raises(GatewayClusterError) as exc:
                 await gateway.connect(cluster_id)
             assert cluster_id in str(exc.value)
 
-            cluster = gateway_proc.db.cluster_from_name(cluster_id)
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster_id)
 
             # Stop cluster called with last reported state
             res = {} if fail_stage == 0 else {"i": fail_stage - 1}
-            assert cluster.manager.stop_cluster_state == res
+            assert cluster_obj.manager.stop_cluster_state == res
 
 
 @pytest.mark.asyncio
@@ -335,17 +335,15 @@ async def test_cluster_fails_between_start_and_connect(tmpdir):
             # Submit cluster
             cluster_id = await gateway.submit()
 
-            cluster = gateway_proc.db.cluster_from_name(cluster_id)
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster_id)
 
-            # Wait for cluster failure and stop_cluster called
-            timeout = 5
-            while timeout > 0:
-                if cluster.manager.status == "stopped":
-                    break
-                await asyncio.sleep(0.1)
-                timeout -= 0.1
-            else:
-                assert False, "Operation timed out"
+            # Connect and wait for start failure
+            with pytest.raises(GatewayClusterError) as exc:
+                await asyncio.wait_for(gateway.connect(cluster_id), 5)
+            assert cluster_id in str(exc.value)
+            assert "failed to start" in str(exc.value)
+
+            assert cluster_obj.manager.status == "stopped"
 
 
 @pytest.mark.asyncio
@@ -363,15 +361,15 @@ async def test_cluster_fails_after_connect(tmpdir):
             # Cluster starts successfully
             cluster_id = await gateway.submit()
 
-            cluster = gateway_proc.db.cluster_from_name(cluster_id)
+            cluster_obj = gateway_proc.db.cluster_from_name(cluster_id)
 
             await gateway.connect(cluster_id)
 
             # Wait for cluster to fail while running
-            await asyncio.wait_for(cluster.manager.failed, 3)
+            await asyncio.wait_for(cluster_obj.manager.failed, 3)
 
             # Stop cluster called to cleanup after failure
-            await asyncio.wait_for(cluster.manager.stop_cluster_called, 3)
+            await asyncio.wait_for(cluster_obj.manager.stop_cluster_called, 3)
 
 
 @pytest.mark.asyncio

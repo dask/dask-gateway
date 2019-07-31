@@ -24,7 +24,18 @@ from .options import Options
 
 del comm
 
-__all__ = ("Gateway", "GatewayCluster")
+__all__ = ("Gateway", "GatewayCluster", "GatewayClusterError", "GatewayServerError")
+
+
+class GatewayClusterError(Exception):
+    """Exception related to starting/stopping/scaling of a gateway cluster"""
+
+
+class GatewayServerError(Exception):
+    """Exception related to the operation of the gateway server.
+
+    Indicates an internal error in the gateway server.
+    """
 
 
 class GatewaySecurity(Security):
@@ -288,12 +299,22 @@ class Gateway(object):
                 self._auth.post_response(req, resp, context)
             self._cookie_jar.post_response(resp)
             if resp.error:
-                if resp.code in {404, 409, 422}:
-                    raise ValueError(json.loads(resp.body)["error"])
-                elif resp.code == 599:
+                if resp.code == 599:
                     raise TimeoutError("Request timed out")
                 else:
-                    resp.rethrow()
+                    try:
+                        msg = json.loads(resp.body)["error"]
+                    except Exception:
+                        msg = resp.body.decode()
+
+                    if resp.code in {404, 422}:
+                        raise ValueError(msg)
+                    elif resp.code == 409:
+                        raise GatewayClusterError(msg)
+                    elif resp.code == 500:
+                        raise GatewayServerError(msg)
+                    else:
+                        resp.rethrow()
         except HTTPError as exc:
             # Tornado 6 still raises these above with raise_error=False
             if exc.code == 599:
@@ -417,12 +438,14 @@ class Gateway(object):
                 if report.status is ClusterStatus.RUNNING:
                     return GatewayCluster(self, report)
                 elif report.status is ClusterStatus.FAILED:
-                    raise Exception(
+                    raise GatewayClusterError(
                         "Cluster %r failed to start, see logs for "
                         "more information" % cluster_name
                     )
                 elif report.status is ClusterStatus.STOPPED:
-                    raise Exception("Cluster %r is already stopped" % cluster_name)
+                    raise GatewayClusterError(
+                        "Cluster %r is already stopped" % cluster_name
+                    )
             # Not started yet, try again later
             await gen.sleep(0.5)
 
@@ -439,6 +462,8 @@ class Gateway(object):
         cluster_name = await self._submit(**kwargs)
         try:
             return await self._connect(cluster_name)
+        except GatewayClusterError:
+            raise
         except BaseException:
             # Ensure cluster is stopped on error
             await self._stop_cluster(cluster_name)
