@@ -1,4 +1,4 @@
-from .client import Gateway, GatewayCluster
+from .client import Gateway, GatewayCluster, GatewayClusterError, GatewayServerError
 from .auth import KerberosAuth, BasicAuth
 from .options import Options
 
