@@ -563,7 +563,11 @@ class GatewayCluster(object):
         self._gateway = gateway
         self.name = report.name
         self.scheduler_address = report.scheduler_address
-        self.dashboard_address = report.dashboard_address
+        self.dashboard_link = (
+            None
+            if report.dashboard_address is None
+            else report.dashboard_address + "/status"
+        )
         self.security = GatewaySecurity(
             tls_key=report.tls_key, tls_cert=report.tls_cert
         )
@@ -690,11 +694,10 @@ class GatewayCluster(object):
 
         elements = [title, HBox([status, request, scale])]
 
-        if self.dashboard_address is not None:
-            link_address = "%s/status" % self.dashboard_address
+        if self.dashboard_link is not None:
             link = HTML(
-                '<p><b>Dashboard: </b><a href="%s" target="_blank">%s'
-                "</a></p>\n" % (link_address, link_address)
+                '<p><b>Dashboard: </b><a href="{0}" target="_blank">{0}'
+                "</a></p>\n".format(self.dashboard_link)
             )
             elements.append(link)
 
