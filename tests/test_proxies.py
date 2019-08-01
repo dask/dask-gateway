@@ -48,7 +48,10 @@ async def cluster_and_security(tmpdir):
     security = Security(
         tls_scheduler_key=tls_key_path,
         tls_scheduler_cert=tls_cert_path,
+        tls_client_key=tls_key_path,
+        tls_client_cert=tls_cert_path,
         tls_ca_file=tls_cert_path,
+        require_encryption=True,
     )
     client_security = GatewaySecurity(tls_key.decode(), tls_cert.decode())
 
