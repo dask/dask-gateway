@@ -2,7 +2,7 @@ import asyncio
 import functools
 import json
 from inspect import isawaitable
-from urllib.parse import urlparse, unquote
+from urllib.parse import unquote
 
 from tornado import web
 from tornado.log import app_log
@@ -118,19 +118,12 @@ class BaseHandler(web.RequestHandler):
 
 
 def cluster_model(gateway, cluster, full=True):
-    if cluster.status == ClusterStatus.RUNNING:
-        scheduler = "gateway://%s/%s" % (
-            urlparse(gateway.gateway_url).netloc,
-            cluster.name,
-        )
-        dashboard = (
-            "/gateway/clusters/%s" % cluster.name if cluster.dashboard_address else ""
-        )
+    if cluster.status == ClusterStatus.RUNNING and cluster.dashboard_address:
+        dashboard = "/gateway/clusters/%s/status" % cluster.name
     else:
-        scheduler = dashboard = None
+        dashboard = None
     out = {
         "name": cluster.name,
-        "scheduler_address": scheduler,
         "dashboard_route": dashboard,
         "status": cluster.status.name,
         "start_time": cluster.start_time,

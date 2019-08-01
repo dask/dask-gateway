@@ -40,11 +40,12 @@ def kdestroy():
 @pytest.mark.asyncio
 async def test_basic_auth(tmpdir):
     async with temp_gateway(temp_dir=str(tmpdir.join("dask-gateway"))) as gateway_proc:
-
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True, auth="basic"
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
+            auth="basic",
         ) as gateway:
-
             await gateway.list_clusters()
 
 
@@ -59,9 +60,11 @@ async def test_basic_auth_password(tmpdir):
 
     async with temp_gateway(config=config) as gateway_proc:
         auth = BasicAuth()
-
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True, auth=auth
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
+            auth=auth,
         ) as gateway:
 
             with pytest.raises(Exception):
@@ -85,7 +88,10 @@ async def test_kerberos_auth(tmpdir):
 
     async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True, auth="kerberos"
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
+            auth="kerberos",
         ) as gateway:
 
             kdestroy()
@@ -170,7 +176,10 @@ async def test_jupyterhub_auth(tmpdir, monkeypatch):
             auth = JupyterHubAuth(api_token=uuid.uuid4().hex)
 
             async with Gateway(
-                address=gateway_proc.public_url, asynchronous=True, auth=auth
+                address=gateway_proc.public_url,
+                proxy_address=gateway_proc.gateway_url,
+                asynchronous=True,
+                auth=auth,
             ) as gateway:
 
                 # Auth fails with bad token

@@ -76,6 +76,7 @@ def test_client_init():
     config = {
         "gateway": {
             "address": "http://127.0.0.1:8888",
+            "proxy-address": 8786,
             "auth": {"type": "basic", "kwargs": {"username": "bruce"}},
         }
     }
@@ -84,22 +85,39 @@ def test_client_init():
         # Defaults
         gateway = Gateway()
         assert gateway.address == "http://127.0.0.1:8888"
+        assert gateway.proxy_address == "gateway://127.0.0.1:8786"
         assert gateway._auth.username == "bruce"
 
         # Address override
         gateway = Gateway(address="http://127.0.0.1:9999")
         assert gateway.address == "http://127.0.0.1:9999"
-        assert gateway._auth.username == "bruce"
+
+        # Proxy address override
+        gateway = Gateway(proxy_address="gateway://123.4.5.6:9999")
+        assert gateway.proxy_address == "gateway://123.4.5.6:9999"
 
         # Auth override
         gateway = Gateway(auth="kerberos")
-        assert gateway.address == "http://127.0.0.1:8888"
         assert isinstance(gateway._auth, KerberosAuth)
 
-    config = {"gateway": {"address": None, "auth": {"type": "basic", "kwargs": {}}}}
+    config = {
+        "gateway": {
+            "address": None,
+            "proxy-address": 8786,
+            "auth": {"type": "basic", "kwargs": {}},
+        }
+    }
 
     with dask.config.set(config):
         # No address provided
+        with pytest.raises(ValueError):
+            Gateway()
+
+    config["gateway"]["address"] = "http://127.0.0.1:8888"
+    config["gateway"]["proxy-address"] = None
+
+    with dask.config.set(config):
+        # No proxy-address provided
         with pytest.raises(ValueError):
             Gateway()
 
