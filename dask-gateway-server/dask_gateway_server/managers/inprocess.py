@@ -53,7 +53,7 @@ class InProcessClusterManager(UnsafeLocalClusterManager):
         gateway_client = self.get_gateway_client()
         workdir = self.get_working_directory()
         worker = await start_worker(
-            gateway_client, security, worker_name, local_dir=workdir, nanny=False
+            gateway_client, security, worker_name, local_directory=workdir, nanny=False
         )
         self.workers[worker_name] = worker
         yield {}

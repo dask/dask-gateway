@@ -67,7 +67,7 @@ class GatewaySecurity(Security):
             ctx.verify_mode = ssl.CERT_REQUIRED
             ctx.check_hostname = False
             ctx.load_cert_chain(cert_path, key_path)
-        return {"ssl_context": ctx}
+        return {"ssl_context": ctx, "require_encryption": True}
 
 
 class _IntEnum(enum.IntEnum):

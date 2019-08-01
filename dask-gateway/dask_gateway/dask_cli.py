@@ -7,7 +7,7 @@ import os
 import sys
 from urllib.parse import urlparse, quote
 
-from tornado import gen, web
+from tornado import web
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.ioloop import IOLoop, TimeoutError
 
@@ -291,9 +291,14 @@ def scheduler(argv=None):
         limit = max(soft, hard // 2)
         resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
 
-    loop.add_callback(start_scheduler, gateway, security)
+    async def run():
+        scheduler = await start_scheduler(gateway, security)
+        await scheduler.finished()
 
-    loop.start()
+    try:
+        loop.run_sync(run)
+    except (KeyboardInterrupt, TimeoutError):
+        pass
 
 
 async def start_scheduler(gateway, security, exit_on_failure=True):
@@ -301,29 +306,29 @@ async def start_scheduler(gateway, security, exit_on_failure=True):
     plugin = GatewaySchedulerPlugin(gateway, loop)
 
     services = {("gateway", 0): (GatewaySchedulerService, {"plugin": plugin})}
-    bokeh = False
+    dashboard = False
     with ignoring(ImportError):
         from distributed.dashboard.scheduler import BokehScheduler
 
-        services[("bokeh", 0)] = (BokehScheduler, {})
-        bokeh = True
+        services[("dashboard", 0)] = (BokehScheduler, {})
+        dashboard = True
 
     scheduler = Scheduler(loop=loop, services=services, security=security)
     scheduler.add_plugin(plugin)
-    scheduler.start("tls://")
+    await scheduler
 
     host = urlparse(scheduler.address).hostname
     gateway_port = scheduler.services["gateway"].port
     api_address = "http://%s:%d" % (host, gateway_port)
 
-    if bokeh:
-        bokeh_port = scheduler.services["bokeh"].port
-        bokeh_address = "http://%s:%d" % (host, bokeh_port)
+    if dashboard:
+        dashboard_port = scheduler.services["dashboard"].port
+        dashboard_address = "http://%s:%d" % (host, dashboard_port)
     else:
-        bokeh_address = ""
+        dashboard_address = ""
 
     try:
-        await gateway.send_addresses(scheduler.address, bokeh_address, api_address)
+        await gateway.send_addresses(scheduler.address, dashboard_address, api_address)
     except Exception as exc:
         logger.error("Failed to send addresses to gateway", exc_info=exc)
         if exit_on_failure:
@@ -352,7 +357,7 @@ async def start_worker(
     worker_name,
     nthreads=1,
     memory_limit="auto",
-    local_dir="",
+    local_directory="",
     nanny=True,
 ):
     loop = IOLoop.current()
@@ -368,7 +373,7 @@ async def start_worker(
         memory_limit=memory_limit,
         security=security,
         name=worker_name,
-        local_dir=local_dir,
+        local_directory=local_directory,
     )
 
     if nanny:
@@ -378,7 +383,7 @@ async def start_worker(
 
         install_signal_handlers(loop, cleanup=close)
 
-    await worker._start(None)
+    await worker
     return worker
 
 
@@ -401,8 +406,7 @@ def worker(argv=None):
         worker = await start_worker(
             gateway, security, worker_name, nthreads, memory_limit
         )
-        while worker.status != "closed":
-            await gen.sleep(0.2)
+        await worker.finished()
 
     try:
         loop.run_sync(run)
