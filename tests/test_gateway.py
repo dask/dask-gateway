@@ -246,9 +246,10 @@ async def test_slow_cluster_start(tmpdir, start_timeout, state):
     config.SlowStartClusterManager.cluster_start_timeout = start_timeout
 
     async with temp_gateway(config=config) as gateway_proc:
-
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
             # Submission fails due to start timeout
@@ -274,9 +275,10 @@ async def test_slow_cluster_connect(tmpdir):
     config.SlowStartClusterManager.pause_time = 0
 
     async with temp_gateway(config=config) as gateway_proc:
-
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
             # Submission fails due to connect timeout
@@ -302,9 +304,10 @@ async def test_cluster_fails_during_start(tmpdir, fail_stage):
     config.ClusterFailsDuringStart.fail_stage = fail_stage
 
     async with temp_gateway(config=config) as gateway_proc:
-
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
             # Submission fails due to error during start
@@ -329,7 +332,9 @@ async def test_cluster_fails_between_start_and_connect(tmpdir):
 
     async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
             # Submit cluster
@@ -355,7 +360,9 @@ async def test_cluster_fails_after_connect(tmpdir):
 
     async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
             # Cluster starts successfully
@@ -382,7 +389,9 @@ async def test_slow_worker_start(tmpdir, start_timeout, state):
 
     async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
             cluster = await gateway.new_cluster()
             await cluster.scale(1)
@@ -415,7 +424,9 @@ async def test_slow_worker_connect(tmpdir):
 
     async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
             cluster = await gateway.new_cluster()
             await cluster.scale(1)
@@ -448,7 +459,9 @@ async def test_worker_fails_during_start(tmpdir, fail_stage):
 
     async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
             cluster = await gateway.new_cluster()
             await cluster.scale(1)
@@ -481,7 +494,9 @@ async def test_worker_fails_between_start_and_connect(tmpdir):
 
     async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
             cluster = await gateway.new_cluster()
             await cluster.scale(1)
@@ -507,9 +522,10 @@ async def test_worker_fails_after_connect(tmpdir):
         cluster_manager_class=WorkerFailsAfterConnect,
         temp_dir=str(tmpdir.join("dask-gateway")),
     ) as gateway_proc:
-
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
             cluster = await gateway.new_cluster()
@@ -535,24 +551,40 @@ async def test_successful_cluster(tmpdir):
         cluster_manager_class=InProcessClusterManager,
         temp_dir=str(tmpdir.join("dask-gateway")),
     ) as gateway_proc:
-
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
+            # No currently running clusters
+            clusters = await gateway.list_clusters()
+            assert clusters == []
+
+            # Start a cluster
             cluster = await gateway.new_cluster()
+
+            # Cluster is now present in list
+            clusters = await gateway.list_clusters()
+            assert len(clusters)
+            assert clusters[0].name == cluster.name
+
+            # Scale up, connect, and compute
             await cluster.scale(2)
 
             with cluster.get_client(set_as_default=False) as client:
                 res = await client.submit(lambda x: x + 1, 1)
                 assert res == 2
 
+            # Scale down
             await cluster.scale(1)
 
+            # Can still compute
             with cluster.get_client(set_as_default=False) as client:
                 res = await client.submit(lambda x: x + 1, 1)
                 assert res == 2
 
+            # Shutdown the cluster
             await cluster.shutdown()
 
 
@@ -573,9 +605,10 @@ async def test_cluster_manager_options(tmpdir):
         ),
         temp_dir=str(tmpdir.join("dask-gateway")),
     ) as gateway_proc:
-
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
             # Create with no parameters
@@ -620,7 +653,9 @@ async def test_gateway_stop_clusters_on_shutdown(tmpdir):
         temp_dir=str(tmpdir.join("dask-gateway")),
     ) as gateway_proc:
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
             cluster = await gateway.new_cluster()
@@ -654,9 +689,10 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
         db_encrypt_keys=db_encrypt_keys,
         stop_clusters_on_shutdown=False,
     ) as gateway_proc:
-
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
             cluster1_name = await gateway.submit()
@@ -706,7 +742,9 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
 
         # Check that cluster is available and everything still works
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
         ) as gateway:
 
             cluster = await gateway.connect(cluster1_name)

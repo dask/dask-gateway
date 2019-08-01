@@ -6,6 +6,7 @@ import tempfile
 import weakref
 from datetime import timedelta, datetime
 from threading import get_ident
+from urllib.parse import urlparse
 
 import dask
 from distributed import Client
@@ -126,8 +127,8 @@ class ClusterReport(object):
         The cluster's status.
     scheduler_address : str or None
         The address of the scheduler, or None if not currently running.
-    dashboard_address : str or None
-        The address of the dashboard, or None if not currently running.
+    dashboard_link : str or None
+        A link to the dashboard, or None if not currently running.
     start_time : datetime.datetime
         The time the cluster was started.
     stop_time : datetime.datetime or None
@@ -145,7 +146,7 @@ class ClusterReport(object):
         "options",
         "status",
         "scheduler_address",
-        "dashboard_address",
+        "dashboard_link",
         "start_time",
         "stop_time",
         "tls_cert",
@@ -158,7 +159,7 @@ class ClusterReport(object):
         options,
         status,
         scheduler_address,
-        dashboard_address,
+        dashboard_link,
         start_time,
         stop_time,
         tls_cert=None,
@@ -166,9 +167,9 @@ class ClusterReport(object):
     ):
         self.name = name
         self.options = options
-        self.status = ClusterStatus._create(status)
+        self.status = status
         self.scheduler_address = scheduler_address
-        self.dashboard_address = dashboard_address
+        self.dashboard_link = dashboard_link
         self.start_time = start_time
         self.stop_time = stop_time
         self.tls_cert = tls_cert
@@ -177,22 +178,40 @@ class ClusterReport(object):
     def __repr__(self):
         return "ClusterReport<name=%s, status=%s>" % (self.name, self.status.name)
 
+    @property
+    def security(self):
+        """A security object for this cluster, if present, else None"""
+        return (
+            None
+            if self.tls_key is None
+            else GatewaySecurity(tls_key=self.tls_key, tls_cert=self.tls_cert)
+        )
+
     @classmethod
-    def _from_json(cls, gateway_address, msg):
+    def _from_json(cls, gateway_address, proxy_address, msg):
         start_time = datetime.fromtimestamp(msg.pop("start_time") / 1000)
         stop_time = msg.pop("stop_time")
         if stop_time is not None:
             stop_time = datetime.fromtimestamp(stop_time / 1000)
 
+        name = msg.pop("name")
+        status = ClusterStatus._create(msg.pop("status"))
+        scheduler_address = (
+            "%s/%s" % (proxy_address, name) if status == ClusterStatus.RUNNING else None
+        )
+
         dashboard_route = msg.pop("dashboard_route")
-        dashboard_address = (
-            gateway_address + dashboard_route if dashboard_route else None
+        dashboard_link = (
+            "%s%s" % (gateway_address, dashboard_route) if dashboard_route else None
         )
 
         return cls(
             start_time=start_time,
             stop_time=stop_time,
-            dashboard_address=dashboard_address,
+            name=name,
+            status=status,
+            scheduler_address=scheduler_address,
+            dashboard_link=dashboard_link,
             **msg,
         )
 
@@ -204,6 +223,10 @@ class Gateway(object):
     ----------
     address : str, optional
         The address to the gateway server.
+    proxy_address : str, int, optional
+        The address of the scheduler proxy server. If an int, it's used as the
+        port, with the host/ip taken from ``address``. Provide a full address
+        if a different host/ip should be used.
     auth : GatewayAuth, optional
         The authentication method to use.
     asynchronous : bool, optional
@@ -214,14 +237,34 @@ class Gateway(object):
         asynchronous mode, otherwise a background loop is started.
     """
 
-    def __init__(self, address=None, auth=None, asynchronous=False, loop=None):
+    def __init__(
+        self, address=None, proxy_address=None, auth=None, asynchronous=False, loop=None
+    ):
         if address is None:
             address = dask.config.get("gateway.address")
         if address is None:
             raise ValueError(
                 "No dask-gateway address provided or found in configuration"
             )
-        self.address = address.rstrip("/")
+        address = address.rstrip("/")
+
+        if proxy_address is None:
+            proxy_address = dask.config.get("gateway.proxy-address")
+        if proxy_address is None:
+            raise ValueError(
+                "No dask-gateway proxy address provided or found in configuration"
+            )
+        if isinstance(proxy_address, int):
+            parsed = urlparse(address)
+            proxy_netloc = "%s:%d" % (parsed.hostname, proxy_address)
+        elif isinstance(proxy_address, str):
+            parsed = urlparse(proxy_address)
+            proxy_netloc = parsed.netloc if parsed.netloc else proxy_address
+        proxy_address = "gateway://%s" % proxy_netloc
+
+        self.address = address
+        self.proxy_address = proxy_address
+
         self._auth = get_auth(auth)
         self._cookie_jar = CookieJar()
 
@@ -337,7 +380,7 @@ class Gateway(object):
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
         return [
-            ClusterReport._from_json(self.address, r)
+            ClusterReport._from_json(self.address, self.proxy_address, r)
             for r in json.loads(resp.body).values()
         ]
 
@@ -425,7 +468,9 @@ class Gateway(object):
         url = "%s/gateway/api/clusters/%s%s" % (self.address, cluster_name, params)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
-        return ClusterReport._from_json(self.address, json.loads(resp.body))
+        return ClusterReport._from_json(
+            self.address, self.proxy_address, json.loads(resp.body)
+        )
 
     async def _connect(self, cluster_name):
         while True:
@@ -436,7 +481,13 @@ class Gateway(object):
                 pass
             else:
                 if report.status is ClusterStatus.RUNNING:
-                    return GatewayCluster(self, report)
+                    return GatewayCluster(
+                        gateway=self,
+                        name=report.name,
+                        scheduler_address=report.scheduler_address,
+                        dashboard_link=report.dashboard_link,
+                        security=report.security,
+                    )
                 elif report.status is ClusterStatus.FAILED:
                     raise GatewayClusterError(
                         "Cluster %r failed to start, see logs for "
@@ -559,18 +610,12 @@ class GatewayCluster(object):
     calling this class directly.
     """
 
-    def __init__(self, gateway, report):
+    def __init__(self, gateway, name, scheduler_address, dashboard_link, security):
         self._gateway = gateway
-        self.name = report.name
-        self.scheduler_address = report.scheduler_address
-        self.dashboard_link = (
-            None
-            if report.dashboard_address is None
-            else report.dashboard_address + "/status"
-        )
-        self.security = GatewaySecurity(
-            tls_key=report.tls_key, tls_cert=report.tls_cert
-        )
+        self.name = name
+        self.scheduler_address = scheduler_address
+        self.dashboard_link = dashboard_link
+        self.security = security
         self._internal_client = None
         # XXX: Ensure client is closed. Currently disconnected clients try to
         # reconnect forever, which spams the schedulerproxy. Once this bug is
