@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Client API &#8212; Dask Gateway 0.2.0+10.gf23d669 documentation</title>
+    <title>Client API &#8212; Dask Gateway 0.2.0+11.gb68fc89 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -37,12 +37,15 @@
 <h2>Gateway<a class="headerlink" href="#gateway" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="dask_gateway.Gateway">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">Gateway</code><span class="sig-paren">(</span><em class="sig-param">address=None</em>, <em class="sig-param">auth=None</em>, <em class="sig-param">asynchronous=False</em>, <em class="sig-param">loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">Gateway</code><span class="sig-paren">(</span><em class="sig-param">address=None</em>, <em class="sig-param">proxy_address=None</em>, <em class="sig-param">auth=None</em>, <em class="sig-param">asynchronous=False</em>, <em class="sig-param">loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway" title="Permalink to this definition">¶</a></dt>
 <dd><p>A client for a Dask Gateway Server.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>address</strong> (<em>str</em><em>, </em><em>optional</em>) – The address to the gateway server.</p></li>
+<li><p><strong>proxy_address</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>optional</em>) – The address of the scheduler proxy server. If an int, it’s used as the
+port, with the host/ip taken from <code class="docutils literal notranslate"><span class="pre">address</span></code>. Provide a full address
+if a different host/ip should be used.</p></li>
 <li><p><strong>auth</strong> (<em>GatewayAuth</em><em>, </em><em>optional</em>) – The authentication method to use.</p></li>
 <li><p><strong>asynchronous</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, starts the client in asynchronous mode, where it can be used
 in other async code.</p></li>
@@ -186,7 +189,7 @@ options are specific to each deployment of dask-gateway, see
 <h2>GatewayCluster<a class="headerlink" href="#gatewaycluster" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="dask_gateway.GatewayCluster">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayCluster</code><span class="sig-paren">(</span><em class="sig-param">gateway</em>, <em class="sig-param">report</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayCluster</code><span class="sig-paren">(</span><em class="sig-param">gateway</em>, <em class="sig-param">name</em>, <em class="sig-param">scheduler_address</em>, <em class="sig-param">dashboard_link</em>, <em class="sig-param">security</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dask-gateway cluster.</p>
 <p>Users should use <code class="docutils literal notranslate"><span class="pre">Gateway.new_cluster</span></code> or <code class="docutils literal notranslate"><span class="pre">Gateway.connect</span></code> instead of
 calling this class directly.</p>
