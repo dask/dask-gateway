@@ -72,6 +72,7 @@ both the cluster backend and the authentication protocol are pluggable.
     api-server
     api-client
     installation
+    patterns
 
 .. _Dask: https://dask.org/
 .. _traitlets: https://traitlets.readthedocs.io/en/stable/
