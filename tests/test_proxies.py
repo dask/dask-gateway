@@ -305,7 +305,7 @@ async def test_scheduler_proxy(scheduler_proxy, cluster_and_security):
     ],
 )
 async def test_proxy_exits_with_error_code(cls, scheme, kind):
-    kwargs = {"%s_url" % kind: "%s://bad-hostname-here:%d" % (scheme, random_port())}
+    kwargs = {"%s_url" % kind: "%s://bad-hostname-here" % scheme}
     proxy = cls(**kwargs)
     try:
         with pytest.raises(RuntimeError) as exc:
