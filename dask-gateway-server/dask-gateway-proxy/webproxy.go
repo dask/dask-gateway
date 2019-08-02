@@ -78,13 +78,13 @@ func (p *HttpProxy) routesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			p.router.Put(route, target)
 			p.routesLock.Unlock()
-			p.logger.Infof("Added route %s -> %s", route, target)
+			p.logger.Debugf("Added route %s -> %s", route, target)
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodDelete:
 			p.routesLock.Lock()
 			p.router.Delete(route)
 			p.routesLock.Unlock()
-			p.logger.Infof("Removed route %s", route)
+			p.logger.Debugf("Removed route %s", route)
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -174,15 +174,19 @@ func webProxyMain(args []string) {
 	if isChildProcess {
 		go awaitShutdown()
 	}
-	go serveAPI(proxy.routesHandler, apiAddress, token)
-
 	proxy.logger.Infof("API serving at %s", apiAddress)
+	go serveAPI(proxy.routesHandler, apiAddress, token, proxy.logger)
 
+	var err error
 	if tlsCert == "" {
 		proxy.logger.Infof("Proxy serving at http://%s", address)
-		server.ListenAndServe()
+		err = server.ListenAndServe()
 	} else {
 		proxy.logger.Infof("Proxy serving at https://%s", address)
-		server.ListenAndServeTLS(tlsCert, tlsKey)
+		err = server.ListenAndServeTLS(tlsCert, tlsKey)
+	}
+	if err != nil && err != http.ErrServerClosed {
+		proxy.logger.Errorf("%s", err)
+		os.Exit(1)
 	}
 }

@@ -292,3 +292,24 @@ async def test_scheduler_proxy(scheduler_proxy, cluster_and_security):
     assert not await scheduler_proxy.get_all_routes()
     # Delete idempotent
     await scheduler_proxy.delete_route("/temp")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "cls, scheme, kind",
+    [
+        (SchedulerProxy, "tls", "public"),
+        (SchedulerProxy, "http", "api"),
+        (WebProxy, "http", "public"),
+        (WebProxy, "http", "api"),
+    ],
+)
+async def test_proxy_exits_with_error_code(cls, scheme, kind):
+    kwargs = {"%s_url" % kind: "%s://bad-hostname-here" % scheme}
+    proxy = cls(**kwargs)
+    try:
+        with pytest.raises(RuntimeError) as exc:
+            await proxy.start()
+        assert "exit code 1" in str(exc.value)
+    finally:
+        proxy.stop()
