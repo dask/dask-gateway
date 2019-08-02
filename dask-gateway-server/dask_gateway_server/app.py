@@ -699,7 +699,9 @@ class DaskGateway(Application):
             await asyncio.sleep(cluster.manager.cluster_status_period)
 
     async def _start_cluster(self, cluster):
-        self.log.debug("Cluster %s is starting...", cluster.name)
+        self.log.info(
+            "Starting cluster %s for user %s...", cluster.name, cluster.user.name
+        )
 
         # Walk through the startup process, saving state as updates occur
         async for state in cluster.manager.start_cluster():
@@ -735,7 +737,7 @@ class DaskGateway(Application):
             )
             return False
 
-        self.log.debug("Cluster %s has started, waiting for connection", cluster.name)
+        self.log.info("Cluster %s has started, waiting for connection", cluster.name)
 
         self.start_cluster_status_monitor(cluster)
 
@@ -752,7 +754,7 @@ class DaskGateway(Application):
             )
             return False
 
-        self.log.debug("Cluster %s connected at %s", cluster.name, scheduler_address)
+        self.log.info("Cluster %s connected at %s", cluster.name, scheduler_address)
 
         # Mark cluster as running
         self.db.update_cluster(
@@ -804,7 +806,7 @@ class DaskGateway(Application):
         self.schedule_stop_cluster(cluster, failed=True)
 
     async def stop_cluster(self, cluster, failed=False):
-        self.log.debug("Cluster %s is stopping...", cluster.name)
+        self.log.info("Stopping cluster %s...", cluster.name)
 
         # Stop the periodic monitor, if present
         self.stop_cluster_status_monitor(cluster)
@@ -835,7 +837,7 @@ class DaskGateway(Application):
         self.db.update_cluster(cluster, status=status, stop_time=timestamp())
         cluster.pending.clear()
 
-        self.log.debug("Cluster %s stopped", cluster.name)
+        self.log.info("Stopped cluster %s", cluster.name)
 
     def schedule_stop_cluster(self, cluster, failed=False):
         self.task_pool.create_task(self.stop_cluster(cluster, failed=failed))
@@ -846,7 +848,7 @@ class DaskGateway(Application):
             delta = total - len(cluster.active_workers)
             if delta == 0:
                 return
-            self.log.debug(
+            self.log.info(
                 "Scaling cluster %s to %d workers, a delta of %d",
                 cluster.name,
                 total,
@@ -866,7 +868,7 @@ class DaskGateway(Application):
             )
 
     async def _start_worker(self, cluster, worker):
-        self.log.debug("Starting worker %r for cluster %r", worker.name, cluster.name)
+        self.log.info("Starting worker %s for cluster %s...", worker.name, cluster.name)
 
         # Walk through the startup process, saving state as updates occur
         async for state in cluster.manager.start_worker(worker.name, cluster.state):
@@ -913,7 +915,7 @@ class DaskGateway(Application):
             self.log.error("Error while starting worker %s", worker, exc_info=exc)
             return False
 
-        self.log.debug("Worker %s has started, waiting for connection", worker.name)
+        self.log.info("Worker %s has started, waiting for connection", worker.name)
 
         # Wait for the worker to connect, periodically checking its status
         worker_status_monitor = asyncio.ensure_future(
@@ -952,7 +954,7 @@ class DaskGateway(Application):
                 )
                 return False
 
-        self.log.debug("Worker %s connected to cluster %s", worker.name, cluster.name)
+        self.log.info("Worker %s connected to cluster %s", worker.name, cluster.name)
 
         # Mark worker as running
         self.mark_worker_running(cluster, worker)
@@ -985,7 +987,7 @@ class DaskGateway(Application):
         self.schedule_stop_worker(cluster, worker, failed=True)
 
     async def stop_worker(self, cluster, worker, failed=False):
-        self.log.debug("Stopping worker %s for cluster %s", worker.name, cluster.name)
+        self.log.info("Stopping worker %s for cluster %s", worker.name, cluster.name)
 
         # Cancel a pending start if needed
         await cancel_task(worker._start_future)
@@ -1009,7 +1011,7 @@ class DaskGateway(Application):
         status = WorkerStatus.FAILED if failed else WorkerStatus.STOPPED
         self.db.update_worker(worker, status=status, stop_time=timestamp())
 
-        self.log.debug("Worker %s stopped", worker.name)
+        self.log.info("Stopped worker %s", worker.name)
 
     def schedule_stop_worker(self, cluster, worker, failed=False):
         self.task_pool.create_task(self.stop_worker(cluster, worker, failed=failed))
