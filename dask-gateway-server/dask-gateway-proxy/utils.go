@@ -33,7 +33,7 @@ func withAuthorization(handler http.HandlerFunc, token string) http.HandlerFunc 
 	}
 }
 
-func serveAPI(handler http.HandlerFunc, address string, token string) {
+func serveAPI(handler http.HandlerFunc, address string, token string, logger *Logger) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/routes/", withAuthorization(handler, token))
 
@@ -41,7 +41,11 @@ func serveAPI(handler http.HandlerFunc, address string, token string) {
 		Addr:    address,
 		Handler: mux,
 	}
-	server.ListenAndServe()
+	err := server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		logger.Errorf("%s", err)
+		os.Exit(1)
+	}
 }
 
 func awaitShutdown() {

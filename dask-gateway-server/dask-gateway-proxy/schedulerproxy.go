@@ -88,13 +88,13 @@ func (p *Proxy) routesHandler(w http.ResponseWriter, r *http.Request) {
 			p.routesLock.Lock()
 			p.routes[route] = target.Host
 			p.routesLock.Unlock()
-			p.logger.Infof("Added route %s -> %s", route, target.Host)
+			p.logger.Debugf("Added route %s -> %s", route, target.Host)
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodDelete:
 			p.routesLock.Lock()
 			delete(p.routes, route)
 			p.routesLock.Unlock()
-			p.logger.Infof("Removed route %s", route)
+			p.logger.Debugf("Removed route %s", route)
 			w.WriteHeader(http.StatusNoContent)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -103,21 +103,23 @@ func (p *Proxy) routesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Proxy) Run(isChildProcess bool) {
+	p.logger.Infof("API serving at %s", p.apiAddress)
+	go serveAPI(p.routesHandler, p.apiAddress, p.token, p.logger)
+
+	p.logger.Infof("Proxy serving at %s", p.address)
 	l, err := net.Listen("tcp", p.address)
 	if err != nil {
-		p.logger.Errorf("Failed to connect: %s", err)
-		return
+		p.logger.Errorf("%s", err)
+		os.Exit(1)
 	}
-	p.logger.Infof("Proxy serving at %s", p.address)
-	p.logger.Infof("API serving at %s", p.apiAddress)
-	go serveAPI(p.routesHandler, p.apiAddress, p.token)
+
 	if isChildProcess {
 		go awaitShutdown()
 	}
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			p.logger.Errorf("Failed to accept new connection: %s", err)
+			p.logger.Warnf("Failed to accept new connection: %s", err)
 		}
 
 		conn := &Conn{inConn: c.(*net.TCPConn)}
@@ -129,18 +131,18 @@ func (p *Proxy) sendAlert(c *Conn, alert tlsAlert, format string, args ...interf
 	if alert == unrecognizedName {
 		p.logger.Debugf(format, args...)
 	} else {
-		p.logger.Errorf(format, args...)
+		p.logger.Warnf(format, args...)
 	}
 
 	alertMsg := []byte{21, 3, byte(c.tlsMinor), 0, 2, 2, byte(alert)}
 
 	if err := c.inConn.SetWriteDeadline(time.Now().Add(p.timeout)); err != nil {
-		p.logger.Errorf("Error while setting write deadline during abort: %s", err)
+		p.logger.Warnf("Error while setting write deadline during abort: %s", err)
 		return
 	}
 
 	if _, err := c.inConn.Write(alertMsg); err != nil {
-		p.logger.Errorf("Error while sending alert: %s", err)
+		p.logger.Warnf("Error while sending alert: %s", err)
 	}
 }
 
@@ -197,7 +199,7 @@ func (p *Proxy) proxy(c *Conn) {
 func (p *Proxy) proxyConnections(wg *sync.WaitGroup, in, out *net.TCPConn) {
 	defer wg.Done()
 	if _, err := io.Copy(in, out); err != nil {
-		p.logger.Errorf("Error proxying %q -> %q: %s", in.RemoteAddr(), out.RemoteAddr(), err)
+		p.logger.Warnf("Error proxying %q -> %q: %s", in.RemoteAddr(), out.RemoteAddr(), err)
 	}
 	in.CloseRead()
 	out.CloseWrite()

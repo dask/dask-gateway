@@ -299,6 +299,7 @@ class ProxyApp(Application):
         env = proxy.get_start_env()
         exe = command[0]
         args = command[1:]
+        print(args)
         os.execle(exe, "dask-gateway-proxy", *args, env)
 
 
