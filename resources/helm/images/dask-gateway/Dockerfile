@@ -8,7 +8,7 @@ LABEL MAINTAINER="Jim Crist"
 # - Removes unnecessary *.js.map files
 # - Removes unminified bokeh js
 RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
-        dask==2.1.0 \
+        dask==2.2.0 \
         numpy==1.16.3 \
         pandas==0.24.2 \
     && /opt/conda/bin/conda clean -afy \
