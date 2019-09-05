@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Client API &#8212; Dask Gateway 0.2.0+13.gc976f75 documentation</title>
+    <title>Client API &#8212; Dask Gateway 0.3.0+2.gc831287 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -245,21 +245,21 @@ a web interface (e.g. Jupyter Notebooks) with <code class="docutils literal notr
 <p class="rubric">Examples</p>
 <p>Options objects are normally created via the <code class="docutils literal notranslate"><span class="pre">Gateway.cluster_options</span></code>
 method:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">cluster_options</span><span class="p">()</span>  <span class="c1"># doctest: +SKIP</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">cluster_options</span><span class="p">()</span>  
 </pre></div>
 </div>
 <p>Available options can then be accessed or set via attribute or key:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span>  <span class="c1"># doctest: +SKIP</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span>  
 <span class="go">1</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;worker_cores&quot;</span><span class="p">]</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;worker_cores&quot;</span><span class="p">]</span>  
 <span class="go">1</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># doctest: +SKIP</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span>  <span class="c1"># doctest: +SKIP</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span>  
 <span class="go">2</span>
 </pre></div>
 </div>
 <p>Accessing invalid options error appropriately:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">not_a_valid_option</span> <span class="o">=</span> <span class="s1">&#39;myvalue&#39;</span>  <span class="c1"># doctest: +SKIP</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">not_a_valid_option</span> <span class="o">=</span> <span class="s1">&#39;myvalue&#39;</span>  
 <span class="gt">Traceback (most recent call last):</span>
     <span class="o">...</span>
 <span class="gr">AttributeError</span>: <span class="n">No option &#39;not_a_valid_option&#39; available</span>

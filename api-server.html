@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0.2.0+13.gc976f75 documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0.3.0+2.gc831287 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -42,13 +42,13 @@
 <dd><p>A gateway for managing dask clusters across multiple users</p>
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.DaskGateway.authenticator_class = Type('dask_gateway_server.auth.KerberosAuthenticator')</code></dt>
+<code class="sig-name descname">config c.DaskGateway.authenticator_class = Type('dask_gateway_server.auth.DummyAuthenticator')</code></dt>
 <dd><p>The gateway authenticator class to use</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.DaskGateway.cluster_manager_class = Type('dask_gateway_server.managers.local.LocalClusterManager')</code></dt>
+<code class="sig-name descname">config c.DaskGateway.cluster_manager_class = Type('dask_gateway_server.managers.local.UnsafeLocalClusterManager')</code></dt>
 <dd><p>The gateway cluster manager class to use</p>
 </dd></dl>
 
@@ -128,7 +128,7 @@ generate a single key via:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.DaskGateway.gateway_url = Unicode('tls://:8786')</code></dt>
+<code class="sig-name descname">config c.DaskGateway.gateway_url = Unicode('')</code></dt>
 <dd><p>The URL that Dask clients will connect to</p>
 </dd></dl>
 
@@ -158,7 +158,7 @@ generate a single key via:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.DaskGateway.public_url = Unicode('http://:8000')</code></dt>
+<code class="sig-name descname">config c.DaskGateway.public_url = Unicode('')</code></dt>
 <dd><p>The public facing URL of the whole Dask Gateway application</p>
 </dd></dl>
 
