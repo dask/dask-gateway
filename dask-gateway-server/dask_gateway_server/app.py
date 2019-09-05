@@ -137,14 +137,14 @@ class DaskGateway(Application):
     )
 
     authenticator_class = Type(
-        "dask_gateway_server.auth.KerberosAuthenticator",
+        "dask_gateway_server.auth.DummyAuthenticator",
         klass="dask_gateway_server.auth.Authenticator",
         help="The gateway authenticator class to use",
         config=True,
     )
 
     cluster_manager_class = Type(
-        "dask_gateway_server.managers.local.LocalClusterManager",
+        "dask_gateway_server.managers.local.UnsafeLocalClusterManager",
         klass="dask_gateway_server.managers.ClusterManager",
         help="The gateway cluster manager class to use",
         config=True,
@@ -163,14 +163,18 @@ class DaskGateway(Application):
     )
 
     public_url = Unicode(
-        "http://:8000",
-        help="The public facing URL of the whole Dask Gateway application",
-        config=True,
+        help="The public facing URL of the whole Dask Gateway application", config=True
     )
 
-    gateway_url = Unicode(
-        "tls://:8786", help="The URL that Dask clients will connect to", config=True
-    )
+    @default("public_url")
+    def _default_public_url(self):
+        return "http://:8000"
+
+    gateway_url = Unicode(help="The URL that Dask clients will connect to", config=True)
+
+    @default("gateway_url")
+    def _default_gateway_url(self):
+        return "tls://:8786"
 
     private_url = Unicode(
         "http://127.0.0.1:8081",
@@ -182,7 +186,7 @@ class DaskGateway(Application):
     def _normalize_url(self, proposal):
         url = proposal.value
         parsed = urlparse(url)
-        if parsed.hostname in {"", "0.0.0.0"}:
+        if parsed.hostname in {None, "", "0.0.0.0"}:
             # Resolve local ip address
             host = get_ip()
             parsed = parsed._replace(netloc="%s:%i" % (host, parsed.port))
@@ -587,6 +591,10 @@ class DaskGateway(Application):
         self.log.info("Gateway API listening on %s", self.private_url)
         await self.web_proxy.add_route(
             self.public_url_prefix + "/gateway/", self.private_url
+        )
+        self.log.info("Dask-Gateway started successfully.")
+        self.log.info(
+            "Serving at %s, scheduler proxy at %s.", self.public_url, self.gateway_url
         )
 
     async def start_or_exit(self):
