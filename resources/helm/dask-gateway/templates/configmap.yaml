@@ -9,6 +9,11 @@ data:
     {{/* Remove secrets before forwarding configuration */}}
     {{- $values := pick .Values "gateway" "schedulerProxy" "webProxy" }}
     {{- $_ := set $values "gateway" (omit $values.gateway "cookieSecret" "proxyToken") }}
+    {{- if $values.gateway.auth.jupyterhub.apiToken }}
+    {{- $auth := omit $values.gateway.auth }}
+    {{- $_ := set $auth "jupyterhub" (omit $auth.jupyterhub "apiToken") }}
+    {{- $_ := set $values.gateway "auth" $auth }}
+    {{- end }}
     import os
     import json
 
@@ -48,7 +53,7 @@ data:
     c.WebProxy.api_url = web_proxy_api
     c.SchedulerProxy.api_url = scheduler_proxy_api
 
-    # Schedulers aren't managed by the gateway
+    # Proxies aren't managed by the gateway
     c.SchedulerProxy.externally_managed = True
     c.WebProxy.externally_managed = True
 
@@ -92,4 +97,28 @@ data:
             setattr(c.KubeClusterManager, field, value)
 
     # Authentication
-    c.DaskGateway.authenticator_class = "dask_gateway_server.auth.DummyAuthenticator"
+    auth_type = get_property("gateway.auth.type")
+    if auth_type == "dummy":
+        c.DaskGateway.authenticator_class = "dask_gateway_server.auth.DummyAuthenticator"
+        password = get_property("gateway.auth.dummy.password")
+        if password is not None:
+            c.DummyAuthenticator.password = password
+    elif auth_type == "kerberos":
+        c.DaskGateway.authenticator_class = "dask_gateway_server.auth.KerberosAuthenticator"
+        keytab = get_property("gateway.auth.kerberos.keytab")
+        if keytab is not None:
+            c.KerberosAuthenticator.keytab = keytab
+    elif auth_type == "jupyterhub":
+        c.DaskGateway.authenticator_class = "dask_gateway_server.auth.JupyterHubAuthenticator"
+        api_url = get_property("gateway.auth.jupyterhub.apiUrl")
+        if api_url is None:
+            api_url = "http://{HUB_SERVICE_HOST}:{HUB_SERVICE_PORT}".format(**os.environ)
+        c.DaskGateway.JupyterHubAuthenticator.jupyterhub_api_url = api_url
+    elif auth_type == "custom":
+        auth_cls = get_property("gateway.auth.custom.class")
+        c.DaskGateway.authenticator_class = auth_cls
+        auth_cls_name = auth_cls.rsplit('.', 1)[-1]
+        auth_config = c[auth_cls_name]
+        auth_config.update(get_property("gateway.auth.custom.config") or {})
+    else:
+        raise ValueError("Unknown authenticator type %r" % auth_type)
