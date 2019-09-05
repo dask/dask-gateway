@@ -53,6 +53,13 @@ spec:
                   name: {{ include "dask-gateway.fullname" . }}
                   key: cookie-secret
             {{- end }}
+            {{- if (eq .Values.gateway.auth.type "jupyterhub") }}
+            - name: JUPYTERHUB_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "dask-gateway.fullname" . }}
+                  key: jupyterhub-api-token
+            {{- end }}
             - name: SCHEDULER_PROXY_PUBLIC_SERVICE_NAME
               value: {{ include "dask-gateway.fullname" . | printf "scheduler-public-%s" | trunc 63 | trimSuffix "-" }}
             - name: SCHEDULER_PROXY_API_SERVICE_NAME

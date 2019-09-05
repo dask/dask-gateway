@@ -21,11 +21,29 @@ gateway:
     tag: 0.3.0
     pullPolicy: IfNotPresent
 
+  auth:
+    type: dummy
+    dummy:
+      password: null
+    kerberos:
+      keytab: null
+    jupyterhub:
+      apiToken: null
+      apiUrl: null
+    custom:
+      class: null
+      options: {}
+
   clusterManager:
     clusterStartTimeout: null
     clusterConnectTimeout: null
     workerStartTimeout: null
     workerConnectTimeout: null
+
+    image:
+      name: jcrist/dask-gateway
+      tag: 0.3.0
+      pullPolicy: IfNotPresent
 
     environment: null
 
