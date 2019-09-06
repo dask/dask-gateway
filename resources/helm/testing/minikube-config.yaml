@@ -13,3 +13,13 @@ gateway:
         request: 0.1
       memory:
         request: 256M
+
+webProxy:
+  service:
+    type: NodePort
+    nodePort: 30200
+
+schedulerProxy:
+  service:
+    type: NodePort
+    nodePort: 30201

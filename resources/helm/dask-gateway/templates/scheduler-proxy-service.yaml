@@ -37,4 +37,10 @@ spec:
     - protocol: TCP
       port: 8786
       targetPort: 8786
+      {{- if .Values.schedulerProxy.service.nodePort }}
+      nodePort: {{ .Values.schedulerProxy.service.nodePort }}
+      {{- end }}
   type: {{ .Values.schedulerProxy.service.type }}
+  {{- if .Values.schedulerProxy.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.schedulerProxy.service.loadBalancerIP }}
+  {{- end }}

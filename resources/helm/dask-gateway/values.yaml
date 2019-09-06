@@ -76,8 +76,10 @@ schedulerProxy:
     pullPolicy: IfNotPresent
 
   service:
-    type: LoadBalancer
     annotations: {}
+    type: LoadBalancer
+    nodePort: null
+    loadBalancerIP: null
 
 webProxy:
   annotations: {}
@@ -90,5 +92,7 @@ webProxy:
     pullPolicy: IfNotPresent
 
   service:
-    type: LoadBalancer
     annotations: {}
+    type: LoadBalancer
+    nodePort: null
+    loadBalancerIP: null
