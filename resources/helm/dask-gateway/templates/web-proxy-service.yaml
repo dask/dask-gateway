@@ -37,4 +37,10 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8000
+      {{- if .Values.webProxy.service.nodePort }}
+      nodePort: {{ .Values.webProxy.service.nodePort }}
+      {{- end }}
   type: {{ .Values.webProxy.service.type }}
+  {{- if .Values.webProxy.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.webProxy.service.loadBalancerIP }}
+  {{- end }}
