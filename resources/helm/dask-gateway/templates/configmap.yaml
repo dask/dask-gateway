@@ -6,9 +6,11 @@ metadata:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 data:
   dask_gateway_config.py: |-
-    {{/* Remove secrets before forwarding configuration */}}
+    {{/* Extract extraConfig, as its handled separately */}}
+    {{- $extraConfig := .Values.gateway.extraConfig }}
+    {{/* Remove secrets and extraConfig before forwarding configuration */}}
     {{- $values := pick .Values "gateway" "schedulerProxy" "webProxy" }}
-    {{- $_ := set $values "gateway" (omit $values.gateway "cookieSecret" "proxyToken") }}
+    {{- $_ := set $values "gateway" (omit $values.gateway "cookieSecret" "proxyToken" "extraConfig") }}
     {{- if $values.gateway.auth.jupyterhub.apiToken }}
     {{- $auth := omit $values.gateway.auth }}
     {{- $_ := set $auth "jupyterhub" (omit $auth.jupyterhub "apiToken") }}
@@ -122,3 +124,15 @@ data:
         auth_config.update(get_property("gateway.auth.custom.config") or {})
     else:
         raise ValueError("Unknown authenticator type %r" % auth_type)
+
+    {{- if $extraConfig }}
+    {{ if kindIs "string" $extraConfig }}
+    # From gateway.extraConfig
+    {{- $extraConfig | nindent 4 }}
+    {{- else }}
+    {{- range $key := keys $extraConfig | sortAlpha }}
+    # From gateway.extraConfig.{{ $key }}
+    {{- index $extraConfig $key | nindent 4 }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
