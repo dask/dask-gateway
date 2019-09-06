@@ -63,6 +63,8 @@ gateway:
         request: null
         limit: null
 
+  extraConfig: {}
+
 schedulerProxy:
   annotations: {}
 
