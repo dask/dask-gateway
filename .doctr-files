@@ -2,6 +2,7 @@
 ./_sources/api-client.rst.txt
 ./_sources/api-server.rst.txt
 ./_sources/index.rst.txt
+./_sources/quickstart.rst.txt
 ./_static/alabaster.css
 ./_static/basic.css
 ./_static/custom.css
@@ -22,5 +23,6 @@
 ./genindex.html
 ./index.html
 ./objects.inv
+./quickstart.html
 ./search.html
 ./searchindex.js
