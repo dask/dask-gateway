@@ -64,9 +64,19 @@ both the cluster backend and the authentication protocol are pluggable.
 - Basic (for testing only)
 
 
+Installation
+------------
+
+As Dask-Gateway can be installed in many different environments, we provide
+instructions for a few different setups.
+
+- :doc:`Quickstart (for local installs)<quickstart>`
+
+
 .. toctree::
     :hidden:
 
+    quickstart
     api-server
     api-client
 
