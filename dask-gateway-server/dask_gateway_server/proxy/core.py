@@ -126,7 +126,7 @@ class ProxyBase(LoggingConfigurable):
             )
             self.proxy_process = proc
             self.log.info(
-                "Dask gateway %s proxy running at %r, api at %r",
+                "Dask gateway %s proxy started at %r, api at %r",
                 self._subcommand,
                 self.public_url,
                 self.api_url,
