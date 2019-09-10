@@ -31,7 +31,14 @@ from .objects import (
 )
 from .options import Options
 from .proxy import SchedulerProxy, WebProxy
-from .utils import cleanup_tmpdir, cancel_task, TaskPool, Type, get_connect_urls
+from .utils import (
+    cleanup_tmpdir,
+    cancel_task,
+    TaskPool,
+    Type,
+    get_connect_urls,
+    random_port,
+)
 
 
 # Override default values for logging
@@ -176,10 +183,18 @@ class DaskGateway(Application):
         return "tls://%s:8786" % host
 
     private_url = Unicode(
-        "http://127.0.0.1:8081",
-        help="The gateway's private URL used for internal communication",
+        help="""
+        The gateway's private URL, used for internal communication.
+
+        This must be reachable from the web proxy, but shouldn't be publicly
+        accessible (if possible). Default is ``http://127.0.0.1:{random-port}``.
+        """,
         config=True,
     )
+
+    @default("private_url")
+    def _default_private_url(self):
+        return "http://127.0.0.1:%d" % random_port()
 
     @validate("public_url", "gateway_url", "private_url")
     def _normalize_url(self, proposal):

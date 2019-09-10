@@ -41,7 +41,7 @@ class ProxyBase(LoggingConfigurable):
 
         This is the address that the Dask Gateway will connect to when
         adding/removing routes. This must be reachable from the Dask Gateway
-        server, but shouldn't be publicly accessible (if possible). Default's
+        server, but shouldn't be publicly accessible (if possible). Defaults
         to ``127.0.0.1:{random-port}``.
         """,
         config=True,
