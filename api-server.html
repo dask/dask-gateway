@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0.3.0+8.g5f48bf9 documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0.3.0+9.g135b450 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -152,8 +152,10 @@ generate a single key via:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.DaskGateway.private_url = Unicode('http://127.0.0.1:8081')</code></dt>
-<dd><p>The gateway’s private URL used for internal communication</p>
+<code class="sig-name descname">config c.DaskGateway.private_url = Unicode('')</code></dt>
+<dd><p>The gateway’s private URL, used for internal communication.</p>
+<p>This must be reachable from the web proxy, but shouldn’t be publicly
+accessible (if possible). Default is <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:{random-port}</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -339,7 +341,7 @@ valid Python variable name. If not provided, <code class="docutils literal notra
 <dd><p>The address for configuring the Proxy.</p>
 <p>This is the address that the Dask Gateway will connect to when
 adding/removing routes. This must be reachable from the Dask Gateway
-server, but shouldn’t be publicly accessible (if possible). Default’s
+server, but shouldn’t be publicly accessible (if possible). Defaults
 to <code class="docutils literal notranslate"><span class="pre">127.0.0.1:{random-port}</span></code>.</p>
 </dd></dl>
 
@@ -386,7 +388,7 @@ external manager (e.g. supervisord).</p>
 <dd><p>The address for configuring the Proxy.</p>
 <p>This is the address that the Dask Gateway will connect to when
 adding/removing routes. This must be reachable from the Dask Gateway
-server, but shouldn’t be publicly accessible (if possible). Default’s
+server, but shouldn’t be publicly accessible (if possible). Defaults
 to <code class="docutils literal notranslate"><span class="pre">127.0.0.1:{random-port}</span></code>.</p>
 </dd></dl>
 
