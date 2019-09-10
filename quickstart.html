@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Quickstart &#8212; Dask Gateway 0.3.0+7.gba36bf9 documentation</title>
+    <title>Quickstart &#8212; Dask Gateway 0.3.0+8.g5f48bf9 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -69,13 +69,15 @@ deployments.</em> They are perfectly fine for testing and experimentation though
 <div class="section" id="connect-to-the-gateway">
 <h2>Connect to the gateway<a class="headerlink" href="#connect-to-the-gateway" title="Permalink to this headline">¶</a></h2>
 <p>To connect to the gateway, create a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gateway</span></code></a> client with the URL output
-above:</p>
+above. By default this is <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:8000</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span><span class="s2">&quot;&lt;connection-url-from-above&gt;&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span><span class="s2">&quot;http://127.0.0.1:8000&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span>
+<span class="go">Gateway&lt;http://127.0.0.1:8000&gt;</span>
 </pre></div>
 </div>
 <p>To check that everything is setup properly, query the gateway to see any
-existing clusters (should be an empty list):</p>
+existing clusters (should be an empty list).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span><span class="o">.</span><span class="n">list_clusters</span><span class="p">()</span>
 <span class="go">[]</span>
 </pre></div>
