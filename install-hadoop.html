@@ -1,0 +1,588 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Install on a Hadoop Cluster &#8212; Dask Gateway 0.3.0+10.gfe299d2 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration API" href="api-server.html" />
+    <link rel="prev" title="Quickstart (for local installs)" href="quickstart.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="install-on-a-hadoop-cluster">
+<h1>Install on a Hadoop Cluster<a class="headerlink" href="#install-on-a-hadoop-cluster" title="Permalink to this headline">¶</a></h1>
+<p>Here we provide instructions for installing and configuring
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a <a class="reference external" href="https://hadoop.apache.org/">Hadoop Cluster</a>.</p>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#create-a-user-account" id="id1">Create a user account</a></p></li>
+<li><p><a class="reference internal" href="#enable-proxy-user-permissions" id="id2">Enable proxy-user permissions</a></p></li>
+<li><p><a class="reference internal" href="#create-install-directories" id="id3">Create install directories</a></p></li>
+<li><p><a class="reference internal" href="#install-a-python-environment" id="id4">Install a python environment</a></p></li>
+<li><p><a class="reference internal" href="#install-dask-gateway-server" id="id5">Install dask-gateway-server</a></p></li>
+<li><p><a class="reference internal" href="#configure-dask-gateway-server" id="id6">Configure dask-gateway-server</a></p>
+<ul>
+<li><p><a class="reference internal" href="#enable-yarn-integration" id="id7">Enable YARN integration</a></p></li>
+<li><p><a class="reference internal" href="#enable-kerberos-security-optional" id="id8">Enable kerberos security (optional)</a></p></li>
+<li><p><a class="reference internal" href="#configure-the-server-addresses-optional" id="id9">Configure the server addresses (optional)</a></p></li>
+<li><p><a class="reference internal" href="#specify-user-python-environments" id="id10">Specify user python environments</a></p>
+<ul>
+<li><p><a class="reference internal" href="#using-a-local-environment" id="id11">Using a local environment</a></p></li>
+<li><p><a class="reference internal" href="#using-an-archived-environment" id="id12">Using an archived environment</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#additional-configuration-options" id="id13">Additional configuration options</a></p></li>
+<li><p><a class="reference internal" href="#example" id="id14">Example</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#open-relevant-ports" id="id15">Open relevant ports</a></p></li>
+<li><p><a class="reference internal" href="#start-dask-gateway-server" id="id16">Start dask-gateway-server</a></p></li>
+<li><p><a class="reference internal" href="#validate-things-are-working" id="id17">Validate things are working</a></p></li>
+</ul>
+</div>
+<div class="section" id="create-a-user-account">
+<h2><a class="toc-backref" href="#id1">Create a user account</a><a class="headerlink" href="#create-a-user-account" title="Permalink to this headline">¶</a></h2>
+<p>Before installing anything, you’ll need to create the user account that will be
+used to run <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. The name of the user doesn’t matter, only
+the permissions they have. Here we’ll use <code class="docutils literal notranslate"><span class="pre">dask</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ adduser dask
+</pre></div>
+</div>
+</div>
+<div class="section" id="enable-proxy-user-permissions">
+<h2><a class="toc-backref" href="#id2">Enable proxy-user permissions</a><a class="headerlink" href="#enable-proxy-user-permissions" title="Permalink to this headline">¶</a></h2>
+<p>Dask-Gateway makes full use of Hadoop’s security model, and will start Dask
+workers in containers with the requesting user’s permissions (e.g. if <code class="docutils literal notranslate"><span class="pre">alice</span></code>
+creates a cluster, their dask workers will be running as user <code class="docutils literal notranslate"><span class="pre">alice</span></code>).  To
+accomplish this, the gateway server needs <a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/Superusers.html">proxy-user</a> permissions. This
+allows the Dask-Gateway server to perform actions impersonating another user.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to work properly, you’ll need to enable
+<a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/Superusers.html">proxy-user</a> permissions for the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user account. The users <code class="docutils literal notranslate"><span class="pre">dask</span></code> has
+permission to impersonate can be restricted to certain groups, and requests to
+impersonate may be restricted to certain hosts. At a minimum, the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user
+will require permission to impersonate anyone using the gateway, with requests
+allowed from at least the host running the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>.</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;property&gt;</span>
+  <span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.hosts<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;value&gt;</span>host-where-dask-gateway-is-running<span class="nt">&lt;/value&gt;</span>
+<span class="nt">&lt;/property&gt;</span>
+<span class="nt">&lt;property&gt;</span>
+  <span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.groups<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;value&gt;</span>group1,group2<span class="nt">&lt;/value&gt;</span>
+<span class="nt">&lt;/property&gt;</span>
+</pre></div>
+</div>
+<p>If looser restrictions are acceptable, you may also use the wildcard <code class="docutils literal notranslate"><span class="pre">*</span></code>
+to allow impersonation of any user or from any host.</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;property&gt;</span>
+  <span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.hosts<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;value&gt;</span>*<span class="nt">&lt;/value&gt;</span>
+<span class="nt">&lt;/property&gt;</span>
+<span class="nt">&lt;property&gt;</span>
+  <span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.groups<span class="nt">&lt;/name&gt;</span>
+  <span class="nt">&lt;value&gt;</span>*<span class="nt">&lt;/value&gt;</span>
+<span class="nt">&lt;/property&gt;</span>
+</pre></div>
+</div>
+<p>See the <a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/Superusers.html">proxy-user</a> documentation for more information.</p>
+</div>
+<div class="section" id="create-install-directories">
+<h2><a class="toc-backref" href="#id3">Create install directories</a><a class="headerlink" href="#create-install-directories" title="Permalink to this headline">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> installation has three types of files which will need
+their own directories created before installation:</p>
+<ul class="simple">
+<li><p>Software files. This includes a Python environment and all required
+libraries. Here we use <code class="docutils literal notranslate"><span class="pre">/opt/dask-gateway</span></code>.</p></li>
+<li><p>Configuration files. Here we use <code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway</span></code>.</p></li>
+<li><p>Runtime files. Here we use <code class="docutils literal notranslate"><span class="pre">/var/dask-gateway</span></code>.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Software files</span>
+$ mkdir -p /opt/dask-gateway
+
+<span class="c1"># Configuration files</span>
+$ mkdir /etc/dask-gateway
+
+<span class="c1"># Runtime files</span>
+$ mkdir /var/dask-gateway
+$ chown dask /var/dask-gateway
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-a-python-environment">
+<h2><a class="toc-backref" href="#id4">Install a python environment</a><a class="headerlink" href="#install-a-python-environment" title="Permalink to this headline">¶</a></h2>
+<p>To avoid interactions between the system python installation and
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, we’ll install a full Python environment into the
+software directory. The easiest way to do this is to use <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>, but this
+isn’t a strict requirement.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
+$ bash /tmp/miniconda.sh -b -p /opt/dask-gateway/miniconda
+$ rm /tmp/miniconda.sh
+</pre></div>
+</div>
+<p>We also recommend adding miniconda to the <code class="docutils literal notranslate"><span class="pre">root</span></code> user’s path to ease further
+commands.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;export PATH=&quot;/opt/dask-gateway/miniconda/bin:$PATH&quot;&#39;</span> &gt;&gt; /root/.bashrc
+$ <span class="nb">source</span> /root/.bashrc
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-dask-gateway-server">
+<h2><a class="toc-backref" href="#id5">Install dask-gateway-server</a><a class="headerlink" href="#install-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
+<p>Now we can install <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> and its dependencies.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install -y -c conda-forge dask-gateway-server-yarn
+</pre></div>
+</div>
+<p>If you want to use Kerberos for user-facing authentication, you’ll also want to
+install <code class="docutils literal notranslate"><span class="pre">dask-gateway-server-kerberos</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install -y -c conda-forge dask-gateway-server-kerberos
+</pre></div>
+</div>
+</div>
+<div class="section" id="configure-dask-gateway-server">
+<h2><a class="toc-backref" href="#id6">Configure dask-gateway-server</a><a class="headerlink" href="#configure-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
+<p>Now we’re ready to configure our <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> installation.
+Configuration is written as a Python file (typically
+<code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway/dask_gateway_config.py</span></code>). Options are assigned to a config
+object <code class="docutils literal notranslate"><span class="pre">c</span></code>, which is then loaded by the gateway on startup. You are free to
+use any python syntax/libraries in this file that you want, the only things
+that matter to <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> are the values set on the <code class="docutils literal notranslate"><span class="pre">c</span></code> config
+object.</p>
+<p>Here we’ll walk through a few common configuration options you may want to set.</p>
+<div class="section" id="enable-yarn-integration">
+<h3><a class="toc-backref" href="#id7">Enable YARN integration</a><a class="headerlink" href="#enable-yarn-integration" title="Permalink to this headline">¶</a></h3>
+<p>First you’ll want to enable YARN as the cluster manager backend.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the gateway to use YARN as the cluster manager</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">cluster_manager_class</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;dask_gateway_server.managers.yarn.YarnClusterManager&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="enable-kerberos-security-optional">
+<h3><a class="toc-backref" href="#id8">Enable kerberos security (optional)</a><a class="headerlink" href="#enable-kerberos-security-optional" title="Permalink to this headline">¶</a></h3>
+<p>If your cluster has <a class="reference external" href="https://web.mit.edu/kerberos/">Kerberos</a> enabled, you’ll also need to create a principal
+and keytab for the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user. You’ll also need to create a <code class="docutils literal notranslate"><span class="pre">HTTP</span></code> service
+principal for the host running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> (if one doesn’t already
+exist).  Keytabs can be created on the command-line as:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create the dask principal</span>
+$ kadmin -q <span class="s2">&quot;addprinc -randkey dask@YOUR_REALM.COM&quot;</span>
+
+<span class="c1"># Create the HTTP principal (if not already created)</span>
+$ kadmin -q <span class="s2">&quot;addprinc -randkey HTTP/FQDN&quot;</span>
+
+<span class="c1"># Create a keytab</span>
+$ kadmin -q <span class="s2">&quot;xst -norandkey -k /etc/dask-gateway/dask.keytab dask HTTP/FQDN&quot;</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">FQDN</span></code> is the <a class="reference external" href="https://en.wikipedia.org/wiki/Fully_qualified_domain_name">fully qualified domain name</a> of the host running
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>.</p>
+<p>Store the keytab file wherever you see fit (we recommend storing it along with
+the other configuration in <code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway/</span></code>, as above). You’ll also want
+to make sure that <code class="docutils literal notranslate"><span class="pre">dask.keytab</span></code> is only readable by the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ chown dask /etc/dask-gateway/dask.keytab
+$ chmod <span class="m">400</span> /etc/dask-gateway/dask.keytab
+</pre></div>
+</div>
+<p>To configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use this keytab file, you’ll need to
+add the following line to your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Specify the location of the keytab file, and the principal name</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/dask.keytab&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">principal</span> <span class="o">=</span> <span class="s2">&quot;dask&quot;</span>
+
+<span class="c1"># Enable Kerberos for user-facing authentication</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">authenticator_class</span> <span class="o">=</span> <span class="s2">&quot;dask_gateway_server.auth.KerberosAuthenticator&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">KerberosAuthenticator</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/dask.keytab&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="configure-the-server-addresses-optional">
+<h3><a class="toc-backref" href="#id9">Configure the server addresses (optional)</a><a class="headerlink" href="#configure-the-server-addresses-optional" title="Permalink to this headline">¶</a></h3>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> will listen at the following addresses:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">http://:8000</span></code>: the public facing URL of the whole application. Set by
+<code class="docutils literal notranslate"><span class="pre">c.DaskGateway.public_url</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tls://:8786</span></code>: the scheduler proxy address, set by
+<code class="docutils literal notranslate"><span class="pre">c.DaskGateway.gateway_url</span></code>.</p></li>
+</ul>
+<p>If you’d rather serve at different ports, you can configure these yourself:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">public_url</span> <span class="o">=</span> <span class="s1">&#39;http://:&lt;PORT-1&gt;&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">gateway_url</span> <span class="o">=</span> <span class="s1">&#39;http://:&lt;PORT-2&gt;&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="specify-user-python-environments">
+<h3><a class="toc-backref" href="#id10">Specify user python environments</a><a class="headerlink" href="#specify-user-python-environments" title="Permalink to this headline">¶</a></h3>
+<p>Since the Dask workers/schedulers will be running in their own YARN containers,
+you’ll need to provide a way for Python environments to be available to these
+containers. You have a few options here:</p>
+<ul class="simple">
+<li><p>Install identical Python environments on every node</p></li>
+<li><p>Archive environments to be distributed to the container at runtime (recommended)</p></li>
+</ul>
+<p>In either case, the Python environment requires the at least the
+<code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> package be installed.</p>
+<div class="section" id="using-a-local-environment">
+<h4><a class="toc-backref" href="#id11">Using a local environment</a><a class="headerlink" href="#using-a-local-environment" title="Permalink to this headline">¶</a></h4>
+<p>If you’ve installed identical Python environments on every node, you only need
+to configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use the provided Python. This could be
+done a few different ways:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-gateway-scheduler&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-gateway-worker&quot;</span>
+
+<span class="c1"># OR</span>
+<span class="c1"># Activate a local conda environment before startup</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;conda activate /path/to/your/environment&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;conda activate /path/to/your/environment&#39;</span>
+
+<span class="c1"># OR</span>
+<span class="c1"># Activate a virtual environment before startup</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/your/environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/your/environment/bin/activate&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-an-archived-environment">
+<h4><a class="toc-backref" href="#id12">Using an archived environment</a><a class="headerlink" href="#using-an-archived-environment" title="Permalink to this headline">¶</a></h4>
+<p>YARN also provides mechanisms to “localize” files/archives to a container
+before starting the application. This can be used to distribute Python
+environments at runtime. This approach is appealing in that it doesn’t require
+installing anything throughout the cluster, and allows for centrally managing
+user’s Python environments.</p>
+<p>Packaging environments for distribution is usually accomplished using</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://conda.github.io/conda-pack/">conda-pack</a> for <a class="reference external" href="http://conda.io/">conda</a> environments</p></li>
+<li><p><a class="reference external" href="https://jcrist.github.io/venv-pack/">venv-pack</a>  for virtual environments (both <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">venv</a> and <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">virtualenv</a> supported)</p></li>
+</ul>
+<p>Both are tools for taking an environment and creating an archive of it in a way
+that (most) absolute paths in any libraries or scripts are altered to be
+relocatable. This archive then can be distributed with your application, and
+will be automatically extracted during <a class="reference external" href="https://hortonworks.com/blog/resource-localization-in-yarn-deep-dive/">YARN resource localization</a></p>
+<p>Below we demonstrate creating and packaging a Conda environment containing
+<code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code>, as well as <code class="docutils literal notranslate"><span class="pre">pandas</span></code> and <code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code>. Additional
+packages could be added as needed.</p>
+<p><strong>Packaging a conda environment with conda-pack</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a folder for storing the conda environments locally</span>
+$ mkdir /opt/dask-gateway/envs
+
+<span class="c1"># Create a new conda environment</span>
+$ conda create -c conda-forge -y -p /opt/dask-gateway/envs/example
+...
+
+<span class="c1"># Activate the environment</span>
+$ conda activate /opt/dask-gateway/envs/example
+
+<span class="c1"># Install dask-gateway, along with any other packages</span>
+$ conda install -c conda-forge -y dask-gateway pandas scikit-learn
+
+<span class="c1"># Package the environment into example.tar.gz</span>
+$ conda pack -o example.tar.gz
+Collecting packages...
+Packing environment at <span class="s1">&#39;/opt/dask-gateway/envs/example&#39;</span> to <span class="s1">&#39;example.tar.gz&#39;</span>
+<span class="o">[</span><span class="c1">########################################] | 100% Completed | 17.9s</span>
+</pre></div>
+</div>
+<p><strong>Using the packaged environment</strong></p>
+<p>It is recommended to upload the environments to some directory on HDFS
+beforehand, to avoid repeating the upload cost for every user. This directory
+should be readable by all users, but writable only by the admin user managing
+Python environments (here we’ll use the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user, and create a
+<code class="docutils literal notranslate"><span class="pre">/dask-gateway</span></code> directory).</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ hdfs dfs -mkdir -p /dask-gateway
+$ hdfs dfs -chown dask /dask-gateway
+$ hdfs dfs -chmod <span class="m">755</span> /dask-gateway
+</pre></div>
+</div>
+<p>Uploading our already packaged environment to hdfs:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ hdfs dfs -put /opt/dask-gateway/envs/example.tar.gz /dask-gateway/example.tar.gz
+</pre></div>
+</div>
+<p>To use the packaged environment with <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, you need to
+include the archive in <code class="docutils literal notranslate"><span class="pre">YarnClusterManager.localize_files</span></code>, and activate the
+environment in
+<code class="docutils literal notranslate"><span class="pre">YarnClusterManager.scheduler_setup</span></code>/<code class="docutils literal notranslate"><span class="pre">YarnClusterManager.worker_setup</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;hdfs:///dask-gateway/example.tar.gz&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;visibility&#39;</span><span class="p">:</span> <span class="s1">&#39;public&#39;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+</pre></div>
+</div>
+<p>Note that we set <code class="docutils literal notranslate"><span class="pre">visibility</span></code> to <code class="docutils literal notranslate"><span class="pre">public</span></code> for the environment, so that
+multiple users can all share the same localized environment (reducing the cost
+of moving the environments around).</p>
+<p>For more information, see the <a class="reference external" href="https://jcrist.github.io/skein/distributing-files.html">Skein documentation on distributing files</a>.</p>
+</div>
+</div>
+<div class="section" id="additional-configuration-options">
+<h3><a class="toc-backref" href="#id13">Additional configuration options</a><a class="headerlink" href="#additional-configuration-options" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dask-gatweay-server</span></code> has several additional configuration fields. See the
+<a class="reference internal" href="api-server.html"><span class="doc">Configuration API</span></a> docs (specifically <a class="reference internal" href="api-server.html#yarn-config"><span class="std std-ref">the yarn configuration docs</span></a>) for more information on all available options. At a minimum
+you’ll probably want to configure the worker resource limits, as well as which
+YARN queue to use.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The resource limits for a worker</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">=</span> <span class="s1">&#39;4 G&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1"># The YARN queue to use</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="s1">&#39;...&#39;</span>
+</pre></div>
+</div>
+<p>If your cluster is under high load (and jobs may be slow to start), you may
+also want to increase the cluster/worker timeout values:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Increase startup timeouts to 5 min (600 seconds) each</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">cluster_connect_timeout</span> <span class="o">=</span> <span class="mi">600</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_connect_timeout</span> <span class="o">=</span> <span class="mi">600</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example">
+<h3><a class="toc-backref" href="#id14">Example</a><a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>In summary, an example <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> configuration might look
+like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the gateway to use YARN as the cluster manager</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">cluster_manager_class</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;dask_gateway_server.managers.yarn.YarnClusterManager&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Specify the location of the keytab file, and the principal name</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/dask.keytab&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">principal</span> <span class="o">=</span> <span class="s2">&quot;dask&quot;</span>
+
+<span class="c1"># Enable Kerberos for user-facing authentication</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">authenticator_class</span> <span class="o">=</span> <span class="s2">&quot;dask_gateway_server.auth.KerberosAuthenticator&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">KerberosAuthenticator</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/dask.keytab&quot;</span>
+
+<span class="c1"># Specify location of the archived Python environment</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;hdfs:///dask-gateway/example.tar.gz&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;visibility&#39;</span><span class="p">:</span> <span class="s1">&#39;public&#39;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+
+<span class="c1"># Limit resources for a single worker</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">=</span> <span class="s1">&#39;4 G&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1"># Specify the YARN queue to use</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="s1">&#39;dask&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="open-relevant-ports">
+<h2><a class="toc-backref" href="#id15">Open relevant ports</a><a class="headerlink" href="#open-relevant-ports" title="Permalink to this headline">¶</a></h2>
+<p>For users to access the gateway server, they’ll need access to the ports set in
+<a class="reference internal" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a> above (by default these are
+<code class="docutils literal notranslate"><span class="pre">8000</span></code> and <code class="docutils literal notranslate"><span class="pre">8786</span></code>). How to open up these ports is system specific and is
+left as an exercise for the reader.</p>
+</div>
+<div class="section" id="start-dask-gateway-server">
+<h2><a class="toc-backref" href="#id16">Start dask-gateway-server</a><a class="headerlink" href="#start-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
+<p>At this point you should be able to start the gateway server as the <code class="docutils literal notranslate"><span class="pre">dask</span></code>
+user using your created configuration file. The <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> process
+will be a long running process - how you intend to manage it (<code class="docutils literal notranslate"><span class="pre">supervisord</span></code>,
+etc…) is system specific. The requirements are:</p>
+<ul class="simple">
+<li><p>Start with <code class="docutils literal notranslate"><span class="pre">dask</span></code> as the user</p></li>
+<li><p>Start with <code class="docutils literal notranslate"><span class="pre">/var/dask-gateway</span></code> as the working directory</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">/opt/dask-gateway/miniconda/bin</span></code> to path</p></li>
+<li><p>Specify the configuration file location with <code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">/etc/dask-gateway/dask_gateway_config.py</span></code></p></li>
+</ul>
+<p>For ease, we recommend creating a small bash script stored at
+<code class="docutils literal notranslate"><span class="pre">/opt/dask-gateway/start-dask-gateway</span></code> to set this up:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env bash</span>
+
+<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/opt/dask-gateway/miniconda/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+<span class="nb">cd</span> /var/dask-gateway
+dask-gateway-server -f /etc/dask-gateway/dask_gateway_config.py
+</pre></div>
+</div>
+<p>For <em>testing</em> here’s how you might start <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> manually:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> /var/dask-gateway
+$ sudo -iu dask /opt/dask-gateway/start-dask-gateway
+</pre></div>
+</div>
+</div>
+<div class="section" id="validate-things-are-working">
+<h2><a class="toc-backref" href="#id17">Validate things are working</a><a class="headerlink" href="#validate-things-are-working" title="Permalink to this headline">¶</a></h2>
+<p>If the server started with no errors, you’ll want to check that things are
+working properly. The easiest way to do this is to try connecting as a user.</p>
+<p>A user’s environment requires the <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> library be installed. If
+your cluster is secured with kerberos, you’ll also need to install
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-kerberos</span></code>.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install the dask-gateway client library</span>
+$ conda create -n dask-gateway -c conda-forge dask-gateway
+
+<span class="c1"># If kerberos is enabled, also install dask-gateway-kerberos</span>
+$ conda create -n dask-gateway -c conda-forge dask-gateway-kerberos
+</pre></div>
+</div>
+<p>You can connect to the gateway by creating a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>
+object, specifying the public address (if you changed the port for proxy server
+via <code class="docutils literal notranslate"><span class="pre">gateway_url</span></code>, you’ll also need to specify the <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
+
+<span class="go"># When running without kerberos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span><span class="s2">&quot;http://public-address&quot;</span><span class="p">)</span>
+
+<span class="go"># OR, if kerberos is enabled, you&#39;ll need to kinit and then do</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span><span class="s2">&quot;http://public-address&quot;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="s2">&quot;kerberos&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You should now be able to make API calls. Try
+<a class="reference internal" href="api-client.html#dask_gateway.Gateway.list_clusters" title="dask_gateway.Gateway.list_clusters"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dask_gateway.Gateway.list_clusters()</span></code></a>, this should return an empty list.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span><span class="o">.</span><span class="n">list_clusters</span><span class="p">()</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+<p>Next, see if you can create a cluster. This may take a few minutes.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">new_cluster</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The last thing you’ll want to check is if you can successfully connect to your
+newly created cluster.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">get_client</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If everything worked properly, you can shutdown your cluster with
+<a class="reference internal" href="api-client.html#dask_gateway.GatewayCluster.shutdown" title="dask_gateway.GatewayCluster.shutdown"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dask_gateway.GatewayCluster.shutdown()</span></code></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Dask Gateway</a></h1>
+
+
+
+<p class="blurb">A multi-tenant server for securely deploying and managing Dask clusters</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jcrist&repo=dask-gateway&type=watch&count=False&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://travis-ci.org/jcrist/dask-gateway">
+    <img
+        alt="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
+        src="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
+    />
+</a>
+</p>
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="installation.html">Installation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart (for local installs)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Install on a Hadoop Cluster</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#create-a-user-account">Create a user account</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enable-proxy-user-permissions">Enable proxy-user permissions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#create-install-directories">Create install directories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#install-a-python-environment">Install a python environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#install-dask-gateway-server">Install dask-gateway-server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configure-dask-gateway-server">Configure dask-gateway-server</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#enable-yarn-integration">Enable YARN integration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#enable-kerberos-security-optional">Enable kerberos security (optional)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#specify-user-python-environments">Specify user python environments</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#using-a-local-environment">Using a local environment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="#using-an-archived-environment">Using an archived environment</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="#additional-configuration-options">Additional configuration options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#open-relevant-ports">Open relevant ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#start-dask-gateway-server">Start dask-gateway-server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#validate-things-are-working">Validate things are working</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
+</ul>
+
+<h3>Need help?</h3>
+
+<p>
+  Open an issue in the <a href="https://github.com/jcrist/dask-gateway/issues">issue tracker</a>.
+</p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Jim Crist.
+      
+      |
+      <a href="_sources/install-hadoop.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

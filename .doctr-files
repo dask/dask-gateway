@@ -3,6 +3,8 @@
 ./_sources/api-server.rst.txt
 ./_sources/develop.rst.txt
 ./_sources/index.rst.txt
+./_sources/install-hadoop.rst.txt
+./_sources/installation.rst.txt
 ./_sources/quickstart.rst.txt
 ./_static/alabaster.css
 ./_static/basic.css
@@ -24,6 +26,8 @@
 ./develop.html
 ./genindex.html
 ./index.html
+./install-hadoop.html
+./installation.html
 ./objects.inv
 ./quickstart.html
 ./search.html

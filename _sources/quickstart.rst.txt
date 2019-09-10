@@ -1,5 +1,5 @@
-Quickstart
-==========
+Quickstart (for local installs)
+===============================
 
 For testing, demos, and development purposes, you can install and use
 ``dask-gateway`` locally.

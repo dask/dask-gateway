@@ -70,16 +70,17 @@ Installation
 As Dask-Gateway can be installed in many different environments, we provide
 instructions for a few different setups.
 
-- :doc:`Quickstart (for local installs)<quickstart>`
+- :doc:`quickstart`
+- :doc:`install-hadoop`
 
 
 .. toctree::
     :hidden:
 
-    quickstart
-    develop
+    installation
     api-server
     api-client
+    develop
 
 .. _Dask: https://dask.org/
 .. _traitlets: https://traitlets.readthedocs.io/en/stable/
