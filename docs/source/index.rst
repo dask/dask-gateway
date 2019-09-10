@@ -77,6 +77,7 @@ instructions for a few different setups.
     :hidden:
 
     quickstart
+    develop
     api-server
     api-client
 
