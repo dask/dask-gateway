@@ -7,7 +7,7 @@ import stat
 import tempfile
 import weakref
 from functools import partial
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 from tornado import web
 from tornado.log import LogFormatter
@@ -31,7 +31,7 @@ from .objects import (
 )
 from .options import Options
 from .proxy import SchedulerProxy, WebProxy
-from .utils import cleanup_tmpdir, cancel_task, TaskPool, Type, get_ip
+from .utils import cleanup_tmpdir, cancel_task, TaskPool, Type, get_connect_urls
 
 
 # Override default values for logging
@@ -97,9 +97,9 @@ class DaskGateway(Application):
 
     examples = """
 
-    Start the server on 10.0.1.2:8080:
+    Start the server with config file ``config.py``
 
-        dask-gateway-server --public-url 10.0.1.2:8080
+        dask-gateway-server -f config.py
     """
 
     subcommands = {
@@ -163,18 +163,17 @@ class DaskGateway(Application):
     )
 
     public_url = Unicode(
-        help="The public facing URL of the whole Dask Gateway application", config=True
+        "http://:8000",
+        help="The public facing URL of the whole Dask Gateway application",
+        config=True,
     )
-
-    @default("public_url")
-    def _default_public_url(self):
-        return "http://:8000"
 
     gateway_url = Unicode(help="The URL that Dask clients will connect to", config=True)
 
     @default("gateway_url")
     def _default_gateway_url(self):
-        return "tls://:8786"
+        host = urlparse(self.public_url).hostname or ""
+        return "tls://%s:8786" % host
 
     private_url = Unicode(
         "http://127.0.0.1:8081",
@@ -185,14 +184,15 @@ class DaskGateway(Application):
     @validate("public_url", "gateway_url", "private_url")
     def _normalize_url(self, proposal):
         url = proposal.value
-        parsed = urlparse(url)
-        if parsed.hostname in {None, "", "0.0.0.0"}:
-            # Resolve local ip address
-            host = get_ip()
-            parsed = parsed._replace(netloc="%s:%i" % (host, parsed.port))
-        # Ensure no trailing slash
-        url = urlunparse(parsed._replace(path=parsed.path.rstrip("/")))
-        return url
+        name = proposal.trait.name
+        scheme = urlparse(url).scheme
+        if name in ("public_url", "private_url"):
+            if scheme not in {"http", "https"}:
+                raise ValueError("%r must be an http/https url, got %s" % (name, url))
+        else:
+            if scheme != "tls":
+                raise ValueError("'gateway_url' must be a tls url, got %s" % url)
+        return url.rstrip("/")
 
     tls_key = Unicode(
         "",
@@ -220,6 +220,23 @@ class DaskGateway(Application):
         """,
         config=True,
     )
+
+    @default("cookie_secret")
+    def _cookie_secret_default(self):
+        secret = os.environb.get(b"DASK_GATEWAY_COOKIE_SECRET", b"")
+        if not secret:
+            self.log.info("Generating new cookie secret")
+            secret = os.urandom(32)
+        return secret
+
+    @validate("cookie_secret")
+    def _cookie_secret_validate(self, proposal):
+        if len(proposal["value"]) != 32:
+            raise ValueError(
+                "Cookie secret is %d bytes, it must be "
+                "32 bytes" % len(proposal["value"])
+            )
+        return proposal["value"]
 
     cookie_max_age_days = Float(
         7,
@@ -354,34 +371,23 @@ class DaskGateway(Application):
         weakref.finalize(self, cleanup_tmpdir, self.log, temp_dir)
         return temp_dir
 
-    @default("cookie_secret")
-    def _cookie_secret_default(self):
-        secret = os.environb.get(b"DASK_GATEWAY_COOKIE_SECRET", b"")
-        if not secret:
-            self.log.info("Generating new cookie secret")
-            secret = os.urandom(32)
-        return secret
+    api_url = Unicode(
+        help="The address schedulers/workers connect to the gateway api at"
+    )
 
-    @validate("cookie_secret")
-    def _cookie_secret_validate(self, proposal):
-        if len(proposal["value"]) != 32:
-            raise ValueError(
-                "Cookie secret is %d bytes, it must be "
-                "32 bytes" % len(proposal["value"])
-            )
-        return proposal["value"]
+    @default("api_url")
+    def _default_api_url(self):
+        return get_connect_urls(self.public_url)[0] + "/gateway/api"
+
+    public_url_prefix = Unicode(help="The base path on the public_url")
+
+    @default("public_url_prefix")
+    def _default_public_url_prefix(self):
+        return urlparse(self.public_url).path
 
     _log_formatter_cls = LogFormatter
 
     classes = List([ClusterManager, Authenticator, WebProxy, SchedulerProxy])
-
-    @property
-    def api_url(self):
-        return self.public_url + "/gateway/api"
-
-    @property
-    def public_url_prefix(self):
-        return urlparse(self.public_url).path
 
     @catch_config_error
     def initialize(self, argv=None):
@@ -588,14 +594,20 @@ class DaskGateway(Application):
         self.http_server = self.tornado_application.listen(
             private_url.port, address=private_url.hostname
         )
-        self.log.info("Gateway API listening on %s", self.private_url)
+        self.log.info("Gateway private API listening at %s", self.private_url)
         await self.web_proxy.add_route(
-            self.public_url_prefix + "/gateway/", self.private_url
+            self.public_url_prefix + "/gateway/", get_connect_urls(self.private_url)[0]
         )
-        self.log.info("Dask-Gateway started successfully.")
-        self.log.info(
-            "Serving at %s, scheduler proxy at %s.", self.public_url, self.gateway_url
-        )
+        self.log.info("Dask-Gateway started successfully!")
+        for name, url in [
+            ("Public address", self.public_url),
+            ("Proxy address", self.gateway_url),
+        ]:
+            urls = get_connect_urls(url)
+            if len(urls) == 2:
+                self.log.info("- %s at %s or %s", name, *urls)
+            else:
+                self.log.info("- %s at %s", name, *urls)
 
     async def start_or_exit(self):
         try:

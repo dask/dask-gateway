@@ -2,6 +2,7 @@ import asyncio
 import shutil
 import socket
 import weakref
+from urllib.parse import urlparse, urlunparse
 
 from traitlets import Integer, TraitError, Type as _Type
 
@@ -72,6 +73,18 @@ def get_ip():
         sock.close()
 
     raise ValueError("Failed to determine local IP address")
+
+
+def get_connect_urls(url):
+    parsed = urlparse(url)
+    if parsed.hostname in {None, "", "0.0.0.0"}:
+        host = socket.gethostname()
+        hosts = ["127.0.0.1", host]
+    else:
+        hosts = [parsed.hostname]
+    return [
+        urlunparse(parsed._replace(netloc="%s:%i" % (h, parsed.port))) for h in hosts
+    ]
 
 
 def cleanup_tmpdir(log, path):

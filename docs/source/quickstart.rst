@@ -52,16 +52,17 @@ Connect to the gateway
 ----------------------
 
 To connect to the gateway, create a :class:`Gateway` client with the URL output
-above:
+above. By default this is ``http://127.0.0.1:8000``.
 
 .. code-block:: python
 
     >>> from dask_gateway import Gateway
-    >>> gateway = Gateway("<connection-url-from-above>")
-
+    >>> gateway = Gateway("http://127.0.0.1:8000")
+    >>> gateway
+    Gateway<http://127.0.0.1:8000>
 
 To check that everything is setup properly, query the gateway to see any
-existing clusters (should be an empty list):
+existing clusters (should be an empty list).
 
 .. code-block:: python
 
