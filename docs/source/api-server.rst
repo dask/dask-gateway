@@ -71,6 +71,8 @@ UnsafeLocalClusterManager
 YARN
 ^^^^
 
+.. _yarn-config:
+
 YarnClusterManager
 ~~~~~~~~~~~~~~~~~~
 
