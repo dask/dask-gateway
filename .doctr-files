@@ -1,6 +1,7 @@
 ./_images/architecture.svg
 ./_sources/api-client.rst.txt
 ./_sources/api-server.rst.txt
+./_sources/develop.rst.txt
 ./_sources/index.rst.txt
 ./_sources/quickstart.rst.txt
 ./_static/alabaster.css
@@ -20,6 +21,7 @@
 ./_static/underscore.js
 ./api-client.html
 ./api-server.html
+./develop.html
 ./genindex.html
 ./index.html
 ./objects.inv
