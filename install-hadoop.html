@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Install on a Hadoop Cluster &#8212; Dask Gateway 0.3.0+11.gc2eaa05 documentation</title>
+    <title>Install on a Hadoop Cluster &#8212; Dask Gateway 0.3.0+12.g132b0c8 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -255,8 +255,8 @@ done a few different ways:</p>
 
 <span class="c1"># OR</span>
 <span class="c1"># Activate a local conda environment before startup</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;conda activate /path/to/your/environment&#39;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;conda activate /path/to/your/environment&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/miniconda/bin/activate /path/to/environment&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/miniconda/bin/activate /path/to/environment&#39;</span>
 
 <span class="c1"># OR</span>
 <span class="c1"># Activate a virtual environment before startup</span>
