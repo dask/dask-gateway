@@ -294,7 +294,7 @@ packages could be added as needed.
     $ conda activate /opt/dask-gateway/envs/example
 
     # Install dask-gateway, along with any other packages
-    $ conda install -c conda-forge -y dask-gateway pandas scikit-learn
+    $ conda install -c conda-forge -y dask-gateway pandas scikit-learn conda-pack
 
     # Package the environment into example.tar.gz
     $ conda pack -o example.tar.gz
@@ -349,7 +349,7 @@ For more information, see the `Skein documentation on distributing files`_.
 Additional configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``dask-gatweay-server`` has several additional configuration fields. See the
+``dask-gateway-server`` has several additional configuration fields. See the
 :doc:`api-server` docs (specifically :ref:`the yarn configuration docs
 <yarn-config>`) for more information on all available options. At a minimum
 you'll probably want to configure the worker resource limits, as well as which
