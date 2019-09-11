@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Install on a Hadoop Cluster &#8212; Dask Gateway 0.3.0+10.gfe299d2 documentation</title>
+    <title>Install on a Hadoop Cluster &#8212; Dask Gateway 0.3.0+11.gc2eaa05 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -296,7 +296,7 @@ $ conda create -c conda-forge -y -p /opt/dask-gateway/envs/example
 $ conda activate /opt/dask-gateway/envs/example
 
 <span class="c1"># Install dask-gateway, along with any other packages</span>
-$ conda install -c conda-forge -y dask-gateway pandas scikit-learn
+$ conda install -c conda-forge -y dask-gateway pandas scikit-learn conda-pack
 
 <span class="c1"># Package the environment into example.tar.gz</span>
 $ conda pack -o example.tar.gz
@@ -342,7 +342,7 @@ of moving the environments around).</p>
 </div>
 <div class="section" id="additional-configuration-options">
 <h3><a class="toc-backref" href="#id13">Additional configuration options</a><a class="headerlink" href="#additional-configuration-options" title="Permalink to this headline">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">dask-gatweay-server</span></code> has several additional configuration fields. See the
+<p><code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> has several additional configuration fields. See the
 <a class="reference internal" href="api-server.html"><span class="doc">Configuration API</span></a> docs (specifically <a class="reference internal" href="api-server.html#yarn-config"><span class="std std-ref">the yarn configuration docs</span></a>) for more information on all available options. At a minimum
 you’ll probably want to configure the worker resource limits, as well as which
 YARN queue to use.</p>
