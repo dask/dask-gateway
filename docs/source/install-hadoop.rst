@@ -247,8 +247,8 @@ done a few different ways:
 
     # OR
     # Activate a local conda environment before startup
-    c.YarnClusterManager.scheduler_setup = 'conda activate /path/to/your/environment'
-    c.YarnClusterManager.worker_setup = 'conda activate /path/to/your/environment'
+    c.YarnClusterManager.scheduler_setup = 'source /path/to/miniconda/bin/activate /path/to/environment'
+    c.YarnClusterManager.worker_setup = 'source /path/to/miniconda/bin/activate /path/to/environment'
 
     # OR
     # Activate a virtual environment before startup
