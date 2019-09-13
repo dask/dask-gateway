@@ -5,3 +5,4 @@ Installation
 
     quickstart
     install-hadoop
+    install-kube
