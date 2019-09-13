@@ -72,6 +72,7 @@ instructions for a few different setups.
 
 - :doc:`quickstart`
 - :doc:`install-hadoop`
+- :doc:`install-kube`
 
 
 .. toctree::
