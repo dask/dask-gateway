@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Installation &#8212; Dask Gateway 0.3.0+12.g132b0c8 documentation</title>
+    <title>Installation &#8212; Dask Gateway 0.3.0+14.g9e248a2 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -73,6 +73,23 @@
 <li class="toctree-l2"><a class="reference internal" href="install-hadoop.html#validate-things-are-working">Validate things are working</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install-kube.html#create-a-kubernetes-cluster-optional">Create a Kubernetes Cluster (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-kube.html#install-helm-optional">Install Helm (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-kube.html#install-dask-gateway">Install Dask-Gateway</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="install-kube.html#download-the-helm-chart">Download the Helm Chart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="install-kube.html#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="install-kube.html#install-the-helm-chart">Install the Helm Chart</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="install-kube.html#connecting-to-the-gateway">Connecting to the gateway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-kube.html#shutting-everything-down">Shutting everything down</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-kube.html#additional-configuration">Additional Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="install-kube.html#authenticating-with-jupyterhub">Authenticating with JupyterHub</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -119,6 +136,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart (for local installs)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration API</a></li>

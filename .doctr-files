@@ -4,6 +4,7 @@
 ./_sources/develop.rst.txt
 ./_sources/index.rst.txt
 ./_sources/install-hadoop.rst.txt
+./_sources/install-kube.rst.txt
 ./_sources/installation.rst.txt
 ./_sources/quickstart.rst.txt
 ./_static/alabaster.css
@@ -27,6 +28,7 @@
 ./genindex.html
 ./index.html
 ./install-hadoop.html
+./install-kube.html
 ./installation.html
 ./objects.inv
 ./quickstart.html
