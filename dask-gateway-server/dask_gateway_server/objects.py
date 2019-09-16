@@ -11,6 +11,7 @@ from sqlalchemy import (
     Table,
     Column,
     Integer,
+    Float,
     Unicode,
     BINARY,
     ForeignKey,
@@ -136,6 +137,8 @@ clusters = Table(
     Column("dashboard_address", Unicode(255), nullable=False),
     Column("api_address", Unicode(255), nullable=False),
     Column("tls_credentials", LargeBinary, nullable=False),
+    Column("memory", Integer, nullable=False),
+    Column("cores", Float, nullable=False),
     Column("start_time", Integer, nullable=False),
     Column("stop_time", Integer, nullable=True),
 )
@@ -148,6 +151,8 @@ workers = Table(
     Column("cluster_id", ForeignKey("clusters.id", ondelete="CASCADE"), nullable=False),
     Column("status", IntEnum(WorkerStatus), nullable=False),
     Column("state", JSON, nullable=False),
+    Column("memory", Integer, nullable=False),
+    Column("cores", Float, nullable=False),
     Column("start_time", Integer, nullable=False),
     Column("stop_time", Integer, nullable=True),
 )
@@ -224,6 +229,8 @@ class DataManager(object):
                 api_address=c.api_address,
                 tls_cert=tls_cert,
                 tls_key=tls_key,
+                memory=c.memory,
+                cores=c.cores,
                 start_time=c.start_time,
                 stop_time=c.stop_time,
             )
@@ -241,6 +248,8 @@ class DataManager(object):
                 status=w.status,
                 cluster=cluster,
                 state=w.state,
+                memory=w.memory,
+                cores=w.cores,
                 start_time=w.start_time,
                 stop_time=w.stop_time,
             )
@@ -320,7 +329,7 @@ class DataManager(object):
                 if cluster.is_active():
                     yield cluster
 
-    def create_cluster(self, user, options):
+    def create_cluster(self, user, options, memory, cores):
         """Create a new cluster for a user"""
         cluster_name = uuid.uuid4().hex
         token = uuid.uuid4().hex
@@ -337,6 +346,8 @@ class DataManager(object):
             "scheduler_address": "",
             "dashboard_address": "",
             "api_address": "",
+            "memory": memory,
+            "cores": cores,
             "start_time": timestamp(),
         }
 
@@ -364,7 +375,7 @@ class DataManager(object):
 
         return cluster
 
-    def create_worker(self, cluster):
+    def create_worker(self, cluster, memory, cores):
         """Create a new worker for a cluster"""
         worker_name = uuid.uuid4().hex
 
@@ -372,6 +383,8 @@ class DataManager(object):
             "name": worker_name,
             "status": WorkerStatus.STARTING,
             "state": {},
+            "memory": memory,
+            "cores": cores,
             "start_time": timestamp(),
         }
 
@@ -409,6 +422,11 @@ class User(object):
         self.cookie = cookie
         self.clusters = {}
 
+    def active_clusters(self):
+        for cluster in self.clusters.values():
+            if cluster.is_active():
+                yield cluster
+
 
 class Cluster(object):
     def __init__(
@@ -425,6 +443,8 @@ class Cluster(object):
         api_address="",
         tls_cert=b"",
         tls_key=b"",
+        memory=None,
+        cores=None,
         start_time=None,
         stop_time=None,
     ):
@@ -440,6 +460,8 @@ class Cluster(object):
         self.api_address = api_address
         self.tls_cert = tls_cert
         self.tls_key = tls_key
+        self.memory = memory
+        self.cores = cores
         self.start_time = start_time
         self.stop_time = stop_time
 
@@ -459,7 +481,6 @@ class Cluster(object):
             self._start_future.set_result(True)
             self._connect_future.set_result(None)
 
-    @property
     def active_workers(self):
         return [w for w in self.workers.values() if w.is_active()]
 
@@ -475,6 +496,8 @@ class Worker(object):
         cluster=None,
         status=None,
         state=None,
+        memory=None,
+        cores=None,
         start_time=None,
         stop_time=None,
     ):
@@ -483,6 +506,8 @@ class Worker(object):
         self.cluster = cluster
         self.status = status
         self.state = state
+        self.memory = memory
+        self.cores = cores
         self.start_time = start_time
         self.stop_time = stop_time
 

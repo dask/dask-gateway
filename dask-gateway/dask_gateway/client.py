@@ -3,6 +3,7 @@ import json
 import os
 import ssl
 import tempfile
+import warnings
 import weakref
 from datetime import timedelta, datetime
 from threading import get_ident
@@ -37,6 +38,11 @@ class GatewayServerError(Exception):
 
     Indicates an internal error in the gateway server.
     """
+
+
+class UserLimitWarning(UserWarning):
+    """Indicates an operation couldn't fully complete due to user limits
+    on the gateway server."""
 
 
 class GatewaySecurity(Security):
@@ -564,7 +570,11 @@ class Gateway(object):
             body=json.dumps({"worker_count": n}),
             headers=HTTPHeaders({"Content-type": "application/json"}),
         )
-        await self._fetch(req)
+        resp = await self._fetch(req)
+        msg = json.loads(resp.body)
+        if msg["message"]:
+            warnings.warn(UserLimitWarning(msg["message"]))
+        return msg["n"]
 
     def scale_cluster(self, cluster_name, n, **kwargs):
         """Scale a cluster to n workers.
@@ -575,6 +585,12 @@ class Gateway(object):
             The cluster name.
         n : int
             The number of workers to scale to.
+
+        Returns
+        -------
+        n_actual : int
+            The number of workers actually scaled to. This may be different
+            than ``n`` depending on user limits.
         """
         return self.sync(self._scale_cluster, cluster_name, n, **kwargs)
 
@@ -676,6 +692,12 @@ class GatewayCluster(object):
         ----------
         n : int
             The number of workers to scale to.
+
+        Returns
+        -------
+        n_actual : int
+            The number of workers actually scaled to. This may be different
+            than ``n`` depending on user limits.
         """
         return self._gateway.scale_cluster(self.name, n, **kwargs)
 

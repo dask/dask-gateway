@@ -273,7 +273,12 @@ class ClusterScaleHandler(BaseHandler):
             total = self.json_data["worker_count"]
         except (TypeError, KeyError):
             raise web.HTTPError(422, reason="Malformed request body")
-        await self.gateway.scale(cluster, total)
+        if total < 0:
+            raise web.HTTPError(
+                422, reason="Scale expects a positive integer, got %r" % total
+            )
+        n, msg = await self.gateway.scale(cluster, total)
+        self.write({"n": n, "message": msg})
 
 
 class ClusterWorkersHandler(BaseHandler):

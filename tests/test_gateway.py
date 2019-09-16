@@ -738,7 +738,7 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
         cluster = active_clusters[0]
 
         assert cluster.name == cluster1_name
-        assert len(cluster.active_workers) == 1
+        assert len(cluster.active_workers()) == 1
 
         # Check that cluster is available and everything still works
         async with Gateway(

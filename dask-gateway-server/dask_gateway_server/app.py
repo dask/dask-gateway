@@ -29,6 +29,7 @@ from .objects import (
     normalize_encrypt_key,
     is_in_memory_db,
 )
+from .limits import UserLimits
 from .options import Options
 from .proxy import SchedulerProxy, WebProxy
 from .utils import (
@@ -416,6 +417,7 @@ class DaskGateway(Application):
         self.init_scheduler_proxy()
         self.init_web_proxy()
         self.init_authenticator()
+        self.init_user_limits()
         self.init_database()
         self.init_tornado_application()
 
@@ -468,6 +470,9 @@ class DaskGateway(Application):
     def init_authenticator(self):
         self.authenticator = self.authenticator_class(parent=self, log=self.log)
 
+    def init_user_limits(self):
+        self.user_limits = UserLimits(parent=self, log=self.log)
+
     def init_database(self):
         self.db = DataManager(
             url=self.db_url, echo=self.db_debug, encrypt_keys=self.db_encrypt_keys
@@ -497,21 +502,23 @@ class DaskGateway(Application):
     async def start_web_proxy(self):
         await self.web_proxy.start()
 
-    def create_cluster_manager(self, cluster):
-        config = self.cluster_manager_options.get_configuration(cluster.options)
-        cluster.manager = self.cluster_manager_class(
+    def create_cluster_manager(self, options):
+        config = self.cluster_manager_options.get_configuration(options)
+        return self.cluster_manager_class(
             parent=self,
             log=self.log,
             task_pool=self.task_pool,
             temp_dir=self.temp_dir,
             api_url=self.api_url,
-            username=cluster.user.name,
-            cluster_name=cluster.name,
-            api_token=cluster.token,
-            tls_cert=cluster.tls_cert,
-            tls_key=cluster.tls_key,
             **config,
         )
+
+    def init_cluster_manager(self, manager, cluster):
+        manager.username = cluster.user.name
+        manager.cluster_name = cluster.name
+        manager.api_token = cluster.token
+        manager.tls_cert = cluster.tls_cert
+        manager.tls_key = cluster.tls_key
 
     async def load_database_state(self):
         self.db.load_database_state()
@@ -556,7 +563,8 @@ class DaskGateway(Application):
             await asyncio.sleep(self.db_cleanup_period)
 
     async def check_cluster(self, cluster):
-        self.create_cluster_manager(cluster)
+        cluster.manager = self.create_cluster_manager(cluster.options)
+        self.init_cluster_manager(cluster.manager, cluster)
 
         if cluster.status == ClusterStatus.RUNNING:
             client = AsyncHTTPClient()
@@ -587,7 +595,7 @@ class DaskGateway(Application):
             # Update our set of workers to match
             actual_workers = set(workers)
             to_stop = []
-            for w in cluster.active_workers:
+            for w in cluster.active_workers():
                 if w.name in actual_workers:
                     self.mark_worker_running(cluster, w)
                 else:
@@ -818,11 +826,27 @@ class DaskGateway(Application):
     def start_new_cluster(self, user, request):
         # Process the user provided options
         options = self.cluster_manager_options.parse_options(request)
-        cluster = self.db.create_cluster(user, options)
-        self.create_cluster_manager(cluster)
+        manager = self.create_cluster_manager(options)
+
+        # Check if allowed to create cluster
+        allowed, msg = self.user_limits.check_cluster_limits(
+            user, manager.scheduler_memory, manager.scheduler_cores
+        )
+        if not allowed:
+            raise Exception(msg)
+
+        # Finish initializing the object states
+        cluster = self.db.create_cluster(
+            user, options, manager.scheduler_memory, manager.scheduler_cores
+        )
+        cluster.manager = manager
+        self.init_cluster_manager(cluster.manager, cluster)
+
+        # Launch the cluster startup task
         f = self.task_pool.create_task(self.start_cluster(cluster))
         f.add_done_callback(partial(self._monitor_start_cluster, cluster=cluster))
         cluster._start_future = f
+
         return cluster
 
     def _monitor_start_cluster(self, future, cluster=None):
@@ -841,7 +865,13 @@ class DaskGateway(Application):
         self.schedule_stop_cluster(cluster, failed=True)
 
     async def stop_cluster(self, cluster, failed=False):
+        if cluster.status >= ClusterStatus.STOPPING:
+            return
+
         self.log.info("Stopping cluster %s...", cluster.name)
+
+        # Move cluster to stopping
+        self.db.update_cluster(cluster, status=ClusterStatus.STOPPING)
 
         # Stop the periodic monitor, if present
         self.stop_cluster_status_monitor(cluster)
@@ -849,16 +879,13 @@ class DaskGateway(Application):
         # If running, cancel running start task
         await cancel_task(cluster._start_future)
 
-        # Move cluster to stopping
-        self.db.update_cluster(cluster, status=ClusterStatus.STOPPING)
-
         # Remove routes from proxies if already set
         await self.web_proxy.delete_route("/gateway/clusters/" + cluster.name)
         await self.scheduler_proxy.delete_route("/" + cluster.name)
 
         # Shutdown individual workers if no bulk shutdown supported
         if not cluster.manager.supports_bulk_shutdown:
-            tasks = (self.stop_worker(cluster, w) for w in cluster.active_workers)
+            tasks = (self.stop_worker(cluster, w) for w in cluster.active_workers())
             await asyncio.gather(*tasks, return_exceptions=True)
 
         # Shutdown the cluster
@@ -866,6 +893,11 @@ class DaskGateway(Application):
             await cluster.manager.stop_cluster(cluster.state)
         except Exception as exc:
             self.log.error("Failed to shutdown cluster %s", cluster.name, exc_info=exc)
+
+        # If we shut the workers down in bulk, cleanup their internal state now
+        if cluster.manager.supports_bulk_shutdown:
+            tasks = (self.stop_worker(cluster, w) for w in cluster.active_workers())
+            await asyncio.gather(*tasks, return_exceptions=True)
 
         # Update the cluster status
         status = ClusterStatus.FAILED if failed else ClusterStatus.STOPPED
@@ -880,9 +912,10 @@ class DaskGateway(Application):
     async def scale(self, cluster, total):
         """Scale cluster to total workers"""
         async with cluster.lock:
-            delta = total - len(cluster.active_workers)
+            n_active = len(cluster.active_workers())
+            delta = total - n_active
             if delta == 0:
-                return
+                return n_active, None
             self.log.info(
                 "Scaling cluster %s to %d workers, a delta of %d",
                 cluster.name,
@@ -890,17 +923,29 @@ class DaskGateway(Application):
                 delta,
             )
             if delta > 0:
-                await self.scale_up(cluster, delta)
+                actual_delta, msg = self.scale_up(cluster, delta)
             else:
-                await self.scale_down(cluster, -delta)
+                actual_delta = -await self.scale_down(cluster, -delta)
+                msg = None
+            return n_active + actual_delta, msg
 
-    async def scale_up(self, cluster, n_start):
-        for _ in range(n_start):
-            w = self.db.create_worker(cluster)
+    def scale_up(self, cluster, n_start):
+        # Check how many workers we're allowed_to_start
+        n_allowed, msg = self.user_limits.check_scale_limits(
+            cluster,
+            n_start,
+            memory=cluster.manager.worker_memory,
+            cores=cluster.manager.worker_cores,
+        )
+        for _ in range(n_allowed):
+            w = self.db.create_worker(
+                cluster, cluster.manager.worker_memory, cluster.manager.worker_cores
+            )
             w._start_future = self.task_pool.create_task(self.start_worker(cluster, w))
             w._start_future.add_done_callback(
                 partial(self._monitor_start_worker, worker=w, cluster=cluster)
             )
+        return n_allowed, msg
 
     async def _start_worker(self, cluster, worker):
         self.log.info("Starting worker %s for cluster %s...", worker.name, cluster.name)
@@ -1022,25 +1067,32 @@ class DaskGateway(Application):
         self.schedule_stop_worker(cluster, worker, failed=True)
 
     async def stop_worker(self, cluster, worker, failed=False):
-        self.log.info("Stopping worker %s for cluster %s", worker.name, cluster.name)
+        # Already stopping elsewhere, return
+        if worker.status >= WorkerStatus.STOPPING:
+            return
 
-        # Cancel a pending start if needed
-        await cancel_task(worker._start_future)
+        self.log.info("Stopping worker %s for cluster %s", worker.name, cluster.name)
 
         # Move worker to stopping
         self.db.update_worker(worker, status=WorkerStatus.STOPPING)
         cluster.pending.discard(worker.name)
 
+        # Cancel a pending start if needed
+        await cancel_task(worker._start_future)
+
         # Shutdown the worker
-        try:
-            await cluster.manager.stop_worker(worker.name, worker.state, cluster.state)
-        except Exception as exc:
-            self.log.error(
-                "Failed to shutdown worker %s for cluster %s",
-                worker.name,
-                cluster.name,
-                exc_info=exc,
-            )
+        if not cluster.manager.supports_bulk_shutdown:
+            try:
+                await cluster.manager.stop_worker(
+                    worker.name, worker.state, cluster.state
+                )
+            except Exception as exc:
+                self.log.error(
+                    "Failed to shutdown worker %s for cluster %s",
+                    worker.name,
+                    cluster.name,
+                    exc_info=exc,
+                )
 
         # Update the worker status
         status = WorkerStatus.FAILED if failed else WorkerStatus.STOPPED
@@ -1099,6 +1151,8 @@ class DaskGateway(Application):
             )
             for w in to_stop:
                 self.schedule_stop_worker(cluster, w)
+
+            return len(to_stop)
 
 
 main = DaskGateway.launch_instance
