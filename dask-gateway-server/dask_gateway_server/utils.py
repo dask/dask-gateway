@@ -6,6 +6,8 @@ from urllib.parse import urlparse, urlunparse
 
 from traitlets import Integer, TraitError, Type as _Type
 
+from .compat import get_running_loop
+
 
 class TaskPool(object):
     def __init__(self):
@@ -67,7 +69,7 @@ class timeout(object):
             self.expired = True
 
     async def __aenter__(self):
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         try:
             self._task = asyncio.current_task(loop=loop)
         except AttributeError:
