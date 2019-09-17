@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0.3.0+14.g9e248a2 documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0.3.0+15.g554434b documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -324,6 +324,43 @@ valid Python variable name. If not provided, <code class="docutils literal notra
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+</div>
+<div class="section" id="user-limits">
+<h2>User Limits<a class="headerlink" href="#user-limits" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dask_gateway_server.limits.UserLimits">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.limits.</code><code class="sig-name descname">UserLimits</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.limits.UserLimits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Manages restrictions for user resource usage</p>
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.UserLimits.max_clusters = Int(0)</code></dt>
+<dd><p>The maximum number of clusters available for each user.</p>
+<p>Set to 0 for no limit (default).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.UserLimits.max_cores = Float(0)</code></dt>
+<dd><p>The maximum number of cores available for each user.</p>
+<p>Set to 0 for no limit (default).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.UserLimits.max_memory = MemoryLimit(0)</code></dt>
+<dd><p>The maximum amount of memory (in bytes) available to each user.
+Can be an integer, or a string with one of the following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Set to 0 for no limit (default).</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1591,6 +1628,7 @@ of failures.</p>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#gateway">Gateway</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#cluster-manager-options">Cluster Manager Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user-limits">User Limits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#proxies">Proxies</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#web-proxy">Web Proxy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#scheduler-proxy">Scheduler Proxy</a></li>
