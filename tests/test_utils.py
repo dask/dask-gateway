@@ -69,12 +69,13 @@ async def test_timeout_supports_cancellation():
     async def waiter():
         try:
             async with timeout(2) as t:
+                outer_task.cancel()
                 await inner_task
         finally:
             assert not t.expired
             assert t._waiter is None
 
     outer_task = asyncio.ensure_future(waiter())
-    with pytest.raises(asyncio.TimeoutError):
-        await asyncio.wait_for(outer_task, 0.01)
+    with pytest.raises(asyncio.CancelledError):
+        await outer_task
     assert inner_task.cancelled()

@@ -781,10 +781,8 @@ async def test_user_limits(tmpdir):
             assert "user limit" in str(exc.value)
 
             # Scaling > 1 triggers a warning, only scales to 1
-            with pytest.warns(GatewayWarning) as rec:
+            with pytest.warns(GatewayWarning, match="user cores limit"):
                 await cluster.scale(2)
-            assert len(rec) == 1
-            assert "user cores limit" in str(rec[0].message)
 
             # Shutdown the cluster
             await cluster.shutdown()
