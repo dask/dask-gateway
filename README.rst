@@ -1,7 +1,11 @@
 dask-gateway
 ============
 
-|travis| |pypi-dask-gateway| |pypi-dask-gateway-server| |conda-dask-gateway| |conda-dask-gateway-server|
+|travis|
+
+|pypi-dask-gateway| |pypi-dask-gateway-server|
+
+|conda-dask-gateway| |conda-dask-gateway-server|
 
 A multi-tenant server for securely deploying and managing Dask clusters. See
 `the documentation <https://jcrist.github.io/dask-gateway/>`__ for more
