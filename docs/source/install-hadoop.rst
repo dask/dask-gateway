@@ -370,8 +370,8 @@ also want to increase the cluster/worker timeout values:
 .. code-block:: python
 
     # Increase startup timeouts to 5 min (600 seconds) each
-    c.YarnClusterManager.cluster_connect_timeout = 600
-    c.YarnClusterManager.worker_connect_timeout = 600
+    c.YarnClusterManager.cluster_start_timeout = 600
+    c.YarnClusterManager.worker_start_timeout = 600
 
 
 Example
