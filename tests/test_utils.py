@@ -4,7 +4,13 @@ import socket
 import pytest
 from traitlets import HasTraits, TraitError
 
-from dask_gateway_server.utils import Type, get_connect_urls, timeout, format_bytes
+from dask_gateway_server.utils import (
+    Type,
+    get_connect_urls,
+    timeout,
+    format_bytes,
+    classname,
+)
 
 
 def test_Type_traitlet():
@@ -88,3 +94,11 @@ def test_format_bytes():
     assert format_bytes(1.5 * 2 ** 30) == "1.50 GiB"
     assert format_bytes(1.5 * 2 ** 40) == "1.50 TiB"
     assert format_bytes(1.5 * 2 ** 50) == "1.50 PiB"
+
+
+class Foo(object):
+    pass
+
+
+def test_classname():
+    assert classname(Foo) == f"{Foo.__module__}.Foo"

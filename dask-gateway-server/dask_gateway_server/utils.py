@@ -208,3 +208,9 @@ class Type(_Type):
                     % (value, type(obj).__name__, self.name, exc)
                 )
         return super().validate(obj, value)
+
+
+def classname(cls):
+    """Return the full qualified name of a class"""
+    mod = cls.__module__
+    return cls.__name__ if mod is None else f"{mod}.{cls.__name__}"

@@ -33,6 +33,7 @@ from .limits import UserLimits
 from .options import Options
 from .proxy import SchedulerProxy, WebProxy
 from .utils import (
+    classname,
     cleanup_tmpdir,
     cancel_task,
     TaskPool,
@@ -412,6 +413,8 @@ class DaskGateway(Application):
         if self.subapp is not None:
             return
         self.log.info("Starting dask-gateway-server - version %s", VERSION)
+        self.log.info("Cluster manager: %r", classname(self.cluster_manager_class))
+        self.log.info("Authenticator: %r", classname(self.authenticator_class))
         self.load_config_file(self.config_file)
         self.init_logging()
         self.init_tempdir()
