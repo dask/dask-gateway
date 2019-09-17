@@ -119,6 +119,20 @@ setup(
     maintainer="Jim Crist",
     maintainer_email="jiminy.crist@gmail.com",
     license="BSD",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "License :: OSI Approved :: BSD License",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: System Administrators",
+        "Topic :: Scientific/Engineering",
+        "Topic :: System :: Distributed Computing",
+        "Topic :: System :: Systems Administration",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+    ],
+    keywords="dask hadoop kubernetes HPC distributed cluster",
     description=(
         "A multi-tenant server for securely deploying and managing "
         "multiple Dask clusters."

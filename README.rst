@@ -1,7 +1,7 @@
 dask-gateway
 ============
 
-|travis| |pypi-dask-gateway| |pypi-dask-gateway-server|
+|travis| |pypi-dask-gateway| |pypi-dask-gateway-server| |conda-dask-gateway| |conda-dask-gateway-server|
 
 A multi-tenant server for securely deploying and managing Dask clusters. See
 `the documentation <https://jcrist.github.io/dask-gateway/>`__ for more
@@ -19,3 +19,7 @@ New BSD. See the `License File
    :target: https://pypi.org/project/dask-gateway/
 .. |pypi-dask-gateway-server| image:: https://img.shields.io/pypi/v/dask-gateway-server.svg?label=dask-gateway-server
    :target: https://pypi.org/project/dask-gateway-server/
+.. |conda-dask-gateway| image:: https://img.shields.io/conda/v/conda-forge/dask-gateway?color=blue&label=dask-gateway
+   :target: https://anaconda.org/conda-forge/dask-gateway
+.. |conda-dask-gateway-server| image:: https://img.shields.io/conda/v/conda-forge/dask-gateway-server?color=blue&label=dask-gateway-server
+   :target: https://anaconda.org/conda-forge/dask-gateway-server

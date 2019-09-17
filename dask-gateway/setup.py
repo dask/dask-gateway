@@ -19,6 +19,18 @@ setup(
     maintainer="Jim Crist",
     maintainer_email="jiminy.crist@gmail.com",
     license="BSD",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "License :: OSI Approved :: BSD License",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering",
+        "Topic :: System :: Distributed Computing",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+    ],
+    keywords="dask hadoop kubernetes HPC distributed cluster",
     description="A client library for interacting with a dask-gateway server",
     long_description=(
         open("README.rst").read() if os.path.exists("README.rst") else ""
