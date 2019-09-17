@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 from traitlets import Integer, Float
 from traitlets.config import Config
 
-from dask_gateway import Gateway, GatewayClusterError
+from dask_gateway import Gateway, GatewayClusterError, GatewayWarning
 from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.objects import ClusterStatus
@@ -738,7 +738,7 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
         cluster = active_clusters[0]
 
         assert cluster.name == cluster1_name
-        assert len(cluster.active_workers) == 1
+        assert len(cluster.active_workers()) == 1
 
         # Check that cluster is available and everything still works
         async with Gateway(
@@ -753,4 +753,42 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
                 res = await client.submit(lambda x: x + 1, 1)
                 assert res == 2
 
+            await cluster.shutdown()
+
+
+@pytest.mark.asyncio
+async def test_user_limits(tmpdir):
+    config = Config()
+    config.DaskGateway.cluster_manager_class = InProcessClusterManager
+    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.UserLimits.max_clusters = 1
+    config.UserLimits.max_cores = 3
+    config.InProcessClusterManager.scheduler_cores = 1
+    config.InProcessClusterManager.worker_cores = 2
+
+    async with temp_gateway(config=config) as gateway_proc:
+        async with Gateway(
+            address=gateway_proc.public_url,
+            proxy_address=gateway_proc.gateway_url,
+            asynchronous=True,
+        ) as gateway:
+            # Start a cluster
+            cluster = await gateway.new_cluster()
+
+            # Only one cluster allowed
+            with pytest.raises(ValueError) as exc:
+                await gateway.new_cluster()
+            assert "user limit" in str(exc.value)
+
+            # Scaling > 1 triggers a warning, only scales to 1
+            with pytest.warns(GatewayWarning) as rec:
+                await cluster.scale(2)
+            assert len(rec) == 1
+            assert "user cores limit" in str(rec[0].message)
+
+            # Shutdown the cluster
+            await cluster.shutdown()
+
+            # Can create a new cluster after resources returned
+            cluster = await gateway.new_cluster()
             await cluster.shutdown()

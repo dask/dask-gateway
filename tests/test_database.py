@@ -60,9 +60,9 @@ async def test_cleanup_expired_clusters(monkeypatch):
     monkeypatch.setattr(time, "time", mytime)
 
     def add_cluster(stop=True):
-        c = db.create_cluster(alice, {})
+        c = db.create_cluster(alice, {}, memory=1e9, cores=1)
         for _ in range(5):
-            w = db.create_worker(c)
+            w = db.create_worker(c, memory=2e9, cores=2)
             if stop:
                 db.update_worker(
                     w,
@@ -125,7 +125,7 @@ async def test_encryption(tmpdir):
     assert data == data2
 
     alice = db.get_or_create_user("alice")
-    c = db.create_cluster(alice, {})
+    c = db.create_cluster(alice, {}, memory=1e9, cores=1)
     assert c.tls_cert is not None
     assert c.tls_key is not None
 

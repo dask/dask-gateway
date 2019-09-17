@@ -3,6 +3,7 @@ import json
 import os
 import ssl
 import tempfile
+import warnings
 import weakref
 from datetime import timedelta, datetime
 from threading import get_ident
@@ -37,6 +38,10 @@ class GatewayServerError(Exception):
 
     Indicates an internal error in the gateway server.
     """
+
+
+class GatewayWarning(UserWarning):
+    """Warnings raised by the Gateway client"""
 
 
 class GatewaySecurity(Security):
@@ -564,7 +569,10 @@ class Gateway(object):
             body=json.dumps({"worker_count": n}),
             headers=HTTPHeaders({"Content-type": "application/json"}),
         )
-        await self._fetch(req)
+        resp = await self._fetch(req)
+        msg = json.loads(resp.body)
+        if msg["message"]:
+            warnings.warn(GatewayWarning(msg["message"]))
 
     def scale_cluster(self, cluster_name, n, **kwargs):
         """Scale a cluster to n workers.
