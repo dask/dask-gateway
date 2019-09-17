@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Install on a Hadoop Cluster &#8212; Dask Gateway 0.3.0+15.g554434b documentation</title>
+    <title>Install on a Hadoop Cluster &#8212; Dask Gateway 0.3.0+16.g32af9dd documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -357,8 +357,8 @@ YARN queue to use.</p>
 <p>If your cluster is under high load (and jobs may be slow to start), you may
 also want to increase the cluster/worker timeout values:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Increase startup timeouts to 5 min (600 seconds) each</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">cluster_connect_timeout</span> <span class="o">=</span> <span class="mi">600</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_connect_timeout</span> <span class="o">=</span> <span class="mi">600</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">cluster_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
 </pre></div>
 </div>
 </div>
