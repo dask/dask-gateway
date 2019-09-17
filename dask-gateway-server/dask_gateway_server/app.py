@@ -242,7 +242,7 @@ class DaskGateway(Application):
     def _cookie_secret_default(self):
         secret = os.environb.get(b"DASK_GATEWAY_COOKIE_SECRET", b"")
         if not secret:
-            self.log.info("Generating new cookie secret")
+            self.log.debug("Generating new cookie secret")
             secret = os.urandom(32)
         return secret
 
@@ -411,6 +411,7 @@ class DaskGateway(Application):
         super().initialize(argv)
         if self.subapp is not None:
             return
+        self.log.info("Starting dask-gateway-server - version %s", VERSION)
         self.load_config_file(self.config_file)
         self.init_logging()
         self.init_tempdir()
