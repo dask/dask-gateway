@@ -4,7 +4,7 @@ import socket
 import pytest
 from traitlets import HasTraits, TraitError
 
-from dask_gateway_server.utils import Type, get_connect_urls, timeout
+from dask_gateway_server.utils import Type, get_connect_urls, timeout, format_bytes
 
 
 def test_Type_traitlet():
@@ -79,3 +79,12 @@ async def test_timeout_supports_cancellation():
     with pytest.raises(asyncio.CancelledError):
         await outer_task
     assert inner_task.cancelled()
+
+
+def test_format_bytes():
+    assert format_bytes(105) == "105 B"
+    assert format_bytes(1.5 * 2 ** 10) == "1.50 KiB"
+    assert format_bytes(1.5 * 2 ** 20) == "1.50 MiB"
+    assert format_bytes(1.5 * 2 ** 30) == "1.50 GiB"
+    assert format_bytes(1.5 * 2 ** 40) == "1.50 TiB"
+    assert format_bytes(1.5 * 2 ** 50) == "1.50 PiB"
