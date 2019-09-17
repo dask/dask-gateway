@@ -23,6 +23,12 @@ Cluster Manager Options
 .. autoclass:: dask_gateway_server.options.Select
 
 
+User Limits
+-----------
+
+.. autoconfigurable:: dask_gateway_server.limits.UserLimits
+
+
 Proxies
 -------
 
