@@ -40,9 +40,8 @@ class GatewayServerError(Exception):
     """
 
 
-class UserLimitWarning(UserWarning):
-    """Indicates an operation couldn't fully complete due to user limits
-    on the gateway server."""
+class GatewayWarning(UserWarning):
+    """Warnings raised by the Gateway client"""
 
 
 class GatewaySecurity(Security):
@@ -573,8 +572,7 @@ class Gateway(object):
         resp = await self._fetch(req)
         msg = json.loads(resp.body)
         if msg["message"]:
-            warnings.warn(UserLimitWarning(msg["message"]))
-        return msg["n"]
+            warnings.warn(GatewayWarning(msg["message"]))
 
     def scale_cluster(self, cluster_name, n, **kwargs):
         """Scale a cluster to n workers.
@@ -585,12 +583,6 @@ class Gateway(object):
             The cluster name.
         n : int
             The number of workers to scale to.
-
-        Returns
-        -------
-        n_actual : int
-            The number of workers actually scaled to. This may be different
-            than ``n`` depending on user limits.
         """
         return self.sync(self._scale_cluster, cluster_name, n, **kwargs)
 
@@ -692,12 +684,6 @@ class GatewayCluster(object):
         ----------
         n : int
             The number of workers to scale to.
-
-        Returns
-        -------
-        n_actual : int
-            The number of workers actually scaled to. This may be different
-            than ``n`` depending on user limits.
         """
         return self._gateway.scale_cluster(self.name, n, **kwargs)
 

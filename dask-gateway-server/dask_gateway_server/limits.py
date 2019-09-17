@@ -45,10 +45,6 @@ class UserLimits(LoggingConfigurable):
         config=True,
     )
 
-    @property
-    def no_limits(self):
-        return self.max_cores == 0 and self.max_memory == 0 and self.max_clusters == 0
-
     @staticmethod
     def _sum_resources(active_clusters):
         memory = 0
