@@ -36,9 +36,7 @@ gateway:
 
   clusterManager:
     clusterStartTimeout: null
-    clusterConnectTimeout: null
     workerStartTimeout: null
-    workerConnectTimeout: null
 
     image:
       name: jcrist/dask-gateway

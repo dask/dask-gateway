@@ -37,7 +37,7 @@ def test_generate_config(tmpdir, capfd):
         cfg_text = f.read()
 
     assert "DaskGateway.cluster_manager_class" in cfg_text
-    assert "ClusterManager.worker_connect_timeout" in cfg_text
+    assert "ClusterManager.worker_start_timeout" in cfg_text
 
 
 @pytest.mark.parametrize("kind", ["web", "scheduler"])

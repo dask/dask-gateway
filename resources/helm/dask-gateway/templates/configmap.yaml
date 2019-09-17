@@ -90,9 +90,7 @@ data:
         ("image_pull_policy", "image.pullPolicy"),
         ("environment", "environment"),
         ("cluster_start_timeout", "clusterStartTimeout"),
-        ("cluster_connect_timeout", "clusterConnectTimeout"),
         ("worker_start_timeout", "workerStartTimeout"),
-        ("worker_connect_timeout", "workerConnectTimeout"),
     ]:
         value = get_property("gateway.clusterManager." + prop_name)
         if value is not None:
