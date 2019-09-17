@@ -39,6 +39,7 @@ from .utils import (
     Type,
     get_connect_urls,
     random_port,
+    timeout,
 )
 
 
@@ -760,10 +761,13 @@ class DaskGateway(Application):
         Returns True if successfully started, False otherwise.
         """
         try:
-            await asyncio.wait_for(
-                self._start_cluster(cluster),
-                timeout=cluster.manager.cluster_start_timeout,
-            )
+            async with timeout(cluster.manager.cluster_start_timeout):
+                await self._start_cluster(cluster)
+                self.log.info(
+                    "Cluster %s has started, waiting for connection", cluster.name
+                )
+                self.start_cluster_status_monitor(cluster)
+                addresses = await cluster._connect_future
         except asyncio.TimeoutError:
             self.log.warning(
                 "Cluster %s startup timed out after %.1f seconds",
@@ -780,23 +784,7 @@ class DaskGateway(Application):
             )
             return False
 
-        self.log.info("Cluster %s has started, waiting for connection", cluster.name)
-
-        self.start_cluster_status_monitor(cluster)
-
-        try:
-            addresses = await asyncio.wait_for(
-                cluster._connect_future, timeout=cluster.manager.cluster_connect_timeout
-            )
-            scheduler_address, dashboard_address, api_address = addresses
-        except asyncio.TimeoutError:
-            self.log.warning(
-                "Cluster %s failed to connect after %.1f seconds",
-                cluster.name,
-                cluster.manager.cluster_connect_timeout,
-            )
-            return False
-
+        scheduler_address, dashboard_address, api_address = addresses
         self.log.info("Cluster %s connected at %s", cluster.name, scheduler_address)
 
         # Mark cluster as running
@@ -976,43 +964,40 @@ class DaskGateway(Application):
             await asyncio.sleep(cluster.manager.worker_status_period)
 
     async def start_worker(self, cluster, worker):
+        worker_status_monitor = None
         try:
-            await asyncio.wait_for(
-                self._start_worker(cluster, worker),
-                timeout=cluster.manager.worker_start_timeout,
-            )
-        except asyncio.TimeoutError:
-            self.log.warning(
-                "Worker %s startup timed out after %.1f seconds",
-                worker.name,
-                cluster.manager.worker_start_timeout,
-            )
-            return False
-        except asyncio.CancelledError:
-            # Catch separately to avoid in generic handler below
-            raise
+            async with timeout(cluster.manager.worker_start_timeout):
+                # Submit the worker
+                await self._start_worker(cluster, worker)
+
+                self.log.info(
+                    "Worker %s has started, waiting for connection", worker.name
+                )
+
+                # Wait for the worker to connect, periodically checking its status
+                worker_status_monitor = asyncio.ensure_future(
+                    self._worker_status_monitor(cluster, worker)
+                )
+                done, pending = await asyncio.wait(
+                    (worker_status_monitor, worker._connect_future),
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
         except Exception as exc:
-            self.log.error("Error while starting worker %s", worker, exc_info=exc)
+            if worker_status_monitor is not None:
+                worker_status_monitor.cancel()
+            if type(exc) is asyncio.CancelledError:
+                raise
+            elif type(exc) is asyncio.TimeoutError:
+                self.log.warning(
+                    "Worker %s startup timed out after %.1f seconds",
+                    worker.name,
+                    cluster.manager.worker_start_timeout,
+                )
+            else:
+                self.log.error("Error while starting worker %s", worker, exc_info=exc)
             return False
 
-        self.log.info("Worker %s has started, waiting for connection", worker.name)
-
-        # Wait for the worker to connect, periodically checking its status
-        worker_status_monitor = asyncio.ensure_future(
-            self._worker_status_monitor(cluster, worker)
-        )
-
-        try:
-            done, pending = await asyncio.wait(
-                (worker_status_monitor, worker._connect_future),
-                timeout=cluster.manager.worker_connect_timeout,
-                return_when=asyncio.FIRST_COMPLETED,
-            )
-        except asyncio.CancelledError:
-            # Start cancelled, cancel the status monitor then reraise
-            worker_status_monitor.cancel()
-            raise
-
+        # Check monitor for failures
         if worker_status_monitor in done:
             # Failure occurred
             msg = worker_status_monitor.result()
@@ -1025,14 +1010,6 @@ class DaskGateway(Application):
             return False
         else:
             worker_status_monitor.cancel()
-            if not done:
-                # Timeout
-                self.log.warning(
-                    "Worker %s failed to connect after %.1f seconds",
-                    worker.name,
-                    cluster.manager.worker_connect_timeout,
-                )
-                return False
 
         self.log.info("Worker %s connected to cluster %s", worker.name, cluster.name)
 

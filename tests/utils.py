@@ -11,7 +11,7 @@ from tornado import web
 from traitlets.config import Config
 
 from dask_gateway_server.app import DaskGateway
-from dask_gateway_server.utils import random_port, get_ip, TaskPool
+from dask_gateway_server.utils import random_port, get_ip, TaskPool, timeout
 from dask_gateway_server.tls import new_keypair
 from dask_gateway_server.objects import (
     Cluster,
@@ -277,13 +277,11 @@ class ClusterManagerTests(object):
         assert not await self.cluster_status(cluster)
 
         # Start the cluster
-        async for state in cluster.manager.start_cluster():
-            cluster.state = state
+        async with timeout(cluster.manager.cluster_start_timeout):
+            async for state in cluster.manager.start_cluster():
+                cluster.state = state
+            await cluster._connect_future
 
-        # Wait for connection
-        await asyncio.wait_for(
-            cluster._connect_future, cluster.manager.cluster_connect_timeout
-        )
         assert await self.cluster_is_running(cluster.manager, cluster.state)
         assert await self.cluster_status(cluster)
 
@@ -343,13 +341,11 @@ class ClusterManagerTests(object):
         cluster = self.new_cluster(gateway)
 
         # Start the cluster
-        async for state in cluster.manager.start_cluster():
-            cluster.state = state
+        async with timeout(cluster.manager.cluster_start_timeout):
+            async for state in cluster.manager.start_cluster():
+                cluster.state = state
+            await cluster._connect_future
 
-        # Wait for connection
-        await asyncio.wait_for(
-            cluster._connect_future, cluster.manager.cluster_connect_timeout
-        )
         assert await self.cluster_is_running(cluster.manager, cluster.state)
         assert await self.cluster_status(cluster)
 
@@ -359,13 +355,11 @@ class ClusterManagerTests(object):
         assert not await self.worker_status(worker, cluster)
 
         # Start the worker
-        async for state in cluster.manager.start_worker(worker.name, cluster.state):
-            worker.state = state
+        async with timeout(cluster.manager.worker_start_timeout):
+            async for state in cluster.manager.start_worker(worker.name, cluster.state):
+                worker.state = state
+            await worker._connect_future
 
-        # Wait for worker to connect
-        await asyncio.wait_for(
-            worker._connect_future, cluster.manager.worker_connect_timeout
-        )
         assert await self.worker_is_running(
             cluster.manager, cluster.state, worker.state
         )
@@ -388,13 +382,11 @@ class ClusterManagerTests(object):
         cluster = self.new_cluster(gateway)
 
         # Start the cluster
-        async for state in cluster.manager.start_cluster():
-            cluster.state = state
+        async with timeout(cluster.manager.cluster_start_timeout):
+            async for state in cluster.manager.start_cluster():
+                cluster.state = state
+            await cluster._connect_future
 
-        # Wait for connection
-        await asyncio.wait_for(
-            cluster._connect_future, cluster.manager.cluster_connect_timeout
-        )
         assert await self.cluster_is_running(cluster.manager, cluster.state)
         assert await self.cluster_status(cluster)
 

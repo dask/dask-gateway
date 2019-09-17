@@ -271,7 +271,7 @@ async def test_slow_cluster_connect(tmpdir):
     config = Config()
     config.DaskGateway.cluster_manager_class = SlowStartClusterManager
     config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
-    config.SlowStartClusterManager.cluster_connect_timeout = 0.1
+    config.SlowStartClusterManager.cluster_start_timeout = 0.1
     config.SlowStartClusterManager.pause_time = 0
 
     async with temp_gateway(config=config) as gateway_proc:
@@ -419,7 +419,7 @@ async def test_slow_worker_connect(tmpdir):
     config = Config()
     config.DaskGateway.cluster_manager_class = SlowWorkerStartClusterManager
     config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
-    config.SlowWorkerStartClusterManager.worker_connect_timeout = 0.1
+    config.SlowWorkerStartClusterManager.worker_start_timeout = 0.1
     config.SlowWorkerStartClusterManager.pause_time = 0
 
     async with temp_gateway(config=config) as gateway_proc:
