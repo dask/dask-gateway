@@ -2,6 +2,7 @@ import asyncio
 
 import pytest
 import dask
+from dask_gateway import client
 from dask_gateway.auth import get_auth, BasicAuth, KerberosAuth, JupyterHubAuth
 from dask_gateway.client import Gateway, GatewayCluster, cleanup_lingering_clusters
 from dask_gateway_server.compat import get_running_loop
@@ -91,6 +92,7 @@ def test_client_init():
             "address": "http://127.0.0.1:8888",
             "proxy-address": 8786,
             "auth": {"type": "basic", "kwargs": {"username": "bruce"}},
+            "proxy_config": {"proxy_host": None, "proxy_port": None, "ca_certs": None},
         }
     }
 
@@ -118,6 +120,7 @@ def test_client_init():
             "address": None,
             "proxy-address": 8786,
             "auth": {"type": "basic", "kwargs": {}},
+            "proxy_config": {"proxy_host": None, "proxy_port": None, "ca_certs": None},
         }
     }
 
@@ -149,6 +152,27 @@ def test_gateway_addresses_template_environment_vars(monkeypatch):
         g = Gateway("http://test.com")
     assert g.address == "http://test.com"
     assert g.proxy_address == "gateway://foobar:8787"
+
+
+def test_local_proxy(monkeypatch):
+    config = {
+        "gateway": {
+            "address": "http://127.0.0.1:8888",
+            "proxy-address": 8786,
+            "auth": {"type": "basic", "kwargs": {}},
+            "proxy_config": {"proxy_host": None, "proxy_port": 1111, "ca_certs": None},
+        }
+    }
+    with dask.config.set(config):
+        Gateway()
+
+    with dask.config.set(config):
+        monkeypatch.setattr(client, "_http_client", "")
+        with pytest.raises(ValueError):
+            Gateway()
+
+    with pytest.raises(ValueError):
+        Gateway(proxy_config_dict="HI")
 
 
 class SlowHandler(web.RequestHandler):

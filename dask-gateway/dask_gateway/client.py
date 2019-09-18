@@ -8,7 +8,9 @@ import tempfile
 import traceback
 import warnings
 import weakref
-from datetime import datetime
+import importlib
+from datetime import timedelta, datetime
+from threading import get_ident
 from urllib.parse import urlparse
 
 import dask
@@ -28,6 +30,13 @@ from .options import Options
 from .utils import format_template, cancel_task
 
 del comm
+
+# Configure AsyncClient backend
+if importlib.util.find_spec("pycurl") is not None:
+    _http_client = "tornado.curl_httpclient.CurlAsyncHTTPClient"
+else:
+    _http_client = ""
+
 
 __all__ = ("Gateway", "GatewayCluster", "GatewayClusterError", "GatewayServerError")
 
@@ -243,10 +252,19 @@ class Gateway(object):
     loop : IOLoop, optional
         The IOLoop instance to use. Defaults to the current loop in
         asynchronous mode, otherwise a background loop is started.
+    proxy_config_defaults : dict, optional
+        Configuration dictionary for the ``CurlAsyncHTTPClient`` to help
+        navigate local proxies. Requires that ``pycurl`` is installed
     """
 
     def __init__(
-        self, address=None, proxy_address=None, auth=None, asynchronous=False, loop=None
+        self,
+        address=None,
+        proxy_address=None,
+        auth=None,
+        asynchronous=False,
+        loop=None,
+        proxy_config_dict=None,
     ):
         if address is None:
             address = format_template(dask.config.get("gateway.address"))
@@ -269,6 +287,22 @@ class Gateway(object):
             parsed = urlparse(proxy_address)
             proxy_netloc = parsed.netloc if parsed.netloc else proxy_address
         proxy_address = "gateway://%s" % proxy_netloc
+
+        if proxy_config_dict is None:
+            proxy_config_dict = dask.config.get("gateway.proxy_config")
+        if not any(proxy_config_dict.values()):
+            AsyncHTTPClient.configure(_http_client, defaults={})
+        elif isinstance(proxy_config_dict, dict):
+            if not _http_client:
+                raise ValueError(
+                    "Custom local proxy setup requires `pycurl` but it is not installed"
+                )
+            else:
+                AsyncHTTPClient.configure(_http_client, defaults=proxy_config_dict)
+        else:
+            raise ValueError(
+                "`proxy_config_dict` was specified but is not a valid dict"
+            )
 
         self.address = address
         self.proxy_address = proxy_address

@@ -19,3 +19,9 @@ gateway:
   cluster:
     options: {}         # Default options to use when calling ``new_cluster`` or
                         # ``cluster_options``. Values may be template strings.
+                        # authentication class above.
+
+  proxy_config:         # Values for a config dictionary for CurlAsyncHTTPClient
+    proxy_host: null    # Local proxy host
+    proxy_port: null    # Local proxy port
+    ca_certs: null      # Custom certificates to use (available from `certifi.where()`)
