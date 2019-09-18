@@ -1,7 +1,6 @@
 import os
 import sys
 
-import alabaster
 import dask_gateway_server
 
 # Project settings
@@ -32,22 +31,6 @@ extlinks = {
 }
 
 # Sphinx Theme
-html_theme = "alabaster"
-html_theme_path = [alabaster.get_path()]
+html_theme = "dask_sphinx_theme"
 templates_path = ["_templates"]
 html_static_path = ["_static"]
-html_theme_options = {
-    "description": (
-        "A multi-tenant server for securely deploying and managing Dask clusters"
-    ),
-    "github_button": True,
-    "github_count": False,
-    "github_user": "jcrist",
-    "github_repo": "dask-gateway",
-    "travis_button": True,
-    "show_powered_by": False,
-    "page_width": "960px",
-    "sidebar_width": "250px",
-    "code_font_size": "0.8em",
-}
-html_sidebars = {"**": ["about.html", "navigation.html", "help.html", "searchbox.html"]}

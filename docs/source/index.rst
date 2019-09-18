@@ -74,14 +74,23 @@ instructions for a few different setups.
 - :doc:`install-hadoop`
 - :doc:`install-kube`
 
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Installation
+
+   quickstart
+   install-hadoop
+   install-kube
 
 .. toctree::
-    :hidden:
+   :maxdepth: 1
+   :hidden:
+   :caption: Reference
 
-    installation
-    api-server
-    api-client
-    develop
+   api-client
+   api-server
+   develop
 
 .. _Dask: https://dask.org/
 .. _traitlets: https://traitlets.readthedocs.io/en/stable/

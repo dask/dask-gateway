@@ -4,8 +4,6 @@ Install on a Hadoop Cluster
 Here we provide instructions for installing and configuring
 ``dask-gateway-server`` on a `Hadoop Cluster`_.
 
-.. contents:: :local:
-
 
 Create a user account
 ---------------------
