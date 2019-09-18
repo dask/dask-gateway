@@ -1,39 +1,264 @@
 
-<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0.3.0+22.gfad62d3 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Configuration Reference &mdash; Dask Gateway 0.3.0+23.g572617d documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Client API" href="api-client.html" />
-    <link rel="prev" title="Install on a Kubernetes Cluster" href="install-kube.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+    <link rel="next" title="Development" href="develop.html" />
+    <link rel="prev" title="Client API" href="api-client.html" /> 
+</head>
 
-  </head><body>
+<body class="wy-body-for-nav">
+
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+<nav id="explore-links">
+  <a href="https://docs.dask.org/">
+    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+  </a>
+
+  <ul>
+    <li>
+      <a>Get Started</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+        <li><a href="https://examples.dask.org"> Examples </a></li>
+        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="">Algorithms</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+        <li><a href="http://ml.dask.org">Machine Learning</a></li>
+        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="https://docs.dask.org/en/latest/setup.html">Deploy</a>
+      <ul>
+        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/kubernetes-helm.html"> Helm </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a>Community</a>
+      <ul>
+        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+        <li><a href="https://github.com/dask">Github</a></li>
+        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+      </ul>
+    </li>
+  </ul>
+
+</nav>
+
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
           
 
-          <div class="body" role="main">
+          
+            <a href="index.html" class="icon icon-home"> Dask Gateway
+          
+
+          
+          </a>
+
+          
             
-  <div class="section" id="configuration-api">
-<h1>Configuration API<a class="headerlink" href="#configuration-api" title="Permalink to this headline">¶</a></h1>
+            
+              <div class="version">
+                0.3.0+23.g572617d
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart (for local installs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#gateway">Gateway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cluster-manager-options">Cluster Manager Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user-limits">User Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#proxies">Proxies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#web-proxy">Web Proxy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scheduler-proxy">Scheduler Proxy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kerberos">Kerberos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cluster-managers">Cluster Managers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#local-processes">Local Processes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#localclustermanager">LocalClusterManager</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#unsafelocalclustermanager">UnsafeLocalClusterManager</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#yarn">YARN</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#yarnclustermanager">YarnClusterManager</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#kubernetes">Kubernetes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#kubeclustermanager">KubeClusterManager</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#job-queues">Job Queues</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pbsclustermanager">PBSClusterManager</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#slurmclustermanager">SlurmClusterManager</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Dask Gateway</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Configuration Reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api-server.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="configuration-reference">
+<h1>Configuration Reference<a class="headerlink" href="#configuration-reference" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="gateway">
 <h2>Gateway<a class="headerlink" href="#gateway" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -1527,115 +1752,52 @@ of failures.</p>
 </div>
 
 
+           </div>
+           
           </div>
-          
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">Dask Gateway</a></h1>
-
-
-
-<p class="blurb">A multi-tenant server for securely deploying and managing Dask clusters</p>
-
-
-
-
-<p>
-<iframe src="https://ghbtns.com/github-btn.html?user=jcrist&repo=dask-gateway&type=watch&count=False&size=large&v=2"
-  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
-</p>
-
-
-
-
-
-    
-
-<p>
-<a class="badge" href="https://travis-ci.org/jcrist/dask-gateway">
-    <img
-        alt="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
-        src="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
-    />
-</a>
-</p>
-
-
-<h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#gateway">Gateway</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cluster-manager-options">Cluster Manager Options</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#user-limits">User Limits</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#proxies">Proxies</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#web-proxy">Web Proxy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#scheduler-proxy">Scheduler Proxy</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#kerberos">Kerberos</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#cluster-managers">Cluster Managers</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#local-processes">Local Processes</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#localclustermanager">LocalClusterManager</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#unsafelocalclustermanager">UnsafeLocalClusterManager</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#yarn">YARN</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#yarnclustermanager">YarnClusterManager</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#kubernetes">Kubernetes</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#kubeclustermanager">KubeClusterManager</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#job-queues">Job Queues</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#pbsclustermanager">PBSClusterManager</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#slurmclustermanager">SlurmClusterManager</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
-</ul>
-
-<h3>Need help?</h3>
-
-<p>
-  Open an issue in the <a href="https://github.com/jcrist/dask-gateway/issues">issue tracker</a>.
-</p>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2019, Jim Crist.
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-      |
-      <a href="_sources/api-server.rst.txt"
-          rel="nofollow">Page source</a>
+        <a href="develop.html" class="btn btn-neutral float-right" title="Development" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="api-client.html" class="btn btn-neutral float-left" title="Client API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
+  
 
-    
+  <hr/>
 
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Jim Crist
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
     
-  </body>
+   
+
+</body>
 </html>

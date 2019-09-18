@@ -1,81 +1,266 @@
 
-<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset="utf-8" />
-    <title>Install on a Kubernetes Cluster &#8212; Dask Gateway 0.3.0+22.gfad62d3 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.3.0+23.g572617d documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Configuration API" href="api-server.html" />
-    <link rel="prev" title="Install on a Hadoop Cluster" href="install-hadoop.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+    <link rel="next" title="Client API" href="api-client.html" />
+    <link rel="prev" title="Install on a Hadoop Cluster" href="install-hadoop.html" /> 
+</head>
 
-  </head><body>
+<body class="wy-body-for-nav">
+
   
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
+<nav id="explore-links">
+  <a href="https://docs.dask.org/">
+    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+  </a>
+
+  <ul>
+    <li>
+      <a>Get Started</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+        <li><a href="https://examples.dask.org"> Examples </a></li>
+        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="">Algorithms</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+        <li><a href="http://ml.dask.org">Machine Learning</a></li>
+        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="https://docs.dask.org/en/latest/setup.html">Deploy</a>
+      <ul>
+        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/kubernetes-helm.html"> Helm </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a>Community</a>
+      <ul>
+        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+        <li><a href="https://github.com/dask">Github</a></li>
+        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+      </ul>
+    </li>
+  </ul>
+
+</nav>
+
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
           
 
-          <div class="body" role="main">
+          
+            <a href="index.html" class="icon icon-home"> Dask Gateway
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3.0+23.g572617d
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart (for local installs)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Install on a Kubernetes Cluster</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#create-a-kubernetes-cluster-optional">Create a Kubernetes Cluster (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-helm-optional">Install Helm (optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-dask-gateway">Install Dask-Gateway</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#download-the-helm-chart">Download the Helm Chart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#install-the-helm-chart">Install the Helm Chart</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#connecting-to-the-gateway">Connecting to the gateway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shutting-everything-down">Shutting everything down</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#additional-configuration">Additional Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-extrapodconfig-extracontainerconfig">Using extraPodConfig/extraContainerConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#authenticating-with-jupyterhub">Authenticating with JupyterHub</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Dask Gateway</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Install on a Kubernetes Cluster</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/install-kube.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="install-on-a-kubernetes-cluster">
 <h1>Install on a Kubernetes Cluster<a class="headerlink" href="#install-on-a-kubernetes-cluster" title="Permalink to this headline">¶</a></h1>
 <p>Here we provide instructions for installing and configuring
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a <a class="reference external" href="https://kubernetes.io/">Kubernetes Cluster</a>.</p>
-<div class="contents local topic" id="contents">
-<ul class="simple">
-<li><p><a class="reference internal" href="#create-a-kubernetes-cluster-optional" id="id1">Create a Kubernetes Cluster (optional)</a></p></li>
-<li><p><a class="reference internal" href="#install-helm-optional" id="id2">Install Helm (optional)</a></p></li>
-<li><p><a class="reference internal" href="#install-dask-gateway" id="id3">Install Dask-Gateway</a></p>
-<ul>
-<li><p><a class="reference internal" href="#download-the-helm-chart" id="id4">Download the Helm Chart</a></p></li>
-<li><p><a class="reference internal" href="#configuration" id="id5">Configuration</a></p></li>
-<li><p><a class="reference internal" href="#install-the-helm-chart" id="id6">Install the Helm Chart</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#connecting-to-the-gateway" id="id7">Connecting to the gateway</a></p></li>
-<li><p><a class="reference internal" href="#shutting-everything-down" id="id8">Shutting everything down</a></p></li>
-<li><p><a class="reference internal" href="#additional-configuration" id="id9">Additional Configuration</a></p>
-<ul>
-<li><p><a class="reference internal" href="#using-extrapodconfig-extracontainerconfig" id="id10">Using extraPodConfig/extraContainerConfig</a></p></li>
-<li><p><a class="reference internal" href="#authenticating-with-jupyterhub" id="id11">Authenticating with JupyterHub</a></p></li>
-</ul>
-</li>
-</ul>
-</div>
 <div class="section" id="create-a-kubernetes-cluster-optional">
-<h2><a class="toc-backref" href="#id1">Create a Kubernetes Cluster (optional)</a><a class="headerlink" href="#create-a-kubernetes-cluster-optional" title="Permalink to this headline">¶</a></h2>
+<h2>Create a Kubernetes Cluster (optional)<a class="headerlink" href="#create-a-kubernetes-cluster-optional" title="Permalink to this headline">¶</a></h2>
 <p>If you don’t already have a cluster running, you’ll want to create one. There
 are plenty of guides online for how to do this. We recommend following the
 excellent <a class="reference external" href="create-k8s-cluster">documentation provided by zero-to-jupyterhub-k8s</a>.</p>
 </div>
 <div class="section" id="install-helm-optional">
-<h2><a class="toc-backref" href="#id2">Install Helm (optional)</a><a class="headerlink" href="#install-helm-optional" title="Permalink to this headline">¶</a></h2>
+<h2>Install Helm (optional)<a class="headerlink" href="#install-helm-optional" title="Permalink to this headline">¶</a></h2>
 <p>If you don’t already have <a class="reference external" href="https://helm.sh/">Helm</a> installed, you’ll need to install it locally,
 and ensure <code class="docutils literal notranslate"><span class="pre">tiller</span></code> is running on your cluster. As with above, there are
 plenty of guides online for doing this. We recommend following the <a class="reference external" href="install-helm">guide
 provided by zero-to-jupyterhub-k8s</a>.</p>
 </div>
 <div class="section" id="install-dask-gateway">
-<h2><a class="toc-backref" href="#id3">Install Dask-Gateway</a><a class="headerlink" href="#install-dask-gateway" title="Permalink to this headline">¶</a></h2>
+<h2>Install Dask-Gateway<a class="headerlink" href="#install-dask-gateway" title="Permalink to this headline">¶</a></h2>
 <p>At this point you should have a Kubernetes cluster with Helm installed and
 configured. You are now ready to install Dask-Gateway on your cluster.</p>
 <div class="section" id="download-the-helm-chart">
-<h3><a class="toc-backref" href="#id4">Download the Helm Chart</a><a class="headerlink" href="#download-the-helm-chart" title="Permalink to this headline">¶</a></h3>
+<h3>Download the Helm Chart<a class="headerlink" href="#download-the-helm-chart" title="Permalink to this headline">¶</a></h3>
 <p>Currently you need to download the chart locally before installing (this will
 change in the future). You can get the chart from the <a class="reference external" href="https://github.com/jcrist/dask-gateway/">dask-gateway github
 repo</a>, available in the <a class="reference external" href="https://github.com/jcrist/dask-gateway/tree/master/resources/helm">resources/helm subdirectory</a>.</p>
@@ -85,7 +270,7 @@ $ <span class="nb">cd</span> resources/helm
 </div>
 </div>
 <div class="section" id="configuration">
-<h3><a class="toc-backref" href="#id5">Configuration</a><a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
 <p>The Helm chart provides access to configure most aspects of the
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. These are provided via a configuration <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file (the
 name of this file doesn’t matter, we’ll use <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>).</p>
@@ -105,7 +290,7 @@ gateway and its proxies. You can generate this using <code class="docutils liter
 values.yaml file</a> for more information.</p>
 </div>
 <div class="section" id="install-the-helm-chart">
-<h3><a class="toc-backref" href="#id6">Install the Helm Chart</a><a class="headerlink" href="#install-the-helm-chart" title="Permalink to this headline">¶</a></h3>
+<h3>Install the Helm Chart<a class="headerlink" href="#install-the-helm-chart" title="Permalink to this headline">¶</a></h3>
 <p>To install the Dask-Gateway Helm chart, run the following command from within
 the <code class="docutils literal notranslate"><span class="pre">resources/helm</span></code> directory:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RELEASE</span><span class="o">=</span>dask-gateway
@@ -143,7 +328,7 @@ scheduler-api-dask-gateway      ClusterIP      <span class="m">10</span>.51.245.
 </div>
 </div>
 <div class="section" id="connecting-to-the-gateway">
-<h2><a class="toc-backref" href="#id7">Connecting to the gateway</a><a class="headerlink" href="#connecting-to-the-gateway" title="Permalink to this headline">¶</a></h2>
+<h2>Connecting to the gateway<a class="headerlink" href="#connecting-to-the-gateway" title="Permalink to this headline">¶</a></h2>
 <p>To connect to the running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, you’ll need the external
 IP’s from both the <code class="docutils literal notranslate"><span class="pre">web-public-*</span></code> and <code class="docutils literal notranslate"><span class="pre">scheduler-public-*</span></code> services above.
 The <code class="docutils literal notranslate"><span class="pre">web-public-*</span></code> service provides access to API requests, and also proxies
@@ -167,7 +352,7 @@ Using the same values as above:</p>
 </div>
 </div>
 <div class="section" id="shutting-everything-down">
-<h2><a class="toc-backref" href="#id8">Shutting everything down</a><a class="headerlink" href="#shutting-everything-down" title="Permalink to this headline">¶</a></h2>
+<h2>Shutting everything down<a class="headerlink" href="#shutting-everything-down" title="Permalink to this headline">¶</a></h2>
 <p>When you’re done with the gateway, you’ll want to delete your deployment and
 clean everything up. You can do this with <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">delete</span></code>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ helm delete --purge <span class="nv">$RELEASE</span>
@@ -175,12 +360,12 @@ clean everything up. You can do this with <code class="docutils literal notransl
 </div>
 </div>
 <div class="section" id="additional-configuration">
-<h2><a class="toc-backref" href="#id9">Additional Configuration</a><a class="headerlink" href="#additional-configuration" title="Permalink to this headline">¶</a></h2>
+<h2>Additional Configuration<a class="headerlink" href="#additional-configuration" title="Permalink to this headline">¶</a></h2>
 <p>Here we provide a few configuration snippets for common deployment scenarios.
 For all available configuration values, see the <a class="reference external" href="https://github.com/jcrist/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default values.yaml file</a> and
 the <a class="reference internal" href="api-server.html#kube-cluster-manager-config"><span class="std std-ref">KubeClusterManager</span></a> docs.</p>
 <div class="section" id="using-extrapodconfig-extracontainerconfig">
-<h3><a class="toc-backref" href="#id10">Using extraPodConfig/extraContainerConfig</a><a class="headerlink" href="#using-extrapodconfig-extracontainerconfig" title="Permalink to this headline">¶</a></h3>
+<h3>Using extraPodConfig/extraContainerConfig<a class="headerlink" href="#using-extrapodconfig-extracontainerconfig" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/">Kubernetes API</a> is large, and not all configuration fields you may want
 to set on scheduler/worker pods are directly exposed by the Helm chart. To
 address this, we provide a few fields for forwarding configuration directly to
@@ -220,7 +405,7 @@ anti-affinity for scheduler pods to avoid <a class="reference external" href="ht
 </ul>
 </div>
 <div class="section" id="authenticating-with-jupyterhub">
-<h3><a class="toc-backref" href="#id11">Authenticating with JupyterHub</a><a class="headerlink" href="#authenticating-with-jupyterhub" title="Permalink to this headline">¶</a></h3>
+<h3>Authenticating with JupyterHub<a class="headerlink" href="#authenticating-with-jupyterhub" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference external" href="https://jupyterhub.readthedocs.io/">JupyterHub</a> provides a multi-user interactive <a class="reference external" href="https://jupyter.org/">notebook</a> environment. Through
 the <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/">zero-to-jupyterhub-k8s</a> project, many companies and institutions have setup
 JuypterHub to run on Kubernetes. When deploying Dask-Gateway alongside
@@ -266,101 +451,52 @@ object.</p>
 </div>
 
 
+           </div>
+           
           </div>
-          
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">Dask Gateway</a></h1>
-
-
-
-<p class="blurb">A multi-tenant server for securely deploying and managing Dask clusters</p>
-
-
-
-
-<p>
-<iframe src="https://ghbtns.com/github-btn.html?user=jcrist&repo=dask-gateway&type=watch&count=False&size=large&v=2"
-  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
-</p>
-
-
-
-
-
-    
-
-<p>
-<a class="badge" href="https://travis-ci.org/jcrist/dask-gateway">
-    <img
-        alt="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
-        src="https://secure.travis-ci.org/jcrist/dask-gateway.svg?branch=master"
-    />
-</a>
-</p>
-
-
-<h3>Navigation</h3>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="installation.html">Installation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart (for local installs)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Install on a Kubernetes Cluster</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#create-a-kubernetes-cluster-optional">Create a Kubernetes Cluster (optional)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#install-helm-optional">Install Helm (optional)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#install-dask-gateway">Install Dask-Gateway</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#download-the-helm-chart">Download the Helm Chart</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#configuration">Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#install-the-helm-chart">Install the Helm Chart</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#connecting-to-the-gateway">Connecting to the gateway</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#shutting-everything-down">Shutting everything down</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#additional-configuration">Additional Configuration</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#using-extrapodconfig-extracontainerconfig">Using extraPodConfig/extraContainerConfig</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#authenticating-with-jupyterhub">Authenticating with JupyterHub</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
-</ul>
-
-<h3>Need help?</h3>
-
-<p>
-  Open an issue in the <a href="https://github.com/jcrist/dask-gateway/issues">issue tracker</a>.
-</p>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2019, Jim Crist.
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-      |
-      <a href="_sources/install-kube.rst.txt"
-          rel="nofollow">Page source</a>
+        <a href="api-client.html" class="btn btn-neutral float-right" title="Client API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install-hadoop.html" class="btn btn-neutral float-left" title="Install on a Hadoop Cluster" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
     </div>
+  
 
-    
+  <hr/>
 
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Jim Crist
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
     
-  </body>
+   
+
+</body>
 </html>

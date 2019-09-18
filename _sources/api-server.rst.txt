@@ -1,5 +1,5 @@
-Configuration API
-=================
+Configuration Reference
+=======================
 
 Gateway
 -------
