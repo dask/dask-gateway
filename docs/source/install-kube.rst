@@ -39,7 +39,7 @@ repo`_, available in the `resources/helm subdirectory`_.
 
 .. code-block:: shell
 
-    $ git clone https://github.com/jcrist/dask-gateway.git
+    $ git clone https://github.com/dask/dask-gateway.git
     $ cd resources/helm
 
 
@@ -266,9 +266,9 @@ object.
 .. _create-k8s-cluster: https://zero-to-jupyterhub.readthedocs.io/en/latest/create-k8s-cluster.html
 .. _zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/
 .. _install-helm: https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-helm.html
-.. _dask-gateway github repo: https://github.com/jcrist/dask-gateway/
-.. _resources/helm subdirectory: https://github.com/jcrist/dask-gateway/tree/master/resources/helm
-.. _default values.yaml file: https://github.com/jcrist/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml
+.. _dask-gateway github repo: https://github.com/dask/dask-gateway/
+.. _resources/helm subdirectory: https://github.com/dask/dask-gateway/tree/master/resources/helm
+.. _default values.yaml file: https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml
 .. _Helm release name: https://docs.helm.sh/glossary/#release
 .. _Kubernetes namespace: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 .. _Dask Dashboards: https://docs.dask.org/en/latest/diagnostics-distributed.html

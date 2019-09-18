@@ -26,8 +26,8 @@ extensions = [
 ]
 
 extlinks = {
-    "issue": ("https://github.com/jcrist/dask-gateway/issues/%s", "Issue #"),
-    "pr": ("https://github.com/jcrist/dask-gateway/pull/%s", "PR #"),
+    "issue": ("https://github.com/dask/dask-gateway/issues/%s", "Issue #"),
+    "pr": ("https://github.com/dask/dask-gateway/pull/%s", "PR #"),
 }
 
 # Sphinx Theme

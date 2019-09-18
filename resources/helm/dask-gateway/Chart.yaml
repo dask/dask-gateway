@@ -3,6 +3,6 @@ name: dask-gateway
 version: 0.1.0
 appVersion: 0.3.0
 description: A multi-tenant server for deploying and managing Dask clusters
-home: https://jcrist.github.io/dask-gateway/
+home: https://dask.github.io/dask-gateway/
 sources:
-  - https://github.com/jcrist/dask-gateway/
+  - https://github.com/dask/dask-gateway/
