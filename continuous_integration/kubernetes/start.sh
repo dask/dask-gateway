@@ -91,7 +91,7 @@ spec:
   serviceAccountName: gateway
   containers:
     - name: dask-gateway-tests
-      image: jcrist/dask-gateway-base:latest
+      image: daskgateway/dask-gateway-base:latest
       args: 
         - sleep
         - infinity

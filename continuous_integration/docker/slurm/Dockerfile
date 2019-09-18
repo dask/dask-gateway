@@ -1,4 +1,4 @@
-FROM jcrist/dask-gateway-testing-base:latest
+FROM daskgateway/testing-base:latest
 
 # Build and install slurm
 RUN yum install -y epel-release \

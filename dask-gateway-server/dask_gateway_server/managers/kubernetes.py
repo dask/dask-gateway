@@ -258,7 +258,7 @@ class KubeClusterManager(ClusterManager):
         return "default"
 
     image = Unicode(
-        "jcrist/dask-gateway:latest",
+        "daskgateway/dask-gateway:latest",
         help="Docker image to use for running user's containers.",
         config=True,
     )

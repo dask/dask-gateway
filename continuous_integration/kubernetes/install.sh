@@ -25,5 +25,5 @@ if [[ "$TRAVIS" != "true" ]]; then
     eval $(minikube docker-env)
 fi
 pushd $git_root
-docker build -t jcrist/dask-gateway -f continuous_integration/kubernetes/docker/dask-gateway/Dockerfile .
+docker build -t daskgateway/dask-gateway -f continuous_integration/kubernetes/docker/dask-gateway/Dockerfile .
 popd

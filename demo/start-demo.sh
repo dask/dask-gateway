@@ -12,4 +12,4 @@ docker run -d --rm \
     -p 8787:8787 \
     -p 8786:8786 \
     -p 8088:8088 \
-    jcrist/dask-gateway-demo-hadoop
+    daskgateway/demo-hadoop

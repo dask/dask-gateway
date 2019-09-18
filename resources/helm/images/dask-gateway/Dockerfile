@@ -1,4 +1,4 @@
-FROM jcrist/dask-gateway-base
+FROM daskgateway/dask-gateway-base
 LABEL MAINTAINER="Jim Crist"
 
 # Does the following in one layer
