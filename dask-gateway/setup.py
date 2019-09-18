@@ -35,7 +35,7 @@ setup(
     long_description=(
         open("README.rst").read() if os.path.exists("README.rst") else ""
     ),
-    url="http://github.com/jcrist/dask-gateway/",
+    url="http://github.com/dask/dask-gateway/",
     packages=find_packages(),
     package_data={"dask_gateway": ["*.yaml"]},
     install_requires=install_requires,

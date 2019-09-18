@@ -17,7 +17,7 @@ The demo cluster can then be started as follows:
 .. code-block:: shell
 
     # Clone the repository
-    $ git clone https://github.com/jcrist/dask-gateway.git
+    $ git clone https://github.com/dask/dask-gateway.git
 
     # Enter the `dask-gateway` directory
     $ cd dask-gateway/

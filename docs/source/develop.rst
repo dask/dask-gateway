@@ -15,7 +15,7 @@ Clone the Dask-Gateway git repository:
 
 .. code-block:: shell
 
-    $ git clone https://github.com/jcrist/dask-gateway.git
+    $ git clone https://github.com/dask/dask-gateway.git
 
 
 Install Dependencies (Conda)
@@ -204,7 +204,4 @@ including the string ``"skip-tests"`` somewhere in your commit message:
 .. _Conda: https://conda.io/docs/
 .. _Go:
 .. _Go Website: https://golang.org/
-.. _Maven: http://maven.apache.org/
 .. _Sphinx: http://www.sphinx-doc.org/
-.. _docker compose: https://docs.docker.com/compose/
-.. _hadoop-test-cluster: https://github.com/jcrist/hadoop-test-cluster
