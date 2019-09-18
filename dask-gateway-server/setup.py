@@ -140,7 +140,12 @@ setup(
     long_description=(
         open("README.rst").read() if os.path.exists("README.rst") else ""
     ),
-    url="http://github.com/dask/dask-gateway/",
+    url="https://gateway.dask.org/",
+    project_urls={
+        "Documentation": "https://gateway.dask.org/",
+        "Source": "https://github.com/dask/dask-gateway/",
+        "Issue Tracker": "https://github.com/dask/dask-gateway/issues",
+    },
     packages=find_packages(),
     package_data={"dask_gateway_server": ["proxy/dask-gateway-proxy"]},
     install_requires=install_requires,
