@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.3.0+23.g572617d documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.3.0+24.gbf4db93 documentation</title>
   
 
   
@@ -122,7 +122,7 @@
             
             
               <div class="version">
-                0.3.0+23.g572617d
+                0.3.0+24.gbf4db93
               </div>
             
           
@@ -262,9 +262,9 @@ configured. You are now ready to install Dask-Gateway on your cluster.</p>
 <div class="section" id="download-the-helm-chart">
 <h3>Download the Helm Chart<a class="headerlink" href="#download-the-helm-chart" title="Permalink to this headline">¶</a></h3>
 <p>Currently you need to download the chart locally before installing (this will
-change in the future). You can get the chart from the <a class="reference external" href="https://github.com/jcrist/dask-gateway/">dask-gateway github
-repo</a>, available in the <a class="reference external" href="https://github.com/jcrist/dask-gateway/tree/master/resources/helm">resources/helm subdirectory</a>.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/jcrist/dask-gateway.git
+change in the future). You can get the chart from the <a class="reference external" href="https://github.com/dask/dask-gateway/">dask-gateway github
+repo</a>, available in the <a class="reference external" href="https://github.com/dask/dask-gateway/tree/master/resources/helm">resources/helm subdirectory</a>.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/dask/dask-gateway.git
 $ <span class="nb">cd</span> resources/helm
 </pre></div>
 </div>
@@ -286,7 +286,7 @@ gateway and its proxies. You can generate this using <code class="docutils liter
   <span class="nt">proxyToken</span><span class="p">:</span> <span class="s">&quot;&lt;RANDOM</span><span class="nv"> </span><span class="s">TOKEN&gt;&quot;</span>
 </pre></div>
 </div>
-<p>There Helm chart exposes many more configuration values, see the <a class="reference external" href="https://github.com/jcrist/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default
+<p>There Helm chart exposes many more configuration values, see the <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default
 values.yaml file</a> for more information.</p>
 </div>
 <div class="section" id="install-the-helm-chart">
@@ -362,7 +362,7 @@ clean everything up. You can do this with <code class="docutils literal notransl
 <div class="section" id="additional-configuration">
 <h2>Additional Configuration<a class="headerlink" href="#additional-configuration" title="Permalink to this headline">¶</a></h2>
 <p>Here we provide a few configuration snippets for common deployment scenarios.
-For all available configuration values, see the <a class="reference external" href="https://github.com/jcrist/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default values.yaml file</a> and
+For all available configuration values, see the <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default values.yaml file</a> and
 the <a class="reference internal" href="api-server.html#kube-cluster-manager-config"><span class="std std-ref">KubeClusterManager</span></a> docs.</p>
 <div class="section" id="using-extrapodconfig-extracontainerconfig">
 <h3>Using extraPodConfig/extraContainerConfig<a class="headerlink" href="#using-extrapodconfig-extracontainerconfig" title="Permalink to this headline">¶</a></h3>
