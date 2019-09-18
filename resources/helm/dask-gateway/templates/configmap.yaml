@@ -76,16 +76,20 @@ data:
 
     # Forward cluster manager configuration
     for field, prop_name in [
-        # Scheduler resources
+        # Scheduler config
         ("scheduler_cores", "scheduler.cores.request"),
         ("scheduler_core_limit", "scheduler.cores.limit"),
         ("scheduler_memory", "scheduler.memory.request"),
         ("scheduler_memory_limit", "scheduler.memory.limit"),
-        # Worker resources
+        ("scheduler_extra_container_config", "scheduler.extraContainerConfig"),
+        ("scheduler_extra_pod_config", "scheduler.extraPodConfig"),
+        # Worker config
         ("worker_cores", "worker.cores.request"),
         ("worker_core_limit", "worker.cores.limit"),
         ("worker_memory", "worker.memory.request"),
         ("worker_memory_limit", "worker.memory.limit"),
+        ("worker_extra_container_config", "worker.extraContainerConfig"),
+        ("worker_extra_pod_config", "worker.extraPodConfig"),
         # Additional fields
         ("image_pull_policy", "image.pullPolicy"),
         ("environment", "environment"),
