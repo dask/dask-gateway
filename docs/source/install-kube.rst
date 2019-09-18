@@ -4,8 +4,6 @@ Install on a Kubernetes Cluster
 Here we provide instructions for installing and configuring
 ``dask-gateway-server`` on a `Kubernetes Cluster`_.
 
-.. contents:: :local:
-
 
 Create a Kubernetes Cluster (optional)
 --------------------------------------
