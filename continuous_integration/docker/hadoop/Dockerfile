@@ -1,4 +1,4 @@
-FROM jcrist/dask-gateway-testing-base:latest
+FROM daskgateway/testing-base:latest
 MAINTAINER jcrist
 
 # Install common utilities

@@ -10,4 +10,4 @@ docker run --rm -d \
     -h master.example.com \
     -v "$git_root":/working \
     -p 8088:8088 \
-    jcrist/dask-gateway-testing-hadoop
+    daskgateway/testing-hadoop

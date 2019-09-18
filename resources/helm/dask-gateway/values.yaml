@@ -17,7 +17,7 @@ gateway:
   resources: {}
 
   image:
-    name: jcrist/dask-gateway-server
+    name: daskgateway/dask-gateway-server
     tag: 0.3.0
     pullPolicy: IfNotPresent
 
@@ -39,7 +39,7 @@ gateway:
     workerStartTimeout: null
 
     image:
-      name: jcrist/dask-gateway
+      name: daskgateway/dask-gateway
       tag: 0.3.0
       pullPolicy: IfNotPresent
 
@@ -73,7 +73,7 @@ schedulerProxy:
   resources: {}
 
   image:
-    name: jcrist/dask-gateway-server
+    name: daskgateway/dask-gateway-server
     tag: 0.3.0
     pullPolicy: IfNotPresent
 
@@ -89,7 +89,7 @@ webProxy:
   resources: {}
 
   image:
-    name: jcrist/dask-gateway-server
+    name: daskgateway/dask-gateway-server
     tag: 0.3.0
     pullPolicy: IfNotPresent
 

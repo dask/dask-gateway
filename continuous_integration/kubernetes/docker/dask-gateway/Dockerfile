@@ -1,4 +1,4 @@
-FROM jcrist/dask-gateway:latest
+FROM daskgateway/dask-gateway:latest
 
 # Install dask-gateway
 COPY ./dask-gateway /gateway-source

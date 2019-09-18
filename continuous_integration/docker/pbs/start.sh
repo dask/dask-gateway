@@ -11,4 +11,4 @@ docker run --rm -d \
     -v "$git_root":/working \
     -p 8088:8088 \
     --cap-add=SYS_RESOURCE \
-    jcrist/dask-gateway-testing-pbs
+    daskgateway/testing-pbs

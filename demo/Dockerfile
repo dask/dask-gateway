@@ -1,4 +1,4 @@
-FROM jcrist/dask-gateway-testing-hadoop:latest
+FROM daskgateway/testing-hadoop:latest
 MAINTAINER jcrist
 
 # Copy over files

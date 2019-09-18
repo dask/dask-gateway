@@ -9,4 +9,4 @@ docker run --rm -d \
     --name slurm \
     -h slurm \
     -v "$git_root":/working \
-    jcrist/dask-gateway-testing-slurm
+    daskgateway/testing-slurm

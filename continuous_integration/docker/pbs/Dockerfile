@@ -1,4 +1,4 @@
-FROM jcrist/dask-gateway-testing-base:latest
+FROM daskgateway/testing-base:latest
 
 # Install pbspro
 RUN yum install -y unzip \
