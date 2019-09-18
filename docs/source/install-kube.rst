@@ -161,8 +161,52 @@ Additional Configuration
 ------------------------
 
 Here we provide a few configuration snippets for common deployment scenarios.
-For all available configuration values, see the `default values.yaml file`_.
+For all available configuration values, see the `default values.yaml file`_ and
+the :ref:`kube-cluster-manager-config` docs.
 
+
+Using extraPodConfig/extraContainerConfig
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `Kubernetes API`_ is large, and not all configuration fields you may want
+to set on scheduler/worker pods are directly exposed by the Helm chart. To
+address this, we provide a few fields for forwarding configuration directly to
+the underlying kubernetes objects:
+
+- ``gateway.clusterManager.scheduler.extraPodConfig``
+- ``gateway.clusterManager.scheduler.extraContainerConfig``
+- ``gateway.clusterManager.worker.extraPodConfig``
+- ``gateway.clusterManager.worker.extraContainerConfig``
+
+These allow configuring any unexposed fields on the pod/container for
+schedulers and workers respectively. Each takes a mapping of key-value pairs,
+which is deep-merged with any settings set by dask-gateway itself (with
+preference given to the ``extra*Config`` values). Note that keys should be
+``camelCase`` (rather than ``snake_case``) to match those in the kubernetes
+API.
+
+For example, this can be useful for setting things like tolerations_ or `node
+affinities`_ on scheduler or worker pods. Here we configure a node
+anti-affinity for scheduler pods to avoid `preemptible nodes`_:
+
+.. code-block:: yaml
+
+  gateway:
+    clusterManager:
+      scheduler:
+        extraPodConfig:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                    - key: cloud.google.com/gke-preemptible
+                      operator: DoesNotExist
+
+For information on allowed fields, see the Kubernetes documentation:
+
+- `PodSpec Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core>`__
+- `Container Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__
 
 Authenticating with JupyterHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -234,3 +278,7 @@ object.
 .. _JupyterHub: https://jupyterhub.readthedocs.io/
 .. _notebook: https://jupyter.org/
 .. _JupyterHub Service: https://jupyterhub.readthedocs.io/en/stable/getting-started/services-basics.html
+.. _Kubernetes API: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/
+.. _tolerations: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+.. _node affinities: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+.. _preemptible nodes: https://cloud.google.com/blog/products/containers-kubernetes/cutting-costs-with-google-kubernetes-engine-using-the-cluster-autoscaler-and-preemptible-vms

@@ -1,8 +1,8 @@
 import os
-import pytest
+import uuid
+from copy import deepcopy
 
-if not os.environ.get("TEST_DASK_GATEWAY_KUBE"):
-    pytest.skip("Not running Kubernetes tests", allow_module_level=True)
+import pytest
 
 pytest.importorskip("kubernetes")
 
@@ -10,13 +10,18 @@ import kubernetes.client
 from kubernetes.client.rest import ApiException
 
 from dask_gateway_server.compat import get_running_loop
-from dask_gateway_server.managers.kubernetes import KubeClusterManager, PodReflector
+from dask_gateway_server.managers.kubernetes import (
+    KubeClusterManager,
+    PodReflector,
+    merge_kube_objects,
+    merge_json_objects,
+)
 
 from .utils import ClusterManagerTests
 
 
+KUBE_RUNNING = os.environ.get("TEST_DASK_GATEWAY_KUBE")
 NAMESPACE = os.environ.get("TEST_DASK_GATEWAY_KUBE_NAMESPACE", "dask-gateway")
-
 
 pytestmark = pytest.mark.usefixtures("cleanup_applications")
 
@@ -24,6 +29,8 @@ pytestmark = pytest.mark.usefixtures("cleanup_applications")
 @pytest.fixture(scope="module")
 def cleanup_applications():
     yield
+    if not KUBE_RUNNING:
+        return
 
     api = kubernetes.client.CoreV1Api()
 
@@ -45,6 +52,106 @@ def cleanup_applications():
         print("-- Deleted %d lost secrets --" % len(secrets))
 
 
+@pytest.mark.parametrize(
+    "a,b,sol",
+    [
+        (
+            {"a": {"b": {"c": 1}}},
+            {"a": {"b": {"d": 2}}},
+            {"a": {"b": {"c": 1, "d": 2}}},
+        ),
+        ({"a": {"b": {"c": 1}}}, {"a": {"b": 2}}, {"a": {"b": 2}}),
+        ({"a": [1, 2]}, {"a": [3, 4]}, {"a": [1, 2, 3, 4]}),
+        ({"a": {"b": 1}}, {"a2": 3}, {"a": {"b": 1}, "a2": 3}),
+        ({"a": 1}, {}, {"a": 1}),
+    ],
+)
+def test_merge_json_objects(a, b, sol):
+    a_orig = deepcopy(a)
+    b_orig = deepcopy(b)
+    res = merge_json_objects(a, b)
+    assert res == sol
+    assert a == a_orig
+    assert b == b_orig
+
+
+def test_merge_kube_objects():
+    # Can merge kubernetes objects
+    orig = kubernetes.client.models.V1PodSpec(
+        containers=[], termination_grace_period_seconds=30
+    )
+    tol_1 = {"key": "foo", "operator": "Equal", "value": "one", "effect": "NoSchedule"}
+    changes = {"tolerations": [tol_1]}
+    new = merge_kube_objects(orig, changes)
+    sol = {
+        "containers": [],
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [tol_1],
+    }
+    assert isinstance(new, dict)
+    assert new == sol
+
+    # Can merge dicts
+    orig = {
+        "containers": [],
+        "terminationGracePeriodSeconds": 30,
+        "tolerations": [tol_1],
+    }
+    tol_2 = {"key": "bar", "operator": "Equal", "value": "two", "effect": "NoSchedule"}
+    changes = {"terminationGracePeriodSeconds": 25, "tolerations": [tol_2]}
+    new = merge_kube_objects(orig, changes)
+    sol = {
+        "containers": [],
+        "terminationGracePeriodSeconds": 25,
+        "tolerations": [tol_1, tol_2],
+    }
+    assert isinstance(new, dict)
+    assert new == sol
+
+
+@pytest.mark.parametrize("kind", ["scheduler", "worker"])
+def test_pod_spec(kind):
+    tol = {"key": "foo", "operator": "Equal", "value": "bar", "effect": "NoSchedule"}
+    kwargs = {
+        f"{kind}_extra_pod_config": {"tolerations": [tol]},
+        f"{kind}_extra_container_config": {"workingDir": "/dir"},
+        f"{kind}_memory": "4G",
+        f"{kind}_memory_limit": "6G",
+        f"{kind}_cores": 2,
+        f"{kind}_cores_limit": 3,
+    }
+
+    manager = KubeClusterManager(
+        _testing=True,
+        username="alice",
+        cluster_name=uuid.uuid4().hex,
+        api_token=uuid.uuid4().hex,
+        namespace=NAMESPACE,
+        **kwargs,
+    )
+    if kind == "scheduler":
+        pod = manager.make_pod_spec("sched-secret-name")
+    else:
+        pod = manager.make_pod_spec("sched-secret-name", worker_name="worker1")
+
+    spec = pod.spec
+    ct = spec["containers"][0]
+
+    # resources are forwarded
+    assert ct["resources"]["requests"]["memory"] == 4 * 2 ** 30
+    assert ct["resources"]["limits"]["memory"] == 6 * 2 ** 30
+    assert ct["resources"]["requests"]["cpu"] == 2
+    assert ct["resources"]["limits"]["cpu"] == 3
+
+    # extra config picked up
+    assert ct["workingDir"] == "/dir"
+    assert spec["tolerations"] == [tol]
+
+    # access to k8s api forbidden
+    assert not spec["automountServiceAccountToken"]
+
+
+@pytest.mark.skipif(not KUBE_RUNNING, reason="Not running Kubernetes tests")
 class TestKubeClusterManager(ClusterManagerTests):
     def new_manager(self, **kwargs):
         PodReflector.clear_instance()

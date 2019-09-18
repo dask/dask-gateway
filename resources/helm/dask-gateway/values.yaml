@@ -46,6 +46,8 @@ gateway:
     environment: null
 
     scheduler:
+      extraPodConfig: {}
+      extraContainerConfig: {}
       cores:
         request: null
         limit: null
@@ -54,6 +56,8 @@ gateway:
         limit: null
 
     worker:
+      extraPodConfig: {}
+      extraContainerConfig: {}
       cores:
         request: null
         limit: null

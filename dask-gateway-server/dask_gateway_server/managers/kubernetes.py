@@ -2,7 +2,7 @@ import os
 import threading
 import time
 
-from traitlets import Int, Float, List, Dict, Unicode, Instance, default
+from traitlets import Int, Float, Dict, Unicode, Instance, default
 from traitlets.config import SingletonConfigurable
 
 try:
@@ -22,7 +22,6 @@ import kubernetes.watch
 from kubernetes.client.models import (
     V1Container,
     V1EnvVar,
-    V1LocalObjectReference,
     V1ObjectMeta,
     V1Pod,
     V1PodSpec,
@@ -40,18 +39,79 @@ from ..compat import get_running_loop
 from ..utils import MemoryLimit
 
 
-def configure_kubernetes_clients():
-    # Patch kubernetes to avoid creating a threadpool
-    from unittest.mock import Mock
-    from kubernetes.client import api_client
+def patch_kube_threadpool(_has_run=[]):
+    if not _has_run:
+        # Patch kubernetes to avoid creating a threadpool
+        from unittest.mock import Mock
+        from kubernetes.client import api_client
 
-    api_client.ThreadPool = lambda *args, **kwargs: Mock()
+        api_client.ThreadPool = lambda *args, **kwargs: Mock()
+        _has_run.append(1)
 
+
+def load_kube_config():
     # Load the appropriate kubernetes configuration
     try:
         kubernetes.config.load_incluster_config()
     except kubernetes.config.ConfigException:
         kubernetes.config.load_kube_config()
+
+
+_shared_api_client = None
+
+
+def _get_api_client():
+    global _shared_api_client
+    if _shared_api_client is None:
+        patch_kube_threadpool()
+        _shared_api_client = kubernetes.client.ApiClient()
+    return _shared_api_client
+
+
+def merge_kube_objects(orig, changes):
+    """Merges a kubernetes object `orig` with another object `changes`.
+
+    A deep merge strategy is used, merging both keys and lists.
+    """
+    api_client = _get_api_client()
+    orig = api_client.sanitize_for_serialization(orig)
+    changes = api_client.sanitize_for_serialization(changes)
+    return merge_json_objects(orig, changes)
+
+
+def merge_json_objects(a, b):
+    """Merge two JSON objects recursively.
+
+    - If a dict, keys are merged, preferring ``b``'s values
+    - If a list, values from ``b`` are appended to ``a``
+
+    Copying is minimized. No input collection will be mutated, but a deep copy
+    is not performed.
+
+    Parameters
+    ----------
+    a, b : dict
+        JSON objects to be merged.
+
+    Returns
+    -------
+    merged : dict
+    """
+    if b:
+        # Use a shallow copy here to avoid needlessly copying
+        a = a.copy()
+        for key, b_val in b.items():
+            if key in a:
+                a_val = a[key]
+                if isinstance(a_val, dict) and isinstance(b_val, dict):
+                    a[key] = merge_json_objects(a_val, b_val)
+                elif isinstance(a_val, list) and isinstance(b_val, list):
+                    a[key] = a_val + b_val
+                else:
+                    a[key] = b_val
+            else:
+                a[key] = b_val
+    return a
 
 
 class PodReflector(SingletonConfigurable):
@@ -209,26 +269,6 @@ class KubeClusterManager(ClusterManager):
         config=True,
     )
 
-    image_pull_secrets = List(
-        trait=Unicode(),
-        help="""
-        A list of secrets to use for pulling images from a private repository.
-
-        See `the Kubernetes documentation
-        <https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod>`__
-        for more information.
-        """,
-        config=True,
-    )
-
-    working_dir = Unicode(
-        help="""
-        The working directory where the command will be run inside the
-        container. Default is the working directory defined in the Dockerfile.
-        """,
-        config=True,
-    )
-
     common_labels = Dict(
         {
             "app.kubernetes.io/name": "dask-gateway",
@@ -329,16 +369,103 @@ class KubeClusterManager(ClusterManager):
     def _default_scheduler_memory_limit(self):
         return self.scheduler_memory
 
+    worker_extra_container_config = Dict(
+        help="""
+        Any extra configuration for the worker container.
+
+        This dict will be deep merged with the worker container (a
+        ``V1Container`` object) before submission. Keys should match those in
+        the `kubernetes spec
+        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__,
+        and should be camelCase.
+
+        For example, here we add environment variables from a secret to the
+        worker container:
+
+        .. code::
+
+            c.KubeClusterManager.worker_extra_container_config = {
+                "envFrom": [
+                    {"secretRef": {"name": "my-env-secret"}}
+                ]
+            }
+        """,
+        config=True,
+    )
+
+    scheduler_extra_container_config = Dict(
+        help="""
+        Any extra configuration for the scheduler container.
+
+        This dict will be deep merged with the scheduler container (a
+        ``V1Container`` object) before submission. Keys should match those in
+        the `kubernetes spec
+        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__,
+        and should be camelCase.
+
+        See ``worker_extra_container_config`` for more information.
+        """,
+        config=True,
+    )
+
+    worker_extra_pod_config = Dict(
+        help="""
+        Any extra configuration for the worker pods.
+
+        This dict will be deep merged with the worker pod spec (a ``V1PodSpec``
+        object) before submission. Keys should match those in the `kubernetes
+        spec
+        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__,
+        and should be camelCase.
+
+        For example, here we add a toleration to worker pods.
+
+        .. code::
+
+            c.KubeClusterManager.worker_extra_pod_config = {
+                "tolerations": [
+                    {
+                        "key": "key",
+                        "operator": "Equal",
+                        "value": "value",
+                        "effect": "NoSchedule",
+                    }
+                ]
+            }
+        """,
+        config=True,
+    )
+
+    scheduler_extra_pod_config = Dict(
+        help="""
+        Any extra configuration for the scheduler pods.
+
+        This dict will be deep merged with the scheduler pod spec (a
+        ``V1PodSpec`` object) before submission. Keys should match those in the
+        `kubernetes spec
+        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__,
+        and should be camelCase.
+
+        See ``worker_extra_pod_config`` for more information.
+        """,
+        config=True,
+    )
+
     # Internal fields
     kube_client = Instance(kubernetes.client.CoreV1Api)
 
     @default("kube_client")
     def _default_kube_client(self):
-        configure_kubernetes_clients()
+        patch_kube_threadpool()
+        load_kube_config()
         return kubernetes.client.CoreV1Api()
 
     def __init__(self, *args, **kwargs):
+        # If in tests
+        testing = kwargs.pop("_testing", False)
         super().__init__(*args, **kwargs)
+        if testing:
+            return
         # Starts the pod reflector for the first instance only
         self.pod_reflector = PodReflector.instance(
             parent=self.parent or self,
@@ -415,6 +542,8 @@ class KubeClusterManager(ClusterManager):
             cpu_lim = self.worker_cores_limit
             env["DASK_GATEWAY_WORKER_NAME"] = worker_name
             cmd = self.worker_command
+            extra_pod_config = self.worker_extra_pod_config
+            extra_container_config = self.worker_extra_container_config
         else:
             # Scheduler
             name = "dask-gateway-scheduler-%s" % self.cluster_name
@@ -425,6 +554,8 @@ class KubeClusterManager(ClusterManager):
             cpu_req = self.scheduler_cores
             cpu_lim = self.scheduler_cores_limit
             cmd = self.scheduler_command
+            extra_pod_config = self.scheduler_extra_pod_config
+            extra_container_config = self.scheduler_extra_container_config
 
         volume = V1Volume(
             name="dask-credentials", secret=V1SecretVolumeSource(secret_name=tls_secret)
@@ -435,7 +566,6 @@ class KubeClusterManager(ClusterManager):
             image=self.image,
             args=cmd,
             env=[V1EnvVar(k, v) for k, v in env.items()],
-            working_dir=self.working_dir or None,
             image_pull_policy=self.image_pull_policy,
             resources=V1ResourceRequirements(
                 requests={"cpu": cpu_req, "memory": mem_req},
@@ -450,6 +580,9 @@ class KubeClusterManager(ClusterManager):
             ],
         )
 
+        if extra_container_config:
+            container = merge_kube_objects(container, extra_container_config)
+
         pod = V1Pod(
             kind="Pod",
             api_version="v1",
@@ -459,13 +592,11 @@ class KubeClusterManager(ClusterManager):
             ),
         )
 
-        if self.image_pull_secrets:
-            pod.spec.image_pull_secrets = [
-                V1LocalObjectReference(name=s) for s in self.image_pull_secrets
-            ]
-
         # Ensure we don't accidentally give access to the kubernetes API
         pod.spec.automount_service_account_token = False
+
+        if extra_pod_config:
+            pod.spec = merge_kube_objects(pod.spec, extra_pod_config)
 
         return pod
 
