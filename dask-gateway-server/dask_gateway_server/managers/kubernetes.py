@@ -375,7 +375,9 @@ class KubeClusterManager(ClusterManager):
 
         This dict will be deep merged with the worker container (a
         ``V1Container`` object) before submission. Keys should match those in
-        the `kubernetes spec`_, and should be camelCase.
+        the `kubernetes spec
+        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__,
+        and should be camelCase.
 
         For example, here we add environment variables from a secret to the
         worker container:
@@ -387,9 +389,6 @@ class KubeClusterManager(ClusterManager):
                     {"secretRef": {"name": "my-env-secret"}}
                 ]
             }
-
-        .. _kubernetes spec: \
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core
         """,
         config=True,
     )
@@ -400,12 +399,11 @@ class KubeClusterManager(ClusterManager):
 
         This dict will be deep merged with the scheduler container (a
         ``V1Container`` object) before submission. Keys should match those in
-        the `kubernetes spec`_, and should be camelCase.
+        the `kubernetes spec
+        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__,
+        and should be camelCase.
 
         See ``worker_extra_container_config`` for more information.
-
-        .. _kubernetes spec: \
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core
         """,
         config=True,
     )
@@ -416,11 +414,14 @@ class KubeClusterManager(ClusterManager):
 
         This dict will be deep merged with the worker pod spec (a ``V1PodSpec``
         object) before submission. Keys should match those in the `kubernetes
-        spec`_, and should be camelCase.
+        spec
+        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__,
+        and should be camelCase.
 
         For example, here we add a toleration to worker pods.
 
         .. code::
+
             c.KubeClusterManager.worker_extra_pod_config = {
                 "tolerations": [
                     {
@@ -431,9 +432,6 @@ class KubeClusterManager(ClusterManager):
                     }
                 ]
             }
-
-        .. _kubernetes spec: \
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core
         """,
         config=True,
     )
@@ -444,12 +442,11 @@ class KubeClusterManager(ClusterManager):
 
         This dict will be deep merged with the scheduler pod spec (a
         ``V1PodSpec`` object) before submission. Keys should match those in the
-        `kubernetes spec`_, and should be camelCase.
+        `kubernetes spec
+        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__,
+        and should be camelCase.
 
         See ``worker_extra_pod_config`` for more information.
-
-        .. _kubernetes spec: \
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core
         """,
         config=True,
     )
