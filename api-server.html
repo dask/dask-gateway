@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Configuration API &#8212; Dask Gateway 0.3.0+21.gd31089a documentation</title>
+    <title>Configuration API &#8212; Dask Gateway 0.3.0+22.gfad62d3 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -935,7 +935,7 @@ of failures.</p>
 <div class="section" id="kubernetes">
 <h3>Kubernetes<a class="headerlink" href="#kubernetes" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="kubeclustermanager">
-<h4>KubeClusterManager<a class="headerlink" href="#kubeclustermanager" title="Permalink to this headline">¶</a></h4>
+<span id="kube-cluster-manager-config"></span><h4>KubeClusterManager<a class="headerlink" href="#kubeclustermanager" title="Permalink to this headline">¶</a></h4>
 <dl class="class">
 <dt id="dask_gateway_server.managers.kubernetes.KubeClusterManager">
 <em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.kubernetes.</code><code class="sig-name descname">KubeClusterManager</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.kubernetes.KubeClusterManager" title="Permalink to this definition">¶</a></dt>
@@ -987,14 +987,6 @@ of failures.</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.KubeClusterManager.image_pull_secrets = List('')</code></dt>
-<dd><p>A list of secrets to use for pulling images from a private repository.</p>
-<p>See <a class="reference external" href="https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod">the Kubernetes documentation</a>
-for more information.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
 <code class="sig-name descname">config c.KubeClusterManager.namespace = Unicode('default')</code></dt>
 <dd><p>Kubernetes namespace to launch pods in.</p>
 <p>If running inside a kubernetes cluster with service accounts enabled,
@@ -1018,6 +1010,28 @@ defaults to the current namespace. If not, defaults to <cite>default</cite></p>
 <code class="sig-name descname">config c.KubeClusterManager.scheduler_cores_limit = Float(0.0)</code></dt>
 <dd><p>Maximum number of cpu-cores available for a dask scheduler.</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">scheduler_cores</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.scheduler_extra_container_config = Dict('')</code></dt>
+<dd><p>Any extra configuration for the scheduler container.</p>
+<p>This dict will be deep merged with the scheduler container (a
+<code class="docutils literal notranslate"><span class="pre">V1Container</span></code> object) before submission. Keys should match those in
+the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes spec</a>,
+and should be camelCase.</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">worker_extra_container_config</span></code> for more information.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.scheduler_extra_pod_config = Dict('')</code></dt>
+<dd><p>Any extra configuration for the scheduler pods.</p>
+<p>This dict will be deep merged with the scheduler pod spec (a
+<code class="docutils literal notranslate"><span class="pre">V1PodSpec</span></code> object) before submission. Keys should match those in the
+<a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes spec</a>,
+and should be camelCase.</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">worker_extra_pod_config</span></code> for more information.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1068,6 +1082,48 @@ following suffixes:</p>
 
 <dl class="attribute">
 <dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_extra_container_config = Dict('')</code></dt>
+<dd><p>Any extra configuration for the worker container.</p>
+<p>This dict will be deep merged with the worker container (a
+<code class="docutils literal notranslate"><span class="pre">V1Container</span></code> object) before submission. Keys should match those in
+the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes spec</a>,
+and should be camelCase.</p>
+<p>For example, here we add environment variables from a secret to the
+worker container:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">KubeClusterManager</span><span class="o">.</span><span class="n">worker_extra_container_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;envFrom&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;secretRef&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;my-env-secret&quot;</span><span class="p">}}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.worker_extra_pod_config = Dict('')</code></dt>
+<dd><p>Any extra configuration for the worker pods.</p>
+<p>This dict will be deep merged with the worker pod spec (a <code class="docutils literal notranslate"><span class="pre">V1PodSpec</span></code>
+object) before submission. Keys should match those in the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes
+spec</a>,
+and should be camelCase.</p>
+<p>For example, here we add a toleration to worker pods.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">KubeClusterManager</span><span class="o">.</span><span class="n">worker_extra_pod_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;tolerations&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;key&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;Equal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;effect&quot;</span><span class="p">:</span> <span class="s2">&quot;NoSchedule&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
 <code class="sig-name descname">config c.KubeClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
 <dd><p>Number of bytes available for a dask worker. Allows the following
 suffixes:</p>
@@ -1106,13 +1162,6 @@ following suffixes:</p>
 <p>A smaller period will detect failed workers sooner, but will use more
 resources. A larger period will provide slower feedback in the presence
 of failures.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.working_dir = Unicode('')</code></dt>
-<dd><p>The working directory where the command will be run inside the
-container. Default is the working directory defined in the Dockerfile.</p>
 </dd></dl>
 
 </dd></dl>

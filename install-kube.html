@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
-    <title>Install on a Kubernetes Cluster &#8212; Dask Gateway 0.3.0+21.gd31089a documentation</title>
+    <title>Install on a Kubernetes Cluster &#8212; Dask Gateway 0.3.0+22.gfad62d3 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -51,7 +51,8 @@
 <li><p><a class="reference internal" href="#shutting-everything-down" id="id8">Shutting everything down</a></p></li>
 <li><p><a class="reference internal" href="#additional-configuration" id="id9">Additional Configuration</a></p>
 <ul>
-<li><p><a class="reference internal" href="#authenticating-with-jupyterhub" id="id10">Authenticating with JupyterHub</a></p></li>
+<li><p><a class="reference internal" href="#using-extrapodconfig-extracontainerconfig" id="id10">Using extraPodConfig/extraContainerConfig</a></p></li>
+<li><p><a class="reference internal" href="#authenticating-with-jupyterhub" id="id11">Authenticating with JupyterHub</a></p></li>
 </ul>
 </li>
 </ul>
@@ -176,9 +177,50 @@ clean everything up. You can do this with <code class="docutils literal notransl
 <div class="section" id="additional-configuration">
 <h2><a class="toc-backref" href="#id9">Additional Configuration</a><a class="headerlink" href="#additional-configuration" title="Permalink to this headline">¶</a></h2>
 <p>Here we provide a few configuration snippets for common deployment scenarios.
-For all available configuration values, see the <a class="reference external" href="https://github.com/jcrist/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default values.yaml file</a>.</p>
+For all available configuration values, see the <a class="reference external" href="https://github.com/jcrist/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default values.yaml file</a> and
+the <a class="reference internal" href="api-server.html#kube-cluster-manager-config"><span class="std std-ref">KubeClusterManager</span></a> docs.</p>
+<div class="section" id="using-extrapodconfig-extracontainerconfig">
+<h3><a class="toc-backref" href="#id10">Using extraPodConfig/extraContainerConfig</a><a class="headerlink" href="#using-extrapodconfig-extracontainerconfig" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/">Kubernetes API</a> is large, and not all configuration fields you may want
+to set on scheduler/worker pods are directly exposed by the Helm chart. To
+address this, we provide a few fields for forwarding configuration directly to
+the underlying kubernetes objects:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gateway.clusterManager.scheduler.extraPodConfig</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gateway.clusterManager.scheduler.extraContainerConfig</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gateway.clusterManager.worker.extraPodConfig</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gateway.clusterManager.worker.extraContainerConfig</span></code></p></li>
+</ul>
+<p>These allow configuring any unexposed fields on the pod/container for
+schedulers and workers respectively. Each takes a mapping of key-value pairs,
+which is deep-merged with any settings set by dask-gateway itself (with
+preference given to the <code class="docutils literal notranslate"><span class="pre">extra*Config</span></code> values). Note that keys should be
+<code class="docutils literal notranslate"><span class="pre">camelCase</span></code> (rather than <code class="docutils literal notranslate"><span class="pre">snake_case</span></code>) to match those in the kubernetes
+API.</p>
+<p>For example, this can be useful for setting things like <a class="reference external" href="https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/">tolerations</a> or <a class="reference external" href="https://kubernetes.io/docs/concepts/configuration/assign-pod-node/">node
+affinities</a> on scheduler or worker pods. Here we configure a node
+anti-affinity for scheduler pods to avoid <a class="reference external" href="https://cloud.google.com/blog/products/containers-kubernetes/cutting-costs-with-google-kubernetes-engine-using-the-cluster-autoscaler-and-preemptible-vms">preemptible nodes</a>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
+  <span class="nt">clusterManager</span><span class="p">:</span>
+    <span class="nt">scheduler</span><span class="p">:</span>
+      <span class="nt">extraPodConfig</span><span class="p">:</span>
+        <span class="nt">affinity</span><span class="p">:</span>
+          <span class="nt">nodeAffinity</span><span class="p">:</span>
+            <span class="nt">requiredDuringSchedulingIgnoredDuringExecution</span><span class="p">:</span>
+              <span class="nt">nodeSelectorTerms</span><span class="p">:</span>
+                <span class="p p-Indicator">-</span> <span class="nt">matchExpressions</span><span class="p">:</span>
+                  <span class="p p-Indicator">-</span> <span class="nt">key</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cloud.google.com/gke-preemptible</span>
+                    <span class="nt">operator</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DoesNotExist</span>
+</pre></div>
+</div>
+<p>For information on allowed fields, see the Kubernetes documentation:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core">PodSpec Configuration</a></p></li>
+<li><p><a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">Container Configuration</a></p></li>
+</ul>
+</div>
 <div class="section" id="authenticating-with-jupyterhub">
-<h3><a class="toc-backref" href="#id10">Authenticating with JupyterHub</a><a class="headerlink" href="#authenticating-with-jupyterhub" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id11">Authenticating with JupyterHub</a><a class="headerlink" href="#authenticating-with-jupyterhub" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference external" href="https://jupyterhub.readthedocs.io/">JupyterHub</a> provides a multi-user interactive <a class="reference external" href="https://jupyter.org/">notebook</a> environment. Through
 the <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/">zero-to-jupyterhub-k8s</a> project, many companies and institutions have setup
 JuypterHub to run on Kubernetes. When deploying Dask-Gateway alongside
@@ -277,6 +319,7 @@ object.</p>
 <li class="toctree-l3"><a class="reference internal" href="#connecting-to-the-gateway">Connecting to the gateway</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#shutting-everything-down">Shutting everything down</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#additional-configuration">Additional Configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#using-extrapodconfig-extracontainerconfig">Using extraPodConfig/extraContainerConfig</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#authenticating-with-jupyterhub">Authenticating with JupyterHub</a></li>
 </ul>
 </li>

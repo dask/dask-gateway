@@ -88,6 +88,8 @@ YarnClusterManager
 Kubernetes
 ^^^^^^^^^^
 
+.. _kube-cluster-manager-config:
+
 KubeClusterManager
 ~~~~~~~~~~~~~~~~~~
 
