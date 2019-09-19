@@ -1,14 +1,15 @@
-FROM debian:8.11-slim
+FROM debian:10.1-slim
 LABEL MAINTAINER="Jim Crist"
 
-ENV CONDA_VERSION 4.6.14
-ENV CONDA_MD5 718259965f234088d785cad1fbd7de03
+ENV CONDA_VERSION 4.7.10
+ENV CONDA_MD5 1c945f2b3335c7b2b15130b1b2dc5cf4
 
 # We do the following all in one block:
 # - Create user dask
 # - Install miniconda install dependencies
 # - Download miniconda and check the md5sum
 # - Install miniconda
+# - Configure conda to minimize automatic package updates
 # - Install tini
 # - Remove all conda managed static libraries
 # - Cleanup conda files
@@ -25,6 +26,10 @@ RUN useradd -m -U -u 1000 dask \
     && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/dask/.profile \
     && echo "conda activate base" >> /home/dask/.profile \
+    && echo "always_yes: true" >> /home/dask/.condarc \
+    && echo "changeps1: false" >> /home/dask/.condarc \
+    && echo "auto_update_conda: false" >> /home/dask/.condarc \
+    && echo "aggressive_update_packages: []" >> /home/dask/.condarc \
     && /opt/conda/bin/conda install --freeze-installed tini -y \
     && find /opt/conda/ -follow -type f -name '*.a' -delete \
     && /opt/conda/bin/conda clean -afy \
