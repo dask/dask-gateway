@@ -413,9 +413,9 @@ class DaskGateway(Application):
         if self.subapp is not None:
             return
         self.log.info("Starting dask-gateway-server - version %s", VERSION)
+        self.load_config_file(self.config_file)
         self.log.info("Cluster manager: %r", classname(self.cluster_manager_class))
         self.log.info("Authenticator: %r", classname(self.authenticator_class))
-        self.load_config_file(self.config_file)
         self.init_logging()
         self.init_tempdir()
         self.init_asyncio()
