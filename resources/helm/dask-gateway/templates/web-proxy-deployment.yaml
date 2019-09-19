@@ -44,8 +44,6 @@ spec:
                 secretKeyRef:
                   name: {{ include "dask-gateway.fullname" . }}
                   key: proxy-token
-            - name: DASK_GATEWAY_PROXY_CONTAINER
-              value: "true"
           ports:
             - containerPort: 8001
               name: api

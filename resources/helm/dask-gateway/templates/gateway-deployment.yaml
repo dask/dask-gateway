@@ -60,6 +60,8 @@ spec:
                   name: {{ include "dask-gateway.fullname" . }}
                   key: jupyterhub-api-token
             {{- end }}
+            - name: GATEWAY_API_SERVICE_NAME
+              value: {{ include "dask-gateway.fullname" . | printf "gateway-api-%s" | trunc 63 | trimSuffix "-" }}
             - name: SCHEDULER_PROXY_PUBLIC_SERVICE_NAME
               value: {{ include "dask-gateway.fullname" . | printf "scheduler-public-%s" | trunc 63 | trimSuffix "-" }}
             - name: SCHEDULER_PROXY_API_SERVICE_NAME

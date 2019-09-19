@@ -1,0 +1,19 @@
+gateway:
+  image:
+    name: dask-gateway-server-test
+    tag: latest
+
+  clusterManager:
+    image:
+      name: dask-gateway-test
+      tag: latest
+
+schedulerProxy:
+  image:
+    name: dask-gateway-server-test
+    tag: latest
+
+webProxy:
+  image:
+    name: dask-gateway-server-test
+    tag: latest
