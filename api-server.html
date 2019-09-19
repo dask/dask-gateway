@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration Reference &mdash; Dask Gateway 0.4.0+1.g6279369 documentation</title>
+  <title>Configuration Reference &mdash; Dask Gateway 0.4.0+2.gfaa7a6c documentation</title>
   
 
   
@@ -122,7 +122,7 @@
             
             
               <div class="version">
-                0.4.0+1.g6279369
+                0.4.0+2.gfaa7a6c
               </div>
             
           
@@ -377,10 +377,28 @@ generate a single key via:</p>
 
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.DaskGateway.private_url = Unicode('')</code></dt>
+<code class="sig-name descname">config c.DaskGateway.private_connect_url = Unicode('')</code></dt>
+<dd><p>The address that the private URL can be connected to.</p>
+<p>Useful if the address the gateway should listen at is different than
+the address it’s reachable at (by e.g. the web proxy).</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">private_url</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.DaskGateway.private_url = Unicode('http://127.0.0.1:0')</code></dt>
 <dd><p>The gateway’s private URL, used for internal communication.</p>
 <p>This must be reachable from the web proxy, but shouldn’t be publicly
 accessible (if possible). Default is <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:{random-port}</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.DaskGateway.public_connect_url = Unicode('')</code></dt>
+<dd><p>The address that the public URL can be connected to.</p>
+<p>Useful if the address the web proxy should listen at is different than
+the address it’s reachable at (by e.g. the scheduler/workers).</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">public_url</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -599,7 +617,16 @@ Can be an integer, or a string with one of the following suffixes:</p>
 <dd><p>A proxy for proxying out the dashboards from behind a firewall</p>
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.WebProxy.api_url = Unicode('')</code></dt>
+<code class="sig-name descname">config c.WebProxy.api_connect_url = Unicode('')</code></dt>
+<dd><p>The address that the api URL can be connected to.</p>
+<p>Useful if the address the api server should listen at is different than
+the address it’s reachable at (by e.g. the gateway).</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">api_url</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.WebProxy.api_url = Unicode('http://127.0.0.1:0')</code></dt>
 <dd><p>The address for configuring the Proxy.</p>
 <p>This is the address that the Dask Gateway will connect to when
 adding/removing routes. This must be reachable from the Dask Gateway
@@ -646,7 +673,16 @@ external manager (e.g. supervisord).</p>
 <dd><p>A proxy for connecting Dask clients to schedulers behind a firewall.</p>
 <dl class="attribute">
 <dt>
-<code class="sig-name descname">config c.SchedulerProxy.api_url = Unicode('')</code></dt>
+<code class="sig-name descname">config c.SchedulerProxy.api_connect_url = Unicode('')</code></dt>
+<dd><p>The address that the api URL can be connected to.</p>
+<p>Useful if the address the api server should listen at is different than
+the address it’s reachable at (by e.g. the gateway).</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">api_url</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SchedulerProxy.api_url = Unicode('http://127.0.0.1:0')</code></dt>
 <dd><p>The address for configuring the Proxy.</p>
 <p>This is the address that the Dask Gateway will connect to when
 adding/removing routes. This must be reachable from the Dask Gateway
