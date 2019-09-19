@@ -38,9 +38,8 @@ from .utils import (
     cancel_task,
     TaskPool,
     Type,
-    get_connect_urls,
-    random_port,
     timeout,
+    ServerUrls,
 )
 
 
@@ -178,14 +177,22 @@ class DaskGateway(Application):
         config=True,
     )
 
+    public_connect_url = Unicode(
+        help="""
+        The address that the public URL can be connected to.
+
+        Useful if the address the web proxy should listen at is different than
+        the address it's reachable at (by e.g. the scheduler/workers).
+
+        Defaults to ``public_url``.
+        """,
+        config=True,
+    )
+
     gateway_url = Unicode(help="The URL that Dask clients will connect to", config=True)
 
-    @default("gateway_url")
-    def _default_gateway_url(self):
-        host = urlparse(self.public_url).hostname or ""
-        return "tls://%s:8786" % host
-
     private_url = Unicode(
+        "http://127.0.0.1:0",
         help="""
         The gateway's private URL, used for internal communication.
 
@@ -195,22 +202,36 @@ class DaskGateway(Application):
         config=True,
     )
 
-    @default("private_url")
-    def _default_private_url(self):
-        return "http://127.0.0.1:%d" % random_port()
+    private_connect_url = Unicode(
+        help="""
+        The address that the private URL can be connected to.
 
-    @validate("public_url", "gateway_url", "private_url")
-    def _normalize_url(self, proposal):
+        Useful if the address the gateway should listen at is different than
+        the address it's reachable at (by e.g. the web proxy).
+
+        Defaults to ``private_url``.
+        """,
+        config=True,
+    )
+
+    @validate(
+        "public_url",
+        "public_connect_url",
+        "gateway_url",
+        "private_url",
+        "private_connect_url",
+    )
+    def _validate_url(self, proposal):
         url = proposal.value
         name = proposal.trait.name
         scheme = urlparse(url).scheme
-        if name in ("public_url", "private_url"):
-            if scheme not in {"http", "https"}:
-                raise ValueError("%r must be an http/https url, got %s" % (name, url))
-        else:
+        if name.startswith("gateway"):
             if scheme != "tls":
                 raise ValueError("'gateway_url' must be a tls url, got %s" % url)
-        return url.rstrip("/")
+        else:
+            if scheme not in {"http", "https"}:
+                raise ValueError("%r must be an http/https url, got %s" % (name, url))
+        return url
 
     tls_key = Unicode(
         "",
@@ -389,20 +410,6 @@ class DaskGateway(Application):
         weakref.finalize(self, cleanup_tmpdir, self.log, temp_dir)
         return temp_dir
 
-    api_url = Unicode(
-        help="The address schedulers/workers connect to the gateway api at"
-    )
-
-    @default("api_url")
-    def _default_api_url(self):
-        return get_connect_urls(self.public_url)[0] + "/gateway/api"
-
-    public_url_prefix = Unicode(help="The base path on the public_url")
-
-    @default("public_url_prefix")
-    def _default_public_url_prefix(self):
-        return urlparse(self.public_url).path
-
     _log_formatter_cls = LogFormatter
 
     classes = List([ClusterManager, Authenticator, WebProxy, SchedulerProxy])
@@ -419,6 +426,7 @@ class DaskGateway(Application):
         self.init_logging()
         self.init_tempdir()
         self.init_asyncio()
+        self.init_server_urls()
         self.init_scheduler_proxy()
         self.init_web_proxy()
         self.init_authenticator()
@@ -458,16 +466,28 @@ class DaskGateway(Application):
     def init_asyncio(self):
         self.task_pool = TaskPool()
 
+    def init_server_urls(self):
+        """Initialize addresses from configuration"""
+        self.public_urls = ServerUrls(self.public_url, self.public_connect_url)
+        self.private_urls = ServerUrls(self.private_url, self.private_connect_url)
+        if not self.gateway_url:
+            gateway_url = f"tls://{self.public_urls.bind_host}:8786"
+        else:
+            gateway_url = self.gateway_url
+        self.gateway_urls = ServerUrls(gateway_url)
+        # Additional common url
+        self.api_url = self.public_urls.connect_url + "/gateway/api"
+
     def init_scheduler_proxy(self):
         self.scheduler_proxy = self.scheduler_proxy_class(
-            parent=self, log=self.log, public_url=self.gateway_url
+            parent=self, log=self.log, public_urls=self.gateway_urls
         )
 
     def init_web_proxy(self):
         self.web_proxy = self.web_proxy_class(
             parent=self,
             log=self.log,
-            public_url=self.public_url,
+            public_urls=self.public_urls,
             tls_cert=self.tls_cert,
             tls_key=self.tls_key,
         )
@@ -618,20 +638,18 @@ class DaskGateway(Application):
         return running
 
     async def start_tornado_application(self):
-        private_url = urlparse(self.private_url)
         self.http_server = self.tornado_application.listen(
-            private_url.port, address=private_url.hostname
+            self.private_urls.bind_port, address=self.private_urls.bind_host
         )
-        self.log.info("Gateway private API listening at %s", self.private_url)
+        self.log.info("Gateway private API serving at %s", self.private_urls.bind_url)
         await self.web_proxy.add_route(
-            self.public_url_prefix + "/gateway/", get_connect_urls(self.private_url)[0]
+            self.public_urls.connect.path + "/gateway/", self.private_urls.connect_url
         )
         self.log.info("Dask-Gateway started successfully!")
-        for name, url in [
-            ("Public address", self.public_url),
-            ("Proxy address", self.gateway_url),
+        for name, urls in [
+            ("Public address", self.public_urls._to_log),
+            ("Proxy address", self.gateway_urls._to_log),
         ]:
-            urls = get_connect_urls(url)
             if len(urls) == 2:
                 self.log.info("- %s at %s or %s", name, *urls)
             else:
@@ -808,7 +826,7 @@ class DaskGateway(Application):
     async def add_cluster_to_proxies(self, cluster):
         if cluster.dashboard_address:
             await self.web_proxy.add_route(
-                self.public_url_prefix + "/gateway/clusters/" + cluster.name,
+                self.public_urls.connect.path + "/gateway/clusters/" + cluster.name,
                 cluster.dashboard_address,
             )
         await self.scheduler_proxy.add_route(

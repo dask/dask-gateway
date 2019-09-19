@@ -2,7 +2,7 @@ import asyncio
 import shutil
 import socket
 import weakref
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 from traitlets import Integer, TraitError, Type as _Type
 
@@ -118,16 +118,84 @@ def get_ip():
     raise ValueError("Failed to determine local IP address")
 
 
-def get_connect_urls(url):
-    parsed = urlparse(url)
-    if parsed.hostname in {None, "", "0.0.0.0"}:
-        host = socket.gethostname()
-        hosts = ["127.0.0.1", host]
-    else:
-        hosts = [parsed.hostname]
-    return [
-        urlunparse(parsed._replace(netloc="%s:%i" % (h, parsed.port))) for h in hosts
-    ]
+class ServerUrls(object):
+    """Holds url information about a server.
+
+    Parameters
+    ----------
+    bind_url : str
+        The url for the server to bind at.
+    connect_url : str, optional
+        The url that the server is reachable at. If not provided, defaults to
+        `url` with hostname resolved.
+    """
+
+    def __init__(self, bind_url, connect_url=None):
+        bind_url = self._parse(bind_url)
+
+        if bind_url.port == 0:
+            port = random_port()
+            host = bind_url.hostname or ""
+            bind_url = bind_url._replace(netloc=f"{host}:{port}")
+
+        connect_specified = bool(connect_url)
+
+        if connect_specified:
+            connect_url = self._parse(connect_url)
+        else:
+            # First resolved url is just hostname, which is what we want
+            connect_url = self._resolve_urls(bind_url)[0]
+
+        self._connect_specified = connect_specified
+        self.bind = bind_url
+        self.bind_url = bind_url.geturl()
+        self.connect = connect_url
+        self.connect_url = connect_url.geturl()
+
+    @staticmethod
+    def _parse(url):
+        parsed = urlparse(url)
+        return parsed._replace(path=parsed.path.rstrip("/"))
+
+    @staticmethod
+    def _resolve_urls(url):
+        if url.hostname in {None, "", "0.0.0.0"}:
+            host = socket.gethostname()
+            hosts = [host, "127.0.0.1"]
+        else:
+            hosts = [url.hostname]
+        if url.port is None:
+            netlocs = hosts
+        else:
+            netlocs = [f"{h}:{url.port}" for h in hosts]
+        return [url._replace(netloc=n) for n in netlocs]
+
+    @property
+    def bind_port(self):
+        """When starting the server, the port to bind at"""
+        if self.bind.port is None:
+            if self.bind.scheme == "http":
+                return 80
+            elif self.bind.scheme == "https":
+                return 443
+            else:
+                return 8786
+        return self.bind.port
+
+    @property
+    def bind_host(self):
+        """When starting the server, the host to listen on"""
+        if self.bind.hostname is None:
+            return ""
+        return self.bind.hostname
+
+    @property
+    def _to_log(self):
+        """URLs to log to user.
+
+        If listening on all interfaces, logs both localhost and hostname"""
+        url = self.connect if self._connect_specified else self.bind
+        return [u.geturl() for u in self._resolve_urls(url)]
 
 
 def cleanup_tmpdir(log, path):

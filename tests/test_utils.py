@@ -4,13 +4,7 @@ import socket
 import pytest
 from traitlets import HasTraits, TraitError
 
-from dask_gateway_server.utils import (
-    Type,
-    get_connect_urls,
-    timeout,
-    format_bytes,
-    classname,
-)
+from dask_gateway_server.utils import Type, timeout, format_bytes, classname, ServerUrls
 
 
 def test_Type_traitlet():
@@ -24,15 +18,33 @@ def test_Type_traitlet():
     Foo(typ="dask_gateway_server.managers.local.LocalClusterManager")
 
 
-def test_get_connect_urls():
+def test_ServerUrls():
     hostname = socket.gethostname()
-    # When binding on all interfaces, report localhost and hostname
-    for url in ["http://:8000", "http://0.0.0.0:8000"]:
-        urls = get_connect_urls(url)
-        assert urls == ["http://127.0.0.1:8000", "http://%s:8000" % hostname]
-    # Otherwise return as is
-    urls = get_connect_urls("http://example.com:8000")
-    assert urls == ["http://example.com:8000"]
+
+    urls = ServerUrls("http://:8000/foo/bar/")
+    assert urls.bind.scheme == "http"
+    assert urls.bind.path == "/foo/bar"
+    assert urls.bind_host == ""
+    assert urls.bind_port == 8000
+    assert urls.bind_url == "http://:8000/foo/bar"
+    assert urls.connect_url == f"http://{hostname}:8000/foo/bar"
+    assert urls._to_log == [urls.connect_url, "http://127.0.0.1:8000/foo/bar"]
+
+    urls = ServerUrls("tls://127.0.0.1:0")
+    assert urls.bind.scheme == "tls"
+    assert urls.bind.port != 0
+    assert urls.bind_port == urls.bind.port
+    assert urls.connect_url == urls.bind_url
+    assert urls._to_log == [urls.connect_url]
+
+    urls = ServerUrls("http://127.0.0.1:8000", "http://foo.com/fizz/buzz/")
+    assert urls.bind_url == "http://127.0.0.1:8000"
+    assert urls.connect_url == "http://foo.com/fizz/buzz"
+
+    # bind port chosen based on scheme
+    assert ServerUrls("http://foo.com").bind_port == 80
+    assert ServerUrls("https://foo.com").bind_port == 443
+    assert ServerUrls("tls://foo.com").bind_port == 8786
 
 
 @pytest.mark.asyncio

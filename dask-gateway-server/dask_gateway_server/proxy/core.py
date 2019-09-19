@@ -3,15 +3,14 @@ import json
 import socket
 import subprocess
 import uuid
-from urllib.parse import urlparse
 
 from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 from traitlets.config import LoggingConfigurable, Application, catch_config_error
-from traitlets import default, Unicode, CaselessStrEnum, Float, Bool
+from traitlets import default, Unicode, CaselessStrEnum, Float, Bool, Instance
 
 from .. import __version__ as VERSION
-from ..utils import random_port
+from ..utils import ServerUrls
 
 
 __all__ = ("SchedulerProxy", "WebProxy")
@@ -34,8 +33,15 @@ class ProxyBase(LoggingConfigurable):
 
     # Forwarded by the main application on initialization
     public_url = Unicode()
+    # or
+    public_urls = Instance(ServerUrls)
+
+    @default("public_urls")
+    def _default_public_urls(self):
+        return ServerUrls(self.public_url)
 
     api_url = Unicode(
+        "http://127.0.0.1:0",
         help="""
         The address for configuring the Proxy.
 
@@ -47,6 +53,24 @@ class ProxyBase(LoggingConfigurable):
         config=True,
     )
 
+    api_connect_url = Unicode(
+        help="""
+        The address that the api URL can be connected to.
+
+        Useful if the address the api server should listen at is different than
+        the address it's reachable at (by e.g. the gateway).
+
+        Defaults to ``api_url``.
+        """,
+        config=True,
+    )
+
+    api_urls = Instance(ServerUrls)
+
+    @default("api_urls")
+    def _default_api_urls(self):
+        return ServerUrls(self.api_url, self.api_connect_url)
+
     auth_token = Unicode(
         help="""
         The Proxy auth token
@@ -55,6 +79,14 @@ class ProxyBase(LoggingConfigurable):
         """,
         config=True,
     )
+
+    @default("auth_token")
+    def _auth_token_default(self):
+        token = os.environ.get("DASK_GATEWAY_PROXY_TOKEN", "")
+        if not token:
+            self.log.info("Generating new auth token for %s proxy", self._subcommand)
+            token = uuid.uuid4().hex
+        return token
 
     connect_timeout = Float(
         10.0,
@@ -76,21 +108,9 @@ class ProxyBase(LoggingConfigurable):
         config=True,
     )
 
-    @default("api_url")
-    def _default_api_url(self):
-        return "http://127.0.0.1:%d" % random_port()
-
-    @default("auth_token")
-    def _auth_token_default(self):
-        token = os.environ.get("DASK_GATEWAY_PROXY_TOKEN", "")
-        if not token:
-            self.log.info("Generating new auth token for %s proxy", self._subcommand)
-            token = uuid.uuid4().hex
-        return token
-
     def get_start_command(self, is_child_process=True):
-        address = urlparse(self.public_url).netloc
-        api_address = urlparse(self.api_url).netloc
+        address = self.public_urls.bind.netloc
+        api_address = self.api_urls.bind.netloc
         out = [
             _PROXY_EXE,
             self._subcommand,
@@ -128,15 +148,15 @@ class ProxyBase(LoggingConfigurable):
             self.log.info(
                 "Dask gateway %s proxy started at %r, api at %r",
                 self._subcommand,
-                self.public_url,
-                self.api_url,
+                self.public_urls.connect_url,
+                self.api_urls.connect_url,
             )
         else:
             self.log.info(
                 "Connecting to dask gateway %s proxy at %r, api at %r",
                 self._subcommand,
-                self.public_url,
-                self.api_url,
+                self.public_urls.connect_url,
+                self.api_urls.connect_url,
             )
 
         await self.wait_until_up()
@@ -156,12 +176,12 @@ class ProxyBase(LoggingConfigurable):
                         "authentication failure, please ensure that "
                         "DASK_GATEWAY_PROXY_TOKEN is the same between "
                         "the proxy process and the gateway"
-                        % (self._subcommand, self.api_url)
+                        % (self._subcommand, self.api_urls.connect_url)
                     )
                 elif e.code != 599:
                     raise RuntimeError(
                         "Error while connecting to %s proxy api at %s: %s"
-                        % (self._subcommand, self.api_url, e)
+                        % (self._subcommand, self.api_urls.connect_url, e)
                     )
             except (OSError, socket.error):
                 # Failed to connect, see if the process erred out
@@ -183,7 +203,7 @@ class ProxyBase(LoggingConfigurable):
             await gen.sleep(dt)
         raise RuntimeError(
             "Failed to connect to %s proxy at %s in %d secs"
-            % (self._subcommand, self.api_url, self.connect_timeout)
+            % (self._subcommand, self.api_urls.connect_url, self.connect_timeout)
         )
 
     def stop(self):
@@ -216,7 +236,7 @@ class ProxyBase(LoggingConfigurable):
         """
         self.log.debug("Adding route %r -> %r", route, target)
         await self._api_request(
-            url="%s/api/routes%s" % (self.api_url, route),
+            url="%s/api/routes%s" % (self.api_urls.connect_url, route),
             method="PUT",
             body={"target": target},
         )
@@ -233,7 +253,7 @@ class ProxyBase(LoggingConfigurable):
         """
         self.log.debug("Removing route %r", route)
         await self._api_request(
-            url="%s/api/routes%s" % (self.api_url, route), method="DELETE"
+            url="%s/api/routes%s" % (self.api_urls.connect_url, route), method="DELETE"
         )
 
     async def get_all_routes(self):
@@ -244,7 +264,9 @@ class ProxyBase(LoggingConfigurable):
         routes : dict
             A dict of route -> target for all routes in the proxy.
         """
-        resp = await self._api_request(url="%s/api/routes" % self.api_url, method="GET")
+        resp = await self._api_request(
+            url="%s/api/routes" % self.api_urls.connect_url, method="GET"
+        )
         return json.loads(resp.body.decode("utf8", "replace"))
 
 
@@ -268,7 +290,7 @@ class WebProxy(ProxyBase):
         if bool(self.tls_cert) != bool(self.tls_key):
             raise ValueError("Must set both tls_cert and tls_key")
         if self.tls_cert:
-            if urlparse(self.public_url).scheme != "https":
+            if self.public_urls.bind.scheme != "https":
                 raise ValueError(
                     "tls_cert & tls_key are set, but public_url doesn't have an "
                     "https scheme"
