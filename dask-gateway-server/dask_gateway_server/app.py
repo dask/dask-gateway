@@ -136,6 +136,9 @@ class DaskGateway(Application):
         "dask_gateway_config.py", help="The config file to load", config=True
     )
 
+    # Fail if the config file errors
+    raise_config_file_errors = True
+
     scheduler_proxy_class = Type(
         "dask_gateway_server.proxy.SchedulerProxy",
         help="The gateway scheduler proxy class to use",
