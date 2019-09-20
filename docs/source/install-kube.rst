@@ -231,10 +231,11 @@ Then add the following lines to your ``config.yaml`` file:
 
 .. code-block:: yaml
 
-    auth:
-      type: jupyterhub
-      jupyterhub:
-        apiToken: "<API TOKEN>"
+    gateway:
+      auth:
+        type: jupyterhub
+        jupyterhub:
+          apiToken: "<API TOKEN>"
 
 replacing ``<API TOKEN>`` with the output from above.
 
