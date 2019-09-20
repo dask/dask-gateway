@@ -81,14 +81,14 @@ data:
     for field, prop_name in [
         # Scheduler config
         ("scheduler_cores", "scheduler.cores.request"),
-        ("scheduler_core_limit", "scheduler.cores.limit"),
+        ("scheduler_cores_limit", "scheduler.cores.limit"),
         ("scheduler_memory", "scheduler.memory.request"),
         ("scheduler_memory_limit", "scheduler.memory.limit"),
         ("scheduler_extra_container_config", "scheduler.extraContainerConfig"),
         ("scheduler_extra_pod_config", "scheduler.extraPodConfig"),
         # Worker config
         ("worker_cores", "worker.cores.request"),
-        ("worker_core_limit", "worker.cores.limit"),
+        ("worker_cores_limit", "worker.cores.limit"),
         ("worker_memory", "worker.memory.request"),
         ("worker_memory_limit", "worker.memory.limit"),
         ("worker_extra_container_config", "worker.extraContainerConfig"),
