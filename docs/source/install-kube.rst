@@ -30,17 +30,16 @@ At this point you should have a Kubernetes cluster with Helm installed and
 configured. You are now ready to install Dask-Gateway on your cluster.
 
 
-Download the Helm Chart
-~~~~~~~~~~~~~~~~~~~~~~~
+Add the Helm Chart Repository
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Currently you need to download the chart locally before installing (this will
-change in the future). You can get the chart from the `dask-gateway github
-repo`_, available in the `resources/helm subdirectory`_.
+To avoid downloading the chart locally from GitHub, you can use the
+`Dask-Gateway Helm chart repository`_.
 
 .. code-block:: shell
 
-    $ git clone https://github.com/dask/dask-gateway.git
-    $ cd resources/helm
+    $ helm repo add dask-gateway https://dask.org/dask-gateway-helm-repo/
+    $ helm repo update
 
 
 Configuration
@@ -80,12 +79,14 @@ the ``resources/helm`` directory:
 
     RELEASE=dask-gateway
     NAMESPACE=dask-gateway
+    VERSION=0.4.1
 
     helm install \
         --name $RELEASE \
         --namespace $NAMESPACE \
+        --version $VERSION \
         --values path/to/your/config.yaml \
-        ./dask-gateway
+        dask-gateway/dask-gateway
 
 where:
 
@@ -95,6 +96,9 @@ where:
   but any release name is fine).
 - ``NAMESPACE`` is the `Kubernetes namespace`_ to install the gateway into (we
   suggest ``dask-gateway``, but any namespace is fine).
+- ``VERSION`` is the Helm chart version to use. To use the latest published
+  version you can omit the ``--version`` flag entirely. See the `Helm chart
+  repository`_ for an index of all available versions.
 
 Running this command may take some time, as resources are created and images
 are downloaded. When everything's ready, running the following command will
@@ -266,6 +270,8 @@ object.
 .. _create-k8s-cluster: https://zero-to-jupyterhub.readthedocs.io/en/latest/create-k8s-cluster.html
 .. _zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/
 .. _install-helm: https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-helm.html
+.. _Helm chart repository:
+.. _dask-gateway helm chart repository: https://dask.org/dask-gateway-helm-repo/
 .. _dask-gateway github repo: https://github.com/dask/dask-gateway/
 .. _resources/helm subdirectory: https://github.com/dask/dask-gateway/tree/master/resources/helm
 .. _default values.yaml file: https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml
