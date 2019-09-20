@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.4.0+2.gfaa7a6c documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.4.1+2.g42058b8 documentation</title>
   
 
   
@@ -122,7 +122,7 @@
             
             
               <div class="version">
-                0.4.0+2.gfaa7a6c
+                0.4.1+2.g42058b8
               </div>
             
           
@@ -154,7 +154,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#create-a-kubernetes-cluster-optional">Create a Kubernetes Cluster (optional)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#install-helm-optional">Install Helm (optional)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#install-dask-gateway">Install Dask-Gateway</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#download-the-helm-chart">Download the Helm Chart</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#add-the-helm-chart-repository">Add the Helm Chart Repository</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#install-the-helm-chart">Install the Helm Chart</a></li>
 </ul>
@@ -259,13 +259,12 @@ provided by zero-to-jupyterhub-k8s</a>.</p>
 <h2>Install Dask-Gateway<a class="headerlink" href="#install-dask-gateway" title="Permalink to this headline">¶</a></h2>
 <p>At this point you should have a Kubernetes cluster with Helm installed and
 configured. You are now ready to install Dask-Gateway on your cluster.</p>
-<div class="section" id="download-the-helm-chart">
-<h3>Download the Helm Chart<a class="headerlink" href="#download-the-helm-chart" title="Permalink to this headline">¶</a></h3>
-<p>Currently you need to download the chart locally before installing (this will
-change in the future). You can get the chart from the <a class="reference external" href="https://github.com/dask/dask-gateway/">dask-gateway github
-repo</a>, available in the <a class="reference external" href="https://github.com/dask/dask-gateway/tree/master/resources/helm">resources/helm subdirectory</a>.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/dask/dask-gateway.git
-$ <span class="nb">cd</span> resources/helm
+<div class="section" id="add-the-helm-chart-repository">
+<h3>Add the Helm Chart Repository<a class="headerlink" href="#add-the-helm-chart-repository" title="Permalink to this headline">¶</a></h3>
+<p>To avoid downloading the chart locally from GitHub, you can use the
+<a class="reference external" href="https://dask.org/dask-gateway-helm-repo/">Dask-Gateway Helm chart repository</a>.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ helm repo add dask-gateway https://dask.org/dask-gateway-helm-repo/
+$ helm repo update
 </pre></div>
 </div>
 </div>
@@ -295,12 +294,14 @@ values.yaml file</a> for more information.</p>
 the <code class="docutils literal notranslate"><span class="pre">resources/helm</span></code> directory:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RELEASE</span><span class="o">=</span>dask-gateway
 <span class="nv">NAMESPACE</span><span class="o">=</span>dask-gateway
+<span class="nv">VERSION</span><span class="o">=</span><span class="m">0</span>.4.1
 
 helm install <span class="se">\</span>
     --name <span class="nv">$RELEASE</span> <span class="se">\</span>
     --namespace <span class="nv">$NAMESPACE</span> <span class="se">\</span>
+    --version <span class="nv">$VERSION</span> <span class="se">\</span>
     --values path/to/your/config.yaml <span class="se">\</span>
-    ./dask-gateway
+    dask-gateway/dask-gateway
 </pre></div>
 </div>
 <p>where:</p>
@@ -311,6 +312,9 @@ above.</p></li>
 but any release name is fine).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NAMESPACE</span></code> is the <a class="reference external" href="https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/">Kubernetes namespace</a> to install the gateway into (we
 suggest <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code>, but any namespace is fine).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">VERSION</span></code> is the Helm chart version to use. To use the latest published
+version you can omit the <code class="docutils literal notranslate"><span class="pre">--version</span></code> flag entirely. See the <a class="reference external" href="https://dask.org/dask-gateway-helm-repo/">Helm chart
+repository</a> for an index of all available versions.</p></li>
 </ul>
 <p>Running this command may take some time, as resources are created and images
 are downloaded. When everything’s ready, running the following command will
