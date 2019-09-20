@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.4.1+4.gc9675ef documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.4.1+5.gc307e8c documentation</title>
   
 
   
@@ -122,7 +122,7 @@
             
             
               <div class="version">
-                0.4.1+4.gc9675ef
+                0.4.1+5.gc307e8c
               </div>
             
           
@@ -422,10 +422,11 @@ Service</a>.</p>
 </pre></div>
 </div>
 <p>Then add the following lines to your <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">auth</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">jupyterhub</span>
-  <span class="nt">jupyterhub</span><span class="p">:</span>
-    <span class="nt">apiToken</span><span class="p">:</span> <span class="s">&quot;&lt;API</span><span class="nv"> </span><span class="s">TOKEN&gt;&quot;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
+  <span class="nt">auth</span><span class="p">:</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">jupyterhub</span>
+    <span class="nt">jupyterhub</span><span class="p">:</span>
+      <span class="nt">apiToken</span><span class="p">:</span> <span class="s">&quot;&lt;API</span><span class="nv"> </span><span class="s">TOKEN&gt;&quot;</span>
 </pre></div>
 </div>
 <p>replacing <code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">TOKEN&gt;</span></code> with the output from above.</p>
