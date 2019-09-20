@@ -1,0 +1,5 @@
+charts:
+  - name: dask-gateway
+    repo:
+      git: dask/dask-gateway-helm-repo
+      published: https://dask.github.io/dask-gateway-helm-repo
