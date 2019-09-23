@@ -58,6 +58,17 @@ def test_get_auth():
         get_auth("not_a_real_module_name_foo_barrr")
 
 
+def test_config_auth_kwargs_template_environment_vars(monkeypatch):
+    monkeypatch.setenv("TEST_USER", "bruce")
+    config = {
+        "gateway": {"auth": {"type": "basic", "kwargs": {"username": "{TEST_USER}"}}}
+    }
+    with dask.config.set(config):
+        auth = get_auth()
+        assert isinstance(auth, BasicAuth)
+        assert auth.username == "bruce"
+
+
 def test_jupyterhub_auth(monkeypatch):
     with pytest.raises(ValueError) as exc:
         get_auth("jupyterhub")
@@ -120,6 +131,22 @@ def test_client_init():
         # No proxy-address provided
         with pytest.raises(ValueError):
             Gateway()
+
+
+def test_gateway_addresses_template_environment_vars(monkeypatch):
+    monkeypatch.setenv("TEST", "foobar")
+
+    with dask.config.set(
+        gateway__address="http://{TEST}:80", gateway__proxy_address=8785
+    ):
+        g = Gateway()
+    assert g.address == "http://foobar:80"
+    assert g.proxy_address == "gateway://foobar:8785"
+
+    with dask.config.set(gateway__proxy_address="gateway://{TEST}:8787"):
+        g = Gateway("http://test.com")
+    assert g.address == "http://test.com"
+    assert g.proxy_address == "gateway://foobar:8787"
 
 
 class SlowHandler(web.RequestHandler):
