@@ -407,22 +407,37 @@ class Gateway(object):
         """
         return self.sync(self._clusters, status=status, **kwargs)
 
-    async def _cluster_options(self):
+    def _config_cluster_options(self):
+        opts = dask.config.get("gateway.cluster.options")
+        return {k: format_template(v) for k, v in opts.items()}
+
+    async def _cluster_options(self, use_local_defaults=True):
         url = "%s/gateway/api/clusters/options" % self.address
         req = HTTPRequest(url=url, method="GET")
         resp = await self._fetch(req)
         data = json.loads(resp.body)
-        return Options._from_spec(data["cluster_options"])
+        options = Options._from_spec(data["cluster_options"])
+        if use_local_defaults:
+            options.update(self._config_cluster_options())
+        return options
 
-    def cluster_options(self, **kwargs):
+    def cluster_options(self, use_local_defaults=True, **kwargs):
         """Get the available cluster configuration options.
+
+        Parameters
+        ----------
+        use_local_defaults : bool, optional
+            Whether to use any default options from the local configuration.
+            Default is True, set to False to use only the server-side defaults.
 
         Returns
         -------
         cluster_options : Options
             A dict of cluster options.
         """
-        return self.sync(self._cluster_options, **kwargs)
+        return self.sync(
+            self._cluster_options, use_local_defaults=use_local_defaults, **kwargs
+        )
 
     async def _submit(self, cluster_options=None, **kwargs):
         url = "%s/gateway/api/clusters/" % self.address
@@ -435,7 +450,8 @@ class Gateway(object):
             options = dict(cluster_options)
             options.update(kwargs)
         else:
-            options = kwargs
+            options = self._config_cluster_options()
+            options.update(kwargs)
         req = HTTPRequest(
             url=url,
             method="POST",
@@ -467,7 +483,7 @@ class Gateway(object):
         cluster_name : str
             The cluster name.
         """
-        return self.sync(self._submit, **kwargs)
+        return self.sync(self._submit, cluster_options=cluster_options, **kwargs)
 
     async def _cluster_report(self, cluster_name, wait=False):
         params = "?wait" if wait else ""

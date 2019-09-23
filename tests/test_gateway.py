@@ -8,6 +8,7 @@ from cryptography.fernet import Fernet
 from traitlets import Integer, Float
 from traitlets.config import Config
 
+import dask
 from dask_gateway import Gateway, GatewayClusterError, GatewayWarning
 from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.compat import get_running_loop
@@ -657,6 +658,65 @@ async def test_cluster_manager_options(tmpdir):
             with pytest.raises(ValueError) as exc:
                 await gateway.new_cluster(option_two="medium")
             assert "option_two" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_cluster_manager_options_client_config(tmpdir, monkeypatch):
+    monkeypatch.setenv("TEST_OPTION_TWO", "large")
+
+    async with temp_gateway(
+        cluster_manager_class=ClusterOptionsManager,
+        cluster_manager_options=options.Options(
+            options.Integer(
+                "option_one", default=1, min=1, max=4, target="option_one_b"
+            ),
+            options.Select("option_two", options=[("small", 1.5), ("large", 15)]),
+        ),
+        temp_dir=str(tmpdir.join("dask-gateway")),
+    ) as gateway_proc:
+        async with Gateway(
+            address=gateway_proc.public_urls.connect_url,
+            proxy_address=gateway_proc.gateway_urls.connect_url,
+            asynchronous=True,
+        ) as gateway:
+
+            with dask.config.set(gateway__cluster__options={"option_one": 2}):
+                # Local config can override
+                opts = await gateway.cluster_options()
+                assert opts.option_one == 2
+                assert opts.option_two == "small"
+                # Without local config, uses server-side defaults
+                opts = await gateway.cluster_options(use_local_defaults=False)
+                assert opts.option_one == 1
+                assert opts.option_two == "small"
+
+            with dask.config.set(
+                gateway__cluster__options={"option_two": "{TEST_OPTION_TWO}"}
+            ):
+                # Values can format from environment variables
+                opts = await gateway.cluster_options()
+                assert opts.option_one == 1
+                assert opts.option_two == "large"
+
+            with dask.config.set(
+                gateway__cluster__options={
+                    "option_two": "{TEST_OPTION_TWO}",
+                    "option_one": 3,
+                }
+            ):
+                # Defaults are merged with kwargs to new_cluster
+                cluster = await gateway.new_cluster(option_one=2)
+                cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
+                assert cluster_obj.options == {"option_one": 2, "option_two": "large"}
+                await cluster.shutdown()
+
+                # If passing `cluster_options`, defaults are assumed already applied
+                opts = await gateway.cluster_options()
+                opts.option_two = "small"
+                cluster = await gateway.new_cluster(opts)
+                cluster_obj = gateway_proc.db.cluster_from_name(cluster.name)
+                assert cluster_obj.options == {"option_one": 3, "option_two": "small"}
+                await cluster.shutdown()
 
 
 @pytest.mark.asyncio
