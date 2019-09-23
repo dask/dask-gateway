@@ -686,7 +686,7 @@ async def test_cluster_manager_options_client_config(tmpdir, monkeypatch):
                 assert opts.option_one == 2
                 assert opts.option_two == "small"
                 # Without local config, uses server-side defaults
-                opts = await gateway.cluster_options(disable_local_defaults=True)
+                opts = await gateway.cluster_options(use_local_defaults=False)
                 assert opts.option_one == 1
                 assert opts.option_two == "small"
 

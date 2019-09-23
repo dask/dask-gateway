@@ -411,25 +411,24 @@ class Gateway(object):
         opts = dask.config.get("gateway.cluster.options")
         return {k: format_template(v) for k, v in opts.items()}
 
-    async def _cluster_options(self, disable_local_defaults=False):
+    async def _cluster_options(self, use_local_defaults=True):
         url = "%s/gateway/api/clusters/options" % self.address
         req = HTTPRequest(url=url, method="GET")
         resp = await self._fetch(req)
         data = json.loads(resp.body)
         options = Options._from_spec(data["cluster_options"])
-        if not disable_local_defaults:
+        if use_local_defaults:
             options.update(self._config_cluster_options())
         return options
 
-    def cluster_options(self, disable_local_defaults=False, **kwargs):
+    def cluster_options(self, use_local_defaults=True, **kwargs):
         """Get the available cluster configuration options.
 
         Parameters
         ----------
-        disable_local_defaults : bool, optional
-            Whether to disable using any default options from the local
-            configuration and get only the server-side defaults instead.
-            Default is False.
+        use_local_defaults : bool, optional
+            Whether to use any default options from the local configuration.
+            Default is True, set to False to use only the server-side defaults.
 
         Returns
         -------
@@ -437,9 +436,7 @@ class Gateway(object):
             A dict of cluster options.
         """
         return self.sync(
-            self._cluster_options,
-            disable_local_defaults=disable_local_defaults,
-            **kwargs,
+            self._cluster_options, use_local_defaults=use_local_defaults, **kwargs
         )
 
     async def _submit(self, cluster_options=None, **kwargs):
