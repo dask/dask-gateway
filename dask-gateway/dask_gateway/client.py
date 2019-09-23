@@ -23,6 +23,7 @@ from .cookiejar import CookieJar
 from . import comm
 from .auth import get_auth
 from .options import Options
+from .utils import format_template
 
 del comm
 
@@ -246,7 +247,7 @@ class Gateway(object):
         self, address=None, proxy_address=None, auth=None, asynchronous=False, loop=None
     ):
         if address is None:
-            address = dask.config.get("gateway.address")
+            address = format_template(dask.config.get("gateway.address"))
         if address is None:
             raise ValueError(
                 "No dask-gateway address provided or found in configuration"
@@ -254,7 +255,7 @@ class Gateway(object):
         address = address.rstrip("/")
 
         if proxy_address is None:
-            proxy_address = dask.config.get("gateway.proxy-address")
+            proxy_address = format_template(dask.config.get("gateway.proxy-address"))
         if proxy_address is None:
             raise ValueError(
                 "No dask-gateway proxy address provided or found in configuration"

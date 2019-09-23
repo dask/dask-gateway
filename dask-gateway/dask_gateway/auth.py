@@ -6,6 +6,8 @@ from urllib.parse import urlparse
 
 import dask
 
+from .utils import format_template
+
 
 __all__ = ("GatewayAuth", "BasicAuth", "KerberosAuth", "JupyterHubAuth", "get_auth")
 
@@ -48,6 +50,7 @@ def get_auth(auth=None):
         raise TypeError("Unknown auth value %r" % auth)
 
     auth_kwargs = dask.config.get("gateway.auth.kwargs", None) or {}
+    auth_kwargs = {k: format_template(v) for k, v in auth_kwargs.items()}
     out = auth(**auth_kwargs)
 
     if not isinstance(out, GatewayAuth):
