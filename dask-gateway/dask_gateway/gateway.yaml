@@ -5,9 +5,7 @@ gateway:
 
   proxy-address: 8786   # The full address or port to the dask-gateway
                         # scheduler proxy. If a port, the host/ip is taken from
-                        # ``address``. May also be a template string, which
-                        # will be formatted with any environment variables
-                        # before usage.
+                        # ``address``. May also be a template string.
 
   auth:
     type: basic         # The authentication type to use. Options are basic,
@@ -16,5 +14,8 @@ gateway:
 
     kwargs: {}          # Keyword arguments to use when instantiating the
                         # authentication class above. Values may be template
-                        # strings, which will be formatted with any environment
-                        # variables before usage.
+                        # strings.
+
+  cluster:
+    options: {}         # Default options to use when calling ``new_cluster`` or
+                        # ``cluster_options``. Values may be template strings.
