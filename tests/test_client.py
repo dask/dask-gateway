@@ -1,4 +1,5 @@
 import asyncio
+import importlib
 
 import pytest
 import dask
@@ -163,11 +164,9 @@ def test_local_proxy(monkeypatch):
         }
     }
     with dask.config.set(config):
-        monkeypatch.setattr(client, "_http_client", "tornado.curl_httpclient.CurlAsyncHTTPClient")
-        Gateway()
-
-    with dask.config.set(config):
-        monkeypatch.setattr(client, "_http_client", "tornado.simple_httpclient.SimpleAsyncHTTPClient")
+        monkeypatch.setattr(
+            client, "_http_client", "tornado.simple_httpclient.SimpleAsyncHTTPClient"
+        )
         with pytest.raises(ValueError):
             Gateway()
 
@@ -183,15 +182,66 @@ def test_local_proxy(monkeypatch):
     }
 
     with dask.config.set(config):
-        monkeypatch.setattr(client, "_http_client", "tornado.curl_httpclient.CurlAsyncHTTPClient")
-        Gateway()
-
-    with dask.config.set(config):
-        monkeypatch.setattr(client, "_http_client", "tornado.simple_httpclient.SimpleAsyncHTTPClient")
+        monkeypatch.setattr(
+            client, "_http_client", "tornado.simple_httpclient.SimpleAsyncHTTPClient"
+        )
         Gateway()
 
     with pytest.raises(ValueError):
         Gateway(proxy_config_dict="HI")
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("pycurl") is None, reason="pycurl not installed"
+)
+def test_local_proxy_w_pycurl(monkeypatch):
+    config = {
+        "gateway": {
+            "address": "http://127.0.0.1:8888",
+            "proxy-address": 8786,
+            "auth": {"type": "basic", "kwargs": {}},
+            "proxy_config": {"proxy_host": None, "proxy_port": 1111, "ca_certs": None},
+        }
+    }
+    with dask.config.set(config):
+        monkeypatch.setattr(
+            client, "_http_client", "tornado.curl_httpclient.CurlAsyncHTTPClient"
+        )
+        Gateway()
+
+    with dask.config.set(config):
+        monkeypatch.setattr(
+            client, "_http_client", "tornado.simple_httpclient.SimpleAsyncHTTPClient"
+        )
+        with pytest.raises(ValueError):
+            Gateway()
+
+    with pytest.raises(ValueError):
+        Gateway(proxy_config_dict="HI")
+
+    config = {
+        "gateway": {
+            "address": "http://127.0.0.1:8888",
+            "proxy-address": 8786,
+            "auth": {"type": "basic", "kwargs": {}},
+        }
+    }
+
+    with dask.config.set(config):
+        monkeypatch.setattr(
+            client, "_http_client", "tornado.curl_httpclient.CurlAsyncHTTPClient"
+        )
+        Gateway()
+
+    with dask.config.set(config):
+        monkeypatch.setattr(
+            client, "_http_client", "tornado.simple_httpclient.SimpleAsyncHTTPClient"
+        )
+        Gateway()
+
+    with pytest.raises(ValueError):
+        Gateway(proxy_config_dict="HI")
+
 
 class SlowHandler(web.RequestHandler):
     async def get(self):
