@@ -35,7 +35,7 @@ del comm
 if importlib.util.find_spec("pycurl") is not None:
     _http_client = "tornado.curl_httpclient.CurlAsyncHTTPClient"
 else:
-    _http_client = ""
+    _http_client = "tornado.simple_httpclient.SimpleAsyncHTTPClient"
 
 
 __all__ = ("Gateway", "GatewayCluster", "GatewayClusterError", "GatewayServerError")
@@ -289,11 +289,11 @@ class Gateway(object):
         proxy_address = "gateway://%s" % proxy_netloc
 
         if proxy_config_dict is None:
-            proxy_config_dict = dask.config.get("gateway.proxy_config")
+            proxy_config_dict = dask.config.get("gateway.proxy_config", {})
         if not any(proxy_config_dict.values()):
             AsyncHTTPClient.configure(_http_client, defaults={})
         elif isinstance(proxy_config_dict, dict):
-            if not _http_client:
+            if _http_client == "tornado.simple_httpclient.SimpleAsyncHTTPClient":
                 raise ValueError(
                     "Custom local proxy setup requires `pycurl` but it is not installed"
                 )
