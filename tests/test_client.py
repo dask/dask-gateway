@@ -4,6 +4,7 @@ import pytest
 import dask
 from dask_gateway.auth import get_auth, BasicAuth, KerberosAuth, JupyterHubAuth
 from dask_gateway.client import Gateway
+from dask_gateway_server.managers.inprocess import InProcessClusterManager
 from dask_gateway_server.utils import random_port
 from tornado import web
 from tornado.httpclient import HTTPRequest
@@ -190,9 +191,14 @@ async def test_client_fetch_timeout():
 
 @pytest.mark.asyncio
 async def test_client_reprs(tmpdir):
-    async with temp_gateway(temp_dir=str(tmpdir.join("dask-gateway"))) as gateway_proc:
+    async with temp_gateway(
+        cluster_manager_class=InProcessClusterManager,
+        temp_dir=str(tmpdir.join("dask-gateway")),
+    ) as gateway_proc:
         async with Gateway(
-            address=gateway_proc.public_url, asynchronous=True
+            address=gateway_proc.public_urls.connect_url,
+            proxy_address=gateway_proc.gateway_urls.connect_url,
+            asynchronous=True,
         ) as gateway:
             cluster = await gateway.new_cluster()
 

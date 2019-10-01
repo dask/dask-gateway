@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 import dask
 from distributed import Client
+from distributed.core import rpc
 from distributed.security import Security
 from distributed.utils import LoopRunner, format_bytes, log_errors
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
@@ -24,7 +25,7 @@ from .cookiejar import CookieJar
 from . import comm
 from .auth import get_auth
 from .options import Options
-from .utils import format_template
+from .utils import format_template, cancel_task
 
 del comm
 
@@ -504,7 +505,7 @@ class Gateway(object):
 
     async def _connect(self, cluster_name, autoclose):
         report = await self._wait_for_start(cluster_name)
-        return GatewayCluster._from_report(self, report, autoclose)
+        return await GatewayCluster._from_report(self, report, autoclose)
 
     def connect(self, cluster_name, autoclose=False):
         """Connect to a submitted cluster.
@@ -687,9 +688,11 @@ class GatewayCluster(object):
             asynchronous=asynchronous,
             loop=loop,
         )
+        if not self.asynchronous:
+            self.gateway.sync(self._start_internal)
 
     @classmethod
-    def _from_report(cls, gateway, report, autoclose):
+    async def _from_report(cls, gateway, report, autoclose):
         self = object.__new__(cls)
         self._init_internal(
             address=gateway.address,
@@ -700,6 +703,7 @@ class GatewayCluster(object):
             autoclose=autoclose,
             report=report,
         )
+        await self._connect()
         return self
 
     def _init_internal(
@@ -731,7 +735,12 @@ class GatewayCluster(object):
             asynchronous=asynchronous,
             loop=loop,
         )
-        self._internal_client = None
+
+        # Internals
+        self.scheduler_info = {}
+        self.scheduler_comm = None
+        self._watch_worker_status_task = None
+
         # XXX: Ensure client is closed. Currently disconnected clients try to
         # reconnect forever, which spams the schedulerproxy. Once this bug is
         # fixed, we should be able to remove this.
@@ -747,14 +756,11 @@ class GatewayCluster(object):
             self.scheduler_address = None
             self.dashboard_link = None
             self.security = None
-            if not self.asynchronous:
-                self.gateway.sync(self._start_internal)
         else:
             self.name = report.name
             self.scheduler_address = report.scheduler_address
             self.dashboard_link = report.dashboard_link
             self.security = report.security
-            self.status = "running"
 
     @property
     def loop(self):
@@ -766,15 +772,14 @@ class GatewayCluster(object):
 
     async def _start_internal(self):
         if self._start_task is None:
-            self._start_task = asyncio.ensure_future(
-                self._start_async(), loop=self.loop.asyncio_loop
-            )
+            self._start_task = asyncio.ensure_future(self._start_async())
         await self._start_task
         return self
 
     async def _start_async(self):
-        if self.status in ("running", "closing", "closed"):
+        if self.status in ("closing", "closed"):
             return
+        # Start cluster
         self.status = "starting"
         cluster_name = await self.gateway._submit(
             cluster_options=self._cluster_options, **self._cluster_kwargs
@@ -791,28 +796,37 @@ class GatewayCluster(object):
         self.scheduler_address = report.scheduler_address
         self.dashboard_link = report.dashboard_link
         self.security = report.security
+        # Connect
+        await self._connect()
         self.status = "running"
+
+    async def _connect(self):
+        self.scheduler_comm = rpc(
+            self.scheduler_address,
+            connection_args=self.security.get_connection_args("client"),
+        )
+        comm = await self.scheduler_comm.live_comm()
+        await comm.write({"op": "subscribe_worker_status"})
+        self.scheduler_info = await comm.read()
+        self._watch_worker_status_task = asyncio.ensure_future(
+            self._watch_worker_status(comm)
+        )
 
     async def _stop_internal(self):
         if self._stop_task is None:
-            self._stop_task = asyncio.ensure_future(
-                self._stop_async(), loop=self.loop.asyncio_loop
-            )
+            self._stop_task = asyncio.ensure_future(self._stop_async())
         await self._stop_task
 
     async def _stop_async(self):
         if self._start_task is not None:
             if not self._start_task.done():
                 # We're still starting, cancel task
-                self._start_task.cancel()
-                try:
-                    await self._start_task
-                except asyncio.CancelledError:
-                    pass
+                await cancel_task(self._start_task)
             self.status = "closing"
-            if self._internal_client is not None:
-                await self._internal_client._close()
-                self._internal_client = None
+            if self._watch_worker_status_task is not None:
+                await cancel_task(self._watch_worker_status_task)
+            if self.scheduler_comm is not None:
+                self.scheduler_comm.close_rpc()
             for client in list(self._clients):
                 await client._close()
                 self._clients.discard(client)
@@ -891,28 +905,36 @@ class GatewayCluster(object):
         """
         return self.gateway.scale_cluster(self.name, n, **kwargs)
 
-    def _widget_status(self):
-        if self._internal_client is None:
-            return None
+    async def _watch_worker_status(self, comm):
         try:
-            workers = self._internal_client._scheduler_identity["workers"]
+            while True:
+                try:
+                    msgs = await comm.read()
+                except OSError:
+                    break
+                for op, msg in msgs:
+                    if op == "add":
+                        workers = msg.pop("workers")
+                        self.scheduler_info["workers"].update(workers)
+                        self.scheduler_info.update(msg)
+                    elif op == "remove":
+                        del self.scheduler_info["workers"][msg]
+                if hasattr(self, "_status_widget"):
+                    self._status_widget.value = self._widget_status()
+        finally:
+            await comm.close()
+
+    def _widget_status(self):
+        try:
+            workers = self.scheduler_info["workers"]
         except KeyError:
-            if self._internal_client.status in ("closing", "closed"):
-                return None
+            return None
         else:
             n_workers = len(workers)
             cores = sum(w["nthreads"] for w in workers.values())
             memory = sum(w["memory_limit"] for w in workers.values())
 
             return _widget_status_template % (n_workers, cores, format_bytes(memory))
-
-    async def _widget_updater(self, widget):
-        while True:
-            value = self._widget_status()
-            if value is None:
-                break
-            widget.value = value
-            await asyncio.sleep(2)
 
     def _widget(self):
         """ Create IPython widget for display within a notebook """
@@ -928,11 +950,6 @@ class GatewayCluster(object):
             from ipywidgets import Layout, VBox, HBox, IntText, Button, HTML
         except ImportError:
             self._cached_widget = None
-            return None
-
-        try:
-            self._internal_client = self.get_client(set_as_default=False)
-        except Exception:
             return None
 
         layout = Layout(width="150px")
@@ -959,8 +976,7 @@ class GatewayCluster(object):
             elements.append(link)
 
         self._cached_widget = box = VBox(elements)
-
-        self._internal_client.loop.add_callback(self._widget_updater, status)
+        self._status_widget = status
 
         return box
 
