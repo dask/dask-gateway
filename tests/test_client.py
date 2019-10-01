@@ -97,7 +97,7 @@ def test_client_init():
         gateway = Gateway()
         assert gateway.address == "http://127.0.0.1:8888"
         assert gateway.proxy_address == "gateway://127.0.0.1:8786"
-        assert gateway._auth.username == "bruce"
+        assert gateway.auth.username == "bruce"
 
         # Address override
         gateway = Gateway(address="http://127.0.0.1:9999")
@@ -109,7 +109,7 @@ def test_client_init():
 
         # Auth override
         gateway = Gateway(auth="kerberos")
-        assert isinstance(gateway._auth, KerberosAuth)
+        assert isinstance(gateway.auth, KerberosAuth)
 
     config = {
         "gateway": {
