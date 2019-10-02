@@ -9,7 +9,7 @@ from traitlets import Integer, Float
 from traitlets.config import Config
 
 import dask
-from dask_gateway import Gateway, GatewayClusterError, GatewayWarning
+from dask_gateway import Gateway, GatewayClusterError, GatewayWarning, GatewayCluster
 from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.objects import ClusterStatus
@@ -18,6 +18,15 @@ from dask_gateway_server.managers.inprocess import InProcessClusterManager
 from dask_gateway_server import options
 
 from .utils import LocalTestingClusterManager, temp_gateway
+
+
+@pytest.fixture(autouse=True)
+def ensure_clusters_closed():
+    instances = len(GatewayCluster._instances)
+    for c in list(GatewayCluster._instances):
+        if not c.asynchronous:
+            c.close()
+    assert instances == 0
 
 
 class SlowStartClusterManager(ClusterManager):
@@ -269,7 +278,8 @@ async def test_slow_cluster_start(tmpdir, start_timeout, state):
             # Submission fails due to start timeout
             cluster_id = await gateway.submit()
             with pytest.raises(GatewayClusterError) as exc:
-                await gateway.connect(cluster_id)
+                async with gateway.connect(cluster_id):
+                    pass
             assert cluster_id in str(exc.value)
 
             cluster = gateway_proc.db.cluster_from_name(cluster_id)
@@ -298,7 +308,8 @@ async def test_slow_cluster_connect(tmpdir):
             # Submission fails due to connect timeout
             cluster_id = await gateway.submit()
             with pytest.raises(GatewayClusterError) as exc:
-                await gateway.connect(cluster_id)
+                async with gateway.connect(cluster_id):
+                    pass
             assert cluster_id in str(exc.value)
 
             cluster = gateway_proc.db.cluster_from_name(cluster_id)
@@ -327,7 +338,8 @@ async def test_cluster_fails_during_start(tmpdir, fail_stage):
             # Submission fails due to error during start
             cluster_id = await gateway.submit()
             with pytest.raises(GatewayClusterError) as exc:
-                await gateway.connect(cluster_id)
+                async with gateway.connect(cluster_id):
+                    pass
             assert cluster_id in str(exc.value)
 
             cluster_obj = gateway_proc.db.cluster_from_name(cluster_id)
@@ -384,13 +396,12 @@ async def test_cluster_fails_after_connect(tmpdir):
 
             cluster_obj = gateway_proc.db.cluster_from_name(cluster_id)
 
-            await gateway.connect(cluster_id)
+            async with gateway.connect(cluster_id):
+                # Wait for cluster to fail while running
+                await asyncio.wait_for(cluster_obj.manager.failed, 3)
 
-            # Wait for cluster to fail while running
-            await asyncio.wait_for(cluster_obj.manager.failed, 3)
-
-            # Stop cluster called to cleanup after failure
-            await asyncio.wait_for(cluster_obj.manager.stop_cluster_called, 3)
+                # Stop cluster called to cleanup after failure
+                await asyncio.wait_for(cluster_obj.manager.stop_cluster_called, 3)
 
 
 @pytest.mark.asyncio
@@ -769,14 +780,15 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
         ) as gateway:
 
             cluster1_name = await gateway.submit()
-            cluster1 = await gateway.connect(cluster1_name)
-            await cluster1.scale(2)
+            async with gateway.connect(cluster1_name) as c:
+                await c.scale(2)
 
             cluster2_name = await gateway.submit()
-            await gateway.connect(cluster2_name)
+            async with gateway.connect(cluster2_name):
+                pass
 
-            cluster3 = await gateway.new_cluster()
-            await cluster3.shutdown()
+            async with gateway.new_cluster():
+                pass
 
     active_clusters = {c.name: c for c in gateway_proc.db.active_clusters()}
 
@@ -819,14 +831,12 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
             proxy_address=gateway_proc.gateway_urls.connect_url,
             asynchronous=True,
         ) as gateway:
-
-            cluster = await gateway.connect(cluster1_name)
-
-            with cluster.get_client(set_as_default=False) as client:
-                res = await client.submit(lambda x: x + 1, 1)
-                assert res == 2
-
-            await cluster.shutdown()
+            async with gateway.connect(
+                cluster1_name, shutdown_on_close=True
+            ) as cluster:
+                with cluster.get_client(set_as_default=False) as client:
+                    res = await client.submit(lambda x: x + 1, 1)
+                    assert res == 2
 
 
 @pytest.mark.asyncio
