@@ -1,19 +1,21 @@
+import asyncio
+import atexit
 import enum
 import json
 import os
 import ssl
 import tempfile
+import traceback
 import warnings
 import weakref
-from datetime import timedelta, datetime
-from threading import get_ident
+from datetime import datetime
 from urllib.parse import urlparse
 
 import dask
 from distributed import Client
+from distributed.core import rpc
 from distributed.security import Security
-from distributed.utils import LoopRunner, sync, thread_state, format_bytes, log_errors
-from tornado import gen
+from distributed.utils import LoopRunner, format_bytes, log_errors
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 from tornado.httputil import HTTPHeaders
 
@@ -23,7 +25,7 @@ from .cookiejar import CookieJar
 from . import comm
 from .auth import get_auth
 from .options import Options
-from .utils import format_template
+from .utils import format_template, cancel_task
 
 del comm
 
@@ -271,32 +273,44 @@ class Gateway(object):
         self.address = address
         self.proxy_address = proxy_address
 
-        self._auth = get_auth(auth)
+        self.auth = get_auth(auth)
         self._cookie_jar = CookieJar()
 
         self._asynchronous = asynchronous
         self._loop_runner = LoopRunner(loop=loop, asynchronous=asynchronous)
-        self.loop = self._loop_runner.loop
-
         self._loop_runner.start()
-        if self._asynchronous:
-            self._started = self._start()
-        else:
-            self.sync(self._start)
 
-    async def _start(self):
-        self._http_client = AsyncHTTPClient()
+    @property
+    def loop(self):
+        return self._loop_runner.loop
+
+    @property
+    def asynchronous(self):
+        return self._asynchronous
+
+    def sync(self, func, *args, **kwargs):
+        if self.asynchronous:
+            return func(*args, **kwargs)
+        else:
+            future = asyncio.run_coroutine_threadsafe(
+                func(*args, **kwargs), self.loop.asyncio_loop
+            )
+            try:
+                return future.result()
+            except BaseException:
+                future.cancel()
+                raise
 
     def close(self):
-        """Close this gateway client"""
+        """Close the gateway client"""
         if not self.asynchronous:
             self._loop_runner.stop()
 
-    def __del__(self):
-        # __del__ is still called, even if __init__ failed. Only close if init
-        # actually succeeded.
-        if hasattr(self, "_started"):
-            self.close()
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, typ, value, traceback):
+        pass
 
     def __enter__(self):
         return self
@@ -304,48 +318,23 @@ class Gateway(object):
     def __exit__(self, *args):
         self.close()
 
-    def __await__(self):
-        return self._started.__await__()
-
-    async def __aenter__(self):
-        await self._started
-        return self
-
-    async def __aexit__(self, typ, value, traceback):
-        pass
+    def __del__(self):
+        # __del__ is called even if __init__ fails, need to detect this
+        if hasattr(self, "_loop_runner"):
+            self.close()
 
     def __repr__(self):
         return "Gateway<%s>" % self.address
 
-    @property
-    def asynchronous(self):
-        return (
-            self._asynchronous
-            or getattr(thread_state, "asynchronous", False)
-            or (
-                hasattr(self.loop, "_thread_identity")
-                and self.loop._thread_identity == get_ident()
-            )
-        )
-
-    def sync(self, func, *args, **kwargs):
-        if kwargs.pop("asynchronous", None) or self.asynchronous:
-            callback_timeout = kwargs.pop("callback_timeout", None)
-            future = func(*args, **kwargs)
-            if callback_timeout is not None:
-                future = gen.with_timeout(timedelta(seconds=callback_timeout), future)
-            return future
-        else:
-            return sync(self.loop, func, *args, **kwargs)
-
     async def _fetch(self, req):
+        client = AsyncHTTPClient()
         try:
             self._cookie_jar.pre_request(req)
-            resp = await self._http_client.fetch(req, raise_error=False)
+            resp = await client.fetch(req, raise_error=False)
             if resp.code == 401:
-                context = self._auth.pre_request(req, resp)
-                resp = await self._http_client.fetch(req, raise_error=False)
-                self._auth.post_response(req, resp, context)
+                context = self.auth.pre_request(req, resp)
+                resp = await client.fetch(req, raise_error=False)
+                self.auth.post_response(req, resp, context)
             self._cookie_jar.post_response(resp)
             if resp.error:
                 if resp.code == 599:
@@ -494,7 +483,7 @@ class Gateway(object):
             self.address, self.proxy_address, json.loads(resp.body)
         )
 
-    async def _connect(self, cluster_name):
+    async def _wait_for_start(self, cluster_name):
         while True:
             try:
                 report = await self._cluster_report(cluster_name, wait=True)
@@ -503,13 +492,7 @@ class Gateway(object):
                 pass
             else:
                 if report.status is ClusterStatus.RUNNING:
-                    return GatewayCluster(
-                        gateway=self,
-                        name=report.name,
-                        scheduler_address=report.scheduler_address,
-                        dashboard_link=report.dashboard_link,
-                        security=report.security,
-                    )
+                    return report
                 elif report.status is ClusterStatus.FAILED:
                     raise GatewayClusterError(
                         "Cluster %r failed to start, see logs for "
@@ -520,29 +503,34 @@ class Gateway(object):
                         "Cluster %r is already stopped" % cluster_name
                     )
             # Not started yet, try again later
-            await gen.sleep(0.5)
+            await asyncio.sleep(0.5)
 
-    def connect(self, cluster_name, **kwargs):
+    def connect(self, cluster_name, shutdown_on_close=False):
         """Connect to a submitted cluster.
+
+        Parameters
+        ----------
+        cluster_name : str
+            The cluster to connect to.
+        shutdown_on_close : bool, optional
+            If True, the cluster will be automatically shutdown on close.
+            Default is False.
 
         Returns
         -------
         cluster : GatewayCluster
         """
-        return self.sync(self._connect, cluster_name, **kwargs)
+        return GatewayCluster.from_name(
+            cluster_name,
+            shutdown_on_close=shutdown_on_close,
+            address=self.address,
+            proxy_address=self.proxy_address,
+            auth=self.auth,
+            asynchronous=self.asynchronous,
+            loop=self.loop,
+        )
 
-    async def _new_cluster(self, **kwargs):
-        cluster_name = await self._submit(**kwargs)
-        try:
-            return await self._connect(cluster_name)
-        except GatewayClusterError:
-            raise
-        except BaseException:
-            # Ensure cluster is stopped on error
-            await self._stop_cluster(cluster_name)
-            raise
-
-    def new_cluster(self, cluster_options=None, **kwargs):
+    def new_cluster(self, cluster_options=None, shutdown_on_close=True, **kwargs):
         """Submit a new cluster to the gateway, and wait for it to be started.
 
         Same as calling ``submit`` and ``connect`` in one go.
@@ -551,6 +539,10 @@ class Gateway(object):
         ----------
         cluster_options : Options, optional
             An ``Options`` object describing the desired cluster configuration.
+        shutdown_on_close : bool, optional
+            If True (default), the cluster will be automatically shutdown on
+            close. Set to False to have cluster persist until explicitly
+            shutdown.
         **kwargs :
             Additional cluster configuration options. If ``cluster_options`` is
             provided, these are applied afterwards as overrides. Available
@@ -561,7 +553,16 @@ class Gateway(object):
         -------
         cluster : GatewayCluster
         """
-        return self.sync(self._new_cluster, cluster_options=cluster_options, **kwargs)
+        return GatewayCluster(
+            address=self.address,
+            proxy_address=self.proxy_address,
+            auth=self.auth,
+            asynchronous=self.asynchronous,
+            loop=self.loop,
+            cluster_options=cluster_options,
+            shutdown_on_close=shutdown_on_close,
+            **kwargs,
+        )
 
     async def _stop_cluster(self, cluster_name):
         url = "%s/gateway/api/clusters/%s" % (self.address, cluster_name)
@@ -628,53 +629,298 @@ _widget_status_template = """
 """
 
 
+@atexit.register
+def cleanup_lingering_clusters():
+    for o in list(GatewayCluster._instances):
+        try:
+            if not o.asynchronous:
+                o.close()
+        except Exception as exc:
+            lines = ["Exception ignored when closing %r:\n" % o]
+            lines.extend(traceback.format_exception(type(exc), exc, exc.__traceback__))
+            warnings.warn("".join(lines))
+
+
 class GatewayCluster(object):
     """A dask-gateway cluster.
 
-    Users should use ``Gateway.new_cluster`` or ``Gateway.connect`` instead of
-    calling this class directly.
+    Parameters
+    ----------
+    address : str, optional
+        The address to the gateway server.
+    proxy_address : str, int, optional
+        The address of the scheduler proxy server. If an int, it's used as the
+        port, with the host/ip taken from ``address``. Provide a full address
+        if a different host/ip should be used.
+    auth : GatewayAuth, optional
+        The authentication method to use.
+    cluster_options : mapping, optional
+        A mapping of cluster options to use to start the cluster.
+    shutdown_on_close : bool, optional
+        If True (default), the cluster will be automatically shutdown on
+        close.
+    asynchronous : bool, optional
+        If true, starts the cluster in asynchronous mode, where it can be used
+        in other async code.
+    loop : IOLoop, optional
+        The IOLoop instance to use. Defaults to the current loop in
+        asynchronous mode, otherwise a background loop is started.
+    **kwargs :
+        Additional cluster configuration options. If ``cluster_options`` is
+        provided, these are applied afterwards as overrides. Available options
+        are specific to each deployment of dask-gateway, see
+        ``Gateway.cluster_options`` for more information.
     """
 
-    def __init__(self, gateway, name, scheduler_address, dashboard_link, security):
-        self._gateway = gateway
-        self.name = name
-        self.scheduler_address = scheduler_address
-        self.dashboard_link = dashboard_link
-        self.security = security
-        self._internal_client = None
+    _instances = weakref.WeakSet()
+
+    def __init__(
+        self,
+        address=None,
+        proxy_address=None,
+        auth=None,
+        cluster_options=None,
+        shutdown_on_close=True,
+        asynchronous=False,
+        loop=None,
+        **kwargs,
+    ):
+        self._init_internal(
+            address=address,
+            proxy_address=proxy_address,
+            auth=auth,
+            cluster_options=cluster_options,
+            cluster_kwargs=kwargs,
+            shutdown_on_close=shutdown_on_close,
+            asynchronous=asynchronous,
+            loop=loop,
+        )
+        if not self.asynchronous:
+            self.gateway.sync(self._start_internal)
+
+    @classmethod
+    def from_name(
+        cls,
+        cluster_name,
+        shutdown_on_close=False,
+        address=None,
+        proxy_address=None,
+        auth=None,
+        asynchronous=False,
+        loop=None,
+    ):
+        """Connect to a submitted cluster.
+
+        Parameters
+        ----------
+        cluster_name : str
+            The cluster to connect to.
+        shutdown_on_close : bool, optional
+            If True, the cluster will be automatically shutdown on close.
+            Default is False.
+        **kwargs :
+            Additional parameters to pass to the ``GatewayCluster``
+            constructor. See the docstring for more information.
+
+        Returns
+        -------
+        cluster : GatewayCluster
+        """
+        self = object.__new__(cls)
+        self._init_internal(
+            address=address,
+            proxy_address=proxy_address,
+            auth=auth,
+            asynchronous=asynchronous,
+            loop=loop,
+            shutdown_on_close=shutdown_on_close,
+            name=cluster_name,
+        )
+        return self
+
+    def _init_internal(
+        self,
+        address=None,
+        proxy_address=None,
+        auth=None,
+        cluster_options=None,
+        cluster_kwargs=None,
+        shutdown_on_close=None,
+        asynchronous=False,
+        loop=None,
+        name=None,
+    ):
+        self.status = "created"
+
+        self.shutdown_on_close = shutdown_on_close
+
+        self._instances.add(self)
+
+        self.gateway = Gateway(
+            address=address,
+            proxy_address=proxy_address,
+            auth=auth,
+            asynchronous=asynchronous,
+            loop=loop,
+        )
+
+        # Internals
+        self.scheduler_info = {}
+        self.scheduler_comm = None
+        self._watch_worker_status_task = None
+
         # XXX: Ensure client is closed. Currently disconnected clients try to
         # reconnect forever, which spams the schedulerproxy. Once this bug is
         # fixed, we should be able to remove this.
         self._clients = weakref.WeakSet()
 
-    def __repr__(self):
-        return "GatewayCluster<%s>" % self.name
+        self._cluster_options = cluster_options
+        self._cluster_kwargs = cluster_kwargs or {}
+        self._start_task = None
+        self._stop_task = None
 
-    async def __aenter__(self):
+        self.name = name
+        self.scheduler_address = None
+        self.dashboard_link = None
+        self.security = None
+
+        if name is not None:
+            self.status = "starting"
+
+    @property
+    def loop(self):
+        return self.gateway.loop
+
+    @property
+    def asynchronous(self):
+        return self.gateway.asynchronous
+
+    async def _start_internal(self):
+        if self._start_task is None:
+            self._start_task = asyncio.ensure_future(self._start_async())
+        try:
+            await self._start_task
+        except BaseException:
+            # On exception, cleanup
+            await self._stop_internal()
+            raise
         return self
 
-    async def __aexit__(self):
-        await self.shutdown()
+    async def _start_async(self):
+        if self.status in ("closing", "closed"):
+            return
+        # Start cluster if not already started
+        if self.status == "created":
+            self.status = "starting"
+            self.name = await self.gateway._submit(
+                cluster_options=self._cluster_options, **self._cluster_kwargs
+            )
+        # Connect to cluster
+        try:
+            report = await self.gateway._wait_for_start(self.name)
+        except GatewayClusterError:
+            raise
+        self.scheduler_address = report.scheduler_address
+        self.dashboard_link = report.dashboard_link
+        self.security = report.security
+        # Initialize scheduler comms and other internals
+        await self._init_internals()
+        self.status = "running"
+
+    async def _init_internals(self):
+        self.scheduler_comm = rpc(
+            self.scheduler_address,
+            connection_args=self.security.get_connection_args("client"),
+        )
+        comm = None
+        try:
+            comm = await self.scheduler_comm.live_comm()
+            await comm.write({"op": "subscribe_worker_status"})
+            self.scheduler_info = await comm.read()
+            self._watch_worker_status_task = asyncio.ensure_future(
+                self._watch_worker_status(comm)
+            )
+        except Exception:
+            if comm is not None:
+                await comm.close()
+
+    async def _stop_internal(self, shutdown=None):
+        self._instances.discard(self)
+        if self._stop_task is None:
+            self._stop_task = asyncio.ensure_future(self._stop_async())
+        await self._stop_task
+
+        if shutdown is None:
+            shutdown = self.shutdown_on_close
+
+        if shutdown and self.name is not None:
+            await self.gateway._stop_cluster(self.name)
+
+    async def _stop_async(self):
+        if self._start_task is not None:
+            if not self._start_task.done():
+                # We're still starting, cancel task
+                await cancel_task(self._start_task)
+
+        self.status = "closing"
+
+        if self._watch_worker_status_task is not None:
+            await cancel_task(self._watch_worker_status_task)
+        if self.scheduler_comm is not None:
+            self.scheduler_comm.close_rpc()
+        for client in list(self._clients):
+            await client._close()
+            self._clients.discard(client)
+
+        self.status = "closed"
+
+    def __await__(self):
+        return self.__aenter__().__await__()
+
+    async def __aenter__(self):
+        return await self._start_internal()
+
+    async def __aexit__(self, typ, value, traceback):
+        await self._stop_internal()
+
+    def close(self, shutdown=None):
+        """Close the cluster object.
+
+        Parameters
+        ----------
+        shutdown : bool, optional
+            Whether to shutdown the cluster. If True, the cluster will be
+            shutdown, if False only the local state will be cleaned up.
+            Defaults to the value of ``shutdown_on_close``, set to True or
+            False to override.
+        """
+        if self.asynchronous:
+            return self._stop_internal(shutdown=shutdown)
+        if self.loop.asyncio_loop.is_running():
+            self.gateway.sync(self._stop_internal, shutdown=shutdown)
+        self.gateway.close()
+
+    def shutdown(self):
+        """Shutdown this cluster. Alias for ``close(shutdown=True)``."""
+        return self.close(shutdown=True)
 
     def __enter__(self):
         return self
 
-    def __exit__(self):
-        self.shutdown()
+    def __exit__(self, *args):
+        if not self.asynchronous:
+            self.close()
 
-    def shutdown(self, **kwargs):
-        """Shutdown this cluster."""
-        if self._internal_client is not None:
-            self._internal_client.close()
-            self._internal_client = None
-        for client in list(self._clients):
-            client.close()
-            self._clients.discard(client)
-        return self._gateway.stop_cluster(self.name, **kwargs)
+    def __del__(self):
+        if not hasattr(self, "gateway"):
+            return
+        if self.asynchronous:
+            # No del for async mode
+            return
+        self.close()
 
-    def close(self, **kwargs):
-        """Shutdown this cluster, alias for ``shutdown``"""
-        return self.shutdown(**kwargs)
+    def __repr__(self):
+        return "GatewayCluster<%s, status=%s>" % (self.name, self.status)
 
     def get_client(self, set_as_default=True):
         """Get a ``Client`` for this cluster.
@@ -687,10 +933,10 @@ class GatewayCluster(object):
             self.scheduler_address,
             security=self.security,
             set_as_default=set_as_default,
-            asynchronous=self._gateway.asynchronous,
-            loop=self._gateway.loop,
+            asynchronous=self.asynchronous,
+            loop=self.loop,
         )
-        if not self._gateway.asynchronous:
+        if not self.asynchronous:
             self._clients.add(client)
         return client
 
@@ -702,30 +948,48 @@ class GatewayCluster(object):
         n : int
             The number of workers to scale to.
         """
-        return self._gateway.scale_cluster(self.name, n, **kwargs)
+        return self.gateway.scale_cluster(self.name, n, **kwargs)
+
+    async def _watch_worker_status(self, comm):
+        # We don't want to hold on to a ref to self, otherwise this will
+        # leave a dangling reference and prevent garbage collection.
+        ref_self = weakref.ref(self)
+        self = None
+        try:
+            while True:
+                try:
+                    msgs = await comm.read()
+                except OSError:
+                    break
+                try:
+                    self = ref_self()
+                    if self is None:
+                        break
+                    for op, msg in msgs:
+                        if op == "add":
+                            workers = msg.pop("workers")
+                            self.scheduler_info["workers"].update(workers)
+                            self.scheduler_info.update(msg)
+                        elif op == "remove":
+                            del self.scheduler_info["workers"][msg]
+                    if hasattr(self, "_status_widget"):
+                        self._status_widget.value = self._widget_status()
+                finally:
+                    self = None
+        finally:
+            await comm.close()
 
     def _widget_status(self):
-        if self._internal_client is None:
-            return None
         try:
-            workers = self._internal_client._scheduler_identity["workers"]
+            workers = self.scheduler_info["workers"]
         except KeyError:
-            if self._internal_client.status in ("closing", "closed"):
-                return None
+            return None
         else:
             n_workers = len(workers)
             cores = sum(w["nthreads"] for w in workers.values())
             memory = sum(w["memory_limit"] for w in workers.values())
 
             return _widget_status_template % (n_workers, cores, format_bytes(memory))
-
-    async def _widget_updater(self, widget):
-        while True:
-            value = self._widget_status()
-            if value is None:
-                break
-            widget.value = value
-            await gen.sleep(2)
 
     def _widget(self):
         """ Create IPython widget for display within a notebook """
@@ -734,18 +998,13 @@ class GatewayCluster(object):
         except AttributeError:
             pass
 
-        if self._gateway.asynchronous:
+        if self.asynchronous:
             return None
 
         try:
             from ipywidgets import Layout, VBox, HBox, IntText, Button, HTML
         except ImportError:
             self._cached_widget = None
-            return None
-
-        try:
-            self._internal_client = self.get_client(set_as_default=False)
-        except Exception:
             return None
 
         layout = Layout(width="150px")
@@ -772,8 +1031,7 @@ class GatewayCluster(object):
             elements.append(link)
 
         self._cached_widget = box = VBox(elements)
-
-        self._internal_client.loop.add_callback(self._widget_updater, status)
+        self._status_widget = status
 
         return box
 

@@ -318,6 +318,7 @@ class DaskGateway(Application):
         checking a cluster's status before deciding that the cluster is no
         longer active.
         """,
+        config=True,
     )
 
     db_url = Unicode(
