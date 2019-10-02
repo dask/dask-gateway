@@ -4,6 +4,7 @@ import pytest
 import dask
 from dask_gateway.auth import get_auth, BasicAuth, KerberosAuth, JupyterHubAuth
 from dask_gateway.client import Gateway, GatewayCluster, cleanup_lingering_clusters
+from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.managers.inprocess import InProcessClusterManager
 from dask_gateway_server.utils import random_port
 from tornado import web
@@ -268,7 +269,7 @@ async def test_GatewayCluster_shutdown_on_close(tmpdir):
             assert cluster.shutdown_on_close
             assert cluster in GatewayCluster._instances
 
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         await loop.run_in_executor(None, test)
 
         assert len(GatewayCluster._instances) == 0
@@ -296,7 +297,7 @@ async def test_GatewayCluster_cleanup_atexit(tmpdir):
                 proxy_address=gateway_proc.gateway_urls.connect_url,
             )
 
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         cluster = await loop.run_in_executor(None, test)
 
         assert len(GatewayCluster._instances) == 1
