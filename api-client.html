@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Client API &mdash; Dask Gateway 0.4.1+7.g623e423 documentation</title>
+  <title>Client API &mdash; Dask Gateway 0.4.1+8.gb4de190 documentation</title>
   
 
   
@@ -39,7 +39,9 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Configuration Reference" href="api-server.html" />
-    <link rel="prev" title="Install on a Kubernetes Cluster" href="install-kube.html" /> 
+    <link rel="prev" title="Install on a Kubernetes Cluster" href="install-kube.html" />
+  <link rel="shortcut icon" href="_static/images/favicon.ico"/>
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -62,6 +64,7 @@
         <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
         <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
         <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+        <li><a href="https://docs.google.com/presentation/d/e/2PACX-1vSTH2kAR0DCR0nw8pFBe5kuYbOk3inZ9cQfZbzOIRjyzQoVaOoMfI2JONGBz-qsvG_P6g050ddHxSXT/pub?start=false&loop=false&delayms=60000"> Slides </a></li>
       </ul>
     </li>
 
@@ -79,13 +82,13 @@
     </li>
 
     <li>
-      <a href="https://docs.dask.org/en/latest/setup.html">Deploy</a>
+      <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
       <ul>
-        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/kubernetes-helm.html"> Helm </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
         <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
         <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
       </ul>
     </li>
 
@@ -122,7 +125,7 @@
             
             
               <div class="version">
-                0.4.1+7.g623e423
+                0.4.1+8.gb4de190
               </div>
             
           
@@ -253,7 +256,7 @@ asynchronous mode, otherwise a background loop is started.</p></li>
 <dl class="method">
 <dt id="dask_gateway.Gateway.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close this gateway client</p>
+<dd><p>Close the gateway client</p>
 </dd></dl>
 
 <dl class="method">
@@ -276,14 +279,21 @@ Default is True, set to False to use only the server-side defaults.</p>
 
 <dl class="method">
 <dt id="dask_gateway.Gateway.connect">
-<code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.connect" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">shutdown_on_close=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.connect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to a submitted cluster.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>cluster</strong></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_name</strong> (<em>str</em>) – The cluster to connect to.</p></li>
+<li><p><strong>shutdown_on_close</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the cluster will be automatically shutdown on close.
+Default is False.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster">GatewayCluster</a></p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>cluster</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster">GatewayCluster</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -310,13 +320,16 @@ By default selects active clusters (‘starting’, ‘started’,
 
 <dl class="method">
 <dt id="dask_gateway.Gateway.new_cluster">
-<code class="sig-name descname">new_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_options=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">new_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_options=None</em>, <em class="sig-param">shutdown_on_close=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a new cluster to the gateway, and wait for it to be started.</p>
 <p>Same as calling <code class="docutils literal notranslate"><span class="pre">submit</span></code> and <code class="docutils literal notranslate"><span class="pre">connect</span></code> in one go.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cluster_options</strong> (<a class="reference internal" href="#dask_gateway.options.Options" title="dask_gateway.options.Options"><em>Options</em></a><em>, </em><em>optional</em>) – An <code class="docutils literal notranslate"><span class="pre">Options</span></code> object describing the desired cluster configuration.</p></li>
+<li><p><strong>shutdown_on_close</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True (default), the cluster will be automatically shutdown on
+close. Set to False to have cluster persist until explicitly
+shutdown.</p></li>
 <li><p><strong>**kwargs</strong> – Additional cluster configuration options. If <code class="docutils literal notranslate"><span class="pre">cluster_options</span></code> is
 provided, these are applied afterwards as overrides. Available
 options are specific to each deployment of dask-gateway, see
@@ -389,14 +402,65 @@ options are specific to each deployment of dask-gateway, see
 <h2>GatewayCluster<a class="headerlink" href="#gatewaycluster" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="dask_gateway.GatewayCluster">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayCluster</code><span class="sig-paren">(</span><em class="sig-param">gateway</em>, <em class="sig-param">name</em>, <em class="sig-param">scheduler_address</em>, <em class="sig-param">dashboard_link</em>, <em class="sig-param">security</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayCluster</code><span class="sig-paren">(</span><em class="sig-param">address=None</em>, <em class="sig-param">proxy_address=None</em>, <em class="sig-param">auth=None</em>, <em class="sig-param">cluster_options=None</em>, <em class="sig-param">shutdown_on_close=True</em>, <em class="sig-param">asynchronous=False</em>, <em class="sig-param">loop=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dask-gateway cluster.</p>
-<p>Users should use <code class="docutils literal notranslate"><span class="pre">Gateway.new_cluster</span></code> or <code class="docutils literal notranslate"><span class="pre">Gateway.connect</span></code> instead of
-calling this class directly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<em>str</em><em>, </em><em>optional</em>) – The address to the gateway server.</p></li>
+<li><p><strong>proxy_address</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>optional</em>) – The address of the scheduler proxy server. If an int, it’s used as the
+port, with the host/ip taken from <code class="docutils literal notranslate"><span class="pre">address</span></code>. Provide a full address
+if a different host/ip should be used.</p></li>
+<li><p><strong>auth</strong> (<em>GatewayAuth</em><em>, </em><em>optional</em>) – The authentication method to use.</p></li>
+<li><p><strong>cluster_options</strong> (<em>mapping</em><em>, </em><em>optional</em>) – A mapping of cluster options to use to start the cluster.</p></li>
+<li><p><strong>shutdown_on_close</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True (default), the cluster will be automatically shutdown on
+close.</p></li>
+<li><p><strong>asynchronous</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, starts the cluster in asynchronous mode, where it can be used
+in other async code.</p></li>
+<li><p><strong>loop</strong> (<em>IOLoop</em><em>, </em><em>optional</em>) – The IOLoop instance to use. Defaults to the current loop in
+asynchronous mode, otherwise a background loop is started.</p></li>
+<li><p><strong>**kwargs</strong> – Additional cluster configuration options. If <code class="docutils literal notranslate"><span class="pre">cluster_options</span></code> is
+provided, these are applied afterwards as overrides. Available options
+are specific to each deployment of dask-gateway, see
+<code class="docutils literal notranslate"><span class="pre">Gateway.cluster_options</span></code> for more information.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="method">
 <dt id="dask_gateway.GatewayCluster.close">
-<code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shutdown this cluster, alias for <code class="docutils literal notranslate"><span class="pre">shutdown</span></code></p>
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param">shutdown=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the cluster object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>shutdown</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to shutdown the cluster. If True, the cluster will be
+shutdown, if False only the local state will be cleaned up.
+Defaults to the value of <code class="docutils literal notranslate"><span class="pre">shutdown_on_close</span></code>, set to True or
+False to override.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.GatewayCluster.from_name">
+<em class="property">classmethod </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">shutdown_on_close=False</em>, <em class="sig-param">address=None</em>, <em class="sig-param">proxy_address=None</em>, <em class="sig-param">auth=None</em>, <em class="sig-param">asynchronous=False</em>, <em class="sig-param">loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.from_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to a submitted cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_name</strong> (<em>str</em>) – The cluster to connect to.</p></li>
+<li><p><strong>shutdown_on_close</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, the cluster will be automatically shutdown on close.
+Default is False.</p></li>
+<li><p><strong>**kwargs</strong> – Additional parameters to pass to the <code class="docutils literal notranslate"><span class="pre">GatewayCluster</span></code>
+constructor. See the docstring for more information.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>cluster</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster">GatewayCluster</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -426,8 +490,8 @@ calling this class directly.</p>
 
 <dl class="method">
 <dt id="dask_gateway.GatewayCluster.shutdown">
-<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.shutdown" title="Permalink to this definition">¶</a></dt>
-<dd><p>Shutdown this cluster.</p>
+<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shutdown this cluster. Alias for <code class="docutils literal notranslate"><span class="pre">close(shutdown=True)</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
