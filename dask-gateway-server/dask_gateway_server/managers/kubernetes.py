@@ -228,6 +228,18 @@ class PodReflector(SingletonConfigurable):
     def stop(self):
         self.stopped = True
 
+    def add_pod(self, pod_name):
+        """Mark a pod as submitted.
+
+        Due to a race condition, there may be a period where a pod has been
+        submitted, but the pod reflector hasn't been notified yet. Here we mark
+        pods in this state with a flag, which will be updated when the watch
+        notification finally arrives"""
+        self.pods[pod_name] = "new"
+
+    def remove_pod(self, pod_name):
+        self.pods.pop(pod_name, None)
+
 
 class KubeClusterManager(ClusterManager):
     """A cluster manager for deploying Dask on a Kubernetes cluster."""
@@ -621,6 +633,8 @@ class KubeClusterManager(ClusterManager):
             None, self.kube_client.create_namespaced_pod, self.namespace, pod
         )
 
+        self.pod_reflector.add_pod(pod.metadata.name)
+
         yield {"secret_name": secret_name, "pod_name": pod.metadata.name}
 
     async def pod_status(self, pod_name, container_name):
@@ -633,6 +647,8 @@ class KubeClusterManager(ClusterManager):
 
         pod = self.pod_reflector.pods.get(pod_name)
         if pod is not None:
+            if pod == "new":
+                return True
             if pod.status.phase == "Pending":
                 return True
             if pod.status.container_statuses is None:
@@ -667,6 +683,7 @@ class KubeClusterManager(ClusterManager):
             await loop.run_in_executor(
                 None, self.kube_client.delete_namespaced_pod, pod_name, self.namespace
             )
+            self.pod_reflector.remove_pod(pod_name)
 
         secret_name = cluster_state.get("secret_name")
         if secret_name is not None:
@@ -689,6 +706,8 @@ class KubeClusterManager(ClusterManager):
             None, self.kube_client.create_namespaced_pod, self.namespace, pod
         )
 
+        self.pod_reflector.add_pod(pod.metadata.name)
+
         yield {"pod_name": pod.metadata.name}
 
     async def stop_worker(self, worker_name, worker_state, cluster_state):
@@ -698,3 +717,4 @@ class KubeClusterManager(ClusterManager):
             await loop.run_in_executor(
                 None, self.kube_client.delete_namespaced_pod, pod_name, self.namespace
             )
+            self.pod_reflector.remove_pod(pod_name)
