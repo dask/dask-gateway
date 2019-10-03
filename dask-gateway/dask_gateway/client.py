@@ -9,8 +9,7 @@ import traceback
 import warnings
 import weakref
 import importlib
-from datetime import timedelta, datetime
-from threading import get_ident
+from datetime import datetime
 from urllib.parse import urlparse
 
 import dask
@@ -31,11 +30,15 @@ from .utils import format_template, cancel_task
 
 del comm
 
-# Configure AsyncClient backend
+# Configure default AsyncClient backend
+HTTP_CLIENTS = {
+    "curl": "tornado.curl_httpclient.CurlAsyncHTTPClient",
+    "simple": "tornado.simple_httpclient.SimpleAsyncHTTPClient",
+}
+
+HAS_PYCURL = False
 if importlib.util.find_spec("pycurl") is not None:
-    _http_client = "tornado.curl_httpclient.CurlAsyncHTTPClient"
-else:
-    _http_client = "tornado.simple_httpclient.SimpleAsyncHTTPClient"
+    HAS_PYCURL = True
 
 
 __all__ = ("Gateway", "GatewayCluster", "GatewayClusterError", "GatewayServerError")
@@ -264,7 +267,8 @@ class Gateway(object):
         auth=None,
         asynchronous=False,
         loop=None,
-        proxy_config_dict=None,
+        http_client=None,
+        client_defaults=None,
     ):
         if address is None:
             address = format_template(dask.config.get("gateway.address"))
@@ -288,21 +292,25 @@ class Gateway(object):
             proxy_netloc = parsed.netloc if parsed.netloc else proxy_address
         proxy_address = "gateway://%s" % proxy_netloc
 
-        if proxy_config_dict is None:
-            proxy_config_dict = dask.config.get("gateway.proxy_config", {})
-        if not any(proxy_config_dict.values()):
-            AsyncHTTPClient.configure(_http_client, defaults={})
-        elif isinstance(proxy_config_dict, dict):
-            if _http_client == "tornado.simple_httpclient.SimpleAsyncHTTPClient":
-                raise ValueError(
-                    "Custom local proxy setup requires `pycurl` but it is not installed"
-                )
-            else:
-                AsyncHTTPClient.configure(_http_client, defaults=proxy_config_dict)
-        else:
-            raise ValueError(
-                "`proxy_config_dict` was specified but is not a valid dict"
+        if http_client is None:
+            http_client = dask.config.get("gateway.httpclient.type", None)
+        if http_client is None:
+            _http_client = (
+                HTTP_CLIENTS["curl"] if HAS_PYCURL else HTTP_CLIENTS["simple"]
             )
+        elif http_client == "curl" and not HAS_PYCURL:
+            raise ValueError("`curl` client requires `pycurl` but it is not installed")
+        else:
+            _http_client = HTTP_CLIENTS[http_client]
+
+        if client_defaults is None:
+            client_defaults = dask.config.get("gateway.httpclient.defaults", {})
+        elif not isinstance(client_defaults, dict):
+            raise TypeError(
+                "Expected dict for `client_defaults`, got %s" % type(client_defaults)
+            )
+
+        AsyncHTTPClient.configure(_http_client, defaults=client_defaults)
 
         self.address = address
         self.proxy_address = proxy_address
