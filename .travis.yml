@@ -2,6 +2,10 @@ dist: xenial
 language: python
 python:
   - "3.6"
+addons:
+  apt:
+    packages:
+      - libgnutls-dev
 
 git:
   depth: false  # Ensure latest tag is pulled
