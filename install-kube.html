@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.4.1+10.g24f3b6c documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.4.1+11.gb38ffa9 documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.4.1+10.g24f3b6c
+                0.4.1+11.gb38ffa9
               </div>
             
           
@@ -249,13 +249,13 @@
 <h2>Create a Kubernetes Cluster (optional)<a class="headerlink" href="#create-a-kubernetes-cluster-optional" title="Permalink to this headline">¶</a></h2>
 <p>If you don’t already have a cluster running, you’ll want to create one. There
 are plenty of guides online for how to do this. We recommend following the
-excellent <a class="reference external" href="create-k8s-cluster">documentation provided by zero-to-jupyterhub-k8s</a>.</p>
+excellent <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/create-k8s-cluster.html">documentation provided by zero-to-jupyterhub-k8s</a>.</p>
 </div>
 <div class="section" id="install-helm-optional">
 <h2>Install Helm (optional)<a class="headerlink" href="#install-helm-optional" title="Permalink to this headline">¶</a></h2>
 <p>If you don’t already have <a class="reference external" href="https://helm.sh/">Helm</a> installed, you’ll need to install it locally,
 and ensure <code class="docutils literal notranslate"><span class="pre">tiller</span></code> is running on your cluster. As with above, there are
-plenty of guides online for doing this. We recommend following the <a class="reference external" href="install-helm">guide
+plenty of guides online for doing this. We recommend following the <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-helm.html">guide
 provided by zero-to-jupyterhub-k8s</a>.</p>
 </div>
 <div class="section" id="install-dask-gateway">
@@ -293,8 +293,7 @@ values.yaml file</a> for more information.</p>
 </div>
 <div class="section" id="install-the-helm-chart">
 <h3>Install the Helm Chart<a class="headerlink" href="#install-the-helm-chart" title="Permalink to this headline">¶</a></h3>
-<p>To install the Dask-Gateway Helm chart, run the following command from within
-the <code class="docutils literal notranslate"><span class="pre">resources/helm</span></code> directory:</p>
+<p>To install the Dask-Gateway Helm chart, run the following command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RELEASE</span><span class="o">=</span>dask-gateway
 <span class="nv">NAMESPACE</span><span class="o">=</span>dask-gateway
 <span class="nv">VERSION</span><span class="o">=</span><span class="m">0</span>.4.1

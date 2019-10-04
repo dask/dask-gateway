@@ -10,8 +10,7 @@ Create a Kubernetes Cluster (optional)
 
 If you don't already have a cluster running, you'll want to create one. There
 are plenty of guides online for how to do this. We recommend following the
-excellent `documentation provided by zero-to-jupyterhub-k8s
-<create-k8s-cluster>`_.
+excellent `documentation provided by zero-to-jupyterhub-k8s`_.
 
 
 Install Helm (optional)
@@ -20,7 +19,7 @@ Install Helm (optional)
 If you don't already have Helm_ installed, you'll need to install it locally,
 and ensure ``tiller`` is running on your cluster. As with above, there are
 plenty of guides online for doing this. We recommend following the `guide
-provided by zero-to-jupyterhub-k8s <install-helm>`_.
+provided by zero-to-jupyterhub-k8s`_.
 
 
 Install Dask-Gateway
@@ -72,8 +71,7 @@ values.yaml file`_ for more information.
 Install the Helm Chart
 ~~~~~~~~~~~~~~~~~~~~~~
 
-To install the Dask-Gateway Helm chart, run the following command from within
-the ``resources/helm`` directory:
+To install the Dask-Gateway Helm chart, run the following command:
 
 .. code-block:: shell
 
@@ -268,9 +266,9 @@ object.
 
 .. _Kubernetes Cluster: https://kubernetes.io/
 .. _Helm: https://helm.sh/
-.. _create-k8s-cluster: https://zero-to-jupyterhub.readthedocs.io/en/latest/create-k8s-cluster.html
+.. _documentation provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/create-k8s-cluster.html
 .. _zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/
-.. _install-helm: https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-helm.html
+.. _guide provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-helm.html
 .. _Helm chart repository:
 .. _dask-gateway helm chart repository: https://dask.org/dask-gateway-helm-repo/
 .. _dask-gateway github repo: https://github.com/dask/dask-gateway/
