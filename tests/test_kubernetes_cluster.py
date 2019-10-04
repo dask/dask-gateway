@@ -15,6 +15,7 @@ from dask_gateway_server.managers.kubernetes import (
     PodReflector,
     merge_kube_objects,
     merge_json_objects,
+    kubequote,
 )
 
 from .utils import ClusterManagerTests
@@ -109,6 +110,12 @@ def test_merge_kube_objects():
     assert new == sol
 
 
+def test_kubequote():
+    assert kubequote("testuser") == "testuser"
+    assert kubequote("\x01\x02alice") == "x01x02alice"
+    assert kubequote("user_name") == "userx5fname"
+
+
 @pytest.mark.parametrize("kind", ["scheduler", "worker"])
 def test_pod_spec(kind):
     tol = {"key": "foo", "operator": "Equal", "value": "bar", "effect": "NoSchedule"}
@@ -123,7 +130,7 @@ def test_pod_spec(kind):
 
     manager = KubeClusterManager(
         _testing=True,
-        username="alice",
+        username="\x01alice",
         cluster_name=uuid.uuid4().hex,
         api_token=uuid.uuid4().hex,
         namespace=NAMESPACE,
@@ -131,8 +138,12 @@ def test_pod_spec(kind):
     )
     if kind == "scheduler":
         pod = manager.make_pod_spec("sched-secret-name")
+        suffix = manager.cluster_name
     else:
-        pod = manager.make_pod_spec("sched-secret-name", worker_name="worker1")
+        suffix = uuid.uuid4().hex
+        pod = manager.make_pod_spec("sched-secret-name", worker_name=suffix)
+
+    assert pod.metadata.name == f"dask-gateway-x01alice-{kind}-{suffix}"
 
     spec = pod.spec
     ct = spec["containers"][0]

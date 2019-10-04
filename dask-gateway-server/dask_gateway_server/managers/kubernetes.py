@@ -1,4 +1,5 @@
 import os
+import string
 import threading
 import time
 
@@ -112,6 +113,14 @@ def merge_json_objects(a, b):
             else:
                 a[key] = b_val
     return a
+
+
+def kubequote(s, _safe=frozenset(string.ascii_lowercase + string.digits + "-.")):
+    """Quote a string to be a valid kubernetes name.
+
+    Unsafe characeters are hex encoded and prefixed with ``"x"``.
+    """
+    return "".join(c if c in _safe else "x%s" % c.encode("utf-8").hex() for c in s)
 
 
 class PodReflector(SingletonConfigurable):
@@ -486,6 +495,10 @@ class KubeClusterManager(ClusterManager):
             label_selector=self.pod_label_selector,
         )
 
+    def make_object_name(self, kind, uuid):
+        username = kubequote(self.username)
+        return f"dask-gateway-{username}-{kind}-{uuid}"
+
     def get_tls_paths(self):
         """Get the absolute paths to the tls cert and key files."""
         return "/etc/dask-credentials/dask.crt", "/etc/dask-credentials/dask.pem"
@@ -524,7 +537,7 @@ class KubeClusterManager(ClusterManager):
         return labels
 
     def make_secret_spec(self):
-        name = "dask-gateway-tls-%s" % self.cluster_name
+        name = self.make_object_name("tls", self.cluster_name)
         labels = self.get_labels_for("dask-gateway-tls")
         annotations = self.common_annotations
 
@@ -545,7 +558,7 @@ class KubeClusterManager(ClusterManager):
 
         if worker_name is not None:
             # Worker
-            name = "dask-gateway-worker-%s" % worker_name
+            name = self.make_object_name("worker", worker_name)
             container_name = "dask-gateway-worker"
             labels = self.get_labels_for("dask-gateway-worker", worker_name=worker_name)
             mem_req = self.worker_memory
@@ -558,7 +571,7 @@ class KubeClusterManager(ClusterManager):
             extra_container_config = self.worker_extra_container_config
         else:
             # Scheduler
-            name = "dask-gateway-scheduler-%s" % self.cluster_name
+            name = self.make_object_name("scheduler", self.cluster_name)
             container_name = "dask-gateway-scheduler"
             labels = self.get_labels_for("dask-gateway-scheduler")
             mem_req = self.scheduler_memory
