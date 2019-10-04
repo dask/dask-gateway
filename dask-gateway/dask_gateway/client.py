@@ -255,9 +255,12 @@ class Gateway(object):
     loop : IOLoop, optional
         The IOLoop instance to use. Defaults to the current loop in
         asynchronous mode, otherwise a background loop is started.
-    proxy_config_defaults : dict, optional
-        Configuration dictionary for the ``CurlAsyncHTTPClient`` to help
-        navigate local proxies. Requires that ``pycurl`` is installed
+    http_client: str, optional
+        Short-name for which http backend to use with Tornado. Either ``curl``
+        or ``simple``. Default is ``curl`` if ``pycurl`` is installed.
+    client_defaults: dict, optional
+        Configuration dictionary to pass to http backend. Needs to be compatible
+        with chosen ``http_client``
     """
 
     def __init__(

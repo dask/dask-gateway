@@ -16,7 +16,8 @@ pip install \
     ipywidgets \
     notebook \
     black \
-    flake8
+    flake8 \
+    pycurl
 
 pushd dask-gateway
 python setup.py develop
