@@ -275,7 +275,7 @@ class ClusterScaleHandler(BaseHandler):
             raise web.HTTPError(422, reason="Malformed request body")
         if total < 0:
             raise web.HTTPError(
-                422, reason="Scale expects a positive integer, got %r" % total
+                422, reason="Scale expects a non-negative integer, got %r" % total
             )
         n, msg = await self.gateway.scale(cluster, total)
         self.write({"n": n, "message": msg})
