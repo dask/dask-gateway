@@ -6,8 +6,8 @@ namespace {{ .Release.Namespace | quote }}.
 
 You can find the public address of Dask-Gateway at:
 
-  $ kubectl --namespace={{ .Release.Namespace }} get service web-proxy-public
+  $ kubectl --namespace={{ .Release.Namespace }} get service {{ include "dask-gateway.fullname" . | printf "web-public-%s" | trunc 63 | trimSuffix "-" }}
 
 Likewise, the public address of for the scheduler proxy is at:
 
-  $ kubectl --namespace={{ .Release.Namespace }} get service scheduler-proxy-public
+  $ kubectl --namespace={{ .Release.Namespace }} get service {{ include "dask-gateway.fullname" . | printf "scheduler-public-%s" | trunc 63 | trimSuffix "-" }}
