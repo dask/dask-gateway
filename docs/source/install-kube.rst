@@ -79,17 +79,15 @@ To install the Dask-Gateway Helm chart, run the following command:
     NAMESPACE=dask-gateway
     VERSION=0.4.1
 
-    helm install \
-        --name $RELEASE \
+    helm upgrade --install \
         --namespace $NAMESPACE \
         --version $VERSION \
         --values path/to/your/config.yaml \
+        $RELEASE \
         dask-gateway/dask-gateway
 
 where:
 
-- ``path/to/your/config.yaml`` is the path to your ``config.yaml`` file created
-  above.
 - ``RELEASE`` is the `Helm release name`_ to use (we suggest ``dask-gateway``,
   but any release name is fine).
 - ``NAMESPACE`` is the `Kubernetes namespace`_ to install the gateway into (we
@@ -97,6 +95,8 @@ where:
 - ``VERSION`` is the Helm chart version to use. To use the latest published
   version you can omit the ``--version`` flag entirely. See the `Helm chart
   repository`_ for an index of all available versions.
+- ``path/to/your/config.yaml`` is the path to your ``config.yaml`` file created
+  above.
 
 Running this command may take some time, as resources are created and images
 are downloaded. When everything's ready, running the following command will

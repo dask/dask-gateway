@@ -19,6 +19,8 @@ spec:
       labels:
         {{- include "dask-gateway.labels" . | nindent 8 }}
         app.kubernetes.io/component: web-proxy
+      annotations:
+        checksum/secret: {{ include (print .Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
       volumes:
         - name: configmap
