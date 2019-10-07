@@ -6,8 +6,8 @@ charts:
       published: https://dask.github.io/dask-gateway-helm-repo
     images:
       dask-gateway:
-        contextPath: resources/helm/images/dask-gateway/
+        contextPath: images/dask-gateway/
         valuesPath: gateway.clusterManager.image
       dask-gateway-server:
-        contextPath: resources/helm/images/dask-gateway-server/
+        contextPath: images/dask-gateway-server/
         valuesPath: gateway.image
