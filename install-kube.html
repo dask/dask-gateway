@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.4.1+12.g4bc298b documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.4.1+13.gebc5c5c documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.4.1+12.g4bc298b
+                0.4.1+13.gebc5c5c
               </div>
             
           
@@ -298,18 +298,16 @@ values.yaml file</a> for more information.</p>
 <span class="nv">NAMESPACE</span><span class="o">=</span>dask-gateway
 <span class="nv">VERSION</span><span class="o">=</span><span class="m">0</span>.4.1
 
-helm install <span class="se">\</span>
-    --name <span class="nv">$RELEASE</span> <span class="se">\</span>
+helm upgrade --install <span class="se">\</span>
     --namespace <span class="nv">$NAMESPACE</span> <span class="se">\</span>
     --version <span class="nv">$VERSION</span> <span class="se">\</span>
     --values path/to/your/config.yaml <span class="se">\</span>
+    <span class="nv">$RELEASE</span> <span class="se">\</span>
     dask-gateway/dask-gateway
 </pre></div>
 </div>
 <p>where:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">path/to/your/config.yaml</span></code> is the path to your <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file created
-above.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">RELEASE</span></code> is the <a class="reference external" href="https://docs.helm.sh/glossary/#release">Helm release name</a> to use (we suggest <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code>,
 but any release name is fine).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NAMESPACE</span></code> is the <a class="reference external" href="https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/">Kubernetes namespace</a> to install the gateway into (we
@@ -317,6 +315,8 @@ suggest <code class="docutils literal notranslate"><span class="pre">dask-gatewa
 <li><p><code class="docutils literal notranslate"><span class="pre">VERSION</span></code> is the Helm chart version to use. To use the latest published
 version you can omit the <code class="docutils literal notranslate"><span class="pre">--version</span></code> flag entirely. See the <a class="reference external" href="https://dask.org/dask-gateway-helm-repo/">Helm chart
 repository</a> for an index of all available versions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">path/to/your/config.yaml</span></code> is the path to your <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file created
+above.</p></li>
 </ul>
 <p>Running this command may take some time, as resources are created and images
 are downloaded. When everything’s ready, running the following command will
