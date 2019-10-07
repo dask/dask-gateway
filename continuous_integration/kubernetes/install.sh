@@ -25,5 +25,9 @@ if [[ "$TRAVIS" != "true" ]]; then
     eval $(minikube docker-env)
 fi
 pushd $git_root
+
+echo "Installing chartpress"
+pip install --default-timeout=100 git+https://github.com/jupyterhub/chartpress.git
+
 docker build -t daskgateway/dask-gateway -f continuous_integration/kubernetes/docker/dask-gateway/Dockerfile .
 popd

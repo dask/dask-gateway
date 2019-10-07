@@ -1,5 +1,15 @@
 charts:
   - name: dask-gateway
+    imagePrefix: daskgateway/
     repo:
       git: dask/dask-gateway-helm-repo
       published: https://dask.github.io/dask-gateway-helm-repo
+    images:
+      dask-gateway-base:
+        contextPath: resources/helm/images/dask-gateway-base/
+      dask-gateway:
+        contextPath: resources/helm/images/dask-gateway/
+        valuesPath: gateway.clusterManager.image
+      dask-gateway-server:
+        contextPath: resources/helm/images/dask-gateway-server/
+        valuesPath: gateway.image
