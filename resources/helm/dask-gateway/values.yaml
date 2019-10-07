@@ -18,7 +18,7 @@ gateway:
 
   image:
     name: daskgateway/dask-gateway-server
-    tag: 0.4.1
+    tag: 0.5.0
     pullPolicy: IfNotPresent
 
   auth:
@@ -40,7 +40,7 @@ gateway:
 
     image:
       name: daskgateway/dask-gateway
-      tag: 0.4.1
+      tag: 0.5.0
       pullPolicy: IfNotPresent
 
     environment: null
@@ -74,7 +74,7 @@ schedulerProxy:
 
   image:
     name: daskgateway/dask-gateway-server
-    tag: 0.4.1
+    tag: 0.5.0
     pullPolicy: IfNotPresent
 
   service:
@@ -90,7 +90,7 @@ webProxy:
 
   image:
     name: daskgateway/dask-gateway-server
-    tag: 0.4.1
+    tag: 0.5.0
     pullPolicy: IfNotPresent
 
   service:

@@ -8,7 +8,7 @@ LABEL MAINTAINER="Jim Crist"
 # - Removes unnecessary *.js.map files
 # - Removes unminified bokeh js
 RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
-        dask==2.4.0 \
+        dask==2.5.2 \
         numpy==1.17.2 \
         pandas==0.25.1 \
     && /opt/conda/bin/conda clean -afy \
@@ -18,4 +18,4 @@ RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
 
 # Install dask-gateway
 RUN /opt/conda/bin/pip install --no-cache-dir --no-deps \
-    dask-gateway==0.4.1
+    dask-gateway==0.5.0
