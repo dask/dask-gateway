@@ -8,7 +8,6 @@ import tempfile
 import traceback
 import warnings
 import weakref
-import importlib
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -26,19 +25,9 @@ from .cookiejar import CookieJar
 from . import comm
 from .auth import get_auth
 from .options import Options
-from .utils import format_template, cancel_task
+from .utils import format_template, cancel_task, select_tornado_backend
 
 del comm
-
-# Configure default AsyncClient backend
-HTTP_CLIENTS = {
-    "curl": "tornado.curl_httpclient.CurlAsyncHTTPClient",
-    "simple": "tornado.simple_httpclient.SimpleAsyncHTTPClient",
-}
-
-HAS_PYCURL = False
-if importlib.util.find_spec("pycurl") is not None:
-    HAS_PYCURL = True
 
 
 __all__ = ("Gateway", "GatewayCluster", "GatewayClusterError", "GatewayServerError")
@@ -255,12 +244,12 @@ class Gateway(object):
     loop : IOLoop, optional
         The IOLoop instance to use. Defaults to the current loop in
         asynchronous mode, otherwise a background loop is started.
-    http_client: str, optional
+    httpclient_type: str, optional
         Short-name for which http backend to use with Tornado. Either ``curl``
         or ``simple``. Default is ``curl`` if ``pycurl`` is installed.
-    client_defaults: dict, optional
+    httpclient_defaults: dict, optional
         Configuration dictionary to pass to http backend. Needs to be compatible
-        with chosen ``http_client``
+        with chosen ``httpclient_type``
     """
 
     def __init__(
@@ -270,8 +259,8 @@ class Gateway(object):
         auth=None,
         asynchronous=False,
         loop=None,
-        http_client=None,
-        client_defaults=None,
+        httpclient_type=None,
+        httpclient_defaults=None,
     ):
         if address is None:
             address = format_template(dask.config.get("gateway.address"))
@@ -295,25 +284,20 @@ class Gateway(object):
             proxy_netloc = parsed.netloc if parsed.netloc else proxy_address
         proxy_address = "gateway://%s" % proxy_netloc
 
-        if http_client is None:
-            http_client = dask.config.get("gateway.httpclient.type", None)
-        if http_client is None:
-            _http_client = (
-                HTTP_CLIENTS["curl"] if HAS_PYCURL else HTTP_CLIENTS["simple"]
-            )
-        elif http_client == "curl" and not HAS_PYCURL:
-            raise ValueError("`curl` client requires `pycurl` but it is not installed")
-        else:
-            _http_client = HTTP_CLIENTS[http_client]
+        if httpclient_type is None:
+            httpclient_type = dask.config.get("gateway.httpclient.type", None)
 
-        if client_defaults is None:
-            client_defaults = dask.config.get("gateway.httpclient.defaults", {})
-        elif not isinstance(client_defaults, dict):
+        _http_client = select_tornado_backend(backend=httpclient_type)
+
+        if httpclient_defaults is None:
+            httpclient_defaults = dask.config.get("gateway.httpclient.defaults", {})
+        elif not isinstance(httpclient_defaults, dict):
             raise TypeError(
-                "Expected dict for `client_defaults`, got %s" % type(client_defaults)
+                "Expected dict for `httpclient_defaults`, got %s"
+                % type(httpclient_defaults)
             )
 
-        AsyncHTTPClient.configure(_http_client, defaults=client_defaults)
+        AsyncHTTPClient.configure(_http_client, defaults=httpclient_defaults)
 
         self.address = address
         self.proxy_address = proxy_address

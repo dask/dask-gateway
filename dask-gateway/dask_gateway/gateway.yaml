@@ -21,5 +21,9 @@ gateway:
                         # ``cluster_options``. Values may be template strings.
 
   httpclient:
-    type: null         # The kind of http client to use. One of {"curl", "simple"}. If not provided, curl is used if pycurl is installed, otherwise simple is used.
+    # See link below for available options for selected backend
+    # http://www.tornadoweb.org/en/stable/httpclient.html#http-client-interfaces
+    type: null         # The kind of http client to use. One of
+                       # {"curl", "simple"}. If not provided, curl is used if
+                       # pycurl is installed, otherwise simple is used.
     defaults: null     # A mapping of default parameters to use on every request
