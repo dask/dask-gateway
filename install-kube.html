@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.5.0+1.g6bf4f1b documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.5.0+3.gd133252 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
         <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
         <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
         <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
-        <li><a href="https://docs.google.com/presentation/d/e/2PACX-1vSTH2kAR0DCR0nw8pFBe5kuYbOk3inZ9cQfZbzOIRjyzQoVaOoMfI2JONGBz-qsvG_P6g050ddHxSXT/pub?start=false&loop=false&delayms=60000"> Slides </a></li>
+        <li><a href="https://dask.org/slides"> Slides </a></li>
       </ul>
     </li>
 
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+1.g6bf4f1b
+                0.5.0+3.gd133252
               </div>
             
           
@@ -432,6 +432,19 @@ Service</a>.</p>
 </pre></div>
 </div>
 <p>replacing <code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">TOKEN&gt;</span></code> with the output from above.</p>
+<p>If you’re not deploying Dask-Gateway in the same cluster and namespace as
+JupyterHub, you’ll also need to specify JupyterHub’s API url. This is usually
+of the form <code class="docutils literal notranslate"><span class="pre">https://&lt;JUPYTERHUB-HOST&gt;:&lt;JUPYTERHUB-PORT&gt;/hub/api</span></code>. If
+JupyterHub and Dask-Gateway are on the same cluster and namespace you can omit
+this configuration key, the address will be inferred automatically.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
+  <span class="nt">auth</span><span class="p">:</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">jupyterhub</span>
+    <span class="nt">jupyterhub</span><span class="p">:</span>
+      <span class="nt">apiToken</span><span class="p">:</span> <span class="s">&quot;&lt;API</span><span class="nv"> </span><span class="s">TOKEN&gt;&quot;</span>
+      <span class="nt">apiUrl</span><span class="p">:</span> <span class="s">&quot;&lt;API</span><span class="nv"> </span><span class="s">URL&gt;&quot;</span>
+</pre></div>
+</div>
 <p>You’ll also need to add the following to the <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file for your
 JupyterHub Helm Chart.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">hub</span><span class="p">:</span>
