@@ -237,6 +237,21 @@ Then add the following lines to your ``config.yaml`` file:
 
 replacing ``<API TOKEN>`` with the output from above.
 
+If you're not deploying Dask-Gateway in the same cluster and namespace as
+JupyterHub, you'll also need to specify JupyterHub's API url. This is usually
+of the form ``https://<JUPYTERHUB-HOST>:<JUPYTERHUB-PORT>/hub/api``. If
+JupyterHub and Dask-Gateway are on the same cluster and namespace you can omit
+this configuration key, the address will be inferred automatically.
+
+.. code-block:: yaml
+
+    gateway:
+      auth:
+        type: jupyterhub
+        jupyterhub:
+          apiToken: "<API TOKEN>"
+          apiUrl: "<API URL>"
+
 You'll also need to add the following to the ``config.yaml`` file for your
 JupyterHub Helm Chart.
 

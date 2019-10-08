@@ -119,7 +119,14 @@ data:
         c.DaskGateway.authenticator_class = "dask_gateway_server.auth.JupyterHubAuthenticator"
         api_url = get_property("gateway.auth.jupyterhub.apiUrl")
         if api_url is None:
-            api_url = "http://{HUB_SERVICE_HOST}:{HUB_SERVICE_PORT}/hub/api".format(**os.environ)
+            try:
+                api_url = "http://{HUB_SERVICE_HOST}:{HUB_SERVICE_PORT}/hub/api".format(**os.environ)
+            except Exception:
+                raise ValueError(
+                    "Failed to infer JupyterHub API url from environment, "
+                    "please specify `gateway.auth.jupyterhub.apiUrl` in "
+                    "your config file"
+                )
         c.DaskGateway.JupyterHubAuthenticator.jupyterhub_api_url = api_url
     elif auth_type == "custom":
         auth_cls = get_property("gateway.auth.custom.class")
