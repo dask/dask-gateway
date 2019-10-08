@@ -12,7 +12,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "dask-gateway.labels" . | nindent 6 }}
+      {{- include "dask-gateway.matchLabels" . | nindent 6 }}
       app.kubernetes.io/component: web-proxy
   template:
     metadata:
