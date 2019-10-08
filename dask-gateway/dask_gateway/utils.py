@@ -1,6 +1,5 @@
 import asyncio
 import os
-import importlib
 
 
 def format_template(x):
@@ -18,11 +17,11 @@ async def cancel_task(task):
 
 
 def _has_pycurl():
-    HAS_PYCURL = False
-    if importlib.util.find_spec("pycurl") is not None:
-        HAS_PYCURL = True
-
-    return HAS_PYCURL
+    try:
+        import pycurl
+        return True
+    except ImportError:
+        return False
 
 
 def select_tornado_backend(backend=None):
