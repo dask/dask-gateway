@@ -279,6 +279,61 @@ object.
     ... )
 
 
+Using Preemptible Nodes for Workers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some cloud providers offer "preemptible" VMs. These are VMs with limited lifetimes that may
+be terminated with little warning, but cost much less than standard VMs. This tradeoff can be
+well-suited for Dask Workers (but not the scheduler, or for dask-gateway itself). To use preemptible
+resources for your workers, use Kubernetes' `taints and tolerations`_.
+
+Your node pool will need the taint. For example, with the ``gcloud`` CLI, this is
+
+.. code-block::
+
+   gcloud beta container node-pools create  \
+       ... # other create options
+       --preemptible \
+       --enable-autoscaling --min-node=<min-nodes> --max-nodes=<max-nodes> \
+       --node-taints preemptible=true:NoSchedule
+
+Then in your ``config.yaml`` for dask-gateway's Helm chart, you'll need to specify the following to
+
+1. Ensure that the scheduler *does not* end up on a preemptible node.
+2. Ensure that the workers *do* end up on preemptible nodes.
+
+.. code-block:: yaml
+
+   gateway:
+     clusterManager:
+       scheduler:
+         extraPodConfig:
+           affinity:
+             nodeAffinity:
+               requiredDuringSchedulingIgnoredDuringExecution:
+                 nodeSelectorTerms:
+                   - matchExpressions:
+                     # This key is specific to the Kubernetes platform
+                     - key: cloud.google.com/gke-preemptible
+                       operator: DoesNotExist
+      worker:
+        extraPodConfig:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                    - key: cloud.google.com/gke-preemptible
+                      operator: In
+                      values:
+                        - "true"
+          tolerations:
+             - key: "preemptible"
+               operator: "Equal"
+               value: "true"
+               effect: "NoSchedule"
+
+
 .. _Kubernetes Cluster: https://kubernetes.io/
 .. _Helm: https://helm.sh/
 .. _documentation provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/create-k8s-cluster.html
@@ -300,3 +355,4 @@ object.
 .. _tolerations: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 .. _node affinities: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 .. _preemptible nodes: https://cloud.google.com/blog/products/containers-kubernetes/cutting-costs-with-google-kubernetes-engine-using-the-cluster-autoscaler-and-preemptible-vms
+.. _taints and tolerations: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
