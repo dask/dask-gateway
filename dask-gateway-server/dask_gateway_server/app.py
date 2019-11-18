@@ -910,7 +910,10 @@ class DaskGateway(Application):
 
         # If we shut the workers down in bulk, cleanup their internal state now
         if cluster.manager.supports_bulk_shutdown:
-            tasks = (self.stop_worker(cluster, w) for w in cluster.active_workers())
+            tasks = (
+                self.stop_worker(cluster, w, state_only=True)
+                for w in cluster.active_workers()
+            )
             await asyncio.gather(*tasks, return_exceptions=True)
 
         # Update the cluster status
@@ -937,13 +940,13 @@ class DaskGateway(Application):
                 delta,
             )
             if delta > 0:
-                actual_delta, msg = self.scale_up(cluster, delta)
+                actual_delta, msg = await self.scale_up(cluster, delta)
             else:
-                actual_delta = -await self.scale_down(cluster, -delta)
+                actual_delta = await self.scale_down(cluster, total)
                 msg = None
             return n_active + actual_delta, msg
 
-    def scale_up(self, cluster, n_start):
+    async def scale_up(self, cluster, n_start):
         # Check how many workers we're allowed_to_start
         n_allowed, msg = self.user_limits.check_scale_limits(
             cluster,
@@ -951,14 +954,33 @@ class DaskGateway(Application):
             memory=cluster.manager.worker_memory,
             cores=cluster.manager.worker_cores,
         )
+        created = []
         for _ in range(n_allowed):
             w = self.db.create_worker(
                 cluster, cluster.manager.worker_memory, cluster.manager.worker_cores
             )
+            created.append(w)
+
+        client = AsyncHTTPClient()
+        body = json.dumps({"op": "add", "workers": [w.name for w in created]})
+        url = "%s/api/pending_workers" % cluster.api_address
+        req = HTTPRequest(
+            url,
+            method="POST",
+            headers={
+                "Authorization": "token %s" % cluster.token,
+                "Content-type": "application/json",
+            },
+            body=body,
+        )
+        await client.fetch(req)
+
+        for w in created:
             w._start_future = self.task_pool.create_task(self.start_worker(cluster, w))
             w._start_future.add_done_callback(
                 partial(self._monitor_start_worker, worker=w, cluster=cluster)
             )
+
         return n_allowed, msg
 
     async def _start_worker(self, cluster, worker):
@@ -1067,9 +1089,11 @@ class DaskGateway(Application):
                 exc_info=exc,
             )
 
-        self.schedule_stop_worker(cluster, worker, failed=True)
+        self.schedule_stop_worker(cluster, worker, failed=True, notify=True)
 
-    async def stop_worker(self, cluster, worker, failed=False):
+    async def stop_worker(
+        self, cluster, worker, failed=False, notify=False, state_only=False
+    ):
         # Already stopping elsewhere, return
         if worker.status >= WorkerStatus.STOPPING:
             return
@@ -1084,7 +1108,7 @@ class DaskGateway(Application):
         await cancel_task(worker._start_future)
 
         # Shutdown the worker
-        if not cluster.manager.supports_bulk_shutdown:
+        if not state_only:
             try:
                 await cluster.manager.stop_worker(
                     worker.name, worker.state, cluster.state
@@ -1101,10 +1125,28 @@ class DaskGateway(Application):
         status = WorkerStatus.FAILED if failed else WorkerStatus.STOPPED
         self.db.update_worker(worker, status=status, stop_time=timestamp())
 
+        # Maybe notify the scheduler of worker death
+        if notify:
+            client = AsyncHTTPClient()
+            body = json.dumps({"op": "remove", "workers": [worker.name]})
+            url = "%s/api/pending_workers" % cluster.api_address
+            req = HTTPRequest(
+                url,
+                method="POST",
+                headers={
+                    "Authorization": "token %s" % cluster.token,
+                    "Content-type": "application/json",
+                },
+                body=body,
+            )
+            await client.fetch(req)
+
         self.log.info("Stopped worker %s", worker.name)
 
-    def schedule_stop_worker(self, cluster, worker, failed=False):
-        self.task_pool.create_task(self.stop_worker(cluster, worker, failed=failed))
+    def schedule_stop_worker(self, cluster, worker, failed=False, notify=False):
+        self.task_pool.create_task(
+            self.stop_worker(cluster, worker, failed=failed, notify=notify)
+        )
 
     def maybe_fail_worker(self, cluster, worker):
         # Ignore if cluster or worker isn't active (
@@ -1115,47 +1157,28 @@ class DaskGateway(Application):
             return
         self.schedule_stop_worker(cluster, worker, failed=True)
 
-    async def scale_down(self, cluster, n_stop):
-        if cluster.pending:
-            if len(cluster.pending) > n_stop:
-                to_stop = [cluster.pending.pop() for _ in range(n_stop)]
-            else:
-                to_stop = list(cluster.pending)
-                cluster.pending.clear()
-            to_stop = [cluster.workers[n] for n in to_stop]
+    async def scale_down(self, cluster, target):
+        client = AsyncHTTPClient()
+        body = json.dumps({"target": target})
+        url = "%s/api/scale_down" % cluster.api_address
+        req = HTTPRequest(
+            url,
+            method="POST",
+            headers={
+                "Authorization": "token %s" % cluster.token,
+                "Content-type": "application/json",
+            },
+            body=body,
+        )
+        resp = await client.fetch(req)
+        data = json.loads(resp.body.decode("utf8", "replace"))
+        to_stop = [cluster.workers[n] for n in data["workers_closed"]]
 
-            self.log.debug(
-                "Stopping %d pending workers for cluster %s", len(to_stop), cluster.name
-            )
-            for w in to_stop:
-                self.schedule_stop_worker(cluster, w)
-            n_stop -= len(to_stop)
+        self.log.debug("Stopping %d workers for cluster %s", len(to_stop), cluster.name)
+        for w in to_stop:
+            self.schedule_stop_worker(cluster, w)
 
-        if n_stop:
-            # Request scheduler shutdown n_stop workers
-            client = AsyncHTTPClient()
-            body = json.dumps({"remove_count": n_stop})
-            url = "%s/api/scale_down" % cluster.api_address
-            req = HTTPRequest(
-                url,
-                method="POST",
-                headers={
-                    "Authorization": "token %s" % cluster.token,
-                    "Content-type": "application/json",
-                },
-                body=body,
-            )
-            resp = await client.fetch(req)
-            data = json.loads(resp.body.decode("utf8", "replace"))
-            to_stop = [cluster.workers[n] for n in data["workers_closed"]]
-
-            self.log.debug(
-                "Stopping %d running workers for cluster %s", len(to_stop), cluster.name
-            )
-            for w in to_stop:
-                self.schedule_stop_worker(cluster, w)
-
-            return len(to_stop)
+        return -len(to_stop)
 
 
 main = DaskGateway.launch_instance
