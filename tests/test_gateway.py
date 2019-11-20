@@ -876,6 +876,43 @@ async def test_user_limits(tmpdir):
             await cluster.shutdown()
 
 
+async def wait_for_workers(cluster, atleast=None, exact=None, timeout=30):
+    timeout = time.time() + timeout
+    while time.time() < timeout:
+        workers = cluster.scheduler_info.get("workers")
+        nworkers = len(workers)
+        if atleast is not None and nworkers >= atleast:
+            break
+        elif exact is not None and nworkers == exact:
+            break
+        await asyncio.sleep(0.25)
+    else:
+        assert False, "scaling timed out"
+
+
+@pytest.mark.asyncio
+async def test_scaling(tmpdir):
+    config = Config()
+    config.DaskGateway.cluster_manager_class = InProcessClusterManager
+    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    async with temp_gateway(config=config) as gateway_proc:
+        async with Gateway(
+            address=gateway_proc.public_urls.connect_url,
+            proxy_address=gateway_proc.gateway_urls.connect_url,
+            asynchronous=True,
+        ) as gateway:
+            # Start a cluster
+            cluster = await gateway.new_cluster()
+
+            await cluster.scale(5)
+            await wait_for_workers(cluster, atleast=3)
+
+            await cluster.scale(1)
+            await wait_for_workers(cluster, exact=1)
+
+            await cluster.shutdown()
+
+
 @pytest.mark.asyncio
 async def test_adaptive_scaling(tmpdir):
     # XXX: we should be able to use `InProcessClusterManager` here, but due to
@@ -912,15 +949,8 @@ async def test_adaptive_scaling(tmpdir):
                 res = await client.submit(lambda x: x + 1, 1)
                 assert res == 2
 
-                # Scales down automatically
-                timeout = time.time() + 30
-                while time.time() < timeout:
-                    info = await client.scheduler.identity()
-                    if not info["workers"]:
-                        break
-                    await asyncio.sleep(0.25)
-                else:
-                    assert False, "didn't autoscale down in time"
+            # Scales down automatically
+            await wait_for_workers(cluster, exact=0)
 
             # Still in adaptive mode
             assert await is_adaptive()

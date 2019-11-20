@@ -137,7 +137,7 @@ class Adaptive(object):
 
     @property
     def observed(self):
-        return set(self.gateway_service.workers)
+        return self.gateway_service.observed
 
     def start(self, minimum=None, maximum=None):
         self.minimum = minimum
@@ -157,8 +157,8 @@ class Adaptive(object):
             target = min(self.maximum, target)
         return target
 
-    async def workers_to_close(self, target):
-        return await self.gateway_service.scheduler.workers_to_close(
+    def workers_to_close(self, target):
+        return self.gateway_service.scheduler.workers_to_close(
             target=target, attribute="name"
         )
 
@@ -168,7 +168,7 @@ class Adaptive(object):
     async def scale_up(self, n):
         await self.gateway_service.scale_up(n)
 
-    async def recommendations(self, target):
+    def recommendations(self, target):
         current = len(self.plan)
         if target == current:
             self.close_counts.clear()
@@ -185,9 +185,7 @@ class Adaptive(object):
                 to_close.update(list(pending)[: current - target])
 
             if target < current - len(to_close):
-                to_close.update(
-                    await self.workers_to_close(target=target, attribute="name")
-                )
+                to_close.update(self.workers_to_close(target))
 
             firmly_close = set()
             for w in to_close:
@@ -211,7 +209,7 @@ class Adaptive(object):
 
         try:
             target = await self.target()
-            recommendations = await self.recommendations(target)
+            recommendations = self.recommendations(target)
 
             status = recommendations.pop("status")
             if status == "same":
@@ -249,14 +247,19 @@ class GatewaySchedulerService(object):
 
         # A set of worker names that are active (pending or running)
         self.plan = set()
-        # A mapping of running worker names -> WorkerState
+        # A mapping of running worker *addresses* -> WorkerState
         self.workers = {}
-        # A mapping of worker name -> TimerHandle. When a worker is found down,
-        # we hold off on notifying the gateway for a period in case this is a
-        # temporary connection failure. The timers for this are stored here.
+        # A mapping of worker name -> TimerHandle. When a worker is found
+        # down, we hold off on notifying the gateway for a period in case this
+        # is a temporary connection failure.
         self.timeouts = {}
         # A set of all intentionally closing worker names.
         self.closing = set()
+
+    @property
+    def observed(self):
+        """A set of all running worker names"""
+        return {ws.name for ws in self.workers.values()}
 
     def listen(self, address):
         ip, port = address
@@ -282,7 +285,7 @@ class GatewaySchedulerService(object):
 
     async def remove_workers(self, workers):
         self.plan.difference_update(workers)
-        self.closing.update(set(workers).union(self.workers))
+        self.closing.update(set(workers).union(self.observed))
         await self.scheduler.retire_workers(
             names=workers, remove=True, close_workers=True
         )
@@ -292,17 +295,19 @@ class GatewaySchedulerService(object):
         n_to_close = len(self.plan) - target
         closed = []
         if n_to_close > 0:
-            pending = self.plan.difference(self.workers)
+            pending = self.plan.difference(self.observed)
             closed.extend(list(pending)[:n_to_close])
             self.plan.difference_update(closed)
 
             if len(closed) < n_to_close:
-                ws = self.scheduler.workers_to_close(target=target)
-                self.closing.update(ws)
-                ws = await self.scheduler.retire_workers(
-                    workers=ws, remove=True, close_workers=True
+                workers = self.scheduler.workers_to_close(
+                    target=target, attribute="name"
                 )
-                closed.extend(v["name"] for v in ws.values())
+                self.closing.update(workers)
+                await self.scheduler.retire_workers(
+                    names=workers, remove=True, close_workers=True
+                )
+                closed.extend(workers)
 
         return {"workers_closed": closed}
 
@@ -312,22 +317,23 @@ class GatewaySchedulerService(object):
         else:
             self.adaptive.stop()
 
-    def worker_added(self, worker):
-        ws = self.scheduler.workers[worker]
+    def worker_added(self, worker_address):
+        ws = self.scheduler.workers[worker_address]
         logger.debug("Worker added [address: %r, name: %r]", ws.address, ws.name)
         timeout = self.timeouts.pop(ws.name, None)
         if timeout is not None:
             # Existing timeout running for this worker, cancel it
             self.loop.remove_timeout(timeout)
-        self.workers[worker] = ws
-        self.loop.add_callback(self.gateway.notify_worker_added, ws)
+        else:
+            self.loop.add_callback(self.gateway.notify_worker_added, ws)
+        self.workers[worker_address] = ws
 
-    def worker_removed(self, worker):
-        ws = self.workers.pop(worker)
+    def worker_removed(self, worker_address):
+        ws = self.workers.pop(worker_address)
         logger.debug("Worker removed [address: %r, name: %r]", ws.address, ws.name)
 
         try:
-            self.closing.remove(ws.address)
+            self.closing.remove(ws.name)
             # This worker was expected to exit, no need to notify
             return
         except KeyError:
