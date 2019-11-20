@@ -2,6 +2,7 @@ import asyncio
 import os
 import socket
 import signal
+import time
 
 import pytest
 from cryptography.fernet import Fernet
@@ -872,4 +873,66 @@ async def test_user_limits(tmpdir):
 
             # Can create a new cluster after resources returned
             cluster = await gateway.new_cluster()
+            await cluster.shutdown()
+
+
+@pytest.mark.asyncio
+async def test_adaptive_scaling(tmpdir):
+    # XXX: we should be able to use `InProcessClusterManager` here, but due to
+    # https://github.com/dask/distributed/issues/3251 this results in periodic
+    # failures.
+    async with temp_gateway(
+        cluster_manager_class=LocalTestingClusterManager,
+        temp_dir=str(tmpdir.join("dask-gateway")),
+    ) as gateway_proc:
+        async with Gateway(
+            address=gateway_proc.public_urls.connect_url,
+            proxy_address=gateway_proc.gateway_urls.connect_url,
+            asynchronous=True,
+        ) as gateway:
+            # Start a cluster
+            cluster = await gateway.new_cluster()
+
+            async def is_adaptive():
+                report = await gateway.get_cluster(cluster.name)
+                return report.adaptive
+
+            # Not in adaptive mode
+            assert not await is_adaptive()
+
+            # Turn on adaptive scaling
+            await cluster.adapt()
+
+            # Now in adaptive mode
+            assert await is_adaptive()
+
+            # Worker is automatically requested
+            with cluster.get_client(set_as_default=False) as client:
+                res = await client.submit(lambda x: x + 1, 1)
+                assert res == 2
+
+                # Scales down automatically
+                timeout = time.time() + 30
+                while time.time() < timeout:
+                    info = await client.scheduler.identity()
+                    if not info["workers"]:
+                        break
+                    await asyncio.sleep(0.25)
+                else:
+                    assert False, "didn't autoscale down in time"
+
+            # Still in adaptive mode
+            assert await is_adaptive()
+
+            # Turn off adaptive scaling implicitly
+            await cluster.scale(1)
+            assert not await is_adaptive()
+
+            # Turn off adaptive scaling explicitly
+            await cluster.adapt()
+            assert await is_adaptive()
+            await cluster.adapt(active=False)
+            assert not await is_adaptive()
+
+            # Shutdown the cluster
             await cluster.shutdown()

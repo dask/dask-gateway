@@ -38,8 +38,8 @@ async def web_proxy():
 @pytest.fixture
 async def cluster_and_security(tmpdir):
     tls_cert, tls_key = new_keypair("temp")
-    tls_key_path = tmpdir.join("dask.pem")
-    tls_cert_path = tmpdir.join("dask.crt")
+    tls_key_path = str(tmpdir.join("dask.pem"))
+    tls_cert_path = str(tmpdir.join("dask.crt"))
     with open(tls_key_path, "wb") as f:
         f.write(tls_key)
     with open(tls_cert_path, "wb") as f:

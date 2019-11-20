@@ -40,6 +40,7 @@ from .utils import (
     Type,
     timeout,
     ServerUrls,
+    nullcontext,
 )
 
 
@@ -926,13 +927,11 @@ class DaskGateway(Application):
     def schedule_stop_cluster(self, cluster, failed=False):
         self.task_pool.create_task(self.stop_cluster(cluster, failed=failed))
 
-    async def scale(self, cluster, total):
+    async def scale(self, cluster, total, is_adapt=False):
         """Scale cluster to total workers"""
         async with cluster.lock:
             n_active = len(cluster.active_workers())
             delta = total - n_active
-            if delta == 0:
-                return n_active, None
             self.log.info(
                 "Scaling cluster %s to %d workers, a delta of %d",
                 cluster.name,
@@ -940,13 +939,15 @@ class DaskGateway(Application):
                 delta,
             )
             if delta > 0:
-                actual_delta, msg = await self.scale_up(cluster, delta)
+                return await self.scale_up(cluster, delta, is_adapt)
+            elif delta < 0:
+                return await self.scale_down(cluster, total)
             else:
-                actual_delta = await self.scale_down(cluster, total)
-                msg = None
-            return n_active + actual_delta, msg
+                if not is_adapt:
+                    await self.adapt(cluster, active=False, lock=False)
+                return {"added": [], "removed": [], "message": None}
 
-    async def scale_up(self, cluster, n_start):
+    async def scale_up(self, cluster, n_start, is_adapt=False):
         # Check how many workers we're allowed_to_start
         n_allowed, msg = self.user_limits.check_scale_limits(
             cluster,
@@ -961,19 +962,24 @@ class DaskGateway(Application):
             )
             created.append(w)
 
-        client = AsyncHTTPClient()
-        body = json.dumps({"op": "add", "workers": [w.name for w in created]})
-        url = "%s/api/pending_workers" % cluster.api_address
-        req = HTTPRequest(
-            url,
-            method="POST",
-            headers={
-                "Authorization": "token %s" % cluster.token,
-                "Content-type": "application/json",
-            },
-            body=body,
-        )
-        await client.fetch(req)
+        new_workers = [w.name for w in created]
+
+        if not is_adapt:
+            client = AsyncHTTPClient()
+            body = json.dumps({"op": "add", "workers": new_workers})
+            url = "%s/api/pending_workers" % cluster.api_address
+            req = HTTPRequest(
+                url,
+                method="POST",
+                headers={
+                    "Authorization": "token %s" % cluster.token,
+                    "Content-type": "application/json",
+                },
+                body=body,
+            )
+            await client.fetch(req)
+            if cluster.adaptive:
+                self.db.update_cluster(cluster, adaptive=False)
 
         for w in created:
             w._start_future = self.task_pool.create_task(self.start_worker(cluster, w))
@@ -981,7 +987,7 @@ class DaskGateway(Application):
                 partial(self._monitor_start_worker, worker=w, cluster=cluster)
             )
 
-        return n_allowed, msg
+        return {"added": new_workers, "removed": [], "message": msg}
 
     async def _start_worker(self, cluster, worker):
         self.log.info("Starting worker %s for cluster %s...", worker.name, cluster.name)
@@ -1157,28 +1163,58 @@ class DaskGateway(Application):
             return
         self.schedule_stop_worker(cluster, worker, failed=True)
 
-    async def scale_down(self, cluster, target):
-        client = AsyncHTTPClient()
-        body = json.dumps({"target": target})
-        url = "%s/api/scale_down" % cluster.api_address
-        req = HTTPRequest(
-            url,
-            method="POST",
-            headers={
-                "Authorization": "token %s" % cluster.token,
-                "Content-type": "application/json",
-            },
-            body=body,
-        )
-        resp = await client.fetch(req)
-        data = json.loads(resp.body.decode("utf8", "replace"))
-        to_stop = [cluster.workers[n] for n in data["workers_closed"]]
+    async def scale_down(self, cluster, target=None, workers=None):
+        if target is not None:
+            client = AsyncHTTPClient()
+            body = json.dumps({"target": target})
+            url = "%s/api/scale_down" % cluster.api_address
+            req = HTTPRequest(
+                url,
+                method="POST",
+                headers={
+                    "Authorization": "token %s" % cluster.token,
+                    "Content-type": "application/json",
+                },
+                body=body,
+            )
+            resp = await client.fetch(req)
+            data = json.loads(resp.body.decode("utf8", "replace"))
+            workers = data["workers_closed"]
+            if cluster.adaptive:
+                self.db.update_cluster(cluster, adaptive=False)
+        else:
+            assert workers is not None
+
+        to_stop = [cluster.workers[n] for n in workers]
 
         self.log.debug("Stopping %d workers for cluster %s", len(to_stop), cluster.name)
         for w in to_stop:
             self.schedule_stop_worker(cluster, w)
 
-        return -len(to_stop)
+        return {"added": [], "removed": [w.name for w in to_stop], "message": None}
+
+    async def adapt(self, cluster, minimum=None, maximum=None, active=True, lock=True):
+        if not active and not cluster.adaptive:
+            # Nothing to do
+            return
+        cl = cluster.lock if lock else nullcontext()
+        async with cl:
+            client = AsyncHTTPClient()
+            body = json.dumps(
+                {"minimum": minimum, "maximum": maximum, "active": active}
+            )
+            url = "%s/api/adapt" % cluster.api_address
+            req = HTTPRequest(
+                url,
+                method="POST",
+                headers={
+                    "Authorization": "token %s" % cluster.token,
+                    "Content-type": "application/json",
+                },
+                body=body,
+            )
+            await client.fetch(req)
+            self.db.update_cluster(cluster, adaptive=active)
 
 
 main = DaskGateway.launch_instance

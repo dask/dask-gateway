@@ -282,3 +282,22 @@ def classname(cls):
     """Return the full qualified name of a class"""
     mod = cls.__module__
     return cls.__name__ if mod is None else f"{mod}.{cls.__name__}"
+
+
+class nullcontext(object):
+    """A no-op context manager"""
+
+    def __init__(self, enter_result=None):
+        self.enter_result = enter_result
+
+    def __enter__(self):
+        return self.enter_result
+
+    def __exit__(self, *args):
+        pass
+
+    async def __aenter__(self):
+        return self.enter_result
+
+    async def __aexit__(self, *args):
+        pass
