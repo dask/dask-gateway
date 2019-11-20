@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 import pytest
 import dask
@@ -217,6 +218,40 @@ async def test_client_reprs(tmpdir):
             # HTML repr with no dashboard
             cluster.dashboard_link = None
             assert "Not Available" in cluster._repr_html_()
+
+
+@pytest.mark.asyncio
+async def test_cluster_widget(tmpdir):
+    pytest.importorskip("ipywidgets")
+
+    def test():
+        with GatewayCluster(
+            address=gateway_proc.public_urls.connect_url,
+            proxy_address=gateway_proc.gateway_urls.connect_url,
+        ) as cluster:
+            # Smoke test widget
+            cluster._widget()
+
+            template = "<tr><th>Workers</th> <td>%d</td></tr>"
+            assert (template % 0) in cluster._widget_status()
+
+            cluster.scale(1)
+            timeout = time.time() + 30
+            while time.time() < timeout:
+                if cluster.scheduler_info.get("workers"):
+                    break
+                time.sleep(0.25)
+            else:
+                assert False, "didn't scale up in time"
+
+            assert (template % 1) in cluster._widget_status()
+
+    async with temp_gateway(
+        cluster_manager_class=InProcessClusterManager,
+        temp_dir=str(tmpdir.join("dask-gateway")),
+    ) as gateway_proc:
+        loop = get_running_loop()
+        await loop.run_in_executor(None, test)
 
 
 @pytest.mark.asyncio

@@ -1,6 +1,7 @@
 from __future__ import print_function, division, absolute_import
 
 import argparse
+import collections
 import json
 import logging
 import os
@@ -9,7 +10,7 @@ from urllib.parse import urlparse, quote
 
 from tornado import web
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
-from tornado.ioloop import IOLoop, TimeoutError
+from tornado.ioloop import IOLoop, TimeoutError, PeriodicCallback
 
 from distributed import Scheduler, Worker, Nanny
 from distributed.security import Security
@@ -55,12 +56,29 @@ class ScaleDownHandler(BaseHandler):
     @web.authenticated
     async def post(self):
         try:
-            remove_count = self.json_data["remove_count"]
+            target = self.json_data["target"]
         except (TypeError, KeyError):
-            raise web.HTTPError(405)
-        result = await self.gateway_service.scale_down(remove_count)
+            raise web.HTTPError(422)
+        self.gateway_service.adapt(active=False)
+        result = await self.gateway_service.scale_down(target)
         self.write(result)
         self.set_status(201)
+
+
+class PendingWorkersHandler(BaseHandler):
+    @web.authenticated
+    async def post(self):
+        try:
+            op = self.json_data["op"]
+            workers = self.json_data["workers"]
+        except (TypeError, KeyError):
+            raise web.HTTPError(422)
+        if op == "add":
+            self.gateway_service.adapt(active=False)
+            self.gateway_service.add_pending_workers(workers)
+        elif op == "remove":
+            self.gateway_service.remove_pending_workers(workers)
+        self.set_status(204)
 
 
 class StatusHandler(BaseHandler):
@@ -71,16 +89,177 @@ class StatusHandler(BaseHandler):
         self.set_status(201)
 
 
+class AdaptHandler(BaseHandler):
+    @web.authenticated
+    async def post(self):
+        try:
+            minimum = self.json_data.get("minimum", None)
+            maximum = self.json_data.get("maximum", None)
+            active = self.json_data.get("active", True)
+        except (TypeError, KeyError):
+            raise web.HTTPError(422)
+        self.gateway_service.adapt(minimum=minimum, maximum=maximum, active=active)
+        self.set_status(204)
+
+
+class Adaptive(object):
+    def __init__(
+        self,
+        gateway_service,
+        minimum=None,
+        maximum=None,
+        target_duration=5,
+        wait_count=3,
+        period=3,
+    ):
+        self.gateway_service = gateway_service
+        self.target_duration = target_duration
+        self.minimum = minimum
+        self.maximum = maximum
+        self.wait_count = wait_count
+        self.period = period
+        self.periodic_callback = PeriodicCallback(self.adapt, self.period * 1000)
+        self.gateway_service.scheduler.periodic_callbacks[
+            "adaptive-callback"
+        ] = self.periodic_callback
+
+        # internal state
+        self.close_counts = collections.defaultdict(int)
+        self._adapting = False
+
+    @property
+    def loop(self):
+        return self.gateway_service.loop
+
+    @property
+    def plan(self):
+        return self.gateway_service.plan
+
+    @property
+    def observed(self):
+        return self.gateway_service.observed
+
+    def start(self, minimum=None, maximum=None):
+        self.minimum = minimum
+        self.maximum = maximum
+        self.periodic_callback.start()
+
+    def stop(self):
+        self.periodic_callback.stop()
+
+    async def target(self):
+        target = self.gateway_service.scheduler.adaptive_target(
+            target_duration=self.target_duration
+        )
+        if self.minimum is not None:
+            target = max(self.minimum, target)
+        if self.maximum is not None:
+            target = min(self.maximum, target)
+        return target
+
+    def workers_to_close(self, target):
+        return self.gateway_service.scheduler.workers_to_close(
+            target=target, attribute="name"
+        )
+
+    async def scale_down(self, workers):
+        await self.gateway_service.remove_workers(workers)
+
+    async def scale_up(self, n):
+        await self.gateway_service.scale_up(n)
+
+    def recommendations(self, target):
+        current = len(self.plan)
+        if target == current:
+            self.close_counts.clear()
+            return {"status": "same"}
+
+        elif target > current:
+            self.close_counts.clear()
+            return {"status": "up", "n": target}
+
+        elif target < current:
+            pending = self.plan - self.observed
+            to_close = set()
+            if pending:
+                to_close.update(list(pending)[: current - target])
+
+            if target < current - len(to_close):
+                to_close.update(self.workers_to_close(target))
+
+            firmly_close = set()
+            for w in to_close:
+                self.close_counts[w] += 1
+                if self.close_counts[w] >= self.wait_count:
+                    firmly_close.add(w)
+
+            for k in list(self.close_counts):  # clear out unseen keys
+                if k in firmly_close or k not in to_close:
+                    del self.close_counts[k]
+
+            if firmly_close:
+                return {"status": "down", "workers": list(firmly_close)}
+            else:
+                return {"status": "same"}
+
+    async def adapt(self):
+        if self._adapting:  # Semaphore to avoid overlapping adapt calls
+            return
+        self._adapting = True
+
+        try:
+            target = await self.target()
+            recommendations = self.recommendations(target)
+
+            status = recommendations.pop("status")
+            if status == "same":
+                return
+            if status == "up":
+                await self.scale_up(**recommendations)
+            if status == "down":
+                await self.scale_down(**recommendations)
+        except OSError:
+            self.stop()
+        finally:
+            self._adapting = False
+
+
 class GatewaySchedulerService(object):
-    def __init__(self, scheduler, io_loop=None, plugin=None):
+    def __init__(self, scheduler, io_loop=None, gateway=None, adaptive_period=3):
         self.scheduler = scheduler
+        self.adaptive = Adaptive(self, period=adaptive_period)
+        self.gateway = gateway
         self.loop = io_loop or scheduler.loop
-        routes = [("/api/scale_down", ScaleDownHandler), ("/api/status", StatusHandler)]
+
+        routes = [
+            ("/api/scale_down", ScaleDownHandler),
+            ("/api/adapt", AdaptHandler),
+            ("/api/pending_workers", PendingWorkersHandler),
+            ("/api/status", StatusHandler),
+        ]
         self.app = web.Application(
-            routes, gateway_service=self, auth_token=plugin.gateway.token
+            routes, gateway_service=self, auth_token=self.gateway.token
         )
         self.server = None
-        self.plugin = plugin
+
+        self.plugin = GatewaySchedulerPlugin(self)
+        self.scheduler.add_plugin(self.plugin)
+
+        # A set of worker names that are active (pending or running)
+        self.plan = set()
+        # A mapping of running worker *addresses* -> WorkerState
+        self.workers = {}
+        # A mapping of worker name -> TimerHandle. When a worker is found
+        # down, we hold off on notifying the gateway for a period in case this
+        # is a temporary connection failure.
+        self.timeouts = {}
+        # A set of all intentionally closing worker names.
+        self.closing = set()
+
+    @property
+    def observed(self):
+        """A set of all running worker names"""
+        return {ws.name for ws in self.workers.values()}
 
     def listen(self, address):
         ip, port = address
@@ -94,64 +273,67 @@ class GatewaySchedulerService(object):
             self.server.stop()
             self.server = None
 
-    async def scale_down(self, remove_count):
-        n_workers = len(self.scheduler.workers)
-        n_to_close = min(n_workers, remove_count)
-        logger.info(
-            "Scale down [remove_count: %d, n_workers: %d]", remove_count, n_workers
+    def add_pending_workers(self, workers):
+        self.plan.update(workers)
+
+    def remove_pending_workers(self, workers):
+        self.plan.difference_update(workers)
+
+    async def scale_up(self, target):
+        workers = await self.gateway.scale_up(target)
+        self.add_pending_workers(workers)
+
+    async def remove_workers(self, workers):
+        self.plan.difference_update(workers)
+        self.closing.update(set(workers).union(self.observed))
+        await self.scheduler.retire_workers(
+            names=workers, remove=True, close_workers=True
         )
+        await self.gateway.remove_workers(workers)
+
+    async def scale_down(self, target):
+        n_to_close = len(self.plan) - target
+        closed = []
         if n_to_close > 0:
-            to_close = self.scheduler.workers_to_close(n=n_to_close)
-            self.plugin.shutdown_requested.update(to_close)
-            closed = await self.scheduler.retire_workers(
-                workers=to_close, remove=True, close_workers=True
-            )
-            logger.info(
-                "Closed %d workers, of %d suggested", len(closed), len(to_close)
-            )
-            workers_closed = [v["name"] for v in closed.values()]
+            pending = self.plan.difference(self.observed)
+            closed.extend(list(pending)[:n_to_close])
+            self.plan.difference_update(closed)
+
+            if len(closed) < n_to_close:
+                workers = self.scheduler.workers_to_close(
+                    target=target, attribute="name"
+                )
+                self.closing.update(workers)
+                await self.scheduler.retire_workers(
+                    names=workers, remove=True, close_workers=True
+                )
+                closed.extend(workers)
+
+        return {"workers_closed": closed}
+
+    def adapt(self, minimum=None, maximum=None, active=True):
+        if active:
+            self.adaptive.start(minimum=minimum, maximum=maximum)
         else:
-            workers_closed = []
-        return {"workers_closed": workers_closed, "n_workers": n_workers}
+            self.adaptive.stop()
 
-    def status(self):
-        workers = [
-            ws.name for ws in self.scheduler.workers.values() if ws.status != "closed"
-        ]
-        return {"workers": workers}
-
-
-class GatewaySchedulerPlugin(SchedulerPlugin):
-    """A plugin to notify the gateway when workers are added or removed"""
-
-    def __init__(self, gateway, loop):
-        self.gateway = gateway
-        # A mapping from name to WorkerState. All workers have a specified
-        # unique name that will be consistent between worker restarts. The
-        # worker address may not be consistent though, so we track intermittent
-        # connection failures from the worker name only.
-        self.workers = {}
-        # A set of worker *addresses* whose shutdown is requested
-        self.shutdown_requested = set()
-        self.timeouts = {}
-        self.loop = loop
-
-    def add_worker(self, scheduler, worker):
-        ws = scheduler.workers[worker]
+    def worker_added(self, worker_address):
+        ws = self.scheduler.workers[worker_address]
         logger.debug("Worker added [address: %r, name: %r]", ws.address, ws.name)
         timeout = self.timeouts.pop(ws.name, None)
         if timeout is not None:
             # Existing timeout running for this worker, cancel it
             self.loop.remove_timeout(timeout)
-        self.workers[worker] = ws
-        self.loop.add_callback(self.gateway.notify_worker_added, ws)
+        else:
+            self.loop.add_callback(self.gateway.notify_worker_added, ws)
+        self.workers[worker_address] = ws
 
-    def remove_worker(self, scheduler, worker):
-        ws = self.workers.pop(worker)
+    def worker_removed(self, worker_address):
+        ws = self.workers.pop(worker_address)
         logger.debug("Worker removed [address: %r, name: %r]", ws.address, ws.name)
 
         try:
-            self.shutdown_requested.remove(ws.address)
+            self.closing.remove(ws.name)
             # This worker was expected to exit, no need to notify
             return
         except KeyError:
@@ -167,6 +349,25 @@ class GatewaySchedulerPlugin(SchedulerPlugin):
             self.timeouts.pop(ws.name, None)
 
         self.timeouts[ws.name] = self.loop.call_later(5, callback)
+
+    def status(self):
+        workers = [
+            ws.name for ws in self.scheduler.workers.values() if ws.status != "closed"
+        ]
+        return {"workers": workers}
+
+
+class GatewaySchedulerPlugin(SchedulerPlugin):
+    """A plugin to notify the gateway when workers are added or removed"""
+
+    def __init__(self, service):
+        self.service = service
+
+    def add_worker(self, scheduler, worker):
+        self.service.worker_added(worker)
+
+    def remove_worker(self, scheduler, worker):
+        self.service.worker_removed(worker)
 
 
 class GatewayClient(object):
@@ -237,11 +438,49 @@ class GatewayClient(object):
         )
         await client.fetch(req)
 
+    async def remove_workers(self, workers):
+        client = AsyncHTTPClient()
+        body = json.dumps({"remove_workers": workers})
+        url = "%s/clusters/%s/scale" % (self.api_url, self.cluster_name)
+        req = HTTPRequest(
+            url,
+            method="POST",
+            headers={
+                "Authorization": "token %s" % self.token,
+                "Content-type": "application/json",
+            },
+            body=body,
+        )
+        await client.fetch(req)
+
+    async def scale_up(self, n):
+        client = AsyncHTTPClient()
+        body = json.dumps({"worker_count": n, "is_adapt": True})
+        url = "%s/clusters/%s/scale" % (self.api_url, self.cluster_name)
+        req = HTTPRequest(
+            url,
+            method="POST",
+            headers={
+                "Authorization": "token %s" % self.token,
+                "Content-type": "application/json",
+            },
+            body=body,
+        )
+        resp = await client.fetch(req)
+        data = json.loads(resp.body.decode("utf8", "replace"))
+        return data["added"]
+
 
 scheduler_parser = argparse.ArgumentParser(
     prog="dask-gateway-scheduler", description="Start a dask-gateway scheduler"
 )
 scheduler_parser.add_argument("--version", action="version", version=VERSION)
+scheduler_parser.add_argument(
+    "--adaptive-period",
+    type=float,
+    default=3,
+    help="Period (in seconds) between adaptive scaling calls",
+)
 
 
 def getenv(key):
@@ -273,7 +512,7 @@ def make_gateway_client(cluster_name=None, api_url=None, api_token=None):
 
 
 def scheduler(argv=None):
-    scheduler_parser.parse_args(argv)
+    args = scheduler_parser.parse_args(argv)
 
     gateway = make_gateway_client()
     security = make_security()
@@ -292,7 +531,9 @@ def scheduler(argv=None):
         resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
 
     async def run():
-        scheduler = await start_scheduler(gateway, security)
+        scheduler = await start_scheduler(
+            gateway, security, adaptive_period=args.adaptive_period
+        )
         await scheduler.finished()
 
     try:
@@ -301,11 +542,14 @@ def scheduler(argv=None):
         pass
 
 
-async def start_scheduler(gateway, security, exit_on_failure=True):
+async def start_scheduler(gateway, security, adaptive_period=3, exit_on_failure=True):
     loop = IOLoop.current()
-    plugin = GatewaySchedulerPlugin(gateway, loop)
-
-    services = {("gateway", 0): (GatewaySchedulerService, {"plugin": plugin})}
+    services = {
+        ("gateway", 0): (
+            GatewaySchedulerService,
+            {"gateway": gateway, "adaptive_period": adaptive_period},
+        )
+    }
     dashboard = False
     with ignoring(ImportError):
         from distributed.dashboard.scheduler import BokehScheduler
@@ -314,7 +558,6 @@ async def start_scheduler(gateway, security, exit_on_failure=True):
         dashboard = True
 
     scheduler = Scheduler(loop=loop, services=services, security=security)
-    scheduler.add_plugin(plugin)
     await scheduler
 
     host = urlparse(scheduler.address).hostname

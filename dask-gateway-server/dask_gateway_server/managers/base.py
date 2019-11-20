@@ -112,6 +112,19 @@ class ClusterManager(LoggingConfigurable):
         config=True,
     )
 
+    adaptive_period = Float(
+        3,
+        min=0,
+        help="""
+        Time (in seconds) between adaptive scaling checks.
+
+        A smaller period will decrease scale up/down latency when responding to
+        cluster load changes, but may also result in higher load on the gateway
+        server.
+        """,
+        config=True,
+    )
+
     # Cluster-specific parameters forwarded by gateway application
     username = Unicode()
     cluster_name = Unicode()
@@ -143,6 +156,32 @@ class ClusterManager(LoggingConfigurable):
             }
         )
         return out
+
+    @property
+    def worker_command_list(self):
+        """The full command (as an arg list) to launch a dask worker"""
+        return [
+            self.worker_cmd,
+            "--nthreads",
+            str(self.worker_cores),
+            "--memory-limit",
+            str(self.worker_memory),
+        ]
+
+    @property
+    def scheduler_command_list(self):
+        """The full command (as an arg list) to launch a dask scheduler"""
+        return [self.scheduler_cmd, "--adaptive-period", str(self.adaptive_period)]
+
+    @property
+    def worker_command(self):
+        """The full command (as a string) to launch a dask worker"""
+        return " ".join(self.worker_command_list)
+
+    @property
+    def scheduler_command(self):
+        """The full command (as a string) to launch a dask scheduler"""
+        return " ".join(self.scheduler_command_list)
 
     supports_bulk_shutdown = Bool(
         False,

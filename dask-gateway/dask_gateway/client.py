@@ -137,6 +137,8 @@ class ClusterReport(object):
         The address of the scheduler, or None if not currently running.
     dashboard_link : str or None
         A link to the dashboard, or None if not currently running.
+    adaptive : bool
+        Whether the cluster is in adaptive mode.
     start_time : datetime.datetime
         The time the cluster was started.
     stop_time : datetime.datetime or None
@@ -155,6 +157,7 @@ class ClusterReport(object):
         "status",
         "scheduler_address",
         "dashboard_link",
+        "adaptive",
         "start_time",
         "stop_time",
         "tls_cert",
@@ -168,6 +171,7 @@ class ClusterReport(object):
         status,
         scheduler_address,
         dashboard_link,
+        adaptive,
         start_time,
         stop_time,
         tls_cert=None,
@@ -178,6 +182,7 @@ class ClusterReport(object):
         self.status = status
         self.scheduler_address = scheduler_address
         self.dashboard_link = dashboard_link
+        self.adaptive = adaptive
         self.start_time = start_time
         self.stop_time = stop_time
         self.tls_cert = tls_cert
@@ -396,6 +401,20 @@ class Gateway(object):
         """
         return self.sync(self._clusters, status=status, **kwargs)
 
+    def get_cluster(self, cluster_name, **kwargs):
+        """Get information about a specific cluster.
+
+        Parameters
+        ----------
+        cluster_name : str
+            The cluster name.
+
+        Returns
+        -------
+        report : ClusterReport
+        """
+        return self.sync(self._cluster_report, cluster_name, **kwargs)
+
     def _config_cluster_options(self):
         opts = dask.config.get("gateway.cluster.options")
         return {k: format_template(v) for k, v in opts.items()}
@@ -580,10 +599,10 @@ class Gateway(object):
         return self.sync(self._stop_cluster, cluster_name, **kwargs)
 
     async def _scale_cluster(self, cluster_name, n):
-        url = "%s/gateway/api/clusters/%s/workers" % (self.address, cluster_name)
+        url = "%s/gateway/api/clusters/%s/scale" % (self.address, cluster_name)
         req = HTTPRequest(
             url=url,
-            method="PUT",
+            method="POST",
             body=json.dumps({"worker_count": n}),
             headers=HTTPHeaders({"Content-type": "application/json"}),
         )
@@ -603,6 +622,44 @@ class Gateway(object):
             The number of workers to scale to.
         """
         return self.sync(self._scale_cluster, cluster_name, n, **kwargs)
+
+    async def _adapt_cluster(
+        self, cluster_name, minimum=None, maximum=None, active=True
+    ):
+        url = "%s/gateway/api/clusters/%s/adapt" % (self.address, cluster_name)
+        req = HTTPRequest(
+            url=url,
+            method="POST",
+            body=json.dumps({"minimum": minimum, "maximum": maximum, "active": active}),
+            headers=HTTPHeaders({"Content-type": "application/json"}),
+        )
+        await self._fetch(req)
+
+    def adapt_cluster(
+        self, cluster_name, minimum=None, maximum=None, active=True, **kwargs
+    ):
+        """Configure adaptive scaling for a cluster.
+
+        Parameters
+        ----------
+        cluster_name : str
+            The cluster name.
+        minimum : int, optional
+            The minimum number of workers to scale to. Defaults to 0.
+        maximum : int, optional
+            The maximum number of workers to scale to. Defaults to infinity.
+        active : bool, optional
+            If ``True`` (default), adaptive scaling is activated. Set to
+            ``False`` to deactivate adaptive scaling.
+        """
+        return self.sync(
+            self._adapt_cluster,
+            cluster_name,
+            minimum=minimum,
+            maximum=maximum,
+            active=active,
+            **kwargs,
+        )
 
 
 _widget_status_template = """
@@ -950,6 +1007,23 @@ class GatewayCluster(object):
         """
         return self.gateway.scale_cluster(self.name, n, **kwargs)
 
+    def adapt(self, minimum=None, maximum=None, active=True, **kwargs):
+        """Configure adaptive scaling for the cluster.
+
+        Parameters
+        ----------
+        minimum : int, optional
+            The minimum number of workers to scale to. Defaults to 0.
+        maximum : int, optional
+            The maximum number of workers to scale to. Defaults to infinity.
+        active : bool, optional
+            If ``True`` (default), adaptive scaling is activated. Set to
+            ``False`` to deactivate adaptive scaling.
+        """
+        return self.gateway.adapt_cluster(
+            self.name, minimum=minimum, maximum=maximum, active=active, **kwargs
+        )
+
     async def _watch_worker_status(self, comm):
         # We don't want to hold on to a ref to self, otherwise this will
         # leave a dangling reference and prevent garbage collection.
@@ -1002,7 +1076,7 @@ class GatewayCluster(object):
             return None
 
         try:
-            from ipywidgets import Layout, VBox, HBox, IntText, Button, HTML
+            from ipywidgets import Layout, VBox, HBox, IntText, Button, HTML, Accordion
         except ImportError:
             self._cached_widget = None
             return None
@@ -1016,12 +1090,30 @@ class GatewayCluster(object):
         request = IntText(0, description="Workers", layout=layout)
         scale = Button(description="Scale", layout=layout)
 
+        minimum = IntText(0, description="Minimum", layout=layout)
+        maximum = IntText(0, description="Maximum", layout=layout)
+        adapt = Button(description="Adapt", layout=layout)
+
+        accordion = Accordion(
+            [HBox([request, scale]), HBox([minimum, maximum, adapt])],
+            layout=Layout(min_width="500px"),
+        )
+        accordion.selected_index = None
+        accordion.set_title(0, "Manual Scaling")
+        accordion.set_title(1, "Adaptive Scaling")
+
         @scale.on_click
         def scale_cb(b):
             with log_errors():
                 self.scale(request.value)
 
-        elements = [title, HBox([status, request, scale])]
+        @adapt.on_click
+        def adapt_cb(b):
+            self.adapt(minimum=minimum.value, maximum=maximum.value)
+
+        name = HTML("<p><b>Name: </b>{0}</p>".format(self.name))
+
+        elements = [title, HBox([status, accordion]), name]
 
         if self.dashboard_link is not None:
             link = HTML(

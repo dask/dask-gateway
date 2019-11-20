@@ -13,32 +13,25 @@ from .objects import ClusterStatus
 DASK_GATEWAY_COOKIE = "dask-gateway"
 
 
-def user_authenticated(method):
-    """Ensure this method is authenticated via a user"""
+def authenticated(user=False, token=False):
+    """Ensure this method is authenticated"""
 
-    @functools.wraps(method)
-    async def inner(self, *args, **kwargs):
-        username = await self.current_user_from_login()
-        if username is None:
-            raise web.HTTPError(401)
-        self.current_user = username
-        return await method(self, *args, **kwargs)
+    def wrapper(method):
+        @functools.wraps(method)
+        async def inner(self, *args, **kwargs):
+            username = None
+            if token:
+                username = self.current_user_from_token()
+            if username is None and user:
+                username = await self.current_user_from_login()
+            if username is None:
+                raise web.HTTPError(401)
+            self.current_user = username
+            return await method(self, *args, **kwargs)
 
-    return inner
+        return inner
 
-
-def token_authenticated(method):
-    """Ensure this method is authenticated via a token"""
-
-    @functools.wraps(method)
-    def inner(self, *args, **kwargs):
-        username = self.current_user_from_token()
-        if username is None:
-            raise web.HTTPError(401)
-        self.current_user = username
-        return method(self, *args, **kwargs)
-
-    return inner
+    return wrapper
 
 
 class BaseHandler(web.RequestHandler):
@@ -129,6 +122,7 @@ def cluster_model(gateway, cluster, full=True):
         "start_time": cluster.start_time,
         "stop_time": cluster.stop_time,
         "options": cluster.options,
+        "adaptive": cluster.adaptive,
     }
     if full:
         if cluster.status == ClusterStatus.RUNNING:
@@ -142,14 +136,14 @@ def cluster_model(gateway, cluster, full=True):
 
 
 class ClusterOptionsHandler(BaseHandler):
-    @user_authenticated
+    @authenticated(user=True)
     async def get(self):
         spec = self.gateway.cluster_manager_options.get_specification()
         self.write({"cluster_options": spec})
 
 
 class ClustersHandler(BaseHandler):
-    @user_authenticated
+    @authenticated(user=True)
     async def post(self, cluster_name):
         # Only accept urls of the form /api/clusters/
         if cluster_name:
@@ -173,7 +167,7 @@ class ClustersHandler(BaseHandler):
         self.write({"name": cluster.name})
         self.set_status(201)
 
-    @user_authenticated
+    @authenticated(user=True)
     async def get(self, cluster_name):
         if not cluster_name:
             status = self.get_query_argument("status", default=None)
@@ -208,7 +202,7 @@ class ClustersHandler(BaseHandler):
                     return
         self.write(cluster_model(self.gateway, cluster, full=True))
 
-    @user_authenticated
+    @authenticated(user=True)
     async def delete(self, cluster_name):
         # Only accept urls of the form /api/clusters/{cluster_name}
         if not cluster_name:
@@ -227,7 +221,7 @@ class ClustersHandler(BaseHandler):
 
 
 class ClusterRegistrationHandler(BaseHandler):
-    @token_authenticated
+    @authenticated(token=True)
     async def put(self, cluster_name):
         self.check_cluster(cluster_name)
         try:
@@ -235,7 +229,7 @@ class ClusterRegistrationHandler(BaseHandler):
             dashboard = self.json_data["dashboard_address"]
             api = self.json_data["api_address"]
         except (TypeError, KeyError):
-            raise web.HTTPError(405)
+            raise web.HTTPError(422)
 
         if self.dask_cluster._connect_future.done():
             raise web.HTTPError(
@@ -244,7 +238,7 @@ class ClusterRegistrationHandler(BaseHandler):
 
         self.dask_cluster._connect_future.set_result((scheduler, dashboard, api))
 
-    @token_authenticated
+    @authenticated(token=True)
     async def get(self, cluster_name):
         self.check_cluster(cluster_name)
         msg = {
@@ -256,8 +250,8 @@ class ClusterRegistrationHandler(BaseHandler):
 
 
 class ClusterScaleHandler(BaseHandler):
-    @user_authenticated
-    async def put(self, cluster_name):
+    @authenticated(user=True, token=True)
+    async def post(self, cluster_name):
         cluster = self.dask_user.clusters.get(cluster_name)
         if cluster is None:
             raise web.HTTPError(404, reason="Cluster %s does not exist" % cluster_name)
@@ -269,16 +263,50 @@ class ClusterScaleHandler(BaseHandler):
                     % (cluster_name, cluster.status.name)
                 ),
             )
-        try:
-            total = self.json_data["worker_count"]
-        except (TypeError, KeyError):
+
+        data = self.json_data or {}
+        if "worker_count" in data:
+            total = data["worker_count"]
+            is_adapt = data.get("is_adapt", False)
+            if total < 0:
+                raise web.HTTPError(
+                    422, reason="Scale expects a non-negative integer, got %r" % total
+                )
+            reply = await self.gateway.scale(cluster, total, is_adapt=is_adapt)
+            self.write(reply)
+        elif "remove_workers" in data:
+            workers = data["remove_workers"]
+            reply = await self.gateway.scale_down(cluster, workers=workers)
+            self.write(reply)
+        else:
             raise web.HTTPError(422, reason="Malformed request body")
-        if total < 0:
+
+
+class ClusterAdaptHandler(BaseHandler):
+    @authenticated(user=True)
+    async def post(self, cluster_name):
+        cluster = self.dask_user.clusters.get(cluster_name)
+        if cluster is None:
+            raise web.HTTPError(404, reason="Cluster %s does not exist" % cluster_name)
+        elif cluster.status != ClusterStatus.RUNNING:
             raise web.HTTPError(
-                422, reason="Scale expects a non-negative integer, got %r" % total
+                409,
+                reason=(
+                    "Cluster %s has status=%s, must be RUNNING to scale"
+                    % (cluster_name, cluster.status.name)
+                ),
             )
-        n, msg = await self.gateway.scale(cluster, total)
-        self.write({"n": n, "message": msg})
+
+        try:
+            minimum = self.json_data.get("minimum", None)
+            maximum = self.json_data.get("maximum", None)
+            active = self.json_data.get("active", True)
+        except TypeError:
+            raise web.HTTPError(422, reason="Malformed request body")
+
+        await self.gateway.adapt(
+            cluster, minimum=minimum, maximum=maximum, active=active
+        )
 
 
 class ClusterWorkersHandler(BaseHandler):
@@ -293,7 +321,7 @@ class ClusterWorkersHandler(BaseHandler):
             )
         return self.dask_cluster, worker
 
-    @token_authenticated
+    @authenticated(token=True)
     async def put(self, cluster_name, worker_name):
         """Register worker added to cluster"""
         cluster, worker = self.get_cluster_and_worker(cluster_name, worker_name)
@@ -303,7 +331,7 @@ class ClusterWorkersHandler(BaseHandler):
             )
         worker._connect_future.set_result(True)
 
-    @token_authenticated
+    @authenticated(token=True)
     async def delete(self, cluster_name, worker_name):
         """Register worker removed from cluster"""
         cluster, worker = self.get_cluster_and_worker(cluster_name, worker_name)
@@ -316,7 +344,8 @@ default_handlers = [
         "/api/clusters/([a-zA-Z0-9-_.]*)/workers/([a-zA-Z0-9-_.]*)",
         ClusterWorkersHandler,
     ),
-    ("/api/clusters/([a-zA-Z0-9-_.]*)/workers", ClusterScaleHandler),
+    ("/api/clusters/([a-zA-Z0-9-_.]*)/scale", ClusterScaleHandler),
+    ("/api/clusters/([a-zA-Z0-9-_.]*)/adapt", ClusterAdaptHandler),
     ("/api/clusters/([a-zA-Z0-9-_.]*)/addresses", ClusterRegistrationHandler),
     ("/api/clusters/([a-zA-Z0-9-_.]*)", ClustersHandler),
 ]

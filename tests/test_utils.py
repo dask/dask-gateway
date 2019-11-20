@@ -4,7 +4,14 @@ import socket
 import pytest
 from traitlets import HasTraits, TraitError
 
-from dask_gateway_server.utils import Type, timeout, format_bytes, classname, ServerUrls
+from dask_gateway_server.utils import (
+    Type,
+    timeout,
+    format_bytes,
+    classname,
+    ServerUrls,
+    nullcontext,
+)
 
 
 def test_Type_traitlet():
@@ -114,3 +121,15 @@ class Foo(object):
 
 def test_classname():
     assert classname(Foo) == f"{Foo.__module__}.Foo"
+
+
+@pytest.mark.asyncio
+async def test_nullcontext():
+    async with nullcontext(0) as c:
+        assert c == 0
+
+    with nullcontext(0) as c:
+        assert c == 0
+
+    with nullcontext() as c:
+        assert c is None

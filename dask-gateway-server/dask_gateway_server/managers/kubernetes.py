@@ -504,8 +504,7 @@ class KubeClusterManager(ClusterManager):
         return "/etc/dask-credentials/dask.crt", "/etc/dask-credentials/dask.pem"
 
     @property
-    def worker_command(self):
-        """The full command (with args) to launch a dask worker"""
+    def worker_command_list(self):
         return [
             self.worker_cmd,
             "--nthreads",
@@ -513,11 +512,6 @@ class KubeClusterManager(ClusterManager):
             "--memory-limit",
             str(self.worker_memory_limit),
         ]
-
-    @property
-    def scheduler_command(self):
-        """The full command (with args) to launch a dask scheduler"""
-        return [self.scheduler_cmd]
 
     @property
     def pod_label_selector(self):
@@ -566,7 +560,7 @@ class KubeClusterManager(ClusterManager):
             cpu_req = self.worker_cores
             cpu_lim = self.worker_cores_limit
             env["DASK_GATEWAY_WORKER_NAME"] = worker_name
-            cmd = self.worker_command
+            cmd = self.worker_command_list
             extra_pod_config = self.worker_extra_pod_config
             extra_container_config = self.worker_extra_container_config
         else:
@@ -578,7 +572,7 @@ class KubeClusterManager(ClusterManager):
             mem_lim = self.scheduler_memory_limit
             cpu_req = self.scheduler_cores
             cpu_lim = self.scheduler_cores_limit
-            cmd = self.scheduler_command
+            cmd = self.scheduler_command_list
             extra_pod_config = self.scheduler_extra_pod_config
             extra_container_config = self.scheduler_extra_container_config
 

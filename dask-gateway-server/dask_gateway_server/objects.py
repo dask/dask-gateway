@@ -12,6 +12,7 @@ from sqlalchemy import (
     Column,
     Integer,
     Float,
+    Boolean,
     Unicode,
     BINARY,
     ForeignKey,
@@ -137,6 +138,7 @@ clusters = Table(
     Column("dashboard_address", Unicode(255), nullable=False),
     Column("api_address", Unicode(255), nullable=False),
     Column("tls_credentials", LargeBinary, nullable=False),
+    Column("adaptive", Boolean, nullable=False),
     Column("memory", Integer, nullable=False),
     Column("cores", Float, nullable=False),
     Column("start_time", Integer, nullable=False),
@@ -229,6 +231,7 @@ class DataManager(object):
                 api_address=c.api_address,
                 tls_cert=tls_cert,
                 tls_key=tls_key,
+                adaptive=c.adaptive,
                 memory=c.memory,
                 cores=c.cores,
                 start_time=c.start_time,
@@ -348,6 +351,7 @@ class DataManager(object):
             "api_address": "",
             "memory": memory,
             "cores": cores,
+            "adaptive": False,
             "start_time": timestamp(),
         }
 
@@ -443,6 +447,7 @@ class Cluster(object):
         api_address="",
         tls_cert=b"",
         tls_key=b"",
+        adaptive=False,
         memory=None,
         cores=None,
         start_time=None,
@@ -460,6 +465,7 @@ class Cluster(object):
         self.api_address = api_address
         self.tls_cert = tls_cert
         self.tls_key = tls_key
+        self.adaptive = adaptive
         self.memory = memory
         self.cores = cores
         self.start_time = start_time

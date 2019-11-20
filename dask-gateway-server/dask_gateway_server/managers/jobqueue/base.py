@@ -144,24 +144,6 @@ class JobQueueClusterManager(ClusterManager):
 
     cancel_command = Unicode(help="The path to the job cancel command", config=True)
 
-    def get_worker_args(self):
-        return [
-            "--nthreads",
-            str(self.worker_cores),
-            "--memory-limit",
-            str(self.worker_memory),
-        ]
-
-    @property
-    def worker_command(self):
-        """The full command (with args) to launch a dask worker"""
-        return " ".join([self.worker_cmd] + self.get_worker_args())
-
-    @property
-    def scheduler_command(self):
-        """The full command (with args) to launch a dask scheduler"""
-        return self.scheduler_cmd
-
     def get_submit_cmd_env_stdin(self, worker_name=None):
         raise NotImplementedError
 
