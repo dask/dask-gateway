@@ -1076,7 +1076,7 @@ class GatewayCluster(object):
             return None
 
         try:
-            from ipywidgets import Layout, VBox, HBox, IntText, Button, HTML
+            from ipywidgets import Layout, VBox, HBox, IntText, Button, HTML, Accordion
         except ImportError:
             self._cached_widget = None
             return None
@@ -1090,12 +1090,30 @@ class GatewayCluster(object):
         request = IntText(0, description="Workers", layout=layout)
         scale = Button(description="Scale", layout=layout)
 
+        minimum = IntText(0, description="Minimum", layout=layout)
+        maximum = IntText(0, description="Maximum", layout=layout)
+        adapt = Button(description="Adapt", layout=layout)
+
+        accordion = Accordion(
+            [HBox([request, scale]), HBox([minimum, maximum, adapt])],
+            layout=Layout(min_width="500px"),
+        )
+        accordion.selected_index = None
+        accordion.set_title(0, "Manual Scaling")
+        accordion.set_title(1, "Adaptive Scaling")
+
         @scale.on_click
         def scale_cb(b):
             with log_errors():
                 self.scale(request.value)
 
-        elements = [title, HBox([status, request, scale])]
+        @adapt.on_click
+        def adapt_cb(b):
+            self.adapt(minimum=minimum.value, maximum=maximum.value)
+
+        name = HTML("<p><b>Name: </b>{0}</p>".format(self.name))
+
+        elements = [title, HBox([status, accordion]), name]
 
         if self.dashboard_link is not None:
             link = HTML(
