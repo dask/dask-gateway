@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+4.g862d0d9 documentation</title>
+  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+5.ga6dd6bb documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+4.g862d0d9
+                0.5.0+5.ga6dd6bb
               </div>
             
           
@@ -791,6 +791,15 @@ external manager (e.g. supervisord).</p>
 requesting username.</p>
 <dl class="attribute">
 <dt>
+<code class="sig-name descname">config c.LocalClusterManager.adaptive_period = Float(3)</code></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
 <code class="sig-name descname">config c.LocalClusterManager.cluster_start_timeout = Float(60)</code></dt>
 <dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
 </dd></dl>
@@ -924,6 +933,15 @@ of failures.</p>
 <dd><p>A version of LocalClusterManager that doesn’t set permissions.</p>
 <p>FOR TESTING ONLY! This provides no user separations - clusters run with the
 same level of permission as the gateway.</p>
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.UnsafeLocalClusterManager.adaptive_period = Float(3)</code></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt>
 <code class="sig-name descname">config c.UnsafeLocalClusterManager.cluster_start_timeout = Float(60)</code></dt>
@@ -1060,6 +1078,15 @@ of failures.</p>
 <dt id="dask_gateway_server.managers.yarn.YarnClusterManager">
 <em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.yarn.</code><code class="sig-name descname">YarnClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.yarn.YarnClusterManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>A cluster manager for deploying Dask on a YARN cluster.</p>
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.YarnClusterManager.adaptive_period = Float(3)</code></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt>
 <code class="sig-name descname">config c.YarnClusterManager.cluster_start_timeout = Float(60)</code></dt>
@@ -1214,6 +1241,15 @@ of failures.</p>
 <dt id="dask_gateway_server.managers.kubernetes.KubeClusterManager">
 <em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.kubernetes.</code><code class="sig-name descname">KubeClusterManager</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.kubernetes.KubeClusterManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>A cluster manager for deploying Dask on a Kubernetes cluster.</p>
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.KubeClusterManager.adaptive_period = Float(3)</code></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt>
 <code class="sig-name descname">config c.KubeClusterManager.cluster_start_timeout = Float(60)</code></dt>
@@ -1458,6 +1494,15 @@ of failures.</p>
 
 <dl class="attribute">
 <dt>
+<code class="sig-name descname">config c.PBSClusterManager.adaptive_period = Float(3)</code></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
 <code class="sig-name descname">config c.PBSClusterManager.cancel_command = Unicode('')</code></dt>
 <dd><p>The path to the job cancel command</p>
 </dd></dl>
@@ -1649,6 +1694,15 @@ of failures.</p>
 <dt>
 <code class="sig-name descname">config c.SlurmClusterManager.account = Unicode('')</code></dt>
 <dd><p>Account string associated with each job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="sig-name descname">config c.SlurmClusterManager.adaptive_period = Float(3)</code></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
 </dd></dl>
 
 <dl class="attribute">

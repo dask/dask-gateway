@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Client API &mdash; Dask Gateway 0.5.0+4.g862d0d9 documentation</title>
+  <title>Client API &mdash; Dask Gateway 0.5.0+5.ga6dd6bb documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+4.g862d0d9
+                0.5.0+5.ga6dd6bb
               </div>
             
           
@@ -254,6 +254,23 @@ asynchronous mode, otherwise a background loop is started.</p></li>
 </dd>
 </dl>
 <dl class="method">
+<dt id="dask_gateway.Gateway.adapt_cluster">
+<code class="sig-name descname">adapt_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">minimum=None</em>, <em class="sig-param">maximum=None</em>, <em class="sig-param">active=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.adapt_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure adaptive scaling for a cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_name</strong> (<em>str</em>) – The cluster name.</p></li>
+<li><p><strong>minimum</strong> (<em>int</em><em>, </em><em>optional</em>) – The minimum number of workers to scale to. Defaults to 0.</p></li>
+<li><p><strong>maximum</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of workers to scale to. Defaults to infinity.</p></li>
+<li><p><strong>active</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), adaptive scaling is activated. Set to
+<code class="docutils literal notranslate"><span class="pre">False</span></code> to deactivate adaptive scaling.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="dask_gateway.Gateway.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close the gateway client</p>
@@ -294,6 +311,23 @@ Default is False.</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster">GatewayCluster</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="dask_gateway.Gateway.get_cluster">
+<code class="sig-name descname">get_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.get_cluster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get information about a specific cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cluster_name</strong> (<em>str</em>) – The cluster name.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>report</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ClusterReport</p>
 </dd>
 </dl>
 </dd></dl>
@@ -426,6 +460,22 @@ are specific to each deployment of dask-gateway, see
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="dask_gateway.GatewayCluster.adapt">
+<code class="sig-name descname">adapt</code><span class="sig-paren">(</span><em class="sig-param">minimum=None</em>, <em class="sig-param">maximum=None</em>, <em class="sig-param">active=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.adapt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure adaptive scaling for the cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>minimum</strong> (<em>int</em><em>, </em><em>optional</em>) – The minimum number of workers to scale to. Defaults to 0.</p></li>
+<li><p><strong>maximum</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of workers to scale to. Defaults to infinity.</p></li>
+<li><p><strong>active</strong> (<em>bool</em><em>, </em><em>optional</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code> (default), adaptive scaling is activated. Set to
+<code class="docutils literal notranslate"><span class="pre">False</span></code> to deactivate adaptive scaling.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="dask_gateway.GatewayCluster.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param">shutdown=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.close" title="Permalink to this definition">¶</a></dt>
