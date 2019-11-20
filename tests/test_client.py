@@ -250,7 +250,7 @@ async def test_cluster_widget(tmpdir):
         cluster_manager_class=InProcessClusterManager,
         temp_dir=str(tmpdir.join("dask-gateway")),
     ) as gateway_proc:
-        loop = asyncio.get_running_loop()
+        loop = get_running_loop()
         await loop.run_in_executor(None, test)
 
 

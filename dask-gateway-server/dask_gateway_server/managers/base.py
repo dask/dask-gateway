@@ -176,12 +176,12 @@ class ClusterManager(LoggingConfigurable):
     @property
     def worker_command(self):
         """The full command (as a string) to launch a dask worker"""
-        return " ".join(self.worker_commmand_list)
+        return " ".join(self.worker_command_list)
 
     @property
     def scheduler_command(self):
         """The full command (as a string) to launch a dask scheduler"""
-        return " ".join(self.scheduler_commmand_list)
+        return " ".join(self.scheduler_command_list)
 
     supports_bulk_shutdown = Bool(
         False,
