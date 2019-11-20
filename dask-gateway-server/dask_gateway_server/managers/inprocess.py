@@ -32,7 +32,10 @@ class InProcessClusterManager(UnsafeLocalClusterManager):
         security = self.get_security()
         gateway_client = self.get_gateway_client()
         self.scheduler = await start_scheduler(
-            gateway_client, security, exit_on_failure=False
+            gateway_client,
+            security,
+            exit_on_failure=False,
+            adaptive_period=self.adaptive_period,
         )
         yield {}
 

@@ -110,15 +110,15 @@ class Adaptive(object):
         maximum=None,
         target_duration=5,
         wait_count=3,
-        interval=1,
+        period=3,
     ):
         self.gateway_service = gateway_service
         self.target_duration = target_duration
         self.minimum = minimum
         self.maximum = maximum
         self.wait_count = wait_count
-        self.interval = interval
-        self.periodic_callback = PeriodicCallback(self.adapt, self.interval * 1000)
+        self.period = period
+        self.periodic_callback = PeriodicCallback(self.adapt, self.period * 1000)
         self.gateway_service.scheduler.periodic_callbacks[
             "adaptive-callback"
         ] = self.periodic_callback
@@ -227,9 +227,9 @@ class Adaptive(object):
 
 
 class GatewaySchedulerService(object):
-    def __init__(self, scheduler, io_loop=None, gateway=None):
+    def __init__(self, scheduler, io_loop=None, gateway=None, adaptive_period=3):
         self.scheduler = scheduler
-        self.adaptive = Adaptive(self)
+        self.adaptive = Adaptive(self, period=adaptive_period)
         self.gateway = gateway
         self.loop = io_loop or scheduler.loop
 
@@ -469,6 +469,12 @@ scheduler_parser = argparse.ArgumentParser(
     prog="dask-gateway-scheduler", description="Start a dask-gateway scheduler"
 )
 scheduler_parser.add_argument("--version", action="version", version=VERSION)
+scheduler_parser.add_argument(
+    "--adaptive-period",
+    type=float,
+    default=3,
+    help="Period (in seconds) between adaptive scaling calls",
+)
 
 
 def getenv(key):
@@ -500,7 +506,7 @@ def make_gateway_client(cluster_name=None, api_url=None, api_token=None):
 
 
 def scheduler(argv=None):
-    scheduler_parser.parse_args(argv)
+    args = scheduler_parser.parse_args(argv)
 
     gateway = make_gateway_client()
     security = make_security()
@@ -519,7 +525,9 @@ def scheduler(argv=None):
         resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
 
     async def run():
-        scheduler = await start_scheduler(gateway, security)
+        scheduler = await start_scheduler(
+            gateway, security, adaptive_period=args.adaptive_period
+        )
         await scheduler.finished()
 
     try:
@@ -528,9 +536,14 @@ def scheduler(argv=None):
         pass
 
 
-async def start_scheduler(gateway, security, exit_on_failure=True):
+async def start_scheduler(gateway, security, adaptive_period=3, exit_on_failure=True):
     loop = IOLoop.current()
-    services = {("gateway", 0): (GatewaySchedulerService, {"gateway": gateway})}
+    services = {
+        ("gateway", 0): (
+            GatewaySchedulerService,
+            {"gateway": gateway, "adaptive_period": adaptive_period},
+        )
+    }
     dashboard = False
     with ignoring(ImportError):
         from distributed.dashboard.scheduler import BokehScheduler

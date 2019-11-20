@@ -220,23 +220,15 @@ class YarnClusterManager(ClusterManager):
                 if os.path.exists(path):
                     os.unlink(path)
 
-    def get_worker_args(self):
+    @property
+    def worker_command_list(self):
         return [
+            self.worker_cmd,
             "--nthreads",
             "$SKEIN_RESOURCE_VCORES",
             "--memory-limit",
             "${SKEIN_RESOURCE_MEMORY}MiB",
         ]
-
-    @property
-    def worker_command(self):
-        """The full command (with args) to launch a dask worker"""
-        return " ".join([self.worker_cmd] + self.get_worker_args())
-
-    @property
-    def scheduler_command(self):
-        """The full command (with args) to launch a dask scheduler"""
-        return self.scheduler_cmd
 
     def _build_specification(self, cert_path, key_path):
         files = {

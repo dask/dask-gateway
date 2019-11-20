@@ -881,10 +881,11 @@ async def test_adaptive_scaling(tmpdir):
     # XXX: we should be able to use `InProcessClusterManager` here, but due to
     # https://github.com/dask/distributed/issues/3251 this results in periodic
     # failures.
-    async with temp_gateway(
-        cluster_manager_class=LocalTestingClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
-    ) as gateway_proc:
+    config = Config()
+    config.DaskGateway.cluster_manager_class = LocalTestingClusterManager
+    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.LocalTestingClusterManager.adaptive_period = 0.25
+    async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_urls.connect_url,
             proxy_address=gateway_proc.gateway_urls.connect_url,

@@ -191,24 +191,6 @@ class LocalClusterManager(ClusterManager):
 
         return preexec
 
-    def get_worker_args(self):
-        return [
-            "--nthreads",
-            str(self.worker_cores),
-            "--memory-limit",
-            str(self.worker_memory),
-        ]
-
-    @property
-    def worker_command(self):
-        """The full command (with args) to launch a dask worker"""
-        return " ".join([self.worker_cmd] + self.get_worker_args())
-
-    @property
-    def scheduler_command(self):
-        """The full command (with args) to launch a dask scheduler"""
-        return self.scheduler_cmd
-
     async def start_process(self, cmd, env, name):
         workdir = self.get_working_directory()
         logsdir = self.get_logs_directory(workdir)
@@ -250,7 +232,7 @@ class LocalClusterManager(ClusterManager):
     async def start_cluster(self):
         self.create_working_directory()
         pid = await self.start_process(
-            self.scheduler_command.split(), self.get_env(), "scheduler"
+            self.scheduler_command_list, self.get_env(), "scheduler"
         )
         yield {"pid": pid}
 
@@ -267,7 +249,7 @@ class LocalClusterManager(ClusterManager):
         self.remove_working_directory()
 
     async def start_worker(self, worker_name, cluster_state):
-        cmd = self.worker_command.split()
+        cmd = self.worker_command_list
         env = self.get_env()
         env["DASK_GATEWAY_WORKER_NAME"] = worker_name
         pid = await self.start_process(cmd, env, "worker-%s" % worker_name)
