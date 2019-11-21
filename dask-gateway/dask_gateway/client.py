@@ -4,6 +4,7 @@ import enum
 import json
 import os
 import ssl
+import sys
 import tempfile
 import traceback
 import warnings
@@ -325,7 +326,7 @@ class Gateway(object):
 
     def __del__(self):
         # __del__ is called even if __init__ fails, need to detect this
-        if hasattr(self, "_loop_runner"):
+        if hasattr(self, "_loop_runner") and not sys.is_finalizing():
             self.close()
 
     def __repr__(self):
@@ -953,6 +954,8 @@ class GatewayCluster(object):
         """
         if self.asynchronous:
             return self._stop_internal(shutdown=shutdown)
+        if self.status == "closed":
+            return
         if self.loop.asyncio_loop.is_running():
             self.gateway.sync(self._stop_internal, shutdown=shutdown)
         self.gateway.close()
@@ -974,7 +977,8 @@ class GatewayCluster(object):
         if self.asynchronous:
             # No del for async mode
             return
-        self.close()
+        if not sys.is_finalizing():
+            self.close()
 
     def __repr__(self):
         return "GatewayCluster<%s, status=%s>" % (self.name, self.status)
