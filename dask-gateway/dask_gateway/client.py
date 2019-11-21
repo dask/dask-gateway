@@ -202,7 +202,7 @@ class ClusterReport(object):
         )
 
     @classmethod
-    def _from_json(cls, gateway_address, proxy_address, msg):
+    def _from_json(cls, public_address, proxy_address, msg):
         start_time = datetime.fromtimestamp(msg.pop("start_time") / 1000)
         stop_time = msg.pop("stop_time")
         if stop_time is not None:
@@ -216,7 +216,7 @@ class ClusterReport(object):
 
         dashboard_route = msg.pop("dashboard_route")
         dashboard_link = (
-            "%s%s" % (gateway_address, dashboard_route) if dashboard_route else None
+            "%s%s" % (public_address, dashboard_route) if dashboard_route else None
         )
 
         return cls(
@@ -262,6 +262,12 @@ class Gateway(object):
             )
         address = address.rstrip("/")
 
+        public_address = format_template(dask.config.get("gateway.public-address"))
+        if public_address is None:
+            public_address = address
+        else:
+            public_address = public_address.rstrip("/")
+
         if proxy_address is None:
             proxy_address = format_template(dask.config.get("gateway.proxy-address"))
         if proxy_address is None:
@@ -277,6 +283,7 @@ class Gateway(object):
         proxy_address = "gateway://%s" % proxy_netloc
 
         self.address = address
+        self._public_address = public_address
         self.proxy_address = proxy_address
 
         self.auth = get_auth(auth)
@@ -381,7 +388,7 @@ class Gateway(object):
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
         return [
-            ClusterReport._from_json(self.address, self.proxy_address, r)
+            ClusterReport._from_json(self._public_address, self.proxy_address, r)
             for r in json.loads(resp.body).values()
         ]
 
@@ -500,7 +507,7 @@ class Gateway(object):
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
         return ClusterReport._from_json(
-            self.address, self.proxy_address, json.loads(resp.body)
+            self._public_address, self.proxy_address, json.loads(resp.body)
         )
 
     async def _wait_for_start(self, cluster_name):
