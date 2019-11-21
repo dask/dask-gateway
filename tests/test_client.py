@@ -90,6 +90,7 @@ def test_client_init():
     config = {
         "gateway": {
             "address": "http://127.0.0.1:8888",
+            "public-address": None,
             "proxy-address": 8786,
             "auth": {"type": "basic", "kwargs": {"username": "bruce"}},
         }
@@ -99,6 +100,7 @@ def test_client_init():
         # Defaults
         gateway = Gateway()
         assert gateway.address == "http://127.0.0.1:8888"
+        assert gateway._public_address == "http://127.0.0.1:8888"
         assert gateway.proxy_address == "gateway://127.0.0.1:8786"
         assert gateway.auth.username == "bruce"
 
@@ -117,6 +119,7 @@ def test_client_init():
     config = {
         "gateway": {
             "address": None,
+            "public-address": None,
             "proxy-address": 8786,
             "auth": {"type": "basic", "kwargs": {}},
         }
@@ -140,11 +143,14 @@ def test_gateway_addresses_template_environment_vars(monkeypatch):
     monkeypatch.setenv("TEST", "foobar")
 
     with dask.config.set(
-        gateway__address="http://{TEST}:80", gateway__proxy_address=8785
+        gateway__address="http://{TEST}:80",
+        gateway__proxy_address=8785,
+        gateway__public_address="/{TEST}/foo/",
     ):
         g = Gateway()
     assert g.address == "http://foobar:80"
     assert g.proxy_address == "gateway://foobar:8785"
+    assert g._public_address == "/foobar/foo"
 
     with dask.config.set(gateway__proxy_address="gateway://{TEST}:8787"):
         g = Gateway("http://test.com")
@@ -252,6 +258,32 @@ async def test_cluster_widget(tmpdir):
     ) as gateway_proc:
         loop = get_running_loop()
         await loop.run_in_executor(None, test)
+
+
+@pytest.mark.asyncio
+async def test_dashboard_link_from_public_address(tmpdir):
+    pytest.importorskip("bokeh")
+
+    async with temp_gateway(
+        cluster_manager_class=InProcessClusterManager,
+        temp_dir=str(tmpdir.join("dask-gateway")),
+    ) as gateway_proc:
+        with dask.config.set(
+            gateway__address=gateway_proc.public_urls.connect_url,
+            gateway__public_address="/services/dask-gateway/",
+            gateway__proxy_address=gateway_proc.gateway_urls.connect_url,
+        ):
+            async with Gateway(asynchronous=True) as gateway:
+                assert gateway._public_address == "/services/dask-gateway"
+
+                cluster = await gateway.new_cluster()
+
+                sol = "/services/dask-gateway/gateway/clusters/%s/status" % cluster.name
+                assert cluster.dashboard_link == sol
+
+                clusters = await gateway.list_clusters()
+                for c in clusters:
+                    assert c.dashboard_link.startswith("/services/dask-gateway")
 
 
 @pytest.mark.asyncio

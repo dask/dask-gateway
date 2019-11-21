@@ -3,6 +3,12 @@ gateway:
                         # May also be a template string, which will be formatted
                         # with any environment variables before usage.
 
+  public-address: null  # The address to the dask-gateway server, as accessible
+                        # from a web browser. This will be used as the root of
+                        # all browser-facing links (e.g. the dask dashboard).
+                        # If `None` (default), `gateway.address` will be used.
+                        # May be a template string.
+
   proxy-address: 8786   # The full address or port to the dask-gateway
                         # scheduler proxy. If a port, the host/ip is taken from
                         # ``address``. May also be a template string.
