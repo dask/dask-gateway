@@ -23,9 +23,9 @@ Highlights
   equally well in the cloud as on-premise. Natively supports Kubernetes,
   Hadoop/YARN, and HPC Job Queueing systems.
 
-- **Robust to Failure**: The gateway can be restarted or experience failover without
-  losing existing clusters. Allows for seamless upgrades and restarts without
-  disrupting users.
+- **Robust to Failure**: The gateway can be restarted or experience failover
+  without losing existing clusters. Allows for seamless upgrades and restarts
+  without disrupting users.
 
 
 Architecture Overview
