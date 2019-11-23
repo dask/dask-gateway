@@ -8,9 +8,9 @@ Here we provide instructions for installing and configuring
 Create a user account
 ---------------------
 
-Before installing anything, you'll need to create the user account that will be
-used to run ``dask-gateway-server``. The name of the user doesn't matter, only
-the permissions they have. Here we'll use ``dask``:
+Before installing anything, you'll need to create the user account which will
+be used to run the ``dask-gateway-server`` process. The name of the user
+doesn't matter, only the permissions they have. Here we'll use ``dask``:
 
 .. code-block:: bash
 
@@ -67,10 +67,10 @@ Create install directories
 A ``dask-gateway-server`` installation has three types of files which will need
 their own directories created before installation:
 
-- Software files. This includes a Python environment and all required
+- Software files: This includes a Python environment and all required
   libraries. Here we use ``/opt/dask-gateway``.
-- Configuration files. Here we use ``/etc/dask-gateway``.
-- Runtime files. Here we use ``/var/dask-gateway``.
+- Configuration files: Here we use ``/etc/dask-gateway``.
+- Runtime files: Here we use ``/var/dask-gateway``.
 
 .. code-block:: bash
 
@@ -226,8 +226,8 @@ containers. You have a few options here:
 - Install identical Python environments on every node
 - Archive environments to be distributed to the container at runtime (recommended)
 
-In either case, the Python environment requires the at least the
-``dask-gateway`` package be installed.
+In either case, the Python environment requires at least the
+``dask-gateway`` package be installed to work properly.
 
 
 Using a local environment
@@ -416,8 +416,8 @@ Open relevant ports
 
 For users to access the gateway server, they'll need access to the ports set in
 `Configure the server addresses (optional)`_ above (by default these are
-``8000`` and ``8786``). How to open up these ports is system specific and is
-left as an exercise for the reader.
+``8000`` and ``8786``). How to open up these ports is system specific - cluster
+administrators should determine how best to perform this task.
 
 
 Start dask-gateway-server
