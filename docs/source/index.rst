@@ -70,16 +70,26 @@ Installation
 As Dask-Gateway can be installed in many different environments, we provide
 instructions for a few different setups.
 
-- :doc:`quickstart`
+- :doc:`install-local`
 - :doc:`install-hadoop`
 - :doc:`install-kube`
+
 
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Installation
+   :caption: For Users
 
-   quickstart
+   install-user
+   usage
+   configuration-user
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: For Administrators
+
+   install-local
    install-hadoop
    install-kube
 
