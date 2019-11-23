@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Hadoop Cluster &mdash; Dask Gateway 0.5.0+8.gcfd2cd2 documentation</title>
+  <title>Install on a Hadoop Cluster &mdash; Dask Gateway 0.5.0+9.g0bcf103 documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+8.gcfd2cd2
+                0.5.0+9.g0bcf103
               </div>
             
           
@@ -259,9 +259,9 @@
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a <a class="reference external" href="https://hadoop.apache.org/">Hadoop Cluster</a>.</p>
 <div class="section" id="create-a-user-account">
 <h2>Create a user account<a class="headerlink" href="#create-a-user-account" title="Permalink to this headline">¶</a></h2>
-<p>Before installing anything, you’ll need to create the user account that will be
-used to run <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. The name of the user doesn’t matter, only
-the permissions they have. Here we’ll use <code class="docutils literal notranslate"><span class="pre">dask</span></code>:</p>
+<p>Before installing anything, you’ll need to create the user account which will
+be used to run the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> process. The name of the user
+doesn’t matter, only the permissions they have. Here we’ll use <code class="docutils literal notranslate"><span class="pre">dask</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ adduser dask
 </pre></div>
 </div>
@@ -308,10 +308,10 @@ to allow impersonation of any user or from any host.</p>
 <p>A <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> installation has three types of files which will need
 their own directories created before installation:</p>
 <ul class="simple">
-<li><p>Software files. This includes a Python environment and all required
+<li><p>Software files: This includes a Python environment and all required
 libraries. Here we use <code class="docutils literal notranslate"><span class="pre">/opt/dask-gateway</span></code>.</p></li>
-<li><p>Configuration files. Here we use <code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway</span></code>.</p></li>
-<li><p>Runtime files. Here we use <code class="docutils literal notranslate"><span class="pre">/var/dask-gateway</span></code>.</p></li>
+<li><p>Configuration files: Here we use <code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway</span></code>.</p></li>
+<li><p>Runtime files: Here we use <code class="docutils literal notranslate"><span class="pre">/var/dask-gateway</span></code>.</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Software files</span>
 $ mkdir -p /opt/dask-gateway
@@ -436,8 +436,8 @@ containers. You have a few options here:</p>
 <li><p>Install identical Python environments on every node</p></li>
 <li><p>Archive environments to be distributed to the container at runtime (recommended)</p></li>
 </ul>
-<p>In either case, the Python environment requires the at least the
-<code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> package be installed.</p>
+<p>In either case, the Python environment requires at least the
+<code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> package be installed to work properly.</p>
 <div class="section" id="using-a-local-environment">
 <h4>Using a local environment<a class="headerlink" href="#using-a-local-environment" title="Permalink to this headline">¶</a></h4>
 <p>If you’ve installed identical Python environments on every node, you only need
@@ -597,8 +597,8 @@ like:</p>
 <h2>Open relevant ports<a class="headerlink" href="#open-relevant-ports" title="Permalink to this headline">¶</a></h2>
 <p>For users to access the gateway server, they’ll need access to the ports set in
 <a class="reference internal" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a> above (by default these are
-<code class="docutils literal notranslate"><span class="pre">8000</span></code> and <code class="docutils literal notranslate"><span class="pre">8786</span></code>). How to open up these ports is system specific and is
-left as an exercise for the reader.</p>
+<code class="docutils literal notranslate"><span class="pre">8000</span></code> and <code class="docutils literal notranslate"><span class="pre">8786</span></code>). How to open up these ports is system specific - cluster
+administrators should determine how best to perform this task.</p>
 </div>
 <div class="section" id="start-dask-gateway-server">
 <h2>Start dask-gateway-server<a class="headerlink" href="#start-dask-gateway-server" title="Permalink to this headline">¶</a></h2>

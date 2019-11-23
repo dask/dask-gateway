@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.5.0+8.gcfd2cd2 documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.5.0+9.g0bcf103 documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+8.gcfd2cd2
+                0.5.0+9.g0bcf103
               </div>
             
           
@@ -261,8 +261,8 @@ excellent <a class="reference external" href="https://zero-to-jupyterhub.readthe
 <h2>Install Helm (optional)<a class="headerlink" href="#install-helm-optional" title="Permalink to this headline">¶</a></h2>
 <p>If you don’t already have <a class="reference external" href="https://helm.sh/">Helm</a> installed, you’ll need to install it locally,
 and ensure <code class="docutils literal notranslate"><span class="pre">tiller</span></code> is running on your cluster. As with above, there are
-plenty of guides online for doing this. We recommend following the <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-helm.html">guide
-provided by zero-to-jupyterhub-k8s</a>.</p>
+plenty of instructional materials online for doing this. We recommend following
+the <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-helm.html">guide provided by zero-to-jupyterhub-k8s</a>.</p>
 </div>
 <div class="section" id="install-dask-gateway">
 <h2>Install Dask-Gateway<a class="headerlink" href="#install-dask-gateway" title="Permalink to this headline">¶</a></h2>
@@ -294,7 +294,7 @@ gateway and its proxies. You can generate this using <code class="docutils liter
   <span class="nt">proxyToken</span><span class="p">:</span> <span class="s">&quot;&lt;RANDOM</span><span class="nv"> </span><span class="s">TOKEN&gt;&quot;</span>
 </pre></div>
 </div>
-<p>There Helm chart exposes many more configuration values, see the <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default
+<p>The Helm chart exposes many more configuration values, see the <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default
 values.yaml file</a> for more information.</p>
 </div>
 <div class="section" id="install-the-helm-chart">
@@ -325,8 +325,8 @@ repository</a> for an index of all available versions.</p></li>
 above.</p></li>
 </ul>
 <p>Running this command may take some time, as resources are created and images
-are downloaded. When everything’s ready, running the following command will
-show <code class="docutils literal notranslate"><span class="pre">EXTERNAL-IP</span></code> addresses for all <code class="docutils literal notranslate"><span class="pre">LoadBalancer</span></code> services (highlighted
+are downloaded. When everything is ready, running the following command will
+show the <code class="docutils literal notranslate"><span class="pre">EXTERNAL-IP</span></code> addresses for all <code class="docutils literal notranslate"><span class="pre">LoadBalancer</span></code> services (highlighted
 below).</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ kubectl get service --namespace dask-gateway
 NAME                            TYPE           CLUSTER-IP      EXTERNAL-IP      PORT<span class="o">(</span>S<span class="o">)</span>          AGE
@@ -342,7 +342,7 @@ scheduler-api-dask-gateway      ClusterIP      <span class="m">10</span>.51.245.
 <div class="section" id="connecting-to-the-gateway">
 <h2>Connecting to the gateway<a class="headerlink" href="#connecting-to-the-gateway" title="Permalink to this headline">¶</a></h2>
 <p>To connect to the running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, you’ll need the external
-IP’s from both the <code class="docutils literal notranslate"><span class="pre">web-public-*</span></code> and <code class="docutils literal notranslate"><span class="pre">scheduler-public-*</span></code> services above.
+IPs from both the <code class="docutils literal notranslate"><span class="pre">web-public-*</span></code> and <code class="docutils literal notranslate"><span class="pre">scheduler-public-*</span></code> services above.
 The <code class="docutils literal notranslate"><span class="pre">web-public-*</span></code> service provides access to API requests, and also proxies
 out the <a class="reference external" href="https://docs.dask.org/en/latest/diagnostics-distributed.html">Dask Dashboards</a>. The <code class="docutils literal notranslate"><span class="pre">scheduler-public-*</span></code> service proxies TCP
 traffic between Dask clients and schedulers.</p>
@@ -356,8 +356,9 @@ Using the same values as above:</p>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
-<p>You should now be able to make API calls. Try
-<a class="reference internal" href="api-client.html#dask_gateway.Gateway.list_clusters" title="dask_gateway.Gateway.list_clusters"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dask_gateway.Gateway.list_clusters()</span></code></a>, this should return an empty list.</p>
+<p>You should now be able to use the gateway client to make API calls. To verify
+this, call <a class="reference internal" href="api-client.html#dask_gateway.Gateway.list_clusters" title="dask_gateway.Gateway.list_clusters"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dask_gateway.Gateway.list_clusters()</span></code></a>. This should return an
+empty list as you have no clusters running yet.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span><span class="o">.</span><span class="n">list_clusters</span><span class="p">()</span>
 <span class="go">[]</span>
 </pre></div>

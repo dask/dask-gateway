@@ -18,8 +18,8 @@ Install Helm (optional)
 
 If you don't already have Helm_ installed, you'll need to install it locally,
 and ensure ``tiller`` is running on your cluster. As with above, there are
-plenty of guides online for doing this. We recommend following the `guide
-provided by zero-to-jupyterhub-k8s`_.
+plenty of instructional materials online for doing this. We recommend following
+the `guide provided by zero-to-jupyterhub-k8s`_.
 
 
 Install Dask-Gateway
@@ -64,7 +64,7 @@ TOKEN>`` with the output of the previous command above.
     gateway:
       proxyToken: "<RANDOM TOKEN>"
 
-There Helm chart exposes many more configuration values, see the `default
+The Helm chart exposes many more configuration values, see the `default
 values.yaml file`_ for more information.
 
 
@@ -99,8 +99,8 @@ where:
   above.
 
 Running this command may take some time, as resources are created and images
-are downloaded. When everything's ready, running the following command will
-show ``EXTERNAL-IP`` addresses for all ``LoadBalancer`` services (highlighted
+are downloaded. When everything is ready, running the following command will
+show the ``EXTERNAL-IP`` addresses for all ``LoadBalancer`` services (highlighted
 below).
 
 .. code-block:: shell
@@ -120,7 +120,7 @@ Connecting to the gateway
 -------------------------
 
 To connect to the running ``dask-gateway-server``, you'll need the external
-IP's from both the ``web-public-*`` and ``scheduler-public-*`` services above.
+IPs from both the ``web-public-*`` and ``scheduler-public-*`` services above.
 The ``web-public-*`` service provides access to API requests, and also proxies
 out the `Dask Dashboards`_. The ``scheduler-public-*`` service proxies TCP
 traffic between Dask clients and schedulers.
@@ -137,8 +137,9 @@ Using the same values as above:
     ...     proxy_address="tls://35.202.68.87:8786"
     ... )
 
-You should now be able to make API calls. Try
-:meth:`dask_gateway.Gateway.list_clusters`, this should return an empty list.
+You should now be able to use the gateway client to make API calls. To verify
+this, call :meth:`dask_gateway.Gateway.list_clusters`. This should return an
+empty list as you have no clusters running yet.
 
 .. code-block:: python
 
