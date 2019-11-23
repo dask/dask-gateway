@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quickstart (for local installs) &mdash; Dask Gateway 0.5.0+7.gdc532b4 documentation</title>
+  <title>Install locally (quickstart) &mdash; Dask Gateway 0.5.0+8.gcfd2cd2 documentation</title>
   
 
   
@@ -39,7 +39,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Install on a Hadoop Cluster" href="install-hadoop.html" />
-    <link rel="prev" title="Dask Gateway" href="index.html" />
+    <link rel="prev" title="Configuration" href="configuration-user.html" />
   <link rel="shortcut icon" href="_static/images/favicon.ico"/>
 
 </head>
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+7.gdc532b4
+                0.5.0+8.gcfd2cd2
               </div>
             
           
@@ -149,18 +149,19 @@
               
             
             
-              <p class="caption"><span class="caption-text">Installation</span></p>
+              <p class="caption"><span class="caption-text">For Users</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
+</ul>
+<p class="caption"><span class="caption-text">For Administrators</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart (for local installs)</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Install locally (quickstart)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#start-the-gateway-server">Start the gateway server</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#connect-to-the-gateway">Connect to the gateway</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#create-a-new-cluster">Create a new cluster</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#scale-up-a-cluster">Scale up a cluster</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#connect-to-the-cluster">Connect to the cluster</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#run-computations-on-the-cluster">Run computations on the cluster</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#shutdown-the-cluster">Shutdown the cluster</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#connect-to-an-existing-cluster">Connect to an existing cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#connect-to-the-gateway-server">Connect to the gateway server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interact-with-the-gateway-server">Interact with the gateway server</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#shutdown-the-gateway-server">Shutdown the gateway server</a></li>
 </ul>
 </li>
@@ -217,13 +218,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>Quickstart (for local installs)</li>
+      <li>Install locally (quickstart)</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/install-local.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -236,10 +237,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="quickstart-for-local-installs">
-<h1>Quickstart (for local installs)<a class="headerlink" href="#quickstart-for-local-installs" title="Permalink to this headline">¶</a></h1>
-<p>For testing, demos, and development purposes, you can install and use
-<code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> locally.</p>
+  <div class="section" id="install-locally-quickstart">
+<h1>Install locally (quickstart)<a class="headerlink" href="#install-locally-quickstart" title="Permalink to this headline">¶</a></h1>
+<p>This page describes how to deploy and interact with a <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>
+locally. This can be useful for testing, demos, and development purposes, but
+is not a normal method of deployment.</p>
+<p>If you’re a user connecting to an existing <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> instance,
+you may want to start at <a class="reference internal" href="usage.html"><span class="doc">Usage</span></a> instead.</p>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>Dask-Gateway can be installed with <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span></code>. It’s composed of two packages:</p>
@@ -270,8 +274,8 @@
 <p><em>Both of these options are insecure and not-advised for any real-world
 deployments.</em> They are perfectly fine for testing and experimentation though.</p>
 </div>
-<div class="section" id="connect-to-the-gateway">
-<h2>Connect to the gateway<a class="headerlink" href="#connect-to-the-gateway" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="connect-to-the-gateway-server">
+<h2>Connect to the gateway server<a class="headerlink" href="#connect-to-the-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>To connect to the gateway, create a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gateway</span></code></a> client with the URL output
 above. By default this is <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:8000</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
@@ -280,85 +284,25 @@ above. By default this is <code class="docutils literal notranslate"><span class
 <span class="go">Gateway&lt;http://127.0.0.1:8000&gt;</span>
 </pre></div>
 </div>
-<p>To check that everything is setup properly, query the gateway to see any
+<p>To check that everything is setup properly, query the gateway server to see any
 existing clusters (should be an empty list).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span><span class="o">.</span><span class="n">list_clusters</span><span class="p">()</span>
 <span class="go">[]</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="create-a-new-cluster">
-<h2>Create a new cluster<a class="headerlink" href="#create-a-new-cluster" title="Permalink to this headline">¶</a></h2>
-<p>To create a new cluster, you can use the <a class="reference internal" href="api-client.html#dask_gateway.Gateway.new_cluster" title="dask_gateway.Gateway.new_cluster"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Gateway.new_cluster()</span></code></a> method.
-This will create a new cluster with no workers.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">new_cluster</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span>
-<span class="go">GatewayCluster&lt;6c14f41343ea462599f126818a14ebd2&gt;</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="scale-up-a-cluster">
-<h2>Scale up a cluster<a class="headerlink" href="#scale-up-a-cluster" title="Permalink to this headline">¶</a></h2>
-<p>To scale a cluster to one or more workers, you can use the
-<a class="reference internal" href="api-client.html#dask_gateway.GatewayCluster.scale" title="dask_gateway.GatewayCluster.scale"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GatewayCluster.scale()</span></code></a> method. Here we scale our cluster up to two
-workers.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="connect-to-the-cluster">
-<h2>Connect to the cluster<a class="headerlink" href="#connect-to-the-cluster" title="Permalink to this headline">¶</a></h2>
-<p>To connect to the cluster so you can start doing work, you can use the
-<a class="reference internal" href="api-client.html#dask_gateway.GatewayCluster.get_client" title="dask_gateway.GatewayCluster.get_client"><code class="xref py py-meth docutils literal notranslate"><span class="pre">GatewayCluster.get_client()</span></code></a> method. This returns a
-<code class="docutils literal notranslate"><span class="pre">dask.distributed.Client</span></code> object.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">get_client</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span>
-<span class="go">&lt;Client: scheduler=&#39;tls://198.51.100.1:65252&#39; processes=2 cores=2&gt;</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="run-computations-on-the-cluster">
-<h2>Run computations on the cluster<a class="headerlink" href="#run-computations-on-the-cluster" title="Permalink to this headline">¶</a></h2>
-<p>At this point you should be able to use normal <code class="docutils literal notranslate"><span class="pre">dask</span></code> methods to do work. For
-example, here we take the mean of a random array.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">dask.array</span> <span class="kn">as</span> <span class="nn">da</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
-<span class="go">0.0022336223893512945</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="shutdown-the-cluster">
-<h2>Shutdown the cluster<a class="headerlink" href="#shutdown-the-cluster" title="Permalink to this headline">¶</a></h2>
-<p>When you’re done using it, you can shutdown the cluster using the
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Cluster.shutdown()</span></code> method. This will cleanly close all dask workers, as
-well as the scheduler.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="connect-to-an-existing-cluster">
-<h2>Connect to an existing cluster<a class="headerlink" href="#connect-to-an-existing-cluster" title="Permalink to this headline">¶</a></h2>
-<p>Alternatively, you can leave a cluster running and reconnect to it later. When
-using <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code>, Dask clusters aren’t tied to the lifetime of your
-client process.</p>
-<p>To see all running clusters, use the <a class="reference internal" href="api-client.html#dask_gateway.Gateway.list_clusters" title="dask_gateway.Gateway.list_clusters"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Gateway.list_clusters()</span></code></a> method.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">clusters</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">list_clusters</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">clusters</span>
-<span class="go">[ClusterReport&lt;name=ce498e95403741118a8f418ee242e646, status=RUNNING&gt;]</span>
-</pre></div>
-</div>
-<p>To connect to an existing cluster, use the <a class="reference internal" href="api-client.html#dask_gateway.Gateway.connect" title="dask_gateway.Gateway.connect"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Gateway.connect()</span></code></a> method.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">clusters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span>
-<span class="go">GatewayCluster&lt;ce498e95403741118a8f418ee242e646&gt;</span>
-</pre></div>
-</div>
+<div class="section" id="interact-with-the-gateway-server">
+<h2>Interact with the gateway server<a class="headerlink" href="#interact-with-the-gateway-server" title="Permalink to this headline">¶</a></h2>
+<p>At this point you can use the <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gateway</span></code></a> client to interact with the
+gateway server. You can use the client to create new clusters and interact with
+existing clusters. We direct you to the <a class="reference internal" href="usage.html"><span class="doc">Usage</span></a> documentation for more
+information, starting from the <a class="reference internal" href="usage.html#usage-create-new-cluster"><span class="std std-ref">Create a new cluster</span></a> section.</p>
 </div>
 <div class="section" id="shutdown-the-gateway-server">
 <h2>Shutdown the gateway server<a class="headerlink" href="#shutdown-the-gateway-server" title="Permalink to this headline">¶</a></h2>
-<p>To shutdown the Dask-Gateway server, <code class="docutils literal notranslate"><span class="pre">Ctrl-C</span></code> in the same terminal you
-started the process in. Note that any active clusters will also be shutdown.</p>
+<p>When you’re done with local usage, you’ll want to shutdown the Dask-Gateway
+server. To do this, <code class="docutils literal notranslate"><span class="pre">Ctrl-C</span></code> in the same terminal you started the process in.
+Note that any active clusters will also be shutdown.</p>
 </div>
 </div>
 
@@ -373,7 +317,7 @@ started the process in. Note that any active clusters will also be shutdown.</p>
         <a href="install-hadoop.html" class="btn btn-neutral float-right" title="Install on a Hadoop Cluster" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral float-left" title="Dask Gateway" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="configuration-user.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
