@@ -1,12 +1,14 @@
 import asyncio
+import atexit
 import errno
 import os
 import pwd
 import shutil
 import signal
 import sys
+import tempfile
 
-from traitlets import List, Unicode, Integer, default
+from traitlets import List, Unicode, Integer
 
 from .base import ClusterManager
 
@@ -41,6 +43,19 @@ async def wait_is_shutdown(pid, timeout=10):
         timeout -= pause
         pause *= 2
     return False
+
+
+# A cache of temporary directories to remove on shutdown
+_TEMPDIRS = set()
+
+
+@atexit.register
+def cleanup_tempdirs():
+    for d in _TEMPDIRS:
+        try:
+            shutil.rmtree(d)
+        except Exception:
+            pass
 
 
 class LocalClusterManager(ClusterManager):
@@ -88,6 +103,8 @@ class LocalClusterManager(ClusterManager):
         A subdirectory will be created for each new cluster which will serve as
         the working directory for that cluster. On cluster shutdown the
         subdirectory will be removed.
+
+        If not specified, a temporary directory will be used for each cluster.
         """,
         config=True,
     )
@@ -111,12 +128,18 @@ class LocalClusterManager(ClusterManager):
 
     pid = Integer(0, help="The pid of the scheduler process")
 
-    @default("clusters_directory")
-    def _default_clusters_directory(self):
-        return os.path.join(self.temp_dir, "clusters")
-
     def get_working_directory(self):
-        return os.path.join(self.clusters_directory, self.cluster_name)
+        if not hasattr(self, "_work_dir"):
+            if not self.clusters_directory:
+                self._work_dir = tempfile.mkdtemp(
+                    dir=self.temp_dir, prefix="dask", suffix=self.cluster_name
+                )
+                _TEMPDIRS.add(self._work_dir)
+            else:
+                self._work_dir = os.path.join(
+                    self.clusters_directory, self.cluster_name
+                )
+        return self._work_dir
 
     def get_certs_directory(self, workdir):
         return os.path.join(workdir, ".certs")
@@ -154,12 +177,13 @@ class LocalClusterManager(ClusterManager):
 
     def remove_working_directory(self):
         workdir = self.get_working_directory()
-        if not os.path.exists(workdir):
-            return
-        try:
-            shutil.rmtree(workdir)
-        except Exception:  # pragma: nocover
-            self.log.warn("Failed to remove working directory %r", workdir)
+        if os.path.exists(workdir):
+            try:
+                shutil.rmtree(workdir)
+            except Exception:  # pragma: nocover
+                self.log.warn("Failed to remove working directory %r", workdir)
+        if not self.clusters_directory:
+            _TEMPDIRS.discard(workdir)
 
     def get_tls_paths(self):
         """Get the absolute paths to the tls cert and key files."""

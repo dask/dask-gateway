@@ -3,9 +3,6 @@ import json
 import logging
 import os
 import signal
-import stat
-import tempfile
-import weakref
 from functools import partial
 from urllib.parse import urlparse
 
@@ -34,7 +31,6 @@ from .options import Options
 from .proxy import SchedulerProxy, WebProxy
 from .utils import (
     classname,
-    cleanup_tmpdir,
     cancel_task,
     TaskPool,
     Type,
@@ -395,25 +391,17 @@ class DaskGateway(Application):
     )
 
     temp_dir = Unicode(
+        None,
         help="""
-        Path to a directory to use to store temporary runtime files.
+        The directory to use when creating temporary runtime files.
 
-        The permissions on this directory must be restricted to ``0o700``. If
-        the directory doesn't already exist, it will be created on startup and
-        removed on shutdown.
-
-        The default is to create a temporary directory
-        ``"dask-gateway-<UUID>"`` in the system tmpdir default location.
+        Defaults to the platform's temporary directory, see
+        https://docs.python.org/3/library/tempfile.html#tempfile.gettempdir for
+        more information.
         """,
         config=True,
+        allow_none=True,
     )
-
-    @default("temp_dir")
-    def _temp_dir_default(self):
-        temp_dir = tempfile.mkdtemp(prefix="dask-gateway-")
-        self.log.debug("Creating temporary directory %r", temp_dir)
-        weakref.finalize(self, cleanup_tmpdir, self.log, temp_dir)
-        return temp_dir
 
     _log_formatter_cls = LogFormatter
 
@@ -429,7 +417,6 @@ class DaskGateway(Application):
         self.log.info("Cluster manager: %r", classname(self.cluster_manager_class))
         self.log.info("Authenticator: %r", classname(self.authenticator_class))
         self.init_logging()
-        self.init_tempdir()
         self.init_asyncio()
         self.init_server_urls()
         self.init_scheduler_proxy()
@@ -454,19 +441,6 @@ class DaskGateway(Application):
         logger.propagate = True
         logger.parent = self.log
         logger.setLevel(self.log.level)
-
-    def init_tempdir(self):
-        if os.path.exists(self.temp_dir):
-            perm = stat.S_IMODE(os.stat(self.temp_dir).st_mode)
-            if perm & (stat.S_IRWXO | stat.S_IRWXG):
-                raise ValueError(
-                    "Temporary directory %s has excessive permissions "
-                    "%r, should be at '0o700'" % (self.temp_dir, oct(perm))
-                )
-        else:
-            self.log.debug("Creating temporary directory %r", self.temp_dir)
-            os.mkdir(self.temp_dir, mode=0o700)
-            weakref.finalize(self, cleanup_tmpdir, self.log, self.temp_dir)
 
     def init_asyncio(self):
         self.task_pool = TaskPool()

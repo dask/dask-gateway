@@ -183,7 +183,7 @@ async def test_shutdown_on_startup_error(tmpdir):
         gateway_url="tls://127.0.0.1:0",
         private_url="http://127.0.0.1:0",
         public_url="http://127.0.0.1:0",
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        temp_dir=str(tmpdir),
         tls_cert=str(tmpdir.join("tls_cert.pem")),
         authenticator_class="dask_gateway_server.auth.DummyAuthenticator",
     )
@@ -199,7 +199,7 @@ def test_db_encrypt_keys_required(tmpdir):
             gateway_url="tls://127.0.0.1:0",
             private_url="http://127.0.0.1:0",
             public_url="http://127.0.0.1:0",
-            temp_dir=str(tmpdir.join("dask-gateway")),
+            temp_dir=str(tmpdir),
             db_url="sqlite:///%s" % tmpdir.join("dask_gateway.sqlite"),
             authenticator_class="dask_gateway_server.auth.DummyAuthenticator",
         )
@@ -214,7 +214,7 @@ def test_db_encrypt_keys_invalid(tmpdir):
             gateway_url="tls://127.0.0.1:0",
             private_url="http://127.0.0.1:0",
             public_url="http://127.0.0.1:0",
-            temp_dir=str(tmpdir.join("dask-gateway")),
+            temp_dir=str(tmpdir),
             db_url="sqlite:///%s" % tmpdir.join("dask_gateway.sqlite"),
             db_encrypt_keys=["abc"],
             authenticator_class="dask_gateway_server.auth.DummyAuthenticator",
@@ -238,7 +238,7 @@ def test_resume_clusters_forbid_in_memory_db(tmpdir):
             gateway_url="tls://127.0.0.1:0",
             private_url="http://127.0.0.1:0",
             public_url="http://127.0.0.1:0",
-            temp_dir=str(tmpdir.join("dask-gateway")),
+            temp_dir=str(tmpdir),
             db_url="sqlite://",
             stop_clusters_on_shutdown=False,
             authenticator_class="dask_gateway_server.auth.DummyAuthenticator",
@@ -266,7 +266,7 @@ async def test_slow_cluster_start(tmpdir, start_timeout, state):
 
     config = Config()
     config.DaskGateway.cluster_manager_class = SlowStartClusterManager
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.SlowStartClusterManager.cluster_start_timeout = start_timeout
 
     async with temp_gateway(config=config) as gateway_proc:
@@ -295,7 +295,7 @@ async def test_slow_cluster_connect(tmpdir):
 
     config = Config()
     config.DaskGateway.cluster_manager_class = SlowStartClusterManager
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.SlowStartClusterManager.cluster_start_timeout = 0.1
     config.SlowStartClusterManager.pause_time = 0
 
@@ -326,7 +326,7 @@ async def test_cluster_fails_during_start(tmpdir, fail_stage):
 
     config = Config()
     config.DaskGateway.cluster_manager_class = ClusterFailsDuringStart
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.ClusterFailsDuringStart.fail_stage = fail_stage
 
     async with temp_gateway(config=config) as gateway_proc:
@@ -354,7 +354,7 @@ async def test_cluster_fails_during_start(tmpdir, fail_stage):
 async def test_cluster_fails_between_start_and_connect(tmpdir):
     config = Config()
     config.DaskGateway.cluster_manager_class = ClusterFailsBetweenStartAndConnect
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.ClusterFailsBetweenStartAndConnect.cluster_status_period = 0.1
 
     async with temp_gateway(config=config) as gateway_proc:
@@ -382,7 +382,7 @@ async def test_cluster_fails_between_start_and_connect(tmpdir):
 async def test_cluster_fails_after_connect(tmpdir):
     config = Config()
     config.DaskGateway.cluster_manager_class = ClusterFailsAfterConnect
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.ClusterFailsAfterConnect.cluster_status_period = 0.25
 
     async with temp_gateway(config=config) as gateway_proc:
@@ -410,7 +410,7 @@ async def test_cluster_fails_after_connect(tmpdir):
 async def test_slow_worker_start(tmpdir, start_timeout, state):
     config = Config()
     config.DaskGateway.cluster_manager_class = SlowWorkerStartClusterManager
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.SlowWorkerStartClusterManager.worker_start_timeout = start_timeout
 
     async with temp_gateway(config=config) as gateway_proc:
@@ -444,7 +444,7 @@ async def test_slow_worker_start(tmpdir, start_timeout, state):
 async def test_slow_worker_connect(tmpdir):
     config = Config()
     config.DaskGateway.cluster_manager_class = SlowWorkerStartClusterManager
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.SlowWorkerStartClusterManager.worker_start_timeout = 0.1
     config.SlowWorkerStartClusterManager.pause_time = 0
 
@@ -480,7 +480,7 @@ async def test_slow_worker_connect(tmpdir):
 async def test_worker_fails_during_start(tmpdir, fail_stage):
     config = Config()
     config.DaskGateway.cluster_manager_class = WorkerFailsDuringStart
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.WorkerFailsDuringStart.fail_stage = fail_stage
 
     async with temp_gateway(config=config) as gateway_proc:
@@ -515,7 +515,7 @@ async def test_worker_fails_during_start(tmpdir, fail_stage):
 async def test_worker_fails_between_start_and_connect(tmpdir):
     config = Config()
     config.DaskGateway.cluster_manager_class = WorkerFailsBetweenStartAndConnect
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.WorkerFailsBetweenStartAndConnect.worker_status_period = 0.1
 
     async with temp_gateway(config=config) as gateway_proc:
@@ -545,8 +545,7 @@ async def test_worker_fails_between_start_and_connect(tmpdir):
 @pytest.mark.asyncio
 async def test_worker_fails_after_connect(tmpdir):
     async with temp_gateway(
-        cluster_manager_class=WorkerFailsAfterConnect,
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        cluster_manager_class=WorkerFailsAfterConnect, temp_dir=str(tmpdir)
     ) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_urls.connect_url,
@@ -574,8 +573,7 @@ async def test_worker_fails_after_connect(tmpdir):
 @pytest.mark.asyncio
 async def test_successful_cluster(tmpdir):
     async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
     ) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_urls.connect_url,
@@ -629,7 +627,7 @@ async def test_cluster_manager_options(tmpdir):
             ),
             options.Select("option_two", options=[("small", 1.5), ("large", 15)]),
         ),
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        temp_dir=str(tmpdir),
     ) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_urls.connect_url,
@@ -684,7 +682,7 @@ async def test_cluster_manager_options_client_config(tmpdir, monkeypatch):
             ),
             options.Select("option_two", options=[("small", 1.5), ("large", 15)]),
         ),
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        temp_dir=str(tmpdir),
     ) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_urls.connect_url,
@@ -734,8 +732,7 @@ async def test_cluster_manager_options_client_config(tmpdir, monkeypatch):
 @pytest.mark.asyncio
 async def test_gateway_stop_clusters_on_shutdown(tmpdir):
     async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
     ) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_urls.connect_url,
@@ -761,8 +758,7 @@ async def test_gateway_stop_clusters_on_shutdown(tmpdir):
 
 @pytest.mark.asyncio
 async def test_gateway_resume_clusters_after_shutdown(tmpdir):
-    temp_dir = str(tmpdir.join("dask-gateway"))
-    os.mkdir(temp_dir, mode=0o700)
+    temp_dir = str(tmpdir)
 
     db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
     db_encrypt_keys = [Fernet.generate_key()]
@@ -844,7 +840,7 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
 async def test_user_limits(tmpdir):
     config = Config()
     config.DaskGateway.cluster_manager_class = InProcessClusterManager
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.UserLimits.max_clusters = 1
     config.UserLimits.max_cores = 3
     config.InProcessClusterManager.scheduler_cores = 1
@@ -894,7 +890,7 @@ async def wait_for_workers(cluster, atleast=None, exact=None, timeout=30):
 async def test_scaling(tmpdir):
     config = Config()
     config.DaskGateway.cluster_manager_class = InProcessClusterManager
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_urls.connect_url,
@@ -920,7 +916,7 @@ async def test_adaptive_scaling(tmpdir):
     # failures.
     config = Config()
     config.DaskGateway.cluster_manager_class = LocalTestingClusterManager
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.LocalTestingClusterManager.adaptive_period = 0.25
     async with temp_gateway(config=config) as gateway_proc:
         async with Gateway(
