@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+9.g0bcf103 documentation</title>
+  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+10.gd32445c documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+9.g0bcf103
+                0.5.0+10.gd32445c
               </div>
             
           
@@ -166,16 +166,10 @@
 <li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#gateway">Gateway</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#cluster-manager-options">Cluster Manager Options</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#user-limits">User Limits</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#proxies">Proxies</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#web-proxy">Web Proxy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#scheduler-proxy">Scheduler Proxy</a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#kerberos">Kerberos</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#basic">Basic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#jupyterhub">JupyterHub</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dummy">Dummy</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#cluster-managers">Cluster Managers</a><ul>
@@ -199,6 +193,13 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#proxies">Proxies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#web-proxy">Web Proxy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#scheduler-proxy">Scheduler Proxy</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cluster-manager-options">Cluster Manager Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#user-limits">User Limits</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
@@ -270,19 +271,15 @@
 <h1>Configuration Reference<a class="headerlink" href="#configuration-reference" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="gateway">
 <h2>Gateway<a class="headerlink" href="#gateway" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="dask_gateway_server.app.DaskGateway">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.app.</code><code class="sig-name descname">DaskGateway</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.app.DaskGateway" title="Permalink to this definition">¶</a></dt>
-<dd><p>A gateway for managing dask clusters across multiple users</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.authenticator_class = Type('dask_gateway_server.auth.DummyAuthenticator')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.authenticator_class">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">authenticator_class</code><em class="property"> = Type('dask_gateway_server.auth.DummyAuthenticator')</em><a class="headerlink" href="#c.DaskGateway.authenticator_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>The gateway authenticator class to use</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.check_cluster_timeout = Float(10)</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.check_cluster_timeout">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">check_cluster_timeout</code><em class="property"> = Float(10)</em><a class="headerlink" href="#c.DaskGateway.check_cluster_timeout" title="Permalink to this definition">¶</a></dt>
 <dd><p>Timeout (in seconds) before deciding a cluster is no longer active.</p>
 <p>When the gateway restarts, any clusters still marked as active have
 their status checked. This timeout sets the max time we allocate for
@@ -290,67 +287,67 @@ checking a cluster’s status before deciding that the cluster is no
 longer active.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.cluster_manager_class = Type('dask_gateway_server.managers.local.UnsafeLocalClusterManager')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.cluster_manager_class">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">cluster_manager_class</code><em class="property"> = Type('dask_gateway_server.managers.local.UnsafeLocalClusterManager')</em><a class="headerlink" href="#c.DaskGateway.cluster_manager_class" title="Permalink to this definition">¶</a></dt>
 <dd><p>The gateway cluster manager class to use</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.cluster_manager_options = Instance('')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.cluster_manager_options">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">cluster_manager_options</code><em class="property"> = Instance('')</em><a class="headerlink" href="#c.DaskGateway.cluster_manager_options" title="Permalink to this definition">¶</a></dt>
 <dd><p>User options for configuring the cluster manager.</p>
 <p>Allows users to specify configuration overrides when creating a new
 cluster manager. See the documentation for more information.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.config_file = Unicode('dask_gateway_config.py')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.config_file">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">config_file</code><em class="property"> = Unicode('dask_gateway_config.py')</em><a class="headerlink" href="#c.DaskGateway.config_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>The config file to load</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.cookie_max_age_days = Float(7)</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.cookie_max_age_days">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">cookie_max_age_days</code><em class="property"> = Float(7)</em><a class="headerlink" href="#c.DaskGateway.cookie_max_age_days" title="Permalink to this definition">¶</a></dt>
 <dd><p>Number of days for a login cookie to be valid.
 Default is one week.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.cookie_secret = Bytes(b'')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.cookie_secret">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">cookie_secret</code><em class="property"> = Bytes(b'')</em><a class="headerlink" href="#c.DaskGateway.cookie_secret" title="Permalink to this definition">¶</a></dt>
 <dd><p>The cookie secret to use to encrypt cookies.</p>
 <p>Loaded from the DASK_GATEWAY_COOKIE_SECRET environment variable by
 default.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.db_cleanup_period = Float(600)</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.db_cleanup_period">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">db_cleanup_period</code><em class="property"> = Float(600)</em><a class="headerlink" href="#c.DaskGateway.db_cleanup_period" title="Permalink to this definition">¶</a></dt>
 <dd><p>Time (in seconds) between database cleanup tasks.</p>
 <p>This sets how frequently old records are removed from the database.
 This shouldn’t be too small (to keep the overhead low), but should be
 smaller than <code class="docutils literal notranslate"><span class="pre">db_record_max_age</span></code> (probably by an order of magnitude).</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.db_cluster_max_age = Float(86400)</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.db_cluster_max_age">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">db_cluster_max_age</code><em class="property"> = Float(86400)</em><a class="headerlink" href="#c.DaskGateway.db_cluster_max_age" title="Permalink to this definition">¶</a></dt>
 <dd><p>Max time (in seconds) to keep around records of completed clusters.</p>
 <p>Every <code class="docutils literal notranslate"><span class="pre">db_cleanup_period</span></code>, completed clusters older than
 <code class="docutils literal notranslate"><span class="pre">db_cluster_max_age</span></code> are removed from the database.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.db_debug = Bool(False)</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.db_debug">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">db_debug</code><em class="property"> = Bool(False)</em><a class="headerlink" href="#c.DaskGateway.db_debug" title="Permalink to this definition">¶</a></dt>
 <dd><p>If True, all database operations will be logged</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.db_encrypt_keys = List('')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.db_encrypt_keys">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">db_encrypt_keys</code><em class="property"> = List('')</em><a class="headerlink" href="#c.DaskGateway.db_encrypt_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>A list of keys to use to encrypt private data in the database. Can also
 be set by the environment variable <code class="docutils literal notranslate"><span class="pre">DASK_GATEWAY_ENCRYPT_KEYS</span></code>, where
 the value is a <code class="docutils literal notranslate"><span class="pre">;</span></code> delimited string of encryption keys.</p>
@@ -363,80 +360,80 @@ generate a single key via:</p>
 <p>A single key is valid, multiple keys can be used to support key rotation.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.db_url = Unicode('sqlite:///:memory:')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.db_url">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">db_url</code><em class="property"> = Unicode('sqlite:///:memory:')</em><a class="headerlink" href="#c.DaskGateway.db_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>The URL for the database. Default is in-memory only.</p>
 <p>If not in-memory, <code class="docutils literal notranslate"><span class="pre">db_encrypt_keys</span></code> must also be set.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.gateway_url = Unicode('')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.gateway_url">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">gateway_url</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.DaskGateway.gateway_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>The URL that Dask clients will connect to</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.log_datefmt = Unicode('%Y-%m-%d %H:%M:%S')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.log_datefmt">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">log_datefmt</code><em class="property"> = Unicode('%Y-%m-%d %H:%M:%S')</em><a class="headerlink" href="#c.DaskGateway.log_datefmt" title="Permalink to this definition">¶</a></dt>
 <dd><p>The date format used by logging formatters for %(asctime)s</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.log_format = Unicode('%(color)s[%(levelname)1.1s %(asctime)s.%(msecs).03d %(name)s]%(end_color)s %(message)s')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.log_format">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">log_format</code><em class="property"> = Unicode('%(color)s[%(levelname)1.1s %(asctime)s.%(msecs).03d %(name)s]%(end_color)s %(message)s')</em><a class="headerlink" href="#c.DaskGateway.log_format" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Logging format template</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.log_level = Enum('INFO')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.log_level">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">log_level</code><em class="property"> = Enum('INFO')</em><a class="headerlink" href="#c.DaskGateway.log_level" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the log level by value or name.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.private_connect_url = Unicode('')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.private_connect_url">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">private_connect_url</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.DaskGateway.private_connect_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>The address that the private URL can be connected to.</p>
 <p>Useful if the address the gateway should listen at is different than
 the address it’s reachable at (by e.g. the web proxy).</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">private_url</span></code>.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.private_url = Unicode('http://127.0.0.1:0')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.private_url">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">private_url</code><em class="property"> = Unicode('http://127.0.0.1:0')</em><a class="headerlink" href="#c.DaskGateway.private_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>The gateway’s private URL, used for internal communication.</p>
 <p>This must be reachable from the web proxy, but shouldn’t be publicly
 accessible (if possible). Default is <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:{random-port}</span></code>.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.public_connect_url = Unicode('')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.public_connect_url">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">public_connect_url</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.DaskGateway.public_connect_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>The address that the public URL can be connected to.</p>
 <p>Useful if the address the web proxy should listen at is different than
 the address it’s reachable at (by e.g. the scheduler/workers).</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">public_url</span></code>.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.public_url = Unicode('http://:8000')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.public_url">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">public_url</code><em class="property"> = Unicode('http://:8000')</em><a class="headerlink" href="#c.DaskGateway.public_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>The public facing URL of the whole Dask Gateway application</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.stop_clusters_on_shutdown = Bool(True)</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.stop_clusters_on_shutdown">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">stop_clusters_on_shutdown</code><em class="property"> = Bool(True)</em><a class="headerlink" href="#c.DaskGateway.stop_clusters_on_shutdown" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether to stop active clusters on gateway shutdown.</p>
 <p>If true, all active clusters will be stopped before shutting down the
 gateway. Set to False to leave active clusters running.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.temp_dir = Unicode('')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.temp_dir">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">temp_dir</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.DaskGateway.temp_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Path to a directory to use to store temporary runtime files.</p>
 <p>The permissions on this directory must be restricted to <code class="docutils literal notranslate"><span class="pre">0o700</span></code>. If
 the directory doesn’t already exist, it will be created on startup and
@@ -445,22 +442,1228 @@ removed on shutdown.</p>
 <code class="docutils literal notranslate"><span class="pre">&quot;dask-gateway-&lt;UUID&gt;&quot;</span></code> in the system tmpdir default location.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.tls_cert = Unicode('')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.tls_cert">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">tls_cert</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.DaskGateway.tls_cert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Path to TLS certificate file for the public url of the web proxy.</p>
 <p>When setting this, you should also set tls_key.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DaskGateway.tls_key = Unicode('')</code></dt>
+<dl class="data">
+<dt id="c.DaskGateway.tls_key">
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">tls_key</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.DaskGateway.tls_key" title="Permalink to this definition">¶</a></dt>
 <dd><p>Path to TLS key file for the public url of the web proxy.</p>
 <p>When setting this, you should also set tls_cert.</p>
 </dd></dl>
 
+</div>
+<div class="section" id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="kerberos">
+<h3>Kerberos<a class="headerlink" href="#kerberos" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="c.KerberosAuthenticator.keytab">
+<code class="sig-prename descclassname">c.KerberosAuthenticator.</code><code class="sig-name descname">keytab</code><em class="property"> = Unicode('dask_gateway.keytab')</em><a class="headerlink" href="#c.KerberosAuthenticator.keytab" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path to the keytab file</p>
 </dd></dl>
 
+<dl class="data">
+<dt id="c.KerberosAuthenticator.service_name">
+<code class="sig-prename descclassname">c.KerberosAuthenticator.</code><code class="sig-name descname">service_name</code><em class="property"> = Unicode('HTTP')</em><a class="headerlink" href="#c.KerberosAuthenticator.service_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The service’s kerberos principal name.</p>
+<p>This is almost always “HTTP” (the default)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="jupyterhub">
+<h3>JupyterHub<a class="headerlink" href="#jupyterhub" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="c.JupyterHubAuthenticator.jupyterhub_api_token">
+<code class="sig-prename descclassname">c.JupyterHubAuthenticator.</code><code class="sig-name descname">jupyterhub_api_token</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.JupyterHubAuthenticator.jupyterhub_api_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dask Gateway’s JupyterHub API Token, used for authenticating the
+gateway’s API requests to JupyterHub.</p>
+<p>By default this is determined from the <code class="docutils literal notranslate"><span class="pre">JUPYTERHUB_API_TOKEN</span></code>
+environment variable.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.JupyterHubAuthenticator.jupyterhub_api_url">
+<code class="sig-prename descclassname">c.JupyterHubAuthenticator.</code><code class="sig-name descname">jupyterhub_api_url</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.JupyterHubAuthenticator.jupyterhub_api_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>The API URL for the JupyterHub server.</p>
+<p>By default this is determined from the <code class="docutils literal notranslate"><span class="pre">JUPYTERHUB_API_URL</span></code>
+environment variable.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.JupyterHubAuthenticator.tls_ca">
+<code class="sig-prename descclassname">c.JupyterHubAuthenticator.</code><code class="sig-name descname">tls_ca</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.JupyterHubAuthenticator.tls_ca" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to TLS CA file for verifying API requests to JupyterHub.</p>
+<p>When setting this, you should also set tls_key and tls_cert.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.JupyterHubAuthenticator.tls_cert">
+<code class="sig-prename descclassname">c.JupyterHubAuthenticator.</code><code class="sig-name descname">tls_cert</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.JupyterHubAuthenticator.tls_cert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to TLS certficate file for making API requests to JupyterHub.</p>
+<p>When setting this, you should also set tls_cert.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.JupyterHubAuthenticator.tls_key">
+<code class="sig-prename descclassname">c.JupyterHubAuthenticator.</code><code class="sig-name descname">tls_key</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.JupyterHubAuthenticator.tls_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to TLS key file for making API requests to JupyterHub.</p>
+<p>When setting this, you should also set tls_cert.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="dummy">
+<h3>Dummy<a class="headerlink" href="#dummy" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="c.DummyAuthenticator.password">
+<code class="sig-prename descclassname">c.DummyAuthenticator.</code><code class="sig-name descname">password</code><em class="property"> = Unicode(None)</em><a class="headerlink" href="#c.DummyAuthenticator.password" title="Permalink to this definition">¶</a></dt>
+<dd><p>If set, a global password that all users must provide.</p>
+<p>If unset (default), the password field is completely ignored.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="cluster-managers">
+<h2>Cluster Managers<a class="headerlink" href="#cluster-managers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="local-processes">
+<h3>Local Processes<a class="headerlink" href="#local-processes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="localclustermanager">
+<h4>LocalClusterManager<a class="headerlink" href="#localclustermanager" title="Permalink to this headline">¶</a></h4>
+<dl class="data">
+<dt id="c.LocalClusterManager.adaptive_period">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">adaptive_period</code><em class="property"> = Float(3)</em><a class="headerlink" href="#c.LocalClusterManager.adaptive_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.cluster_start_timeout">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">cluster_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.LocalClusterManager.cluster_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.cluster_status_period">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">cluster_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.LocalClusterManager.cluster_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.clusters_directory">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">clusters_directory</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.LocalClusterManager.clusters_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base directory for cluster working directories.</p>
+<p>A subdirectory will be created for each new cluster which will serve as
+the working directory for that cluster. On cluster shutdown the
+subdirectory will be removed.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.environment">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.LocalClusterManager.environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.inherited_environment">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">inherited_environment</code><em class="property"> = List('')</em><a class="headerlink" href="#c.LocalClusterManager.inherited_environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whitelist of environment variables for the scheduler and worker
+processes to inherit from the Dask-Gateway process.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.scheduler_cmd">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.LocalClusterManager.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.scheduler_cores">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">scheduler_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.LocalClusterManager.scheduler_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.scheduler_memory">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">scheduler_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.LocalClusterManager.scheduler_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask scheduler. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.sigint_timeout">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">sigint_timeout</code><em class="property"> = Int(10)</em><a class="headerlink" href="#c.LocalClusterManager.sigint_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seconds to wait for process to stop after SIGINT.</p>
+<p>If the process has not stopped after this time, a SIGTERM is sent.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.sigkill_timeout">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">sigkill_timeout</code><em class="property"> = Int(5)</em><a class="headerlink" href="#c.LocalClusterManager.sigkill_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seconds to wait for process to stop after SIGKILL.</p>
+<p>If the process has not stopped after this time, a warning is logged and
+the process is deemed a zombie process.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.sigterm_timeout">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">sigterm_timeout</code><em class="property"> = Int(5)</em><a class="headerlink" href="#c.LocalClusterManager.sigterm_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seconds to wait for process to stop after SIGTERM.</p>
+<p>If the process has not stopped after this time, a SIGKILL is sent.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.worker_cmd">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.LocalClusterManager.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.worker_cores">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">worker_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.LocalClusterManager.worker_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.worker_memory">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">worker_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.LocalClusterManager.worker_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask worker. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.worker_start_timeout">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">worker_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.LocalClusterManager.worker_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.worker_status_period">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">worker_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.LocalClusterManager.worker_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="unsafelocalclustermanager">
+<h4>UnsafeLocalClusterManager<a class="headerlink" href="#unsafelocalclustermanager" title="Permalink to this headline">¶</a></h4>
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.adaptive_period">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">adaptive_period</code><em class="property"> = Float(3)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.adaptive_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.cluster_start_timeout">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">cluster_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.cluster_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.cluster_status_period">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">cluster_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.cluster_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.clusters_directory">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">clusters_directory</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.clusters_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base directory for cluster working directories.</p>
+<p>A subdirectory will be created for each new cluster which will serve as
+the working directory for that cluster. On cluster shutdown the
+subdirectory will be removed.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.environment">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.inherited_environment">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">inherited_environment</code><em class="property"> = List('')</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.inherited_environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whitelist of environment variables for the scheduler and worker
+processes to inherit from the Dask-Gateway process.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.scheduler_cmd">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.scheduler_cores">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">scheduler_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.scheduler_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.scheduler_memory">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">scheduler_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.scheduler_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask scheduler. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.sigint_timeout">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">sigint_timeout</code><em class="property"> = Int(10)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.sigint_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seconds to wait for process to stop after SIGINT.</p>
+<p>If the process has not stopped after this time, a SIGTERM is sent.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.sigkill_timeout">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">sigkill_timeout</code><em class="property"> = Int(5)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.sigkill_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seconds to wait for process to stop after SIGKILL.</p>
+<p>If the process has not stopped after this time, a warning is logged and
+the process is deemed a zombie process.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.sigterm_timeout">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">sigterm_timeout</code><em class="property"> = Int(5)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.sigterm_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Seconds to wait for process to stop after SIGTERM.</p>
+<p>If the process has not stopped after this time, a SIGKILL is sent.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.worker_cmd">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.worker_cores">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">worker_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.worker_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.worker_memory">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">worker_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.worker_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask worker. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.worker_start_timeout">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">worker_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.worker_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.UnsafeLocalClusterManager.worker_status_period">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">worker_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.worker_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="yarn">
+<h3>YARN<a class="headerlink" href="#yarn" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="yarnclustermanager">
+<span id="yarn-config"></span><h4>YarnClusterManager<a class="headerlink" href="#yarnclustermanager" title="Permalink to this headline">¶</a></h4>
+<dl class="data">
+<dt id="c.YarnClusterManager.adaptive_period">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">adaptive_period</code><em class="property"> = Float(3)</em><a class="headerlink" href="#c.YarnClusterManager.adaptive_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.cluster_start_timeout">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">cluster_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.YarnClusterManager.cluster_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.cluster_status_period">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">cluster_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.YarnClusterManager.cluster_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.environment">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.YarnClusterManager.environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.keytab">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">keytab</code><em class="property"> = Unicode(None)</em><a class="headerlink" href="#c.YarnClusterManager.keytab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path to kerberos keytab for Dask Gateway user</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.localize_files">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">localize_files</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.YarnClusterManager.localize_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extra files to distribute to both the worker and scheduler containers.</p>
+<p>This is a mapping from <code class="docutils literal notranslate"><span class="pre">local-name</span></code> to <code class="docutils literal notranslate"><span class="pre">resource</span></code>. Resource paths
+can be local, or in HDFS (prefix with <code class="docutils literal notranslate"><span class="pre">hdfs://...</span></code> if so). If an
+archive (<code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> or <code class="docutils literal notranslate"><span class="pre">.zip</span></code>), the resource will be unarchived as
+directory <code class="docutils literal notranslate"><span class="pre">local-name</span></code>. For finer control, resources can also be
+specified as <code class="docutils literal notranslate"><span class="pre">skein.File</span></code> objects, or their <code class="docutils literal notranslate"><span class="pre">dict</span></code> equivalents.</p>
+<p>This can be used to distribute conda/virtual environments by
+configuring the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;hdfs:///path/to/archived/environment.tar.gz&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;visibility&#39;</span><span class="p">:</span> <span class="s1">&#39;public&#39;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+</pre></div>
+</div>
+<p>These archives are usually created using either <code class="docutils literal notranslate"><span class="pre">conda-pack</span></code> or
+<code class="docutils literal notranslate"><span class="pre">venv-pack</span></code>. For more information on distributing files, see
+<a class="reference external" href="https://jcrist.github.io/skein/distributing-files.html">https://jcrist.github.io/skein/distributing-files.html</a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.principal">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">principal</code><em class="property"> = Unicode(None)</em><a class="headerlink" href="#c.YarnClusterManager.principal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kerberos principal for Dask Gateway user</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.queue">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">queue</code><em class="property"> = Unicode('default')</em><a class="headerlink" href="#c.YarnClusterManager.queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>The YARN queue to submit applications under</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.scheduler_cmd">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.YarnClusterManager.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.scheduler_cores">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">scheduler_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.YarnClusterManager.scheduler_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.scheduler_memory">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">scheduler_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.YarnClusterManager.scheduler_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask scheduler. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.scheduler_setup">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">scheduler_setup</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.YarnClusterManager.scheduler_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Script to run before dask scheduler starts.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.worker_cmd">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.YarnClusterManager.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.worker_cores">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">worker_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.YarnClusterManager.worker_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.worker_memory">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">worker_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.YarnClusterManager.worker_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask worker. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.worker_setup">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">worker_setup</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.YarnClusterManager.worker_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Script to run before dask worker starts.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.worker_start_timeout">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">worker_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.YarnClusterManager.worker_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.worker_status_period">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">worker_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.YarnClusterManager.worker_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="kubernetes">
+<h3>Kubernetes<a class="headerlink" href="#kubernetes" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="kubeclustermanager">
+<span id="kube-cluster-manager-config"></span><h4>KubeClusterManager<a class="headerlink" href="#kubeclustermanager" title="Permalink to this headline">¶</a></h4>
+<dl class="data">
+<dt id="c.KubeClusterManager.adaptive_period">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">adaptive_period</code><em class="property"> = Float(3)</em><a class="headerlink" href="#c.KubeClusterManager.adaptive_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.cluster_start_timeout">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">cluster_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.KubeClusterManager.cluster_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.cluster_status_period">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">cluster_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.KubeClusterManager.cluster_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.common_annotations">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">common_annotations</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterManager.common_annotations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kubernetes annotations to apply to all objects created by the gateway</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.common_labels">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">common_labels</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterManager.common_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kubernetes labels to apply to all objects created by the gateway</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.environment">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterManager.environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.image">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">image</code><em class="property"> = Unicode('daskgateway/dask-gateway:latest')</em><a class="headerlink" href="#c.KubeClusterManager.image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Docker image to use for running user’s containers.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.image_pull_policy">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">image_pull_policy</code><em class="property"> = Unicode('IfNotPresent')</em><a class="headerlink" href="#c.KubeClusterManager.image_pull_policy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The image pull policy of the docker image specified in <code class="docutils literal notranslate"><span class="pre">image</span></code></p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.namespace">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">namespace</code><em class="property"> = Unicode('default')</em><a class="headerlink" href="#c.KubeClusterManager.namespace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kubernetes namespace to launch pods in.</p>
+<p>If running inside a kubernetes cluster with service accounts enabled,
+defaults to the current namespace. If not, defaults to <cite>default</cite></p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.scheduler_cmd">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.KubeClusterManager.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.scheduler_cores">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">scheduler_cores</code><em class="property"> = Float(1)</em><a class="headerlink" href="#c.KubeClusterManager.scheduler_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.scheduler_cores_limit">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">scheduler_cores_limit</code><em class="property"> = Float(0.0)</em><a class="headerlink" href="#c.KubeClusterManager.scheduler_cores_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum number of cpu-cores available for a dask scheduler.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">scheduler_cores</span></code>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.scheduler_extra_container_config">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">scheduler_extra_container_config</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterManager.scheduler_extra_container_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Any extra configuration for the scheduler container.</p>
+<p>This dict will be deep merged with the scheduler container (a
+<code class="docutils literal notranslate"><span class="pre">V1Container</span></code> object) before submission. Keys should match those in
+the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes spec</a>,
+and should be camelCase.</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">worker_extra_container_config</span></code> for more information.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.scheduler_extra_pod_config">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">scheduler_extra_pod_config</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterManager.scheduler_extra_pod_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Any extra configuration for the scheduler pods.</p>
+<p>This dict will be deep merged with the scheduler pod spec (a
+<code class="docutils literal notranslate"><span class="pre">V1PodSpec</span></code> object) before submission. Keys should match those in the
+<a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes spec</a>,
+and should be camelCase.</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">worker_extra_pod_config</span></code> for more information.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.scheduler_memory">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">scheduler_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.KubeClusterManager.scheduler_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask scheduler. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.scheduler_memory_limit">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">scheduler_memory_limit</code><em class="property"> = MemoryLimit(0)</em><a class="headerlink" href="#c.KubeClusterManager.scheduler_memory_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum number of bytes available for a dask scheduler. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">scheduler_memory</span></code>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.worker_cmd">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.KubeClusterManager.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.worker_cores">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">worker_cores</code><em class="property"> = Float(1)</em><a class="headerlink" href="#c.KubeClusterManager.worker_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.worker_cores_limit">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">worker_cores_limit</code><em class="property"> = Float(0.0)</em><a class="headerlink" href="#c.KubeClusterManager.worker_cores_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum number of cpu-cores available for a dask worker.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.worker_extra_container_config">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">worker_extra_container_config</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterManager.worker_extra_container_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Any extra configuration for the worker container.</p>
+<p>This dict will be deep merged with the worker container (a
+<code class="docutils literal notranslate"><span class="pre">V1Container</span></code> object) before submission. Keys should match those in
+the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes spec</a>,
+and should be camelCase.</p>
+<p>For example, here we add environment variables from a secret to the
+worker container:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">KubeClusterManager</span><span class="o">.</span><span class="n">worker_extra_container_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;envFrom&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;secretRef&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;my-env-secret&quot;</span><span class="p">}}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.worker_extra_pod_config">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">worker_extra_pod_config</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterManager.worker_extra_pod_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Any extra configuration for the worker pods.</p>
+<p>This dict will be deep merged with the worker pod spec (a <code class="docutils literal notranslate"><span class="pre">V1PodSpec</span></code>
+object) before submission. Keys should match those in the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes
+spec</a>,
+and should be camelCase.</p>
+<p>For example, here we add a toleration to worker pods.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">KubeClusterManager</span><span class="o">.</span><span class="n">worker_extra_pod_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;tolerations&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;key&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;Equal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;effect&quot;</span><span class="p">:</span> <span class="s2">&quot;NoSchedule&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.worker_memory">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">worker_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.KubeClusterManager.worker_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask worker. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.worker_memory_limit">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">worker_memory_limit</code><em class="property"> = MemoryLimit(0)</em><a class="headerlink" href="#c.KubeClusterManager.worker_memory_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum number of bytes available for a dask worker. Allows the
+following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_memory</span></code>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.worker_start_timeout">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">worker_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.KubeClusterManager.worker_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.worker_status_period">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">worker_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.KubeClusterManager.worker_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="job-queues">
+<h3>Job Queues<a class="headerlink" href="#job-queues" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="pbsclustermanager">
+<h4>PBSClusterManager<a class="headerlink" href="#pbsclustermanager" title="Permalink to this headline">¶</a></h4>
+<dl class="data">
+<dt id="c.PBSClusterManager.account">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">account</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.PBSClusterManager.account" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accounting string associated with each job.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.adaptive_period">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">adaptive_period</code><em class="property"> = Float(3)</em><a class="headerlink" href="#c.PBSClusterManager.adaptive_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.cancel_command">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">cancel_command</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.PBSClusterManager.cancel_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path to the job cancel command</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.cluster_start_timeout">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">cluster_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.PBSClusterManager.cluster_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.cluster_status_period">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">cluster_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.PBSClusterManager.cluster_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.dask_gateway_jobqueue_launcher">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">dask_gateway_jobqueue_launcher</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.PBSClusterManager.dask_gateway_jobqueue_launcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path to the dask-gateway-jobqueue-launcher executable</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.environment">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.PBSClusterManager.environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.gateway_hostname">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">gateway_hostname</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.PBSClusterManager.gateway_hostname" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hostname of the node running the gateway. Used for referencing the
+local host in PBS directives.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.project">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">project</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.PBSClusterManager.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Project associated with each job.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.queue">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">queue</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.PBSClusterManager.queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>The queue to submit jobs to.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.scheduler_cmd">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.PBSClusterManager.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.scheduler_cores">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">scheduler_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.PBSClusterManager.scheduler_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.scheduler_memory">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">scheduler_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.PBSClusterManager.scheduler_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask scheduler. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.scheduler_resource_list">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">scheduler_resource_list</code><em class="property"> = Unicode('select=1:ncpus={cores}:mem={memory}')</em><a class="headerlink" href="#c.PBSClusterManager.scheduler_resource_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>The resource list to use for the scheduler.</p>
+<p>This is a template, and receives the following fields:</p>
+<ul class="simple">
+<li><p>cores</p></li>
+<li><p>memory</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.scheduler_setup">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">scheduler_setup</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.PBSClusterManager.scheduler_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Script to run before dask scheduler starts.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.staging_directory">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">staging_directory</code><em class="property"> = Unicode('{home}/.dask-gateway/')</em><a class="headerlink" href="#c.PBSClusterManager.staging_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The staging directory for storing files before the job starts.</p>
+<p>A subdirectory will be created for each new cluster which will store
+temporary files for that cluster. On cluster shutdown the subdirectory
+will be removed.</p>
+<p>This field can be a template, which recieves the following fields:</p>
+<ul class="simple">
+<li><p>home (the user’s home directory)</p></li>
+<li><p>username (the user’s name)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.submit_command">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">submit_command</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.PBSClusterManager.submit_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path to the job submit command</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.use_stagein">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">use_stagein</code><em class="property"> = Bool(True)</em><a class="headerlink" href="#c.PBSClusterManager.use_stagein" title="Permalink to this definition">¶</a></dt>
+<dd><p>If true, the staging directory created above will be copied into the
+job working directories at runtime using the <code class="docutils literal notranslate"><span class="pre">-Wstagein</span></code> directive.</p>
+<p>If the staging directory is on a networked filesystem, you can set this
+to False and rely on the networked filesystem for access.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.worker_cmd">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.PBSClusterManager.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.worker_cores">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">worker_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.PBSClusterManager.worker_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.worker_memory">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">worker_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.PBSClusterManager.worker_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask worker. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.worker_resource_list">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">worker_resource_list</code><em class="property"> = Unicode('select=1:ncpus={cores}:mem={memory}')</em><a class="headerlink" href="#c.PBSClusterManager.worker_resource_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>The resource list to use for the workers.</p>
+<p>This is a template, and receives the following fields:</p>
+<ul class="simple">
+<li><p>cores</p></li>
+<li><p>memory</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.worker_setup">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">worker_setup</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.PBSClusterManager.worker_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Script to run before dask worker starts.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.worker_start_timeout">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">worker_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.PBSClusterManager.worker_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.PBSClusterManager.worker_status_period">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">worker_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.PBSClusterManager.worker_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="slurmclustermanager">
+<h4>SlurmClusterManager<a class="headerlink" href="#slurmclustermanager" title="Permalink to this headline">¶</a></h4>
+<dl class="data">
+<dt id="c.SlurmClusterManager.account">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">account</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SlurmClusterManager.account" title="Permalink to this definition">¶</a></dt>
+<dd><p>Account string associated with each job.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.adaptive_period">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">adaptive_period</code><em class="property"> = Float(3)</em><a class="headerlink" href="#c.SlurmClusterManager.adaptive_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.cancel_command">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">cancel_command</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SlurmClusterManager.cancel_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path to the job cancel command</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.cluster_start_timeout">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">cluster_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.SlurmClusterManager.cluster_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.cluster_status_period">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">cluster_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.SlurmClusterManager.cluster_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.dask_gateway_jobqueue_launcher">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">dask_gateway_jobqueue_launcher</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SlurmClusterManager.dask_gateway_jobqueue_launcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path to the dask-gateway-jobqueue-launcher executable</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.environment">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.SlurmClusterManager.environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.partition">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">partition</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SlurmClusterManager.partition" title="Permalink to this definition">¶</a></dt>
+<dd><p>The partition to submit jobs to.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.qos">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">qos</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SlurmClusterManager.qos" title="Permalink to this definition">¶</a></dt>
+<dd><p>QOS string associated with each job.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.scheduler_cmd">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.SlurmClusterManager.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.scheduler_cores">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">scheduler_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.SlurmClusterManager.scheduler_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.scheduler_memory">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">scheduler_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.SlurmClusterManager.scheduler_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask scheduler. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.scheduler_setup">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">scheduler_setup</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SlurmClusterManager.scheduler_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Script to run before dask scheduler starts.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.staging_directory">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">staging_directory</code><em class="property"> = Unicode('{home}/.dask-gateway/')</em><a class="headerlink" href="#c.SlurmClusterManager.staging_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The staging directory for storing files before the job starts.</p>
+<p>A subdirectory will be created for each new cluster which will store
+temporary files for that cluster. On cluster shutdown the subdirectory
+will be removed.</p>
+<p>This field can be a template, which recieves the following fields:</p>
+<ul class="simple">
+<li><p>home (the user’s home directory)</p></li>
+<li><p>username (the user’s name)</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.submit_command">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">submit_command</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SlurmClusterManager.submit_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path to the job submit command</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.worker_cmd">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.SlurmClusterManager.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.worker_cores">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">worker_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.SlurmClusterManager.worker_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.worker_memory">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">worker_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.SlurmClusterManager.worker_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask worker. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.worker_setup">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">worker_setup</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SlurmClusterManager.worker_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Script to run before dask worker starts.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.worker_start_timeout">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">worker_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.SlurmClusterManager.worker_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.worker_status_period">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">worker_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.SlurmClusterManager.worker_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+<div class="section" id="proxies">
+<h2>Proxies<a class="headerlink" href="#proxies" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="web-proxy">
+<h3>Web Proxy<a class="headerlink" href="#web-proxy" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="c.WebProxy.api_connect_url">
+<code class="sig-prename descclassname">c.WebProxy.</code><code class="sig-name descname">api_connect_url</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.WebProxy.api_connect_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>The address that the api URL can be connected to.</p>
+<p>Useful if the address the api server should listen at is different than
+the address it’s reachable at (by e.g. the gateway).</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">api_url</span></code>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.WebProxy.api_url">
+<code class="sig-prename descclassname">c.WebProxy.</code><code class="sig-name descname">api_url</code><em class="property"> = Unicode('http://127.0.0.1:0')</em><a class="headerlink" href="#c.WebProxy.api_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>The address for configuring the Proxy.</p>
+<p>This is the address that the Dask Gateway will connect to when
+adding/removing routes. This must be reachable from the Dask Gateway
+server, but shouldn’t be publicly accessible (if possible). Defaults
+to <code class="docutils literal notranslate"><span class="pre">127.0.0.1:{random-port}</span></code>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.WebProxy.auth_token">
+<code class="sig-prename descclassname">c.WebProxy.</code><code class="sig-name descname">auth_token</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.WebProxy.auth_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Proxy auth token</p>
+<p>Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.WebProxy.connect_timeout">
+<code class="sig-prename descclassname">c.WebProxy.</code><code class="sig-name descname">connect_timeout</code><em class="property"> = Float(10.0)</em><a class="headerlink" href="#c.WebProxy.connect_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) from init until the proxy process is connected.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.WebProxy.externally_managed">
+<code class="sig-prename descclassname">c.WebProxy.</code><code class="sig-name descname">externally_managed</code><em class="property"> = Bool(False)</em><a class="headerlink" href="#c.WebProxy.externally_managed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the proxy process is externally managed.</p>
+<p>If False (default), the proxy process will be started and stopped by
+the gateway process. Set to True if the proxy will be started via some
+external manager (e.g. supervisord).</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.WebProxy.log_level">
+<code class="sig-prename descclassname">c.WebProxy.</code><code class="sig-name descname">log_level</code><em class="property"> = CaselessStrEnum('warn')</em><a class="headerlink" href="#c.WebProxy.log_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>The proxy log-level.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="scheduler-proxy">
+<h3>Scheduler Proxy<a class="headerlink" href="#scheduler-proxy" title="Permalink to this headline">¶</a></h3>
+<dl class="data">
+<dt id="c.SchedulerProxy.api_connect_url">
+<code class="sig-prename descclassname">c.SchedulerProxy.</code><code class="sig-name descname">api_connect_url</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SchedulerProxy.api_connect_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>The address that the api URL can be connected to.</p>
+<p>Useful if the address the api server should listen at is different than
+the address it’s reachable at (by e.g. the gateway).</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">api_url</span></code>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SchedulerProxy.api_url">
+<code class="sig-prename descclassname">c.SchedulerProxy.</code><code class="sig-name descname">api_url</code><em class="property"> = Unicode('http://127.0.0.1:0')</em><a class="headerlink" href="#c.SchedulerProxy.api_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>The address for configuring the Proxy.</p>
+<p>This is the address that the Dask Gateway will connect to when
+adding/removing routes. This must be reachable from the Dask Gateway
+server, but shouldn’t be publicly accessible (if possible). Defaults
+to <code class="docutils literal notranslate"><span class="pre">127.0.0.1:{random-port}</span></code>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SchedulerProxy.auth_token">
+<code class="sig-prename descclassname">c.SchedulerProxy.</code><code class="sig-name descname">auth_token</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SchedulerProxy.auth_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Proxy auth token</p>
+<p>Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SchedulerProxy.connect_timeout">
+<code class="sig-prename descclassname">c.SchedulerProxy.</code><code class="sig-name descname">connect_timeout</code><em class="property"> = Float(10.0)</em><a class="headerlink" href="#c.SchedulerProxy.connect_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) from init until the proxy process is connected.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SchedulerProxy.externally_managed">
+<code class="sig-prename descclassname">c.SchedulerProxy.</code><code class="sig-name descname">externally_managed</code><em class="property"> = Bool(False)</em><a class="headerlink" href="#c.SchedulerProxy.externally_managed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether the proxy process is externally managed.</p>
+<p>If False (default), the proxy process will be started and stopped by
+the gateway process. Set to True if the proxy will be started via some
+external manager (e.g. supervisord).</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SchedulerProxy.log_level">
+<code class="sig-prename descclassname">c.SchedulerProxy.</code><code class="sig-name descname">log_level</code><em class="property"> = CaselessStrEnum('warn')</em><a class="headerlink" href="#c.SchedulerProxy.log_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>The proxy log-level.</p>
+</dd></dl>
+
+</div>
 </div>
 <div class="section" id="cluster-manager-options">
 <h2>Cluster Manager Options<a class="headerlink" href="#cluster-manager-options" title="Permalink to this headline">¶</a></h2>
@@ -591,27 +1794,23 @@ valid Python variable name. If not provided, <code class="docutils literal notra
 </div>
 <div class="section" id="user-limits">
 <h2>User Limits<a class="headerlink" href="#user-limits" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="dask_gateway_server.limits.UserLimits">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.limits.</code><code class="sig-name descname">UserLimits</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.limits.UserLimits" title="Permalink to this definition">¶</a></dt>
-<dd><p>Manages restrictions for user resource usage</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UserLimits.max_clusters = Int(0)</code></dt>
+<dl class="data">
+<dt id="c.UserLimits.max_clusters">
+<code class="sig-prename descclassname">c.UserLimits.</code><code class="sig-name descname">max_clusters</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.UserLimits.max_clusters" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum number of clusters available for each user.</p>
 <p>Set to 0 for no limit (default).</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UserLimits.max_cores = Float(0)</code></dt>
+<dl class="data">
+<dt id="c.UserLimits.max_cores">
+<code class="sig-prename descclassname">c.UserLimits.</code><code class="sig-name descname">max_cores</code><em class="property"> = Float(0)</em><a class="headerlink" href="#c.UserLimits.max_cores" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum number of cores available for each user.</p>
 <p>Set to 0 for no limit (default).</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UserLimits.max_memory = MemoryLimit(0)</code></dt>
+<dl class="data">
+<dt id="c.UserLimits.max_memory">
+<code class="sig-prename descclassname">c.UserLimits.</code><code class="sig-name descname">max_memory</code><em class="property"> = MemoryLimit(0)</em><a class="headerlink" href="#c.UserLimits.max_memory" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum amount of memory (in bytes) available to each user.
 Can be an integer, or a string with one of the following suffixes:</p>
 <ul class="simple">
@@ -623,1240 +1822,6 @@ Can be an integer, or a string with one of the following suffixes:</p>
 <p>Set to 0 for no limit (default).</p>
 </dd></dl>
 
-</dd></dl>
-
-</div>
-<div class="section" id="proxies">
-<h2>Proxies<a class="headerlink" href="#proxies" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="web-proxy">
-<h3>Web Proxy<a class="headerlink" href="#web-proxy" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="dask_gateway_server.proxy.WebProxy">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.proxy.</code><code class="sig-name descname">WebProxy</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.proxy.WebProxy" title="Permalink to this definition">¶</a></dt>
-<dd><p>A proxy for proxying out the dashboards from behind a firewall</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.WebProxy.api_connect_url = Unicode('')</code></dt>
-<dd><p>The address that the api URL can be connected to.</p>
-<p>Useful if the address the api server should listen at is different than
-the address it’s reachable at (by e.g. the gateway).</p>
-<p>Defaults to <code class="docutils literal notranslate"><span class="pre">api_url</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.WebProxy.api_url = Unicode('http://127.0.0.1:0')</code></dt>
-<dd><p>The address for configuring the Proxy.</p>
-<p>This is the address that the Dask Gateway will connect to when
-adding/removing routes. This must be reachable from the Dask Gateway
-server, but shouldn’t be publicly accessible (if possible). Defaults
-to <code class="docutils literal notranslate"><span class="pre">127.0.0.1:{random-port}</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.WebProxy.auth_token = Unicode('')</code></dt>
-<dd><p>The Proxy auth token</p>
-<p>Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.WebProxy.connect_timeout = Float(10.0)</code></dt>
-<dd><p>Timeout (in seconds) from init until the proxy process is connected.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.WebProxy.externally_managed = Bool(False)</code></dt>
-<dd><p>Whether the proxy process is externally managed.</p>
-<p>If False (default), the proxy process will be started and stopped by
-the gateway process. Set to True if the proxy will be started via some
-external manager (e.g. supervisord).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.WebProxy.log_level = CaselessStrEnum('warn')</code></dt>
-<dd><p>The proxy log-level.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="scheduler-proxy">
-<h3>Scheduler Proxy<a class="headerlink" href="#scheduler-proxy" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="dask_gateway_server.proxy.SchedulerProxy">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.proxy.</code><code class="sig-name descname">SchedulerProxy</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.proxy.SchedulerProxy" title="Permalink to this definition">¶</a></dt>
-<dd><p>A proxy for connecting Dask clients to schedulers behind a firewall.</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SchedulerProxy.api_connect_url = Unicode('')</code></dt>
-<dd><p>The address that the api URL can be connected to.</p>
-<p>Useful if the address the api server should listen at is different than
-the address it’s reachable at (by e.g. the gateway).</p>
-<p>Defaults to <code class="docutils literal notranslate"><span class="pre">api_url</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SchedulerProxy.api_url = Unicode('http://127.0.0.1:0')</code></dt>
-<dd><p>The address for configuring the Proxy.</p>
-<p>This is the address that the Dask Gateway will connect to when
-adding/removing routes. This must be reachable from the Dask Gateway
-server, but shouldn’t be publicly accessible (if possible). Defaults
-to <code class="docutils literal notranslate"><span class="pre">127.0.0.1:{random-port}</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SchedulerProxy.auth_token = Unicode('')</code></dt>
-<dd><p>The Proxy auth token</p>
-<p>Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SchedulerProxy.connect_timeout = Float(10.0)</code></dt>
-<dd><p>Timeout (in seconds) from init until the proxy process is connected.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SchedulerProxy.externally_managed = Bool(False)</code></dt>
-<dd><p>Whether the proxy process is externally managed.</p>
-<p>If False (default), the proxy process will be started and stopped by
-the gateway process. Set to True if the proxy will be started via some
-external manager (e.g. supervisord).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SchedulerProxy.log_level = CaselessStrEnum('warn')</code></dt>
-<dd><p>The proxy log-level.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="authentication">
-<h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="kerberos">
-<h3>Kerberos<a class="headerlink" href="#kerberos" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="dask_gateway_server.auth.KerberosAuthenticator">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.auth.</code><code class="sig-name descname">KerberosAuthenticator</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.auth.KerberosAuthenticator" title="Permalink to this definition">¶</a></dt>
-<dd><p>An authenticator using kerberos</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KerberosAuthenticator.keytab = Unicode('dask_gateway.keytab')</code></dt>
-<dd><p>The path to the keytab file</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KerberosAuthenticator.service_name = Unicode('HTTP')</code></dt>
-<dd><p>The service’s kerberos principal name.</p>
-<p>This is almost always “HTTP” (the default)</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="basic">
-<h3>Basic<a class="headerlink" href="#basic" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="dask_gateway_server.auth.DummyAuthenticator">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.auth.</code><code class="sig-name descname">DummyAuthenticator</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.auth.DummyAuthenticator" title="Permalink to this definition">¶</a></dt>
-<dd><p>A simple authenticator that uses Basic Auth.</p>
-<p>This is highly insecure, use only for testing!!!</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.DummyAuthenticator.password = Unicode(None)</code></dt>
-<dd><p>If set, a global password that all users must provide.</p>
-<p>If unset (default), the password field is completely ignored.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="cluster-managers">
-<h2>Cluster Managers<a class="headerlink" href="#cluster-managers" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="local-processes">
-<h3>Local Processes<a class="headerlink" href="#local-processes" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="localclustermanager">
-<h4>LocalClusterManager<a class="headerlink" href="#localclustermanager" title="Permalink to this headline">¶</a></h4>
-<dl class="class">
-<dt id="dask_gateway_server.managers.local.LocalClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.local.</code><code class="sig-name descname">LocalClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.local.LocalClusterManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>A cluster manager that launches local processes.</p>
-<p>Requires super-user permissions in order to run processes for the
-requesting username.</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.adaptive_period = Float(3)</code></dt>
-<dd><p>Time (in seconds) between adaptive scaling checks.</p>
-<p>A smaller period will decrease scale up/down latency when responding to
-cluster load changes, but may also result in higher load on the gateway
-server.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.cluster_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.cluster_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between cluster status checks.</p>
-<p>A smaller period will detect failed clusters sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.clusters_directory = Unicode('')</code></dt>
-<dd><p>The base directory for cluster working directories.</p>
-<p>A subdirectory will be created for each new cluster which will serve as
-the working directory for that cluster. On cluster shutdown the
-subdirectory will be removed.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.environment = Dict('')</code></dt>
-<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.inherited_environment = List('')</code></dt>
-<dd><p>Whitelist of environment variables for the scheduler and worker
-processes to inherit from the Dask-Gateway process.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
-<dd><p>Shell command to start a dask-gateway scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.scheduler_cores = Int(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask scheduler. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.sigint_timeout = Int(10)</code></dt>
-<dd><p>Seconds to wait for process to stop after SIGINT.</p>
-<p>If the process has not stopped after this time, a SIGTERM is sent.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.sigkill_timeout = Int(5)</code></dt>
-<dd><p>Seconds to wait for process to stop after SIGKILL.</p>
-<p>If the process has not stopped after this time, a warning is logged and
-the process is deemed a zombie process.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.sigterm_timeout = Int(5)</code></dt>
-<dd><p>Seconds to wait for process to stop after SIGTERM.</p>
-<p>If the process has not stopped after this time, a SIGKILL is sent.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
-<dd><p>Shell command to start a dask-gateway worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.worker_cores = Int(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask worker. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.worker_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.LocalClusterManager.worker_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between worker status checks.</p>
-<p>A smaller period will detect failed workers sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="unsafelocalclustermanager">
-<h4>UnsafeLocalClusterManager<a class="headerlink" href="#unsafelocalclustermanager" title="Permalink to this headline">¶</a></h4>
-<dl class="class">
-<dt id="dask_gateway_server.managers.local.UnsafeLocalClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.local.</code><code class="sig-name descname">UnsafeLocalClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.local.UnsafeLocalClusterManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>A version of LocalClusterManager that doesn’t set permissions.</p>
-<p>FOR TESTING ONLY! This provides no user separations - clusters run with the
-same level of permission as the gateway.</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.adaptive_period = Float(3)</code></dt>
-<dd><p>Time (in seconds) between adaptive scaling checks.</p>
-<p>A smaller period will decrease scale up/down latency when responding to
-cluster load changes, but may also result in higher load on the gateway
-server.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.cluster_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.cluster_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between cluster status checks.</p>
-<p>A smaller period will detect failed clusters sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.clusters_directory = Unicode('')</code></dt>
-<dd><p>The base directory for cluster working directories.</p>
-<p>A subdirectory will be created for each new cluster which will serve as
-the working directory for that cluster. On cluster shutdown the
-subdirectory will be removed.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.environment = Dict('')</code></dt>
-<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.inherited_environment = List('')</code></dt>
-<dd><p>Whitelist of environment variables for the scheduler and worker
-processes to inherit from the Dask-Gateway process.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
-<dd><p>Shell command to start a dask-gateway scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.scheduler_cores = Int(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask scheduler. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.sigint_timeout = Int(10)</code></dt>
-<dd><p>Seconds to wait for process to stop after SIGINT.</p>
-<p>If the process has not stopped after this time, a SIGTERM is sent.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.sigkill_timeout = Int(5)</code></dt>
-<dd><p>Seconds to wait for process to stop after SIGKILL.</p>
-<p>If the process has not stopped after this time, a warning is logged and
-the process is deemed a zombie process.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.sigterm_timeout = Int(5)</code></dt>
-<dd><p>Seconds to wait for process to stop after SIGTERM.</p>
-<p>If the process has not stopped after this time, a SIGKILL is sent.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
-<dd><p>Shell command to start a dask-gateway worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.worker_cores = Int(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask worker. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.worker_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.UnsafeLocalClusterManager.worker_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between worker status checks.</p>
-<p>A smaller period will detect failed workers sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="yarn">
-<h3>YARN<a class="headerlink" href="#yarn" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="yarnclustermanager">
-<span id="yarn-config"></span><h4>YarnClusterManager<a class="headerlink" href="#yarnclustermanager" title="Permalink to this headline">¶</a></h4>
-<dl class="class">
-<dt id="dask_gateway_server.managers.yarn.YarnClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.yarn.</code><code class="sig-name descname">YarnClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.yarn.YarnClusterManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>A cluster manager for deploying Dask on a YARN cluster.</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.adaptive_period = Float(3)</code></dt>
-<dd><p>Time (in seconds) between adaptive scaling checks.</p>
-<p>A smaller period will decrease scale up/down latency when responding to
-cluster load changes, but may also result in higher load on the gateway
-server.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.cluster_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.cluster_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between cluster status checks.</p>
-<p>A smaller period will detect failed clusters sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.environment = Dict('')</code></dt>
-<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.keytab = Unicode(None)</code></dt>
-<dd><p>Path to kerberos keytab for Dask Gateway user</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.localize_files = Dict('')</code></dt>
-<dd><p>Extra files to distribute to both the worker and scheduler containers.</p>
-<p>This is a mapping from <code class="docutils literal notranslate"><span class="pre">local-name</span></code> to <code class="docutils literal notranslate"><span class="pre">resource</span></code>. Resource paths
-can be local, or in HDFS (prefix with <code class="docutils literal notranslate"><span class="pre">hdfs://...</span></code> if so). If an
-archive (<code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> or <code class="docutils literal notranslate"><span class="pre">.zip</span></code>), the resource will be unarchived as
-directory <code class="docutils literal notranslate"><span class="pre">local-name</span></code>. For finer control, resources can also be
-specified as <code class="docutils literal notranslate"><span class="pre">skein.File</span></code> objects, or their <code class="docutils literal notranslate"><span class="pre">dict</span></code> equivalents.</p>
-<p>This can be used to distribute conda/virtual environments by
-configuring the following:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;hdfs:///path/to/archived/environment.tar.gz&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;visibility&#39;</span><span class="p">:</span> <span class="s1">&#39;public&#39;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
-</pre></div>
-</div>
-<p>These archives are usually created using either <code class="docutils literal notranslate"><span class="pre">conda-pack</span></code> or
-<code class="docutils literal notranslate"><span class="pre">venv-pack</span></code>. For more information on distributing files, see
-<a class="reference external" href="https://jcrist.github.io/skein/distributing-files.html">https://jcrist.github.io/skein/distributing-files.html</a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.principal = Unicode(None)</code></dt>
-<dd><p>Kerberos principal for Dask Gateway user</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.queue = Unicode('default')</code></dt>
-<dd><p>The YARN queue to submit applications under</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
-<dd><p>Shell command to start a dask-gateway scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.scheduler_cores = Int(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask scheduler. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.scheduler_setup = Unicode('')</code></dt>
-<dd><p>Script to run before dask scheduler starts.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
-<dd><p>Shell command to start a dask-gateway worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.worker_cores = Int(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask worker. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.worker_setup = Unicode('')</code></dt>
-<dd><p>Script to run before dask worker starts.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.worker_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.YarnClusterManager.worker_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between worker status checks.</p>
-<p>A smaller period will detect failed workers sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="kubernetes">
-<h3>Kubernetes<a class="headerlink" href="#kubernetes" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="kubeclustermanager">
-<span id="kube-cluster-manager-config"></span><h4>KubeClusterManager<a class="headerlink" href="#kubeclustermanager" title="Permalink to this headline">¶</a></h4>
-<dl class="class">
-<dt id="dask_gateway_server.managers.kubernetes.KubeClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.kubernetes.</code><code class="sig-name descname">KubeClusterManager</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.kubernetes.KubeClusterManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>A cluster manager for deploying Dask on a Kubernetes cluster.</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.adaptive_period = Float(3)</code></dt>
-<dd><p>Time (in seconds) between adaptive scaling checks.</p>
-<p>A smaller period will decrease scale up/down latency when responding to
-cluster load changes, but may also result in higher load on the gateway
-server.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.cluster_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.cluster_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between cluster status checks.</p>
-<p>A smaller period will detect failed clusters sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.common_annotations = Dict('')</code></dt>
-<dd><p>Kubernetes annotations to apply to all objects created by the gateway</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.common_labels = Dict('')</code></dt>
-<dd><p>Kubernetes labels to apply to all objects created by the gateway</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.environment = Dict('')</code></dt>
-<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.image = Unicode('daskgateway/dask-gateway:latest')</code></dt>
-<dd><p>Docker image to use for running user’s containers.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.image_pull_policy = Unicode('IfNotPresent')</code></dt>
-<dd><p>The image pull policy of the docker image specified in <code class="docutils literal notranslate"><span class="pre">image</span></code></p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.namespace = Unicode('default')</code></dt>
-<dd><p>Kubernetes namespace to launch pods in.</p>
-<p>If running inside a kubernetes cluster with service accounts enabled,
-defaults to the current namespace. If not, defaults to <cite>default</cite></p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
-<dd><p>Shell command to start a dask-gateway scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.scheduler_cores = Float(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.scheduler_cores_limit = Float(0.0)</code></dt>
-<dd><p>Maximum number of cpu-cores available for a dask scheduler.</p>
-<p>Defaults to <code class="docutils literal notranslate"><span class="pre">scheduler_cores</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.scheduler_extra_container_config = Dict('')</code></dt>
-<dd><p>Any extra configuration for the scheduler container.</p>
-<p>This dict will be deep merged with the scheduler container (a
-<code class="docutils literal notranslate"><span class="pre">V1Container</span></code> object) before submission. Keys should match those in
-the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes spec</a>,
-and should be camelCase.</p>
-<p>See <code class="docutils literal notranslate"><span class="pre">worker_extra_container_config</span></code> for more information.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.scheduler_extra_pod_config = Dict('')</code></dt>
-<dd><p>Any extra configuration for the scheduler pods.</p>
-<p>This dict will be deep merged with the scheduler pod spec (a
-<code class="docutils literal notranslate"><span class="pre">V1PodSpec</span></code> object) before submission. Keys should match those in the
-<a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes spec</a>,
-and should be camelCase.</p>
-<p>See <code class="docutils literal notranslate"><span class="pre">worker_extra_pod_config</span></code> for more information.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask scheduler. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.scheduler_memory_limit = MemoryLimit(0)</code></dt>
-<dd><p>Maximum number of bytes available for a dask scheduler. Allows the
-following suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-<p>Defaults to <code class="docutils literal notranslate"><span class="pre">scheduler_memory</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
-<dd><p>Shell command to start a dask-gateway worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_cores = Float(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_cores_limit = Float(0.0)</code></dt>
-<dd><p>Maximum number of cpu-cores available for a dask worker.</p>
-<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_extra_container_config = Dict('')</code></dt>
-<dd><p>Any extra configuration for the worker container.</p>
-<p>This dict will be deep merged with the worker container (a
-<code class="docutils literal notranslate"><span class="pre">V1Container</span></code> object) before submission. Keys should match those in
-the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes spec</a>,
-and should be camelCase.</p>
-<p>For example, here we add environment variables from a secret to the
-worker container:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">KubeClusterManager</span><span class="o">.</span><span class="n">worker_extra_container_config</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;envFrom&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">{</span><span class="s2">&quot;secretRef&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;my-env-secret&quot;</span><span class="p">}}</span>
-    <span class="p">]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_extra_pod_config = Dict('')</code></dt>
-<dd><p>Any extra configuration for the worker pods.</p>
-<p>This dict will be deep merged with the worker pod spec (a <code class="docutils literal notranslate"><span class="pre">V1PodSpec</span></code>
-object) before submission. Keys should match those in the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">kubernetes
-spec</a>,
-and should be camelCase.</p>
-<p>For example, here we add a toleration to worker pods.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">KubeClusterManager</span><span class="o">.</span><span class="n">worker_extra_pod_config</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;tolerations&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">{</span>
-            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;key&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;Equal&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;effect&quot;</span><span class="p">:</span> <span class="s2">&quot;NoSchedule&quot;</span><span class="p">,</span>
-        <span class="p">}</span>
-    <span class="p">]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask worker. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_memory_limit = MemoryLimit(0)</code></dt>
-<dd><p>Maximum number of bytes available for a dask worker. Allows the
-following suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_memory</span></code>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.KubeClusterManager.worker_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between worker status checks.</p>
-<p>A smaller period will detect failed workers sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="job-queues">
-<h3>Job Queues<a class="headerlink" href="#job-queues" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="pbsclustermanager">
-<h4>PBSClusterManager<a class="headerlink" href="#pbsclustermanager" title="Permalink to this headline">¶</a></h4>
-<dl class="class">
-<dt id="dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.jobqueue.pbs.</code><code class="sig-name descname">PBSClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>A cluster manager for deploying Dask on a PBS cluster.</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.account = Unicode('')</code></dt>
-<dd><p>Accounting string associated with each job.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.adaptive_period = Float(3)</code></dt>
-<dd><p>Time (in seconds) between adaptive scaling checks.</p>
-<p>A smaller period will decrease scale up/down latency when responding to
-cluster load changes, but may also result in higher load on the gateway
-server.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.cancel_command = Unicode('')</code></dt>
-<dd><p>The path to the job cancel command</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.cluster_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.cluster_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between cluster status checks.</p>
-<p>A smaller period will detect failed clusters sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.dask_gateway_jobqueue_launcher = Unicode('')</code></dt>
-<dd><p>The path to the dask-gateway-jobqueue-launcher executable</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.environment = Dict('')</code></dt>
-<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.gateway_hostname = Unicode('')</code></dt>
-<dd><p>The hostname of the node running the gateway. Used for referencing the
-local host in PBS directives.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.project = Unicode('')</code></dt>
-<dd><p>Project associated with each job.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.queue = Unicode('')</code></dt>
-<dd><p>The queue to submit jobs to.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
-<dd><p>Shell command to start a dask-gateway scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.scheduler_cores = Int(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask scheduler. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.scheduler_resource_list = Unicode('select=1:ncpus={cores}:mem={memory}')</code></dt>
-<dd><p>The resource list to use for the scheduler.</p>
-<p>This is a template, and receives the following fields:</p>
-<ul class="simple">
-<li><p>cores</p></li>
-<li><p>memory</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.scheduler_setup = Unicode('')</code></dt>
-<dd><p>Script to run before dask scheduler starts.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.staging_directory = Unicode('{home}/.dask-gateway/')</code></dt>
-<dd><p>The staging directory for storing files before the job starts.</p>
-<p>A subdirectory will be created for each new cluster which will store
-temporary files for that cluster. On cluster shutdown the subdirectory
-will be removed.</p>
-<p>This field can be a template, which recieves the following fields:</p>
-<ul class="simple">
-<li><p>home (the user’s home directory)</p></li>
-<li><p>username (the user’s name)</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.submit_command = Unicode('')</code></dt>
-<dd><p>The path to the job submit command</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.use_stagein = Bool(True)</code></dt>
-<dd><p>If true, the staging directory created above will be copied into the
-job working directories at runtime using the <code class="docutils literal notranslate"><span class="pre">-Wstagein</span></code> directive.</p>
-<p>If the staging directory is on a networked filesystem, you can set this
-to False and rely on the networked filesystem for access.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
-<dd><p>Shell command to start a dask-gateway worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.worker_cores = Int(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask worker. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.worker_resource_list = Unicode('select=1:ncpus={cores}:mem={memory}')</code></dt>
-<dd><p>The resource list to use for the workers.</p>
-<p>This is a template, and receives the following fields:</p>
-<ul class="simple">
-<li><p>cores</p></li>
-<li><p>memory</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.worker_setup = Unicode('')</code></dt>
-<dd><p>Script to run before dask worker starts.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.worker_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.PBSClusterManager.worker_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between worker status checks.</p>
-<p>A smaller period will detect failed workers sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-<div class="section" id="slurmclustermanager">
-<h4>SlurmClusterManager<a class="headerlink" href="#slurmclustermanager" title="Permalink to this headline">¶</a></h4>
-<dl class="class">
-<dt id="dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.managers.jobqueue.slurm.</code><code class="sig-name descname">SlurmClusterManager</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>A cluster manager for deploying Dask on a Slurm cluster.</p>
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.account = Unicode('')</code></dt>
-<dd><p>Account string associated with each job.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.adaptive_period = Float(3)</code></dt>
-<dd><p>Time (in seconds) between adaptive scaling checks.</p>
-<p>A smaller period will decrease scale up/down latency when responding to
-cluster load changes, but may also result in higher load on the gateway
-server.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.cancel_command = Unicode('')</code></dt>
-<dd><p>The path to the job cancel command</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.cluster_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.cluster_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between cluster status checks.</p>
-<p>A smaller period will detect failed clusters sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.dask_gateway_jobqueue_launcher = Unicode('')</code></dt>
-<dd><p>The path to the dask-gateway-jobqueue-launcher executable</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.environment = Dict('')</code></dt>
-<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.partition = Unicode('')</code></dt>
-<dd><p>The partition to submit jobs to.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.qos = Unicode('')</code></dt>
-<dd><p>QOS string associated with each job.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.scheduler_cmd = Unicode('dask-gateway-scheduler')</code></dt>
-<dd><p>Shell command to start a dask-gateway scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.scheduler_cores = Int(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask scheduler.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.scheduler_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask scheduler. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.scheduler_setup = Unicode('')</code></dt>
-<dd><p>Script to run before dask scheduler starts.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.staging_directory = Unicode('{home}/.dask-gateway/')</code></dt>
-<dd><p>The staging directory for storing files before the job starts.</p>
-<p>A subdirectory will be created for each new cluster which will store
-temporary files for that cluster. On cluster shutdown the subdirectory
-will be removed.</p>
-<p>This field can be a template, which recieves the following fields:</p>
-<ul class="simple">
-<li><p>home (the user’s home directory)</p></li>
-<li><p>username (the user’s name)</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.submit_command = Unicode('')</code></dt>
-<dd><p>The path to the job submit command</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.worker_cmd = Unicode('dask-gateway-worker')</code></dt>
-<dd><p>Shell command to start a dask-gateway worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.worker_cores = Int(1)</code></dt>
-<dd><p>Number of cpu-cores available for a dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.worker_memory = MemoryLimit('2 G')</code></dt>
-<dd><p>Number of bytes available for a dask worker. Allows the following
-suffixes:</p>
-<ul class="simple">
-<li><p>K -&gt; Kibibytes</p></li>
-<li><p>M -&gt; Mebibytes</p></li>
-<li><p>G -&gt; Gibibytes</p></li>
-<li><p>T -&gt; Tebibytes</p></li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.worker_setup = Unicode('')</code></dt>
-<dd><p>Script to run before dask worker starts.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.worker_start_timeout = Float(60)</code></dt>
-<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="sig-name descname">config c.SlurmClusterManager.worker_status_period = Float(30)</code></dt>
-<dd><p>Time (in seconds) between worker status checks.</p>
-<p>A smaller period will detect failed workers sooner, but will use more
-resources. A larger period will provide slower feedback in the presence
-of failures.</p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
-</div>
 </div>
 </div>
 
