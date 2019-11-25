@@ -1,15 +1,15 @@
 """autodoc extension for configurable traitlets
 
-Borrowed from jupyterhub/kubespawner:
+Borrowed and heavily modified from jupyterhub/kubespawner:
 
 https://github.com/jupyterhub/kubespawner/blob/master/docs/sphinxext/autodoc_traits.py
 """
 
 from traitlets import TraitType, Undefined
-from sphinx.ext.autodoc import ClassDocumenter, AttributeDocumenter
+from sphinx.ext.autodoc import DataDocumenter, ModuleDocumenter
 
 
-class ConfigurableDocumenter(ClassDocumenter):
+class ConfigurableDocumenter(ModuleDocumenter):
     """Specialized Documenter subclass for traits with config=True"""
 
     objtype = "configurable"
@@ -17,7 +17,6 @@ class ConfigurableDocumenter(ClassDocumenter):
 
     def get_object_members(self, want_all):
         """Add traits with .tag(config=True) to members list"""
-        check, members = super().get_object_members(want_all)
         get_traits = (
             self.object.class_own_traits
             if self.options.inherited_members
@@ -28,12 +27,18 @@ class ConfigurableDocumenter(ClassDocumenter):
             # put help in __doc__ where autodoc will look for it
             trait.__doc__ = trait.help
             trait_members.append((name, trait))
-        return check, trait_members + members
+        return False, trait_members
+
+    def add_directive_header(self, sig):
+        pass
+
+    def add_content(self, more_content):
+        pass
 
 
-class TraitDocumenter(AttributeDocumenter):
+class TraitDocumenter(DataDocumenter):
     objtype = "trait"
-    directivetype = "attribute"
+    directivetype = "data"
     member_order = 1
     priority = 100
 
@@ -42,7 +47,8 @@ class TraitDocumenter(AttributeDocumenter):
         return isinstance(member, TraitType)
 
     def format_name(self):
-        return "config c." + super().format_name()
+        name = ".".join(self.fullname.split(".")[-2:])
+        return "c.%s" % name
 
     def add_directive_header(self, sig):
         default = self.object.default_value
@@ -50,7 +56,9 @@ class TraitDocumenter(AttributeDocumenter):
             default = ""
         # Ensures escape sequences render properly
         default_s = repr(repr(default))[1:-1]
-        sig = " = {}({})".format(self.object.__class__.__name__, default_s)
+        val = "= {}({})".format(self.object.__class__.__name__, default_s)
+        self.options.annotation = val
+        self.modname = ""
         return super().add_directive_header(sig)
 
 
