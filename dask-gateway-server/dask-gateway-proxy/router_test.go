@@ -10,6 +10,7 @@ import (
 func TestEmpty(t *testing.T) {
 	router := NewRouter()
 	// No matches for empty router
+	assert.False(t, router.HasMatch(""))
 	assert.False(t, router.HasMatch("/"))
 	assert.False(t, router.HasMatch("/foo"))
 }
@@ -41,6 +42,9 @@ func TestMatch(t *testing.T) {
 	testMatch("/foo/val/b", bV, "")
 
 	testMatch("/foo/c", cV, "")
+
+	assert.False(t, r.HasMatch(""))
+	assert.False(t, r.HasMatch("/"))
 
 	assert.False(t, r.HasMatch("/foo/d"))
 	u, p := r.Match("/foo/d")

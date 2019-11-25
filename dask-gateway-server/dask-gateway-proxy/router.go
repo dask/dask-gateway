@@ -8,7 +8,7 @@ import (
 
 func normalizePath(path string) (string, int) {
 	offset := 0
-	if path == "/" {
+	if path == "" || path == "/" {
 		return "", offset
 	}
 	if path[0] == '/' {
