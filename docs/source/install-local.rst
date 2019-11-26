@@ -1,4 +1,4 @@
-Install locally (quickstart)
+Install Locally (Quickstart)
 ============================
 
 This page describes how to deploy and interact with a ``dask-gateway-server``
