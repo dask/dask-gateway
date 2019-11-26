@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+12.g2fb99f2 documentation</title>
+  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+13.g79a4443 documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+12.g2fb99f2
+                0.5.0+13.g79a4443
               </div>
             
           
@@ -155,11 +155,15 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">For Administrators</span></p>
+<p class="caption"><span class="caption-text">Admin - Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install locally (quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul class="current">
@@ -173,6 +177,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#cluster-managers">Cluster Managers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#base-class">Base Class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#clustermanager">ClusterManager</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#local-processes">Local Processes</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#localclustermanager">LocalClusterManager</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#unsafelocalclustermanager">UnsafeLocalClusterManager</a></li>
@@ -198,8 +206,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#scheduler-proxy">Scheduler Proxy</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#cluster-manager-options">Cluster Manager Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#user-limits">User Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cluster-manager-options">Cluster Manager Options</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
@@ -298,7 +306,8 @@ longer active.</p>
 <code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">cluster_manager_options</code><em class="property"> = Instance('')</em><a class="headerlink" href="#c.DaskGateway.cluster_manager_options" title="Permalink to this definition">¶</a></dt>
 <dd><p>User options for configuring the cluster manager.</p>
 <p>Allows users to specify configuration overrides when creating a new
-cluster manager. See the documentation for more information.</p>
+cluster manager. See the documentation for more information:</p>
+<p><a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a>.</p>
 </dd></dl>
 
 <dl class="data">
@@ -527,6 +536,107 @@ environment variable.</p>
 </div>
 <div class="section" id="cluster-managers">
 <h2>Cluster Managers<a class="headerlink" href="#cluster-managers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="base-class">
+<h3>Base Class<a class="headerlink" href="#base-class" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="clustermanager">
+<h4>ClusterManager<a class="headerlink" href="#clustermanager" title="Permalink to this headline">¶</a></h4>
+<dl class="data">
+<dt id="c.ClusterManager.adaptive_period">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">adaptive_period</code><em class="property"> = Float(3)</em><a class="headerlink" href="#c.ClusterManager.adaptive_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between adaptive scaling checks.</p>
+<p>A smaller period will decrease scale up/down latency when responding to
+cluster load changes, but may also result in higher load on the gateway
+server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.cluster_start_timeout">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">cluster_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.ClusterManager.cluster_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask cluster.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.cluster_status_period">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">cluster_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.ClusterManager.cluster_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between cluster status checks.</p>
+<p>A smaller period will detect failed clusters sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.environment">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.ClusterManager.environment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.scheduler_cmd">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.ClusterManager.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.scheduler_cores">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">scheduler_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.ClusterManager.scheduler_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask scheduler.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.scheduler_memory">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">scheduler_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.ClusterManager.scheduler_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask scheduler. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.worker_cmd">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.ClusterManager.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shell command to start a dask-gateway worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.worker_cores">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">worker_cores</code><em class="property"> = Int(1)</em><a class="headerlink" href="#c.ClusterManager.worker_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of cpu-cores available for a dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.worker_memory">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">worker_memory</code><em class="property"> = MemoryLimit('2 G')</em><a class="headerlink" href="#c.ClusterManager.worker_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of bytes available for a dask worker. Allows the following
+suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.worker_start_timeout">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">worker_start_timeout</code><em class="property"> = Float(60)</em><a class="headerlink" href="#c.ClusterManager.worker_start_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Timeout (in seconds) before giving up on a starting dask worker.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.ClusterManager.worker_status_period">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">worker_status_period</code><em class="property"> = Float(30)</em><a class="headerlink" href="#c.ClusterManager.worker_status_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) between worker status checks.</p>
+<p>A smaller period will detect failed workers sooner, but will use more
+resources. A larger period will provide slower feedback in the presence
+of failures.</p>
+</dd></dl>
+
+</div>
+</div>
 <div class="section" id="local-processes">
 <h3>Local Processes<a class="headerlink" href="#local-processes" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="localclustermanager">
@@ -1665,133 +1775,6 @@ external manager (e.g. supervisord).</p>
 
 </div>
 </div>
-<div class="section" id="cluster-manager-options">
-<h2>Cluster Manager Options<a class="headerlink" href="#cluster-manager-options" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="dask_gateway_server.options.Options">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">Options</code><span class="sig-paren">(</span><em class="sig-param">*fields</em>, <em class="sig-param">handler=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.Options" title="Permalink to this definition">¶</a></dt>
-<dd><p>A description of cluster options.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>*fields</strong> (<em>Field</em>) – Zero or more configurable fields.</p></li>
-<li><p><strong>handler</strong> (<em>callable</em><em>, </em><em>optional</em>) – A callable with the signature <code class="docutils literal notranslate"><span class="pre">handler(options)</span></code>, where <code class="docutils literal notranslate"><span class="pre">options</span></code>
-is the validated dict of user options. Should return a dict of
-configuration overrides to forward to the cluster manager. If not
-provided, the default will return the options unchanged.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
-<dt id="dask_gateway_server.options.Integer">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">Integer</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">default=0</em>, <em class="sig-param">min=None</em>, <em class="sig-param">max=None</em>, <em class="sig-param">label=None</em>, <em class="sig-param">target=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.Integer" title="Permalink to this definition">¶</a></dt>
-<dd><p>An integer option field.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<em>str</em>) – The field name to use. Must be a valid Python variable name. This will
-be the keyword user’s use to set this field programmatically (e.g.
-<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
-<li><p><strong>default</strong> (<em>int</em><em>, </em><em>optional</em>) – The default value. Default is 0.</p></li>
-<li><p><strong>min</strong> (<em>int</em><em>, </em><em>optional</em>) – The minimum valid value (inclusive). Unbounded if not set.</p></li>
-<li><p><strong>max</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum valid value (inclusive). Unbounded if not set.</p></li>
-<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A human readable label that will be used in GUI representations (e.g.
-<code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
-<li><p><strong>target</strong> (<em>str</em><em>, </em><em>optional</em>) – The target parameter to set in the processed options dict. Must be a
-valid Python variable name. If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
-<dt id="dask_gateway_server.options.Float">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">Float</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">default=0</em>, <em class="sig-param">min=None</em>, <em class="sig-param">max=None</em>, <em class="sig-param">label=None</em>, <em class="sig-param">target=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.Float" title="Permalink to this definition">¶</a></dt>
-<dd><p>A float option field.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<em>str</em>) – The field name to use. Must be a valid Python variable name. This will
-be the keyword user’s use to set this field programmatically (e.g.
-<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
-<li><p><strong>default</strong> (<em>float</em><em>, </em><em>optional</em>) – The default value. Default is 0.</p></li>
-<li><p><strong>min</strong> (<em>float</em><em>, </em><em>optional</em>) – The minimum valid value (inclusive). Unbounded if not set.</p></li>
-<li><p><strong>max</strong> (<em>float</em><em>, </em><em>optional</em>) – The maximum valid value (inclusive). Unbounded if not set.</p></li>
-<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A human readable label that will be used in GUI representations (e.g.
-<code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
-<li><p><strong>target</strong> (<em>str</em><em>, </em><em>optional</em>) – The target parameter to set in the processed options dict. Must be a
-valid Python variable name. If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
-<dt id="dask_gateway_server.options.String">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">String</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">default=''</em>, <em class="sig-param">label=None</em>, <em class="sig-param">target=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.String" title="Permalink to this definition">¶</a></dt>
-<dd><p>A string option field.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<em>str</em>) – The field name to use. Must be a valid Python variable name. This will
-be the keyword user’s use to set this field programmatically (e.g.
-<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
-<li><p><strong>default</strong> (<em>str</em><em>, </em><em>optional</em>) – The default value. Default is the empty string (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>).</p></li>
-<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A human readable label that will be used in GUI representations (e.g.
-<code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
-<li><p><strong>target</strong> (<em>str</em><em>, </em><em>optional</em>) – The target parameter to set in the processed options dict. Must be a
-valid Python variable name. If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
-<dt id="dask_gateway_server.options.Bool">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">Bool</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">default=False</em>, <em class="sig-param">label=None</em>, <em class="sig-param">target=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.Bool" title="Permalink to this definition">¶</a></dt>
-<dd><p>A boolean option field.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<em>str</em>) – The field name to use. Must be a valid Python variable name. This will
-be the keyword user’s use to set this field programmatically (e.g.
-<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
-<li><p><strong>default</strong> (<em>bool</em><em>, </em><em>optional</em>) – The default value. Default is False.</p></li>
-<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A human readable label that will be used in GUI representations (e.g.
-<code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
-<li><p><strong>target</strong> (<em>str</em><em>, </em><em>optional</em>) – The target parameter to set in the processed options dict. Must be a
-valid Python variable name. If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="class">
-<dt id="dask_gateway_server.options.Select">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">Select</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">options</em>, <em class="sig-param">default=None</em>, <em class="sig-param">label=None</em>, <em class="sig-param">target=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.Select" title="Permalink to this definition">¶</a></dt>
-<dd><p>An option field asking users to select between a few choices.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>field</strong> (<em>str</em>) – The field name to use. Must be a valid Python variable name. This will
-be the keyword user’s use to set this field programmatically (e.g.
-<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
-<li><p><strong>options</strong> (<em>list</em>) – A list of valid options. Elements may be a tuple of <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">value)</span></code>,
-or just <code class="docutils literal notranslate"><span class="pre">key</span></code> (in which case the value is the same as the key).
-Values may be any Python object, keys must be strings.</p></li>
-<li><p><strong>default</strong> (<em>str</em><em>, </em><em>optional</em>) – The key for the default option. Defaults to the first listed option.</p></li>
-<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A human readable label that will be used in GUI representations (e.g.
-<code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
-<li><p><strong>target</strong> (<em>str</em><em>, </em><em>optional</em>) – The target parameter to set in the processed options dict. Must be a
-valid Python variable name. If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
 <div class="section" id="user-limits">
 <h2>User Limits<a class="headerlink" href="#user-limits" title="Permalink to this headline">¶</a></h2>
 <dl class="data">
@@ -1820,6 +1803,155 @@ Can be an integer, or a string with one of the following suffixes:</p>
 <li><p>T -&gt; Tebibytes</p></li>
 </ul>
 <p>Set to 0 for no limit (default).</p>
+</dd></dl>
+
+</div>
+<div class="section" id="cluster-manager-options">
+<h2>Cluster Manager Options<a class="headerlink" href="#cluster-manager-options" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="dask_gateway_server.options.Options">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">Options</code><span class="sig-paren">(</span><em class="sig-param">*fields</em>, <em class="sig-param">handler=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.Options" title="Permalink to this definition">¶</a></dt>
+<dd><p>A declarative specification of exposed cluster options.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*fields</strong> (<em>Field</em>) – Zero or more configurable fields.</p></li>
+<li><p><strong>handler</strong> (<em>callable</em><em>, </em><em>optional</em>) – A callable with the signature <code class="docutils literal notranslate"><span class="pre">handler(options)</span></code>, where <code class="docutils literal notranslate"><span class="pre">options</span></code>
+is the validated dict of user options. Should return a dict of
+configuration overrides to forward to the cluster manager. If not
+provided, the default will return the options unchanged.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>Here we expose options for users to configure
+<a class="reference internal" href="#c.ClusterManager.worker_cores" title="c.ClusterManager.worker_cores"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterManager.worker_cores</span></code></a> and
+<a class="reference internal" href="#c.ClusterManager.worker_memory" title="c.ClusterManager.worker_memory"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterManager.worker_memory</span></code></a>. We set bounds on each resource to
+prevent users from requesting too large of a worker. The handler is used to
+convert the user specified memory from GiB to bytes (as expected by
+<a class="reference internal" href="#c.ClusterManager.worker_memory" title="c.ClusterManager.worker_memory"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterManager.worker_memory</span></code></a>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
+
+<span class="k">def</span> <span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;worker_cores&quot;</span><span class="p">:</span> <span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span><span class="p">,</span>
+        <span class="s2">&quot;worker_memory&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">30</span><span class="p">)</span>
+    <span class="p">}</span>
+
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">cluster_manager_options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">(</span>
+    <span class="n">Integer</span><span class="p">(</span><span class="s2">&quot;worker_cores&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Worker Cores&quot;</span><span class="p">),</span>
+    <span class="n">Float</span><span class="p">(</span><span class="s2">&quot;worker_memory&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Worker Memory (GiB)&quot;</span><span class="p">),</span>
+    <span class="n">handler</span><span class="o">=</span><span class="n">options_handler</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="dask_gateway_server.options.Integer">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">Integer</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">default=0</em>, <em class="sig-param">min=None</em>, <em class="sig-param">max=None</em>, <em class="sig-param">label=None</em>, <em class="sig-param">target=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.Integer" title="Permalink to this definition">¶</a></dt>
+<dd><p>An integer field, with optional bounds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field</strong> (<em>str</em>) – The field name to use. Must be a valid Python variable name. This will
+be the keyword users use to set this field programmatically (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
+<li><p><strong>default</strong> (<em>int</em><em>, </em><em>optional</em>) – The default value. Default is 0.</p></li>
+<li><p><strong>min</strong> (<em>int</em><em>, </em><em>optional</em>) – The minimum valid value (inclusive). Unbounded if not set.</p></li>
+<li><p><strong>max</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum valid value (inclusive). Unbounded if not set.</p></li>
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A human readable label that will be used in GUI representations (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+<li><p><strong>target</strong> (<em>str</em><em>, </em><em>optional</em>) – The target parameter to set in the processed options dict. Must be a
+valid Python variable name. If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="dask_gateway_server.options.Float">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">Float</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">default=0</em>, <em class="sig-param">min=None</em>, <em class="sig-param">max=None</em>, <em class="sig-param">label=None</em>, <em class="sig-param">target=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.Float" title="Permalink to this definition">¶</a></dt>
+<dd><p>A float field, with optional bounds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field</strong> (<em>str</em>) – The field name to use. Must be a valid Python variable name. This will
+be the keyword users use to set this field programmatically (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
+<li><p><strong>default</strong> (<em>float</em><em>, </em><em>optional</em>) – The default value. Default is 0.</p></li>
+<li><p><strong>min</strong> (<em>float</em><em>, </em><em>optional</em>) – The minimum valid value (inclusive). Unbounded if not set.</p></li>
+<li><p><strong>max</strong> (<em>float</em><em>, </em><em>optional</em>) – The maximum valid value (inclusive). Unbounded if not set.</p></li>
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A human readable label that will be used in GUI representations (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+<li><p><strong>target</strong> (<em>str</em><em>, </em><em>optional</em>) – The target parameter to set in the processed options dict. Must be a
+valid Python variable name. If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="dask_gateway_server.options.String">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">String</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">default=''</em>, <em class="sig-param">label=None</em>, <em class="sig-param">target=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.String" title="Permalink to this definition">¶</a></dt>
+<dd><p>A string field.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field</strong> (<em>str</em>) – The field name to use. Must be a valid Python variable name. This will
+be the keyword users use to set this field programmatically (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
+<li><p><strong>default</strong> (<em>str</em><em>, </em><em>optional</em>) – The default value. Default is the empty string (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>).</p></li>
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A human readable label that will be used in GUI representations (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+<li><p><strong>target</strong> (<em>str</em><em>, </em><em>optional</em>) – The target parameter to set in the processed options dict. Must be a
+valid Python variable name. If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="dask_gateway_server.options.Bool">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">Bool</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">default=False</em>, <em class="sig-param">label=None</em>, <em class="sig-param">target=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.Bool" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean field.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field</strong> (<em>str</em>) – The field name to use. Must be a valid Python variable name. This will
+be the keyword users use to set this field programmatically (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
+<li><p><strong>default</strong> (<em>bool</em><em>, </em><em>optional</em>) – The default value. Default is False.</p></li>
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A human readable label that will be used in GUI representations (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+<li><p><strong>target</strong> (<em>str</em><em>, </em><em>optional</em>) – The target parameter to set in the processed options dict. Must be a
+valid Python variable name. If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="dask_gateway_server.options.Select">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.options.</code><code class="sig-name descname">Select</code><span class="sig-paren">(</span><em class="sig-param">field</em>, <em class="sig-param">options</em>, <em class="sig-param">default=None</em>, <em class="sig-param">label=None</em>, <em class="sig-param">target=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.options.Select" title="Permalink to this definition">¶</a></dt>
+<dd><p>A select field, allowing users to select between a few choices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field</strong> (<em>str</em>) – The field name to use. Must be a valid Python variable name. This will
+be the keyword users use to set this field programmatically (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
+<li><p><strong>options</strong> (<em>list</em>) – A list of valid options. Elements may be a tuple of <code class="docutils literal notranslate"><span class="pre">(key,</span> <span class="pre">value)</span></code>,
+or just <code class="docutils literal notranslate"><span class="pre">key</span></code> (in which case the value is the same as the key).
+Values may be any Python object, keys must be strings.</p></li>
+<li><p><strong>default</strong> (<em>str</em><em>, </em><em>optional</em>) – The key for the default option. Defaults to the first listed option.</p></li>
+<li><p><strong>label</strong> (<em>str</em><em>, </em><em>optional</em>) – A human readable label that will be used in GUI representations (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+<li><p><strong>target</strong> (<em>str</em><em>, </em><em>optional</em>) – The target parameter to set in the processed options dict. Must be a
+valid Python variable name. If not provided, <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Usage &mdash; Dask Gateway 0.5.0+12.g2fb99f2 documentation</title>
+  <title>Usage &mdash; Dask Gateway 0.5.0+13.g79a4443 documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+12.g2fb99f2
+                0.5.0+13.g79a4443
               </div>
             
           
@@ -166,11 +166,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">For Administrators</span></p>
+<p class="caption"><span class="caption-text">Admin - Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install locally (quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
@@ -321,7 +325,7 @@ with the gateway server only to create a new cluster then using
 instead.</p>
 </div>
 <div class="section" id="configure-a-cluster">
-<h2>Configure a cluster<a class="headerlink" href="#configure-a-cluster" title="Permalink to this headline">¶</a></h2>
+<span id="user-cluster-options"></span><h2>Configure a cluster<a class="headerlink" href="#configure-a-cluster" title="Permalink to this headline">¶</a></h2>
 <p>Some <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> deployments allow users to configure their
 clusters upon launching. Typical options may include specifying worker
 memory/cores or which docker image to use. To see which options (if any) your
@@ -409,7 +413,7 @@ calling <a class="reference internal" href="api-client.html#dask_gateway.Gateway
 <img alt="Manual scaling widget" src="_images/adapt-widget.png" />
 <p>If you wish to disable adaptive scaling later you can pass in <code class="docutils literal notranslate"><span class="pre">active=False</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Disable adaptive scaling</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">cluster</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">active</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">cluster</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">active</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -428,7 +432,7 @@ calling <a class="reference internal" href="api-client.html#dask_gateway.Gateway
 <h2>Run computations on the cluster<a class="headerlink" href="#run-computations-on-the-cluster" title="Permalink to this headline">¶</a></h2>
 <p>At this point you should be able to use normal <code class="docutils literal notranslate"><span class="pre">dask</span></code> methods to do work. For
 example, here we take the mean of a random array.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">dask.array</span> <span class="kn">as</span> <span class="nn">da</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">dask.array</span> <span class="k">as</span> <span class="nn">da</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="n">chunks</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">500</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
 <span class="go">0.0022336223893512945</span>
@@ -464,7 +468,7 @@ do this, set <code class="docutils literal notranslate"><span class="pre">shutdo
 the lifetime of your client process.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a new cluster which will persist longer than the lifetime of the</span>
 <span class="c1"># client process</span>
-<span class="n">cluster</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">new_cluster</span><span class="p">(</span><span class="n">shutdown_on_close</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">cluster</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">new_cluster</span><span class="p">(</span><span class="n">shutdown_on_close</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To connect to a running cluster, you need the cluster’s name (a unique

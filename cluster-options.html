@@ -1,0 +1,462 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Exposing Cluster Options &mdash; Dask Gateway 0.5.0+13.g79a4443 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Client API" href="api-client.html" />
+    <link rel="prev" title="Install on a Kubernetes Cluster" href="install-kube.html" />
+  <link rel="shortcut icon" href="_static/images/favicon.ico"/>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+  
+
+<nav id="explore-links">
+  <a href="https://docs.dask.org/">
+    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+  </a>
+
+  <ul>
+    <li>
+      <a>Get Started</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+        <li><a href="https://examples.dask.org"> Examples </a></li>
+        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+        <li><a href="https://dask.org/slides"> Slides </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="">Algorithms</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+        <li><a href="http://ml.dask.org">Machine Learning</a></li>
+        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a>Community</a>
+      <ul>
+        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+        <li><a href="https://github.com/dask">Github</a></li>
+        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+      </ul>
+    </li>
+  </ul>
+
+</nav>
+
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Dask Gateway
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.5.0+13.g79a4443
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">For Users</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install-local.html">Install locally (quickstart)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Exposing Cluster Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#user-experience">User Experience</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#server-configuration">Server Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#worker-cores-and-memory">Worker Cores and Memory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cluster-profiles">Cluster Profiles</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Dask Gateway</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Exposing Cluster Options</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/cluster-options.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="exposing-cluster-options">
+<h1>Exposing Cluster Options<a class="headerlink" href="#exposing-cluster-options" title="Permalink to this headline">¶</a></h1>
+<p>By default cluster configuration (e.g. worker memory, docker image, etc…) is
+set statically by an administrator in the server configuration file. To allow
+users to change certain parameters when creating a new cluster an administrator
+must explicitly expose them in the configuration.</p>
+<div class="section" id="user-experience">
+<h2>User Experience<a class="headerlink" href="#user-experience" title="Permalink to this headline">¶</a></h2>
+<p>On the user side, exposing options with allows users to:</p>
+<ul class="simple">
+<li><p>Query what options (if any) are available using
+<a class="reference internal" href="api-client.html#dask_gateway.Gateway.cluster_options" title="dask_gateway.Gateway.cluster_options"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dask_gateway.Gateway.cluster_options()</span></code></a></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">cluster_options</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">options</span>
+<span class="go">Options&lt;worker_cores=1, worker_memory=1.0, environment=&#39;basic&#39;&gt;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Specify configuration overrides for exposed fields as keyword
+arguments to <a class="reference internal" href="api-client.html#dask_gateway.Gateway.new_cluster" title="dask_gateway.Gateway.new_cluster"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dask_gateway.Gateway.new_cluster()</span></code></a> or
+<a class="reference internal" href="api-client.html#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dask_gateway.GatewayCluster()</span></code></a>.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using Gateway.new_cluster</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">cluster</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">new_cluster</span><span class="p">(</span><span class="n">worker_cores</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">)</span>
+
+<span class="c1"># Or using the GatewayCluster constructor</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">cluster</span> <span class="o">=</span> <span class="n">GatewayCluster</span><span class="p">(</span><span class="n">worker_cores</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>If working in a notebook, use the <a class="reference external" href="https://ipywidgets.readthedocs.io/en/latest/">ipywidgets</a> based GUI to configure a
+cluster.</p></li>
+</ul>
+<img alt="Cluster options widget" src="_images/options-widget.png" />
+<p>See <a class="reference internal" href="usage.html#user-cluster-options"><span class="std std-ref">Configure a cluster</span></a> for more information on the user experience.</p>
+</div>
+<div class="section" id="server-configuration">
+<h2>Server Configuration<a class="headerlink" href="#server-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Options are exposed to the user by setting
+<a class="reference internal" href="api-server.html#c.DaskGateway.cluster_manager_options" title="c.DaskGateway.cluster_manager_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.cluster_manager_options</span></code></a>. This configuration field takes
+a <a class="reference internal" href="api-server.html#dask_gateway_server.options.Options" title="dask_gateway_server.options.Options"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.options.Options</span></code></a> object, which describes what
+options are exposed to end users, and how the gateway server should interpret
+those options.</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-server.html#dask_gateway_server.options.Options" title="dask_gateway_server.options.Options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Options</span></code></a>(*fields[, handler])</p></td>
+<td><p>A declarative specification of exposed cluster options.</p></td>
+</tr>
+</tbody>
+</table>
+<p>A <a class="reference internal" href="api-server.html#dask_gateway_server.options.Options" title="dask_gateway_server.options.Options"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.options.Options</span></code></a> object takes two arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">*fields</span></code>: One or more <code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.options.Field</span></code> objects,
+which provide a typed declarative specification of each user facing option.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">handler</span></code>: An optional handler function for translating the values set by
+those options into configuration values to set on the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.managers.ClusterManager</span></code>.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">Field</span></code> objects provide typed specifications for a user facing option. There
+are several different <code class="docutils literal notranslate"><span class="pre">Field</span></code> classes available, each representing a
+different common type:</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-server.html#dask_gateway_server.options.Integer" title="dask_gateway_server.options.Integer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Integer</span></code></a>(field[, default, min, max, label, …])</p></td>
+<td><p>An integer field, with optional bounds.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-server.html#dask_gateway_server.options.Float" title="dask_gateway_server.options.Float"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Float</span></code></a>(field[, default, min, max, label, target])</p></td>
+<td><p>A float field, with optional bounds.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-server.html#dask_gateway_server.options.Bool" title="dask_gateway_server.options.Bool"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bool</span></code></a>(field[, default, label, target])</p></td>
+<td><p>A boolean field.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api-server.html#dask_gateway_server.options.String" title="dask_gateway_server.options.String"><code class="xref py py-obj docutils literal notranslate"><span class="pre">String</span></code></a>(field[, default, label, target])</p></td>
+<td><p>A string field.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api-server.html#dask_gateway_server.options.Select" title="dask_gateway_server.options.Select"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Select</span></code></a>(field, options[, default, label, target])</p></td>
+<td><p>A select field, allowing users to select between a few choices.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Each field supports the following standard parameters:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">field</span></code>: The field name to use. Must be a valid Python identifier. This
+will be the keyword users use to set this field programmatically (e.g.
+<code class="docutils literal notranslate"><span class="pre">&quot;worker_cores&quot;</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">default</span></code>: The default value if the user doesn’t specify this field.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label</span></code>: A human readable label that will be used in GUI representations
+(e.g. <code class="docutils literal notranslate"><span class="pre">&quot;Worker</span> <span class="pre">Cores&quot;</span></code>). Optional, if not provided <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">target</span></code>: The target key to set in the processed options dict. Must be a
+valid Python identifier. Optional, if not provided <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
+</ul>
+<p>After validation (type, bounds, etc…), a dictionary of all options for a
+requested cluster is passed to a <code class="docutils literal notranslate"><span class="pre">handler</span></code> function. Here any additional
+validation can be done (errors raised in the handler are forwarded to the
+user), as well as any conversion needed between the exposed option fields and
+configuration fields on the backing
+<code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.managers.ClusterManager</span></code>. The default <code class="docutils literal notranslate"><span class="pre">handler</span></code>
+returns the provided options unchanged.</p>
+</div>
+<div class="section" id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="worker-cores-and-memory">
+<h3>Worker Cores and Memory<a class="headerlink" href="#worker-cores-and-memory" title="Permalink to this headline">¶</a></h3>
+<p>Here we expose options for users to configure
+<a class="reference internal" href="api-server.html#c.ClusterManager.worker_cores" title="c.ClusterManager.worker_cores"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterManager.worker_cores</span></code></a> and
+<a class="reference internal" href="api-server.html#c.ClusterManager.worker_memory" title="c.ClusterManager.worker_memory"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterManager.worker_memory</span></code></a>. We set bounds on each resource to
+prevent users from requesting too large of a worker. The handler is used to
+convert the user specified memory from GiB to bytes (as expected by
+<a class="reference internal" href="api-server.html#c.ClusterManager.worker_memory" title="c.ClusterManager.worker_memory"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterManager.worker_memory</span></code></a>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
+
+<span class="k">def</span> <span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;worker_cores&quot;</span><span class="p">:</span> <span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span><span class="p">,</span>
+        <span class="s2">&quot;worker_memory&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">30</span><span class="p">),</span>
+    <span class="p">}</span>
+
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">cluster_manager_options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">(</span>
+    <span class="n">Integer</span><span class="p">(</span><span class="s2">&quot;worker_cores&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Worker Cores&quot;</span><span class="p">),</span>
+    <span class="n">Float</span><span class="p">(</span><span class="s2">&quot;worker_memory&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Worker Memory (GiB)&quot;</span><span class="p">),</span>
+    <span class="n">handler</span><span class="o">=</span><span class="n">options_handler</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cluster-profiles">
+<h3>Cluster Profiles<a class="headerlink" href="#cluster-profiles" title="Permalink to this headline">¶</a></h3>
+<p>Instead of exposing individual options, you may instead wish to expose
+“profiles” - user-friendly names for common groups of options. For example,
+here we provide 3 cluster profiles (small, medium, and large) a user can select
+from.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Select</span>
+
+<span class="c1"># A mapping from profile name to configuration overrides</span>
+<span class="n">profiles</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;small&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;worker_cores&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;worker_memory&quot;</span><span class="p">:</span> <span class="s2">&quot;4 G&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;medium&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;worker_cores&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;worker_memory&quot;</span><span class="p">:</span> <span class="s2">&quot;8 G&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;large&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;worker_cores&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;worker_memory&quot;</span><span class="p">:</span> <span class="s2">&quot;16 G&quot;</span><span class="p">},</span>
+<span class="p">}</span>
+
+<span class="c1"># Expose `profile` as an option, valid values are &#39;small&#39;, &#39;medium&#39;, or</span>
+<span class="c1"># &#39;large&#39;. A handler is used to convert the profile name to the</span>
+<span class="c1"># corresponding configuration overrides.</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">cluster_manager_options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">(</span>
+    <span class="n">Select</span><span class="p">(</span>
+        <span class="s2">&quot;profile&quot;</span><span class="p">,</span>
+        <span class="p">[</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span> <span class="s2">&quot;large&quot;</span><span class="p">],</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;medium&quot;</span><span class="p">,</span>
+        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Cluster Profile&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">options</span><span class="p">:</span> <span class="n">profiles</span><span class="p">[</span><span class="n">options</span><span class="o">.</span><span class="n">profile</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api-client.html" class="btn btn-neutral float-right" title="Client API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install-kube.html" class="btn btn-neutral float-left" title="Install on a Kubernetes Cluster" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Jim Crist
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

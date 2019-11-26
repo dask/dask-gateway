@@ -4,6 +4,7 @@
 ./_images/scale-widget.png
 ./_sources/api-client.rst.txt
 ./_sources/api-server.rst.txt
+./_sources/cluster-options.rst.txt
 ./_sources/configuration-user.rst.txt
 ./_sources/develop.rst.txt
 ./_sources/index.rst.txt
@@ -73,6 +74,7 @@
 ./_static/underscore.js
 ./api-client.html
 ./api-server.html
+./cluster-options.html
 ./configuration-user.html
 ./develop.html
 ./genindex.html
