@@ -64,17 +64,6 @@ both the cluster backend and the authentication protocol are pluggable.
 - Basic (for testing only)
 
 
-Installation
-------------
-
-As Dask-Gateway can be installed in many different environments, we provide
-instructions for a few different setups.
-
-- :doc:`install-local`
-- :doc:`install-hadoop`
-- :doc:`install-kube`
-
-
 .. toctree::
    :maxdepth: 1
    :hidden:
@@ -87,11 +76,18 @@ instructions for a few different setups.
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: For Administrators
+   :caption: Admin - Installation
 
    install-local
    install-hadoop
    install-kube
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Admin - Customization
+
+   cluster-options
 
 .. toctree::
    :maxdepth: 1

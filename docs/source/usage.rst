@@ -96,6 +96,9 @@ with the gateway server only to create a new cluster then using
 instead.
 
 
+.. _user-cluster-options:
+
+
 Configure a cluster
 -------------------
 

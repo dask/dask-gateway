@@ -20,6 +20,7 @@ docs = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(docs, "sphinxext"))
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
     "sphinx.ext.napoleon",
     "autodoc_traitlets",

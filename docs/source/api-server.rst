@@ -30,6 +30,15 @@ Dummy
 Cluster Managers
 ----------------
 
+Base Class
+^^^^^^^^^^
+
+ClusterManager
+~~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.managers.base.ClusterManager
+
+
 Local Processes
 ^^^^^^^^^^^^^^^
 
@@ -94,6 +103,12 @@ Scheduler Proxy
 .. autoconfigurable:: dask_gateway_server.proxy.SchedulerProxy
 
 
+User Limits
+-----------
+
+.. autoconfigurable:: dask_gateway_server.limits.UserLimits
+
+
 Cluster Manager Options
 -----------------------
 
@@ -108,9 +123,3 @@ Cluster Manager Options
 .. autoclass:: dask_gateway_server.options.Bool
 
 .. autoclass:: dask_gateway_server.options.Select
-
-
-User Limits
------------
-
-.. autoconfigurable:: dask_gateway_server.limits.UserLimits
