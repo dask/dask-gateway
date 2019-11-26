@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+11.gd537b7a documentation</title>
+  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+12.g2fb99f2 documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+11.gd537b7a
+                0.5.0+12.g2fb99f2
               </div>
             
           
@@ -433,13 +433,11 @@ gateway. Set to False to leave active clusters running.</p>
 
 <dl class="data">
 <dt id="c.DaskGateway.temp_dir">
-<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">temp_dir</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.DaskGateway.temp_dir" title="Permalink to this definition">¶</a></dt>
-<dd><p>Path to a directory to use to store temporary runtime files.</p>
-<p>The permissions on this directory must be restricted to <code class="docutils literal notranslate"><span class="pre">0o700</span></code>. If
-the directory doesn’t already exist, it will be created on startup and
-removed on shutdown.</p>
-<p>The default is to create a temporary directory
-<code class="docutils literal notranslate"><span class="pre">&quot;dask-gateway-&lt;UUID&gt;&quot;</span></code> in the system tmpdir default location.</p>
+<code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">temp_dir</code><em class="property"> = Unicode(None)</em><a class="headerlink" href="#c.DaskGateway.temp_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>The directory to use when creating temporary runtime files.</p>
+<p>Defaults to the platform’s temporary directory, see
+<a class="reference external" href="https://docs.python.org/3/library/tempfile.html#tempfile.gettempdir">https://docs.python.org/3/library/tempfile.html#tempfile.gettempdir</a> for
+more information.</p>
 </dd></dl>
 
 <dl class="data">
@@ -564,6 +562,7 @@ of failures.</p>
 <p>A subdirectory will be created for each new cluster which will serve as
 the working directory for that cluster. On cluster shutdown the
 subdirectory will be removed.</p>
+<p>If not specified, a temporary directory will be used for each cluster.</p>
 </dd></dl>
 
 <dl class="data">
@@ -700,6 +699,7 @@ of failures.</p>
 <p>A subdirectory will be created for each new cluster which will serve as
 the working directory for that cluster. On cluster shutdown the
 subdirectory will be removed.</p>
+<p>If not specified, a temporary directory will be used for each cluster.</p>
 </dd></dl>
 
 <dl class="data">
