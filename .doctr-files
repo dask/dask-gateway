@@ -12,6 +12,7 @@
 ./_sources/install-kube.rst.txt
 ./_sources/install-local.rst.txt
 ./_sources/install-user.rst.txt
+./_sources/resource-limits.rst.txt
 ./_sources/usage.rst.txt
 ./_static/basic.css
 ./_static/css/badge_only.css
@@ -84,6 +85,7 @@
 ./install-local.html
 ./install-user.html
 ./objects.inv
+./resource-limits.html
 ./search.html
 ./searchindex.js
 ./usage.html
