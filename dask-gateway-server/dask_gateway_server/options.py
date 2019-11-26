@@ -36,7 +36,7 @@ class FrozenAttrDict(Mapping):
 
 
 class Options(object):
-    """A description of cluster options.
+    """A declarative specification of exposed cluster options.
 
     Parameters
     ----------
@@ -47,6 +47,32 @@ class Options(object):
         is the validated dict of user options. Should return a dict of
         configuration overrides to forward to the cluster manager. If not
         provided, the default will return the options unchanged.
+
+    Example
+    -------
+
+    Here we expose options for users to configure
+    :data:`c.ClusterManager.worker_cores` and
+    :data:`c.ClusterManager.worker_memory`. We set bounds on each resource to
+    prevent users from requesting too large of a worker. The handler is used to
+    convert the user specified memory from GiB to bytes (as expected by
+    :data:`c.ClusterManager.worker_memory`).
+
+    .. code-block:: python
+
+      from dask_gateway_server.options import Options, Integer, Float
+
+      def options_handler(options):
+          return {
+              "worker_cores": options.worker_cores,
+              "worker_memory": int(options.worker_memory * 2 ** 30)
+          }
+
+      c.DaskGateway.cluster_manager_options = Options(
+          Integer("worker_cores", default=1, min=1, max=4, label="Worker Cores"),
+          Float("worker_memory", default=1, min=1, max=8, label="Worker Memory (GiB)"),
+          handler=options_handler,
+      )
     """
 
     def __init__(self, *fields, handler=None):
@@ -93,7 +119,7 @@ Parameters
 ----------
 field : str
     The field name to use. Must be a valid Python variable name. This will
-    be the keyword user's use to set this field programmatically (e.g.
+    be the keyword users use to set this field programmatically (e.g.
     ``"worker_cores"``).
 {params}
 label : str, optional
@@ -150,7 +176,7 @@ class Field(object):
 
 
 @field_doc(
-    description="A string option field.",
+    description="A string field.",
     params="""
     default : str, optional
         The default value. Default is the empty string (``""``).
@@ -170,7 +196,7 @@ class String(Field):
 
 
 @field_doc(
-    description="A boolean option field.",
+    description="A boolean field.",
     params="""
     default : bool, optional
         The default value. Default is False.
@@ -208,7 +234,7 @@ class Number(Field):
 
 
 @field_doc(
-    description="An integer option field.",
+    description="An integer field, with optional bounds.",
     params="""
     default : int, optional
         The default value. Default is 0.
@@ -229,7 +255,7 @@ class Integer(Number):
 
 
 @field_doc(
-    description="A float option field.",
+    description="A float field, with optional bounds.",
     params="""
     default : float, optional
         The default value. Default is 0.
@@ -252,7 +278,7 @@ class Float(Number):
 
 
 @field_doc(
-    description="An option field asking users to select between a few choices.",
+    description="A select field, allowing users to select between a few choices.",
     params="""
     options : list
         A list of valid options. Elements may be a tuple of ``(key, value)``,

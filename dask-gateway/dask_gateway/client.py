@@ -448,7 +448,7 @@ class Gateway(object):
 
         Returns
         -------
-        cluster_options : Options
+        cluster_options : dask_gateway.options.Options
             A dict of cluster options.
         """
         return self.sync(
@@ -486,7 +486,7 @@ class Gateway(object):
 
         Parameters
         ----------
-        cluster_options : Options, optional
+        cluster_options : dask_gateway.options.Options, optional
             An ``Options`` object describing the desired cluster configuration.
         **kwargs :
             Additional cluster configuration options. If ``cluster_options`` is
@@ -564,7 +564,7 @@ class Gateway(object):
 
         Parameters
         ----------
-        cluster_options : Options, optional
+        cluster_options : dask_gateway.options.Options, optional
             An ``Options`` object describing the desired cluster configuration.
         shutdown_on_close : bool, optional
             If True (default), the cluster will be automatically shutdown on

@@ -166,7 +166,9 @@ class DaskGateway(Application):
         User options for configuring the cluster manager.
 
         Allows users to specify configuration overrides when creating a new
-        cluster manager. See the documentation for more information.
+        cluster manager. See the documentation for more information:
+
+        :doc:`cluster-options`.
         """,
         config=True,
     )
