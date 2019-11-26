@@ -208,7 +208,9 @@ class YarnClusterManager(ClusterManager):
             dir=self.temp_dir
         ) as key_fil:
             cert_fil.write(self.tls_cert)
+            cert_fil.file.flush()
             key_fil.write(self.tls_key)
+            key_fil.file.flush()
             yield cert_fil.name, key_fil.name
 
     @property
