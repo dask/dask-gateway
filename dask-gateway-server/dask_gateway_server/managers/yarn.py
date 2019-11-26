@@ -1,7 +1,7 @@
 import asyncio
-import os
 from collections import OrderedDict
 from contextlib import contextmanager
+from tempfile import NamedTemporaryFile
 
 try:
     import skein
@@ -204,21 +204,14 @@ class YarnClusterManager(ClusterManager):
         -------
         cert_path, key_path
         """
-        prefix = os.path.join(self.temp_dir, self.cluster_name)
-        cert_path = prefix + ".crt"
-        key_path = prefix + ".pem"
-
-        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-        try:
-            for path, data in [(cert_path, self.tls_cert), (key_path, self.tls_key)]:
-                with os.fdopen(os.open(path, flags, 0o600), "wb") as fil:
-                    fil.write(data)
-
-            yield cert_path, key_path
-        finally:
-            for path in [cert_path, key_path]:
-                if os.path.exists(path):
-                    os.unlink(path)
+        with NamedTemporaryFile(dir=self.temp_dir) as cert_fil, NamedTemporaryFile(
+            dir=self.temp_dir
+        ) as key_fil:
+            cert_fil.write(self.tls_cert)
+            cert_fil.file.flush()
+            key_fil.write(self.tls_key)
+            key_fil.file.flush()
+            yield cert_fil.name, key_fil.name
 
     @property
     def worker_command_list(self):

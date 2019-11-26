@@ -39,7 +39,7 @@ def kdestroy():
 
 @pytest.mark.asyncio
 async def test_basic_auth(tmpdir):
-    async with temp_gateway(temp_dir=str(tmpdir.join("dask-gateway"))) as gateway_proc:
+    async with temp_gateway(temp_dir=str(tmpdir)) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_urls.connect_url,
             proxy_address=gateway_proc.gateway_urls.connect_url,
@@ -52,7 +52,7 @@ async def test_basic_auth(tmpdir):
 @pytest.mark.asyncio
 async def test_basic_auth_password(tmpdir):
     config = Config()
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.DaskGateway.authenticator_class = (
         "dask_gateway_server.auth.DummyAuthenticator"
     )
@@ -80,7 +80,7 @@ async def test_basic_auth_password(tmpdir):
 async def test_kerberos_auth(tmpdir):
     config = Config()
     config.DaskGateway.public_url = "http://master.example.com:0"
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.DaskGateway.authenticator_class = (
         "dask_gateway_server.auth.KerberosAuthenticator"
     )
@@ -158,7 +158,7 @@ async def test_jupyterhub_auth(tmpdir, monkeypatch):
     # Configure gateway
     config = Config()
     config.DaskGateway.public_url = gateway_address + "/services/dask-gateway/"
-    config.DaskGateway.temp_dir = str(tmpdir.join("dask-gateway"))
+    config.DaskGateway.temp_dir = str(tmpdir)
     config.DaskGateway.authenticator_class = (
         "dask_gateway_server.auth.JupyterHubAuthenticator"
     )

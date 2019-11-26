@@ -1,5 +1,4 @@
 import asyncio
-import shutil
 import socket
 import weakref
 from urllib.parse import urlparse
@@ -196,14 +195,6 @@ class ServerUrls(object):
         If listening on all interfaces, logs both localhost and hostname"""
         url = self.connect if self._connect_specified else self.bind
         return [u.geturl() for u in self._resolve_urls(url)]
-
-
-def cleanup_tmpdir(log, path):
-    try:
-        log.debug("Removing temporary directory %r", path)
-        shutil.rmtree(path)
-    except Exception as exc:
-        log.error("Failed to remove temporary directory %r.", path, exc_info=exc)
 
 
 async def cancel_task(task):

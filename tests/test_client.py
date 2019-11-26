@@ -200,8 +200,7 @@ async def test_client_fetch_timeout():
 @pytest.mark.asyncio
 async def test_client_reprs(tmpdir):
     async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
     ) as gateway_proc:
         async with Gateway(
             address=gateway_proc.public_urls.connect_url,
@@ -253,8 +252,7 @@ async def test_cluster_widget(tmpdir):
             assert (template % 1) in cluster._widget_status()
 
     async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
     ) as gateway_proc:
         loop = get_running_loop()
         await loop.run_in_executor(None, test)
@@ -265,8 +263,7 @@ async def test_dashboard_link_from_public_address(tmpdir):
     pytest.importorskip("bokeh")
 
     async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
     ) as gateway_proc:
         with dask.config.set(
             gateway__address=gateway_proc.public_urls.connect_url,
@@ -289,8 +286,7 @@ async def test_dashboard_link_from_public_address(tmpdir):
 @pytest.mark.asyncio
 async def test_create_cluster_with_GatewayCluster_constructor(tmpdir):
     async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
     ) as gateway_proc:
         async with GatewayCluster(
             address=gateway_proc.public_urls.connect_url,
@@ -324,8 +320,7 @@ async def test_create_cluster_with_GatewayCluster_constructor(tmpdir):
 @pytest.mark.asyncio
 async def test_GatewayCluster_shutdown_on_close(tmpdir):
     async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
     ) as gateway_proc:
 
         def test():
@@ -354,8 +349,7 @@ async def test_GatewayCluster_shutdown_on_close(tmpdir):
 @pytest.mark.asyncio
 async def test_GatewayCluster_cleanup_atexit(tmpdir):
     async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager,
-        temp_dir=str(tmpdir.join("dask-gateway")),
+        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
     ) as gateway_proc:
 
         def test():

@@ -135,7 +135,7 @@ class ClusterManager(LoggingConfigurable):
     # Common parameters forwarded by gateway application
     task_pool = Instance(TaskPool, args=())
     api_url = Unicode()
-    temp_dir = Unicode()
+    temp_dir = Unicode(allow_none=True)
 
     def get_tls_paths(self):
         """Get the absolute paths to the tls cert and key files."""
