@@ -75,6 +75,8 @@ KubeClusterManager
 .. autoconfigurable:: dask_gateway_server.managers.kubernetes.KubeClusterManager
 
 
+.. _jobqueue-config:
+
 Job Queues
 ^^^^^^^^^^
 

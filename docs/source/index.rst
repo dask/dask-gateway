@@ -81,6 +81,7 @@ both the cluster backend and the authentication protocol are pluggable.
    install-local
    install-hadoop
    install-kube
+   install-jobqueue
 
 .. toctree::
    :maxdepth: 1

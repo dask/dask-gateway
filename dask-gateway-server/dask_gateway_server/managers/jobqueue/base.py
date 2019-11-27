@@ -118,7 +118,7 @@ class JobQueueClusterManager(ClusterManager):
         temporary files for that cluster. On cluster shutdown the subdirectory
         will be removed.
 
-        This field can be a template, which recieves the following fields:
+        This field can be a template, which receives the following fields:
 
         - home (the user's home directory)
         - username (the user's name)
