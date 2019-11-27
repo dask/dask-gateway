@@ -27,6 +27,8 @@ Dummy
 .. autoconfigurable:: dask_gateway_server.auth.DummyAuthenticator
 
 
+.. _cluster-managers-reference:
+
 Cluster Managers
 ----------------
 
