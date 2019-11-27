@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+14.gc63f048 documentation</title>
+  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+15.g7b8f930 documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+14.gc63f048
+                0.5.0+15.g7b8f930
               </div>
             
           
@@ -160,6 +160,7 @@
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Admin - Customization</span></p>
 <ul>
@@ -1312,7 +1313,7 @@ of failures.</p>
 </div>
 </div>
 <div class="section" id="job-queues">
-<h3>Job Queues<a class="headerlink" href="#job-queues" title="Permalink to this headline">¶</a></h3>
+<span id="jobqueue-config"></span><h3>Job Queues<a class="headerlink" href="#job-queues" title="Permalink to this headline">¶</a></h3>
 <div class="section" id="pbsclustermanager">
 <h4>PBSClusterManager<a class="headerlink" href="#pbsclustermanager" title="Permalink to this headline">¶</a></h4>
 <dl class="data">
@@ -1431,7 +1432,7 @@ suffixes:</p>
 <p>A subdirectory will be created for each new cluster which will store
 temporary files for that cluster. On cluster shutdown the subdirectory
 will be removed.</p>
-<p>This field can be a template, which recieves the following fields:</p>
+<p>This field can be a template, which receives the following fields:</p>
 <ul class="simple">
 <li><p>home (the user’s home directory)</p></li>
 <li><p>username (the user’s name)</p></li>
@@ -1611,7 +1612,7 @@ suffixes:</p>
 <p>A subdirectory will be created for each new cluster which will store
 temporary files for that cluster. On cluster shutdown the subdirectory
 will be removed.</p>
-<p>This field can be a template, which recieves the following fields:</p>
+<p>This field can be a template, which receives the following fields:</p>
 <ul class="simple">
 <li><p>home (the user’s home directory)</p></li>
 <li><p>username (the user’s name)</p></li>

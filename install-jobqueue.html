@@ -1,0 +1,617 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Install on an HPC Job Queue &mdash; Dask Gateway 0.5.0+15.g7b8f930 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Exposing Cluster Options" href="cluster-options.html" />
+    <link rel="prev" title="Install on a Kubernetes Cluster" href="install-kube.html" />
+  <link rel="shortcut icon" href="_static/images/favicon.ico"/>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+  
+
+<nav id="explore-links">
+  <a href="https://docs.dask.org/">
+    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+  </a>
+
+  <ul>
+    <li>
+      <a>Get Started</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+        <li><a href="https://examples.dask.org"> Examples </a></li>
+        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+        <li><a href="https://dask.org/slides"> Slides </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="">Algorithms</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+        <li><a href="http://ml.dask.org">Machine Learning</a></li>
+        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a>Community</a>
+      <ul>
+        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+        <li><a href="https://github.com/dask">Github</a></li>
+        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+      </ul>
+    </li>
+  </ul>
+
+</nav>
+
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Dask Gateway
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.5.0+15.g7b8f930
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">For Users</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Install on an HPC Job Queue</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#create-a-user-account">Create a user account</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-install-directories">Create install directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-a-python-environment">Install a python environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-dask-gateway-server">Install dask-gateway-server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#enable-permissions-for-the-dask-user">Enable permissions for the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configure-dask-gateway-server">Configure dask-gateway-server</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#specify-cluster-manager-backend">Specify cluster manager backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#specify-user-python-environments">Specify user python environments</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#using-a-fixed-environment-path">Using a fixed environment path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#user-configurable-python-environments">User-configurable python environments</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#additional-configuration-options">Additional configuration options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#open-relevant-ports">Open relevant ports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#start-dask-gateway-server">Start dask-gateway-server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validate-things-are-working">Validate things are working</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">User Resource Limits</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Dask Gateway</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Install on an HPC Job Queue</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/install-jobqueue.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="install-on-an-hpc-job-queue">
+<h1>Install on an HPC Job Queue<a class="headerlink" href="#install-on-an-hpc-job-queue" title="Permalink to this headline">¶</a></h1>
+<p>Here we provide instructions for installing and configuring
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a HPC Job Queue system like <a class="reference external" href="https://www.pbspro.org/">PBS</a> or <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a>. Note
+that <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> only needs to be installed on one node (typically
+an edge node).</p>
+<p>Currently only <a class="reference external" href="https://www.pbspro.org/">PBS</a> and <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a> are supported, but support for additional
+backends is planned. If this is something you’re interested in, please <a class="reference external" href="https://github.com/dask/dask-gateway/issues">file an
+issue</a>.</p>
+<div class="section" id="create-a-user-account">
+<h2>Create a user account<a class="headerlink" href="#create-a-user-account" title="Permalink to this headline">¶</a></h2>
+<p>Before installing anything, you’ll need to create the user account which will
+be used to run the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> process. The name of the user
+doesn’t matter, only the permissions they have. Here we’ll use <code class="docutils literal notranslate"><span class="pre">dask</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ adduser dask
+</pre></div>
+</div>
+</div>
+<div class="section" id="create-install-directories">
+<h2>Create install directories<a class="headerlink" href="#create-install-directories" title="Permalink to this headline">¶</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> installation has three types of files which will need
+their own directories created before installation:</p>
+<ul class="simple">
+<li><p>Software files: This includes a Python environment and all required
+libraries. Here we use <code class="docutils literal notranslate"><span class="pre">/opt/dask-gateway</span></code>.</p></li>
+<li><p>Configuration files: Here we use <code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway</span></code>.</p></li>
+<li><p>Runtime files: Here we use <code class="docutils literal notranslate"><span class="pre">/var/dask-gateway</span></code>.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Software files</span>
+$ mkdir -p /opt/dask-gateway
+
+<span class="c1"># Configuration files</span>
+$ mkdir /etc/dask-gateway
+
+<span class="c1"># Runtime files</span>
+$ mkdir /var/dask-gateway
+$ chown dask /var/dask-gateway
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-a-python-environment">
+<h2>Install a python environment<a class="headerlink" href="#install-a-python-environment" title="Permalink to this headline">¶</a></h2>
+<p>To avoid interactions between the system python installation and
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, we’ll install a full Python environment into the
+software directory. The easiest way to do this is to use <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>, but this
+isn’t a strict requirement.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
+$ bash /tmp/miniconda.sh -b -p /opt/dask-gateway/miniconda
+$ rm /tmp/miniconda.sh
+</pre></div>
+</div>
+<p>We also recommend adding miniconda to the <code class="docutils literal notranslate"><span class="pre">root</span></code> user’s path to ease further
+commands.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;export PATH=&quot;/opt/dask-gateway/miniconda/bin:$PATH&quot;&#39;</span> &gt;&gt; /root/.bashrc
+$ <span class="nb">source</span> /root/.bashrc
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-dask-gateway-server">
+<h2>Install dask-gateway-server<a class="headerlink" href="#install-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
+<p>Now we can install <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> and its dependencies.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install -y -c conda-forge dask-gateway-server
+</pre></div>
+</div>
+</div>
+<div class="section" id="enable-permissions-for-the-dask-user">
+<h2>Enable permissions for the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user<a class="headerlink" href="#enable-permissions-for-the-dask-user" title="Permalink to this headline">¶</a></h2>
+<p>For <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to work properly, you’ll need to enable <a class="reference external" href="https://en.wikipedia.org/wiki/Sudo">sudo</a>
+permissions for the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user account. At a minimum, the <code class="docutils literal notranslate"><span class="pre">dask</span></code> account
+will need passwordless permissions to run the
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-jobqueue-launcher</span></code> command (installed as part of
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> above) as any dask-gateway user.  The
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-jobqueue-launcher</span></code> script is responsible for launching,
+tracking, and stopping batch jobs for individual users, and thus needs to be
+sudo-executed as them for permissions to be transferred appropriately.</p>
+<p>An example entry in <code class="docutils literal notranslate"><span class="pre">sudoers</span></code> might look like:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Cmnd_Alias DASK_GATEWAY_JOBQUEUE_LAUNCHER = /opt/dask-gateway/miniconda/bin/dask-gateway-jobqueue-launcher
+
+%dask_users ALL=(dask) /usr/bin/sudo
+dask ALL=(%dask_users) NOPASSWD:DASK_GATEWAY_JOBQUEUE_LAUNCHER
+</pre></div>
+</div>
+<p>Additionaly, when using <a class="reference external" href="https://www.pbspro.org/">PBS</a> you’ll need to make the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user a PBS
+Operator:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ qmgr -c <span class="s2">&quot;set server operators += dask@pbs&quot;</span>
+</pre></div>
+</div>
+<p>Operator level permissions are needed in <a class="reference external" href="https://www.pbspro.org/">PBS</a> to allow <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>
+to more efficiently track the status of all users’ jobs.</p>
+</div>
+<div class="section" id="configure-dask-gateway-server">
+<h2>Configure dask-gateway-server<a class="headerlink" href="#configure-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
+<p>Now we’re ready to configure our <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> installation.
+Configuration is written as a Python file (typically
+<code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway/dask_gateway_config.py</span></code>). Options are assigned to a config
+object <code class="docutils literal notranslate"><span class="pre">c</span></code>, which is then loaded by the gateway on startup. You are free to
+use any python syntax/libraries in this file that you want, the only things
+that matter to <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> are the values set on the <code class="docutils literal notranslate"><span class="pre">c</span></code> config
+object.</p>
+<p>Here we’ll walk through a few common configuration options you may want to set.</p>
+<div class="section" id="specify-cluster-manager-backend">
+<h3>Specify cluster manager backend<a class="headerlink" href="#specify-cluster-manager-backend" title="Permalink to this headline">¶</a></h3>
+<p>First you’ll need to specify which cluster manager backend to use by setting
+<a class="reference internal" href="api-server.html#c.DaskGateway.cluster_manager_class" title="c.DaskGateway.cluster_manager_class"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.cluster_manager_class</span></code></a>. You have a few options:</p>
+<ul class="simple">
+<li><p>PBS: <code class="docutils literal notranslate"><span class="pre">dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager</span></code></p></li>
+<li><p>Slurm: <code class="docutils literal notranslate"><span class="pre">dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager</span></code></p></li>
+</ul>
+<p>For example, here we configure the gateway to use the PBS cluster manager:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the gateway to use PBS</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">cluster_manager_class</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="configure-the-server-addresses-optional">
+<h3>Configure the server addresses (optional)<a class="headerlink" href="#configure-the-server-addresses-optional" title="Permalink to this headline">¶</a></h3>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> will listen at the following addresses:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">http://:8000</span></code>: the public facing URL of the whole application. Set by
+<code class="docutils literal notranslate"><span class="pre">c.DaskGateway.public_url</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tls://:8786</span></code>: the scheduler proxy address, set by
+<code class="docutils literal notranslate"><span class="pre">c.DaskGateway.gateway_url</span></code>.</p></li>
+</ul>
+<p>If you’d rather serve at different ports, you can configure these yourself:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">public_url</span> <span class="o">=</span> <span class="s1">&#39;http://:&lt;PORT-1&gt;&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">gateway_url</span> <span class="o">=</span> <span class="s1">&#39;http://:&lt;PORT-2&gt;&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="specify-user-python-environments">
+<h3>Specify user python environments<a class="headerlink" href="#specify-user-python-environments" title="Permalink to this headline">¶</a></h3>
+<p>Since the Dask workers/schedulers will be running on disparate nodes across the
+cluster, you’ll need to provide a way for Python environments to be available
+on every node. You have a few options here:</p>
+<ul class="simple">
+<li><p>Use a fixed path to a Python environment available on every node</p></li>
+<li><p>Allow users to specify the location of the Python environment (recommended)</p></li>
+</ul>
+<p>In either case, the Python environment requires at least the <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code>
+package be installed to work properly.</p>
+<div class="section" id="using-a-fixed-environment-path">
+<h4>Using a fixed environment path<a class="headerlink" href="#using-a-fixed-environment-path" title="Permalink to this headline">¶</a></h4>
+<p>If identical Python environments are available on every node (either local
+disk, or NFS mount), you only need to configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use
+the provided Python. This could be done a few different ways:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterManager</span><span class="o">.</span><span class="n">scheduler_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-gateway-scheduler&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterManager</span><span class="o">.</span><span class="n">worker_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-gateway-worker&quot;</span>
+
+<span class="c1"># OR</span>
+<span class="c1"># Activate a local conda environment before startup</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/miniconda/bin/activate /path/to/environment&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/miniconda/bin/activate /path/to/environment&#39;</span>
+
+<span class="c1"># OR</span>
+<span class="c1"># Activate a virtual environment before startup</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/your/environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/your/environment/bin/activate&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="user-configurable-python-environments">
+<h4>User-configurable python environments<a class="headerlink" href="#user-configurable-python-environments" title="Permalink to this headline">¶</a></h4>
+<p>Alternatively, you might want to allow users to provide their own Python
+environments. This can be useful, as it allows users to manage package versions
+themselves without needing to contact an admin for support.</p>
+<p>This can be done by exposing an option for Python environment in
+<a class="reference internal" href="api-server.html#c.DaskGateway.cluster_manager_options" title="c.DaskGateway.cluster_manager_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.cluster_manager_options</span></code></a>. Exposing cluster options is
+discussed in detail in <a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a> - here we’ll only provide a short
+example of one way of accomplishing this. Please see <a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a> for
+more information.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">String</span>
+
+<span class="k">def</span> <span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+    <span class="c1"># Fill in environment activation command template with the users</span>
+    <span class="c1"># provided environment name. This command is then used as the setup</span>
+    <span class="c1"># script for both the scheduler and workers.</span>
+    <span class="n">setup</span> <span class="o">=</span> <span class="s2">&quot;source ~/miniconda/bin/activate </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">options</span><span class="o">.</span><span class="n">environment</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;scheduler_setup&quot;</span><span class="p">:</span> <span class="n">setup</span><span class="p">,</span> <span class="s2">&quot;worker_setup&quot;</span><span class="p">:</span> <span class="n">setup</span><span class="p">}</span>
+
+<span class="c1"># Provide an option for users to specify the name or location of a</span>
+<span class="c1"># conda environment to use for both the scheduler and workers.</span>
+<span class="c1"># If not specified, the default environment of ``base`` is used.</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">cluster_manager_options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">(</span>
+    <span class="n">String</span><span class="p">(</span><span class="s2">&quot;environment&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;base&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Conda Environment&quot;</span><span class="p">),</span>
+    <span class="n">handler</span><span class="o">=</span><span class="n">options_handler</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="additional-configuration-options">
+<h3>Additional configuration options<a class="headerlink" href="#additional-configuration-options" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> has several additional configuration fields. See the
+<a class="reference internal" href="api-server.html"><span class="doc">Configuration Reference</span></a> docs (specifically <a class="reference internal" href="api-server.html#jobqueue-config"><span class="std std-ref">the jobqueue configuration docs</span></a>) for more information on all available options. At a minimum
+you’ll probably want to configure the worker resource limits.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The resource limits for a worker</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterManager</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">=</span> <span class="s1">&#39;4 G&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterManager</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>If your cluster is under high load (and jobs may be slow to start), you may
+also want to increase the cluster/worker timeout values:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Increase startup timeouts to 5 min (600 seconds) each</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterManager</span><span class="o">.</span><span class="n">cluster_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterManager</span><span class="o">.</span><span class="n">worker_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+<p>In summary, an example <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> configuration for PBS might
+look like:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the gateway to use PBS as the cluster manager</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">cluster_manager_class</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;dask_gateway_server.managers.pbs.PBSClusterManager&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs</span>
+<span class="n">c</span><span class="o">.</span><span class="n">PBSClusterManager</span><span class="o">.</span><span class="n">scheduler_cmd</span> <span class="o">=</span> <span class="s2">&quot;~/miniconda/bin/dask-gateway-scheduler&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">PBSClusterManager</span><span class="o">.</span><span class="n">worker_cmd</span> <span class="o">=</span> <span class="s2">&quot;~/miniconda/bin/dask-gateway-worker&quot;</span>
+
+<span class="c1"># Limit resources for a single worker</span>
+<span class="n">c</span><span class="o">.</span><span class="n">PBSClusterManager</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">=</span> <span class="s1">&#39;4 G&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">PBSClusterManager</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1"># Specify the PBS queue to use</span>
+<span class="n">c</span><span class="o">.</span><span class="n">PBSClusterManager</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="s1">&#39;dask&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="open-relevant-ports">
+<h2>Open relevant ports<a class="headerlink" href="#open-relevant-ports" title="Permalink to this headline">¶</a></h2>
+<p>For users to access the gateway server, they’ll need access to the ports set in
+<a class="reference internal" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a> above (by default these are
+<code class="docutils literal notranslate"><span class="pre">8000</span></code> and <code class="docutils literal notranslate"><span class="pre">8786</span></code>). How to open up these ports is system specific - cluster
+administrators should determine how best to perform this task.</p>
+</div>
+<div class="section" id="start-dask-gateway-server">
+<h2>Start dask-gateway-server<a class="headerlink" href="#start-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
+<p>At this point you should be able to start the gateway server as the <code class="docutils literal notranslate"><span class="pre">dask</span></code>
+user using your created configuration file. The <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> process
+will be a long running process - how you intend to manage it (<code class="docutils literal notranslate"><span class="pre">supervisord</span></code>,
+etc…) is system specific. The requirements are:</p>
+<ul class="simple">
+<li><p>Start with <code class="docutils literal notranslate"><span class="pre">dask</span></code> as the user</p></li>
+<li><p>Start with <code class="docutils literal notranslate"><span class="pre">/var/dask-gateway</span></code> as the working directory</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">/opt/dask-gateway/miniconda/bin</span></code> to path</p></li>
+<li><p>Specify the configuration file location with <code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">/etc/dask-gateway/dask_gateway_config.py</span></code></p></li>
+</ul>
+<p>For ease, we recommend creating a small bash script stored at
+<code class="docutils literal notranslate"><span class="pre">/opt/dask-gateway/start-dask-gateway</span></code> to set this up:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env bash</span>
+
+<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/opt/dask-gateway/miniconda/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+<span class="nb">cd</span> /var/dask-gateway
+dask-gateway-server -f /etc/dask-gateway/dask_gateway_config.py
+</pre></div>
+</div>
+<p>For <em>testing</em> here’s how you might start <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> manually:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> /var/dask-gateway
+$ sudo -iu dask /opt/dask-gateway/start-dask-gateway
+</pre></div>
+</div>
+</div>
+<div class="section" id="validate-things-are-working">
+<h2>Validate things are working<a class="headerlink" href="#validate-things-are-working" title="Permalink to this headline">¶</a></h2>
+<p>If the server started with no errors, you’ll want to check that things are
+working properly. The easiest way to do this is to try connecting as a user.</p>
+<p>A user’s environment requires the <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> library be installed.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install the dask-gateway client library</span>
+$ conda create -n dask-gateway -c conda-forge dask-gateway
+</pre></div>
+</div>
+<p>You can connect to the gateway by creating a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>
+object, specifying the public address (if you changed the port for proxy server
+via <code class="docutils literal notranslate"><span class="pre">gateway_url</span></code>, you’ll also need to specify the <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span><span class="s2">&quot;http://public-address&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You should now be able to make API calls. Try
+<a class="reference internal" href="api-client.html#dask_gateway.Gateway.list_clusters" title="dask_gateway.Gateway.list_clusters"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dask_gateway.Gateway.list_clusters()</span></code></a>, this should return an empty list.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span><span class="o">.</span><span class="n">list_clusters</span><span class="p">()</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+<p>Next, see if you can create a cluster. This may take a few minutes.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">new_cluster</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The last thing you’ll want to check is if you can successfully connect to your
+newly created cluster.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">get_client</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If everything worked properly, you can shutdown your cluster with
+<a class="reference internal" href="api-client.html#dask_gateway.GatewayCluster.shutdown" title="dask_gateway.GatewayCluster.shutdown"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dask_gateway.GatewayCluster.shutdown()</span></code></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cluster-options.html" class="btn btn-neutral float-right" title="Exposing Cluster Options" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install-kube.html" class="btn btn-neutral float-left" title="Install on a Kubernetes Cluster" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Jim Crist
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

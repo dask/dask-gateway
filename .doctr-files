@@ -9,6 +9,7 @@
 ./_sources/develop.rst.txt
 ./_sources/index.rst.txt
 ./_sources/install-hadoop.rst.txt
+./_sources/install-jobqueue.rst.txt
 ./_sources/install-kube.rst.txt
 ./_sources/install-local.rst.txt
 ./_sources/install-user.rst.txt
@@ -81,6 +82,7 @@
 ./genindex.html
 ./index.html
 ./install-hadoop.html
+./install-jobqueue.html
 ./install-kube.html
 ./install-local.html
 ./install-user.html
