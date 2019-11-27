@@ -10,19 +10,26 @@ Gateway
 Authentication
 --------------
 
-Kerberos
-^^^^^^^^
+.. _kerberos-auth-config:
+
+KerberosAuthenticator
+^^^^^^^^^^^^^^^^^^^^^
 
 .. autoconfigurable:: dask_gateway_server.auth.KerberosAuthenticator
 
-JupyterHub
-^^^^^^^^^^
+
+.. _jupyterhub-auth-config:
+
+JupyterHubAuthenticator
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoconfigurable:: dask_gateway_server.auth.JupyterHubAuthenticator
 
 
-Dummy
-^^^^^
+.. _dummy-auth-config:
+
+DummyAuthenticator
+^^^^^^^^^^^^^^^^^^
 
 .. autoconfigurable:: dask_gateway_server.auth.DummyAuthenticator
 

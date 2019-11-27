@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Authentication &mdash; Dask Gateway 0.5.0+16.gbbd2133 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Exposing Cluster Options" href="cluster-options.html" />
+    <link rel="prev" title="Install on an HPC Job Queue" href="install-jobqueue.html" />
+  <link rel="shortcut icon" href="_static/images/favicon.ico"/>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+  
+
+<nav id="explore-links">
+  <a href="https://docs.dask.org/">
+    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+  </a>
+
+  <ul>
+    <li>
+      <a>Get Started</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+        <li><a href="https://examples.dask.org"> Examples </a></li>
+        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+        <li><a href="https://dask.org/slides"> Slides </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="">Algorithms</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+        <li><a href="http://ml.dask.org">Machine Learning</a></li>
+        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a>Community</a>
+      <ul>
+        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+        <li><a href="https://github.com/dask">Github</a></li>
+        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+      </ul>
+    </li>
+  </ul>
+
+</nav>
+
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Dask Gateway
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.5.0+16.gbbd2133
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">For Users</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Authentication</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#simple-authentication-for-testing">Simple authentication for testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kerberos-authentication">Kerberos authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-jupyterhub-s-authentication">Using JupyterHub’s authentication</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">User Resource Limits</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Dask Gateway</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Authentication</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/authentication.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="authentication">
+<h1>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h1>
+<p>Being a multi-tenant application, <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> needs a method to
+authenticate users. Like cluster manager backends, authentication is also
+configurable by setting <a class="reference internal" href="api-server.html#c.DaskGateway.authenticator_class" title="c.DaskGateway.authenticator_class"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.authenticator_class</span></code></a>. Here we
+document a few common implementations.</p>
+<div class="section" id="simple-authentication-for-testing">
+<h2>Simple authentication for testing<a class="headerlink" href="#simple-authentication-for-testing" title="Permalink to this headline">¶</a></h2>
+<p>For testing purposes, a simple “dummy” authentication method can be used. This
+method implements <a class="reference external" href="https://en.wikipedia.org/wiki/Basic_access_authentication">Basic</a> authentication, with no validation of the password
+field. As such, <em>it is not suitable for production, only for testing</em>. If
+desired, an optional password can be configured to be shared across all users.
+Note that this only marginally makes things more secure, as users can still
+easily impersonate each other.</p>
+<p>This protocol is the default, and is implemented by
+<code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.auth.DummyAuthenticator</span></code>. No further configuration
+is needed to enable it. If you would like to add a shared password, you can do
+so by adding the following line to your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set a shared password.</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DummyAuthenticator</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="s2">&quot;mypassword&quot;</span>
+</pre></div>
+</div>
+<p>For more information see the <a class="reference internal" href="api-server.html#dummy-auth-config"><span class="std std-ref">DummyAuthenticator</span></a> docs.</p>
+</div>
+<div class="section" id="kerberos-authentication">
+<h2>Kerberos authentication<a class="headerlink" href="#kerberos-authentication" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://web.mit.edu/kerberos/">Kerberos</a> can be used to authenticate users by enabling the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.auth.KerberosAuthenticator</span></code>. To do this, you’ll
+need to create a <code class="docutils literal notranslate"><span class="pre">HTTP</span></code> service principal and keytab for the host running
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> (if one doesn’t already exist). Keytabs can be created
+on the command-line as:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create the HTTP principal (if not already created)</span>
+$ kadmin -q <span class="s2">&quot;addprinc -randkey HTTP/FQDN&quot;</span>
+
+<span class="c1"># Create a keytab</span>
+$ kadmin -q <span class="s2">&quot;xst -norandkey -k /etc/dask-gateway/http.keytab HTTP/FQDN&quot;</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">FQDN</span></code> is the <a class="reference external" href="https://en.wikipedia.org/wiki/Fully_qualified_domain_name">fully qualified domain name</a> of the host running
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>.</p>
+<p>Store the keytab file wherever you see fit. We recommend storing it along with
+the other configuration (usually in <code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway/</span></code>). You’ll also want
+to make sure that <code class="docutils literal notranslate"><span class="pre">http.keytab</span></code> is only readable by admin users (usually just
+the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>).</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ chown dask /etc/dask-gateway/http.keytab
+$ chmod <span class="m">400</span> /etc/dask-gateway/http.keytab
+</pre></div>
+</div>
+<p>To configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use this keytab file, you’ll need to
+add the following line to your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Enable Kerberos for user-facing authentication</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">authenticator_class</span> <span class="o">=</span> <span class="s2">&quot;dask_gateway_server.auth.KerberosAuthenticator&quot;</span>
+
+<span class="c1"># The location of the HTTP keytab</span>
+<span class="n">c</span><span class="o">.</span><span class="n">KerberosAuthenticator</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/http.keytab&quot;</span>
+</pre></div>
+</div>
+<p>For more information see the <a class="reference internal" href="api-server.html#kerberos-auth-config"><span class="std std-ref">KerberosAuthenticator</span></a> docs.</p>
+</div>
+<div class="section" id="using-jupyterhub-s-authentication">
+<h2>Using JupyterHub’s authentication<a class="headerlink" href="#using-jupyterhub-s-authentication" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://jupyterhub.readthedocs.io/">JupyterHub</a> provides a multi-user interactive <a class="reference external" href="https://jupyter.org/">notebook</a> environment.  When
+deploying Dask-Gateway alongside JupyterHub, you can configure Dask-Gateway to
+use JupyterHub for authentication. To do this, we register <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> as
+a <a class="reference external" href="https://jupyterhub.readthedocs.io/en/stable/getting-started/services-basics.html">JupyterHub Service</a>.</p>
+<p>First we need to generate an API Token - this is commonly done using
+<code class="docutils literal notranslate"><span class="pre">openssl</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -hex <span class="m">32</span>
+</pre></div>
+</div>
+<p>Then add the following lines to your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">authenticator_class</span> <span class="o">=</span> <span class="s2">&quot;dask_gateway_server.auth.JupyterHubAuthenticator&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHubAuthenticator</span><span class="o">.</span><span class="n">api_token</span> <span class="o">=</span> <span class="s2">&quot;&lt;API TOKEN&gt;&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHubAuthenticator</span><span class="o">.</span><span class="n">api_url</span> <span class="o">=</span> <span class="s2">&quot;&lt;API URL&gt;&quot;</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">TOKEN&gt;</span></code> is the token generated above</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">URL&gt;</span></code> is JupyterHub’s API url. This is usually of the form
+<code class="docutils literal notranslate"><span class="pre">https://&lt;JUPYTERHUB-HOST&gt;:&lt;JUPYTERHUB-PORT&gt;/hub/api</span></code>.</p></li>
+</ul>
+<p>You’ll also need to register the API token with JupyterHub. This can be done by
+adding the following to the corresponding <code class="docutils literal notranslate"><span class="pre">jupyterhub_config.py</span></code> file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">services</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;dask-gateway&quot;</span><span class="p">,</span> <span class="s2">&quot;api_token&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;API TOKEN&gt;&quot;</span><span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>again, replacing <code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">TOKEN&gt;</span></code> with the output from above.</p>
+<p>With this configuration, JupyterHub will be used to authenticate requests
+between users and the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>.</p>
+<p>For more information see the <a class="reference internal" href="api-server.html#jupyterhub-auth-config"><span class="std std-ref">JupyterHubAuthenticator</span></a> docs.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cluster-options.html" class="btn btn-neutral float-right" title="Exposing Cluster Options" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install-jobqueue.html" class="btn btn-neutral float-left" title="Install on an HPC Job Queue" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Jim Crist
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

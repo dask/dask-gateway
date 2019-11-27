@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+15.g7b8f930 documentation</title>
+  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+16.gbbd2133 documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+15.g7b8f930
+                0.5.0+16.gbbd2133
               </div>
             
           
@@ -164,6 +164,7 @@
 </ul>
 <p class="caption"><span class="caption-text">Admin - Customization</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-limits.html">User Resource Limits</a></li>
 </ul>
@@ -173,9 +174,9 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#gateway">Gateway</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#kerberos">Kerberos</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#jupyterhub">JupyterHub</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dummy">Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kerberosauthenticator">KerberosAuthenticator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#jupyterhubauthenticator">JupyterHubAuthenticator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dummyauthenticator">DummyAuthenticator</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#cluster-managers">Cluster Managers</a><ul>
@@ -468,8 +469,8 @@ more information.</p>
 </div>
 <div class="section" id="authentication">
 <h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="kerberos">
-<h3>Kerberos<a class="headerlink" href="#kerberos" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="kerberosauthenticator">
+<span id="kerberos-auth-config"></span><h3>KerberosAuthenticator<a class="headerlink" href="#kerberosauthenticator" title="Permalink to this headline">¶</a></h3>
 <dl class="data">
 <dt id="c.KerberosAuthenticator.keytab">
 <code class="sig-prename descclassname">c.KerberosAuthenticator.</code><code class="sig-name descname">keytab</code><em class="property"> = Unicode('dask_gateway.keytab')</em><a class="headerlink" href="#c.KerberosAuthenticator.keytab" title="Permalink to this definition">¶</a></dt>
@@ -484,8 +485,8 @@ more information.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="jupyterhub">
-<h3>JupyterHub<a class="headerlink" href="#jupyterhub" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="jupyterhubauthenticator">
+<span id="jupyterhub-auth-config"></span><h3>JupyterHubAuthenticator<a class="headerlink" href="#jupyterhubauthenticator" title="Permalink to this headline">¶</a></h3>
 <dl class="data">
 <dt id="c.JupyterHubAuthenticator.jupyterhub_api_token">
 <code class="sig-prename descclassname">c.JupyterHubAuthenticator.</code><code class="sig-name descname">jupyterhub_api_token</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.JupyterHubAuthenticator.jupyterhub_api_token" title="Permalink to this definition">¶</a></dt>
@@ -525,8 +526,8 @@ environment variable.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="dummy">
-<h3>Dummy<a class="headerlink" href="#dummy" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="dummyauthenticator">
+<span id="dummy-auth-config"></span><h3>DummyAuthenticator<a class="headerlink" href="#dummyauthenticator" title="Permalink to this headline">¶</a></h3>
 <dl class="data">
 <dt id="c.DummyAuthenticator.password">
 <code class="sig-prename descclassname">c.DummyAuthenticator.</code><code class="sig-name descname">password</code><em class="property"> = Unicode(None)</em><a class="headerlink" href="#c.DummyAuthenticator.password" title="Permalink to this definition">¶</a></dt>

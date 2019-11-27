@@ -88,6 +88,7 @@ both the cluster backend and the authentication protocol are pluggable.
    :hidden:
    :caption: Admin - Customization
 
+   authentication
    cluster-options
    resource-limits
 
