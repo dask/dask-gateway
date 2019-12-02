@@ -10,5 +10,5 @@ USER root
 WORKDIR /srv/dask-gateway
 RUN chown dask:dask /srv/dask-gateway
 
-USER dask:dask
+USER 1000:1000
 CMD ["dask-gateway-server", "--config", "/etc/dask-gateway/dask_gateway_config.py"]
