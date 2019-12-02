@@ -1,82 +1,131 @@
-rbac:
-  enabled: true
-
-ingress:
-  enabled: false
-  annotations: {}
-  hosts: []
-  tls: []
-  path: /
-
 gateway:
+  # Annotations to apply to the gateway-server pod.
   annotations: {}
 
+  # A 32 byte hex-encoded secret token for encrypting cookies.
+  # Sets `c.DaskGateway.cookie_secret`.
   cookieSecret: null
+
+  # A 32 byte hex-encoded secret token for authenticating with the proxies.
+  # Sets `c.WebProxy.auth_token` and `c.SchedulerProxy.auth_token`.
   proxyToken: null
 
+  # Resource requests/limits for the gateway-server pod.
   resources: {}
 
+  # The image to use for the gateway-server pod.
   image:
     name: daskgateway/dask-gateway-server
     tag: 0.5.0
     pullPolicy: IfNotPresent
 
   auth:
+    # The auth type to use. One of {dummy, kerberos, jupyterhub, custom}.
     type: dummy
+
     dummy:
+      # A shared password to use for all users.
       password: null
+
     kerberos:
+      # Path to the HTTP keytab for this node.
       keytab: null
+
     jupyterhub:
+      # A JupyterHub api token for dask-gateway to use. See
+      # https://gateway.dask.org/install-kube.html#authenticating-with-jupyterhub.
       apiToken: null
+
+      # JupyterHub's api url. Inferred from JupyterHub's service name if running
+      # in the same namespace.
       apiUrl: null
+
     custom:
+      # The full authenticator class name.
       class: null
+
+      # Configuration fields to set on the authenticator class.
       options: {}
 
   clusterManager:
+    # Timeout (in seconds) for starting a cluster.
+    # Sets `c.KubeClusterManager.cluster_start_timeout`.
     clusterStartTimeout: null
+
+    # Timeout (in seconds) for starting a worker.
+    # Sets `c.KubeClusterManager.worker_start_timeout`.
     workerStartTimeout: null
 
+    # The image to use for both schedulers and workers.
     image:
       name: daskgateway/dask-gateway
       tag: 0.5.0
       pullPolicy: IfNotPresent
 
+    # A mapping of environment variables to set for both schedulers and workers.
     environment: null
 
     scheduler:
+      # Any extra configuration for the scheduler pod. Sets
+      # `c.KubeClusterManager.scheduler_extra_pod_config`.
       extraPodConfig: {}
+
+      # Any extra configuration for the scheduler container.
+      # Sets `c.KubeClusterManager.scheduler_extra_container_config`.
       extraContainerConfig: {}
+
+      # Cores request/limit for the scheduler.
       cores:
         request: null
         limit: null
+
+      # Memory request/limit for the scheduler.
       memory:
         request: null
         limit: null
 
     worker:
+      # Any extra configuration for the worker pod. Sets
+      # `c.KubeClusterManager.worker_extra_pod_config`.
       extraPodConfig: {}
+
+      # Any extra configuration for the worker container. Sets
+      # `c.KubeClusterManager.worker_extra_container_config`.
       extraContainerConfig: {}
+
+      # Cores request/limit for each worker.
       cores:
         request: null
         limit: null
+
+      # Memory request/limit for each worker.
       memory:
         request: null
         limit: null
 
+  # Any extra configuration code to append to the generated `dask_gateway_config.py`
+  # file. Can be either a single code-block, or a map of key -> code-block
+  # (code-blocks are run in alphabetical order by key, the key value itself is
+  # meaningless). The map version is useful as it supports merging multiple
+  # `values.yaml` files, but is unnecessary in other cases.
   extraConfig: {}
 
 schedulerProxy:
+  # Annotations to apply to the scheduler-proxy pod.
   annotations: {}
 
+  # Resource requests/limits for the scheduler-proxy pod.
   resources: {}
 
+  # The image to use for the scheduler-proxy.
   image:
     name: daskgateway/dask-gateway-server
     tag: 0.5.0
     pullPolicy: IfNotPresent
 
+  # Service configuration for the scheduler-proxy service. See
+  # https://kubernetes.io/docs/concepts/services-networking/service/ for more
+  # information.
   service:
     annotations: {}
     type: LoadBalancer
@@ -84,17 +133,47 @@ schedulerProxy:
     loadBalancerIP: null
 
 webProxy:
+  # Annotations to apply to the web-proxy pod.
   annotations: {}
 
+  # Resource requests/limits for the web-proxy pod.
   resources: {}
 
+  # The image to use for the web-proxy.
   image:
     name: daskgateway/dask-gateway-server
     tag: 0.5.0
     pullPolicy: IfNotPresent
 
+  # Service configuration for the web-proxy service. See
+  # https://kubernetes.io/docs/concepts/services-networking/service/ for more
+  # information.
   service:
     annotations: {}
     type: LoadBalancer
     nodePort: null
     loadBalancerIP: null
+
+rbac:
+  # Whether to enable RBAC.
+  enabled: true
+
+ingress:
+  # Whether an Ingress object should be used.
+  enabled: false
+
+  # Annotations to apply to the Ingress.
+  annotations: {}
+
+  # A list of hosts to route requests to the proxy.
+  hosts: []
+
+  # TLS configuration for ingress. See
+  # https://kubernetes.io/docs/concepts/services-networking/ingress/#tls for more
+  # information.
+  tls: []
+
+  # The path to use when adding the gateway to the Ingress rules. See
+  # https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules
+  # for more information.
+  path: /

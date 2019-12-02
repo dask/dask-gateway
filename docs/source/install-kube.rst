@@ -158,16 +158,15 @@ clean everything up. You can do this with ``helm delete``:
     $ helm delete --purge $RELEASE
 
 
-Additional Configuration
+Additional configuration
 ------------------------
 
 Here we provide a few configuration snippets for common deployment scenarios.
-For all available configuration values, see the `default values.yaml file`_ and
-the :ref:`kube-cluster-manager-config` docs.
+For all available configuration fields see the :ref:`helm-chart-reference`.
 
 
-Using extraPodConfig/extraContainerConfig
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using ``extraPodConfig``/``extraContainerConfig``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `Kubernetes API`_ is large, and not all configuration fields you may want
 to set on scheduler/worker pods are directly exposed by the Helm chart. To
@@ -208,6 +207,50 @@ For information on allowed fields, see the Kubernetes documentation:
 
 - `PodSpec Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core>`__
 - `Container Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__
+
+
+Using ``extraConfig``
+~~~~~~~~~~~~~~~~~~~~~
+
+Not all configuration options have been exposed via the helm chart. To set
+unexposed options, you can use the ``gateway.extraConfig`` field. This takes
+either:
+
+- A python code-block (as a string) to append to the end of the generated
+  ``dask_gateway_config.py`` file.
+- A map of keys -> code-blocks. When applied in this form, code-blocks are
+  appended in alphabetical order by key (the keys themselves are meaningless).
+  This allows merging multiple ``values.yaml`` files together, as Helm can
+  natively merge maps.
+
+For example, here we use ``gateway.extraConfig`` to set
+:data:`c.DaskGateway.cluster_manager_options`, exposing options for worker
+resources and image (see :doc:`cluster-options` for more information).
+
+.. code-block:: yaml
+
+    gateway:
+      extraConfig: |
+        from dask_gateway_server.options import Options, Integer, Float, String
+
+        def option_handler(options):
+            return {
+                "worker_cores": options.worker_cores,
+                "worker_memory": "%fG" % options.worker_memory,
+                "image": options.image,
+            }
+
+        c.DaskGateway.cluster_manager_options = Options(
+            Integer("worker_cores", 2, min=1, max=4, label="Worker Cores"),
+            Float("worker_memory", 4, min=1, max=8, label="Worker Memory (GiB)"),
+            String("image", default="daskgateway/dask-gateway:latest", label="Image"),
+            handler=option_handler,
+        )
+
+For information on all available configuration options, see the
+:doc:`api-server` (in particular, the :ref:`kube-cluster-manager-config`
+section).
+
 
 Authenticating with JupyterHub
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -278,6 +321,18 @@ object.
     ...     proxy_address="tls://35.202.68.87:8786",
     ...     auth="jupyterhub",
     ... )
+
+
+.. _helm-chart-reference:
+
+Helm chart reference
+--------------------
+
+The full `default values.yaml file`_ for the dask-gateway Helm chart is included
+here for reference:
+
+.. literalinclude:: ../../resources/helm/dask-gateway/values.yaml
+    :language: yaml
 
 
 .. _Kubernetes Cluster: https://kubernetes.io/
