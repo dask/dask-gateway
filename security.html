@@ -1,0 +1,392 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Security settings &mdash; Dask Gateway 0.5.0+18.g4b511ba documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Exposing Cluster Options" href="cluster-options.html" />
+    <link rel="prev" title="Authentication" href="authentication.html" />
+  <link rel="shortcut icon" href="_static/images/favicon.ico"/>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+  
+
+<nav id="explore-links">
+  <a href="https://docs.dask.org/">
+    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+  </a>
+
+  <ul>
+    <li>
+      <a>Get Started</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+        <li><a href="https://examples.dask.org"> Examples </a></li>
+        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+        <li><a href="https://dask.org/slides"> Slides </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="">Algorithms</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+        <li><a href="http://ml.dask.org">Machine Learning</a></li>
+        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
+      <ul>
+        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
+        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+      </ul>
+    </li>
+
+    <li>
+      <a>Community</a>
+      <ul>
+        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+        <li><a href="https://github.com/dask">Github</a></li>
+        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+      </ul>
+    </li>
+  </ul>
+
+</nav>
+
+
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Dask Gateway
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.5.0+18.g4b511ba
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">For Users</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Security settings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#enabling-tls">Enabling TLS</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-your-own-tls-certificate">Using your own TLS certificate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-letsencrypt">Using letsencrypt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-external-tls-termination">Using external TLS termination</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#proxy-authentication-tokens">Proxy authentication tokens</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cookie-secret-token">Cookie secret token</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">User Resource Limits</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Dask Gateway</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Security settings</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/security.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="security-settings">
+<h1>Security settings<a class="headerlink" href="#security-settings" title="Permalink to this headline">¶</a></h1>
+<p>Here we present a few common security fields you’ll likely want to configure in
+a production deployment.</p>
+<div class="section" id="enabling-tls">
+<h2>Enabling TLS<a class="headerlink" href="#enabling-tls" title="Permalink to this headline">¶</a></h2>
+<p>As a web application, any production deployment of Dask-Gateway should be run
+with TLS encryption (<a class="reference external" href="https://en.wikipedia.org/wiki/HTTPS">HTTPS</a>) enabled. There are a few common options for
+enabling this.</p>
+<div class="section" id="using-your-own-tls-certificate">
+<h3>Using your own TLS certificate<a class="headerlink" href="#using-your-own-tls-certificate" title="Permalink to this headline">¶</a></h3>
+<p>If you have your own TLS certificate/key pair, you can specify the file
+locations in your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file. The relevant configuration
+fields are:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="api-server.html#c.DaskGateway.tls_cert" title="c.DaskGateway.tls_cert"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.tls_cert</span></code></a></p></li>
+<li><p><a class="reference internal" href="api-server.html#c.DaskGateway.tls_key" title="c.DaskGateway.tls_key"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.tls_key</span></code></a></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">tls_cert</span> <span class="o">=</span> <span class="s2">&quot;/path/to/my.cert&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">tls_key</span> <span class="o">=</span> <span class="s2">&quot;/path/to/my.key&quot;</span>
+</pre></div>
+</div>
+<p>Note that the certificate and key <em>must</em> be stored in a secure location where
+they are readable only by admin users.</p>
+</div>
+<div class="section" id="using-letsencrypt">
+<h3>Using letsencrypt<a class="headerlink" href="#using-letsencrypt" title="Permalink to this headline">¶</a></h3>
+<p>It is also possible to use <a class="reference external" href="https://letsencrypt.org/">letsencrypt</a> to automatically obtain TLS
+certificates. If you have letsencrypt running using the default options, you
+can configure this by adding the following to your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code>
+file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">tls_cert</span> <span class="o">=</span> <span class="s2">&quot;/etc/letsencrypt/live/</span><span class="si">{FQDN}</span><span class="s2">/fullchain.pem&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">tls_key</span> <span class="o">=</span> <span class="s2">&quot;/etc/letsencrpyt/live/</span><span class="si">{FQDN}</span><span class="s2">/privkey.pem&quot;</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">FQDN</span></code> is the  <a class="reference external" href="https://en.wikipedia.org/wiki/Fully_qualified_domain_name">fully qualified domain name</a> for your server.</p>
+</div>
+<div class="section" id="using-external-tls-termination">
+<h3>Using external TLS termination<a class="headerlink" href="#using-external-tls-termination" title="Permalink to this headline">¶</a></h3>
+<p>If <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> is running behind a proxy that does TLS termination
+(e.g. <a class="reference external" href="https://docs.nginx.com/nginx/admin-guide/security-controls/terminating-ssl-http/">NGINX</a>), then no further configuration is needed.</p>
+</div>
+</div>
+<div class="section" id="proxy-authentication-tokens">
+<h2>Proxy authentication tokens<a class="headerlink" href="#proxy-authentication-tokens" title="Permalink to this headline">¶</a></h2>
+<p>To secure communication between the proxies and the gateway server, a secret
+token is used for each proxy. By default these tokens are generated
+automatically. It’s necessary for an admin to configure these explicitly if the
+proxies are being externally managed (i.e.
+<a class="reference internal" href="api-server.html#c.WebProxy.externally_managed" title="c.WebProxy.externally_managed"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.WebProxy.externally_managed</span></code></a>/<a class="reference internal" href="api-server.html#c.SchedulerProxy.externally_managed" title="c.SchedulerProxy.externally_managed"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.SchedulerProxy.externally_managed</span></code></a>
+are set to true). To do this you have two options:</p>
+<ul class="simple">
+<li><p>Configure <a class="reference internal" href="api-server.html#c.WebProxy.auth_token" title="c.WebProxy.auth_token"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.WebProxy.auth_token</span></code></a> and
+<a class="reference internal" href="api-server.html#c.SchedulerProxy.auth_token" title="c.SchedulerProxy.auth_token"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.SchedulerProxy.auth_token</span></code></a> in your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file.
+Since these fields are secrets, the config file <em>must</em> be readable only by
+admin users.</p></li>
+<li><p>Set the <code class="docutils literal notranslate"><span class="pre">DASK_GATEWAY_PROXY_TOKEN</span></code> environment variable. In this case both
+proxies will share the same token. For security reasons, this environment
+variable should only be visible by the gateway server and proxy processes.</p></li>
+</ul>
+<p>In either case all options take 32 byte random strings, encoded as hex. One way
+to create these is through the <code class="docutils literal notranslate"><span class="pre">openssl</span></code> CLI:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -hex <span class="m">32</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cookie-secret-token">
+<h2>Cookie secret token<a class="headerlink" href="#cookie-secret-token" title="Permalink to this headline">¶</a></h2>
+<p>Dask-Gateway uses cookies to reduce load on the configured authenticator (see
+<a class="reference internal" href="authentication.html"><span class="doc">Authentication</span></a>). The cookie secret token is used to encrypt these
+cookies.</p>
+<p>Most deployments shouldn’t need to configure this token. By default it’s
+created automatically on startup - if it changes on a restart it will force a
+relogin for all users, but for most authenticators this shouldn’t cause a
+disruption.</p>
+<p>If you do want to configure this field, you have two options:</p>
+<ul class="simple">
+<li><p>Configure <a class="reference internal" href="api-server.html#c.DaskGateway.cookie_secret" title="c.DaskGateway.cookie_secret"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.cookie_secret</span></code></a> in your
+<code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file. Since this is a secret, the config file
+<em>must</em> be readable only by admin users.</p></li>
+<li><p>Set the <code class="docutils literal notranslate"><span class="pre">DASK_GATEWAY_COOKIE_SECRET</span></code> environment variable. For security
+reasons, this environment variable should only be visible by the
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>.</p></li>
+</ul>
+<p>In either case this takes a 32 byte random string, encoded as hex. One way to
+create this is through the <code class="docutils literal notranslate"><span class="pre">openssl</span></code> CLI:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -hex <span class="m">32</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cluster-options.html" class="btn btn-neutral float-right" title="Exposing Cluster Options" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="authentication.html" class="btn btn-neutral float-left" title="Authentication" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Jim Crist
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

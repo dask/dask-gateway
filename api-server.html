@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+17.gda8b7d0 documentation</title>
+  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+18.g4b511ba documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+17.gda8b7d0
+                0.5.0+18.g4b511ba
               </div>
             
           
@@ -165,6 +165,7 @@
 <p class="caption"><span class="caption-text">Admin - Customization</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-limits.html">User Resource Limits</a></li>
 </ul>
@@ -330,6 +331,11 @@ Default is one week.</p>
 <dt id="c.DaskGateway.cookie_secret">
 <code class="sig-prename descclassname">c.DaskGateway.</code><code class="sig-name descname">cookie_secret</code><em class="property"> = Bytes(b'')</em><a class="headerlink" href="#c.DaskGateway.cookie_secret" title="Permalink to this definition">¶</a></dt>
 <dd><p>The cookie secret to use to encrypt cookies.</p>
+<p>A 32 byte hex-encoded random string. Commonly created with the
+<code class="docutils literal notranslate"><span class="pre">openssl</span></code> CLI:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -hex <span class="m">32</span>
+</pre></div>
+</div>
 <p>Loaded from the DASK_GATEWAY_COOKIE_SECRET environment variable by
 default.</p>
 </dd></dl>
@@ -1702,6 +1708,11 @@ to <code class="docutils literal notranslate"><span class="pre">127.0.0.1:{rando
 <dt id="c.WebProxy.auth_token">
 <code class="sig-prename descclassname">c.WebProxy.</code><code class="sig-name descname">auth_token</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.WebProxy.auth_token" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Proxy auth token</p>
+<p>A 32 byte hex-encoded random string. Commonly created with the
+<code class="docutils literal notranslate"><span class="pre">openssl</span></code> CLI:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -hex <span class="m">32</span>
+</pre></div>
+</div>
 <p>Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.</p>
 </dd></dl>
 
@@ -1752,6 +1763,11 @@ to <code class="docutils literal notranslate"><span class="pre">127.0.0.1:{rando
 <dt id="c.SchedulerProxy.auth_token">
 <code class="sig-prename descclassname">c.SchedulerProxy.</code><code class="sig-name descname">auth_token</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SchedulerProxy.auth_token" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Proxy auth token</p>
+<p>A 32 byte hex-encoded random string. Commonly created with the
+<code class="docutils literal notranslate"><span class="pre">openssl</span></code> CLI:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -hex <span class="m">32</span>
+</pre></div>
+</div>
 <p>Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.</p>
 </dd></dl>
 

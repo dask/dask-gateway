@@ -15,6 +15,7 @@
 ./_sources/install-local.rst.txt
 ./_sources/install-user.rst.txt
 ./_sources/resource-limits.rst.txt
+./_sources/security.rst.txt
 ./_sources/usage.rst.txt
 ./_static/basic.css
 ./_static/css/badge_only.css
@@ -92,4 +93,5 @@
 ./resource-limits.html
 ./search.html
 ./searchindex.js
+./security.html
 ./usage.html
