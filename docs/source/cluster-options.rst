@@ -60,8 +60,7 @@ A :class:`dask_gateway_server.options.Options` object takes two arguments:
   which provide a typed declarative specification of each user facing option.
 
 - ``handler``: An optional handler function for translating the values set by
-  those options into configuration values to set on the
-  :class:`dask_gateway_server.managers.ClusterManager`.
+  those options into configuration values to set on the cluster manager.
 
 ``Field`` objects provide typed specifications for a user facing option. There
 are several different ``Field`` classes available, each representing a
@@ -89,9 +88,14 @@ After validation (type, bounds, etc...), a dictionary of all options for a
 requested cluster is passed to a ``handler`` function. Here any additional
 validation can be done (errors raised in the handler are forwarded to the
 user), as well as any conversion needed between the exposed option fields and
-configuration fields on the backing
-:class:`dask_gateway_server.managers.ClusterManager`. The default ``handler``
+configuration fields on the backing cluster manager. The default ``handler``
 returns the provided options unchanged.
+
+Available options are cluster manager specific. For example, if running on
+Kubernetes, an options handler can return overrides for any configuration
+fields on :ref:`KubeClusterManager <kube-cluster-manager-config>`. See
+:ref:`cluster-managers-reference` for information on what configuration fields
+are available on your backend.
 
 Examples
 --------
