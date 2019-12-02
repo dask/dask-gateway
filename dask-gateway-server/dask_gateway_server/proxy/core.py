@@ -75,6 +75,13 @@ class ProxyBase(LoggingConfigurable):
         help="""
         The Proxy auth token
 
+        A 32 byte hex-encoded random string. Commonly created with the
+        ``openssl`` CLI:
+
+        .. code-block:: shell
+
+            $ openssl rand -hex 32
+
         Loaded from the DASK_GATEWAY_PROXY_TOKEN env variable by default.
         """,
         config=True,

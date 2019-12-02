@@ -256,6 +256,13 @@ class DaskGateway(Application):
     cookie_secret = Bytes(
         help="""The cookie secret to use to encrypt cookies.
 
+        A 32 byte hex-encoded random string. Commonly created with the
+        ``openssl`` CLI:
+
+        .. code-block:: shell
+
+            $ openssl rand -hex 32
+
         Loaded from the DASK_GATEWAY_COOKIE_SECRET environment variable by
         default.
         """,
