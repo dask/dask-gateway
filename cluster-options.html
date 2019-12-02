@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Exposing Cluster Options &mdash; Dask Gateway 0.5.0+16.gbbd2133 documentation</title>
+  <title>Exposing Cluster Options &mdash; Dask Gateway 0.5.0+17.gda8b7d0 documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+16.gbbd2133
+                0.5.0+17.gda8b7d0
               </div>
             
           
@@ -306,8 +306,7 @@ those options.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">*fields</span></code>: One or more <code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.options.Field</span></code> objects,
 which provide a typed declarative specification of each user facing option.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">handler</span></code>: An optional handler function for translating the values set by
-those options into configuration values to set on the
-<code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.managers.ClusterManager</span></code>.</p></li>
+those options into configuration values to set on the cluster manager.</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">Field</span></code> objects provide typed specifications for a user facing option. There
 are several different <code class="docutils literal notranslate"><span class="pre">Field</span></code> classes available, each representing a
@@ -350,9 +349,13 @@ valid Python identifier. Optional, if not provided <code class="docutils literal
 requested cluster is passed to a <code class="docutils literal notranslate"><span class="pre">handler</span></code> function. Here any additional
 validation can be done (errors raised in the handler are forwarded to the
 user), as well as any conversion needed between the exposed option fields and
-configuration fields on the backing
-<code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.managers.ClusterManager</span></code>. The default <code class="docutils literal notranslate"><span class="pre">handler</span></code>
+configuration fields on the backing cluster manager. The default <code class="docutils literal notranslate"><span class="pre">handler</span></code>
 returns the provided options unchanged.</p>
+<p>Available options are cluster manager specific. For example, if running on
+Kubernetes, an options handler can return overrides for any configuration
+fields on <a class="reference internal" href="api-server.html#kube-cluster-manager-config"><span class="std std-ref">KubeClusterManager</span></a>. See
+<a class="reference internal" href="api-server.html#cluster-managers-reference"><span class="std std-ref">Cluster Managers</span></a> for information on what configuration fields
+are available on your backend.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
