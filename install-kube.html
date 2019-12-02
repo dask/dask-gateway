@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.5.0+18.g4b511ba documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.5.0+19.g7476fdb documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+18.g4b511ba
+                0.5.0+19.g7476fdb
               </div>
             
           
@@ -170,11 +170,13 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#connecting-to-the-gateway">Connecting to the gateway</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#shutting-everything-down">Shutting everything down</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#additional-configuration">Additional Configuration</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#using-extrapodconfig-extracontainerconfig">Using extraPodConfig/extraContainerConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#additional-configuration">Additional configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-extrapodconfig-extracontainerconfig">Using <code class="docutils literal notranslate"><span class="pre">extraPodConfig</span></code>/<code class="docutils literal notranslate"><span class="pre">extraContainerConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-extraconfig">Using <code class="docutils literal notranslate"><span class="pre">extraConfig</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#authenticating-with-jupyterhub">Authenticating with JupyterHub</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#helm-chart-reference">Helm chart reference</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
@@ -381,12 +383,11 @@ clean everything up. You can do this with <code class="docutils literal notransl
 </div>
 </div>
 <div class="section" id="additional-configuration">
-<h2>Additional Configuration<a class="headerlink" href="#additional-configuration" title="Permalink to this headline">¶</a></h2>
+<h2>Additional configuration<a class="headerlink" href="#additional-configuration" title="Permalink to this headline">¶</a></h2>
 <p>Here we provide a few configuration snippets for common deployment scenarios.
-For all available configuration values, see the <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default values.yaml file</a> and
-the <a class="reference internal" href="api-server.html#kube-cluster-manager-config"><span class="std std-ref">KubeClusterManager</span></a> docs.</p>
+For all available configuration fields see the <a class="reference internal" href="#helm-chart-reference"><span class="std std-ref">Helm chart reference</span></a>.</p>
 <div class="section" id="using-extrapodconfig-extracontainerconfig">
-<h3>Using extraPodConfig/extraContainerConfig<a class="headerlink" href="#using-extrapodconfig-extracontainerconfig" title="Permalink to this headline">¶</a></h3>
+<h3>Using <code class="docutils literal notranslate"><span class="pre">extraPodConfig</span></code>/<code class="docutils literal notranslate"><span class="pre">extraContainerConfig</span></code><a class="headerlink" href="#using-extrapodconfig-extracontainerconfig" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/">Kubernetes API</a> is large, and not all configuration fields you may want
 to set on scheduler/worker pods are directly exposed by the Helm chart. To
 address this, we provide a few fields for forwarding configuration directly to
@@ -424,6 +425,45 @@ anti-affinity for scheduler pods to avoid <a class="reference external" href="ht
 <li><p><a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core">PodSpec Configuration</a></p></li>
 <li><p><a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">Container Configuration</a></p></li>
 </ul>
+</div>
+<div class="section" id="using-extraconfig">
+<h3>Using <code class="docutils literal notranslate"><span class="pre">extraConfig</span></code><a class="headerlink" href="#using-extraconfig" title="Permalink to this headline">¶</a></h3>
+<p>Not all configuration options have been exposed via the helm chart. To set
+unexposed options, you can use the <code class="docutils literal notranslate"><span class="pre">gateway.extraConfig</span></code> field. This takes
+either:</p>
+<ul class="simple">
+<li><p>A python code-block (as a string) to append to the end of the generated
+<code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file.</p></li>
+<li><p>A map of keys -&gt; code-blocks. When applied in this form, code-blocks are
+appended in alphabetical order by key (the keys themselves are meaningless).
+This allows merging multiple <code class="docutils literal notranslate"><span class="pre">values.yaml</span></code> files together, as Helm can
+natively merge maps.</p></li>
+</ul>
+<p>For example, here we use <code class="docutils literal notranslate"><span class="pre">gateway.extraConfig</span></code> to set
+<a class="reference internal" href="api-server.html#c.DaskGateway.cluster_manager_options" title="c.DaskGateway.cluster_manager_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.cluster_manager_options</span></code></a>, exposing options for worker
+resources and image (see <a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a> for more information).</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
+  <span class="nt">extraConfig</span><span class="p">:</span> <span class="p p-Indicator">|</span>
+    <span class="no">from dask_gateway_server.options import Options, Integer, Float, String</span>
+
+    <span class="no">def option_handler(options):</span>
+        <span class="no">return {</span>
+            <span class="no">&quot;worker_cores&quot;: options.worker_cores,</span>
+            <span class="no">&quot;worker_memory&quot;: &quot;%fG&quot; % options.worker_memory,</span>
+            <span class="no">&quot;image&quot;: options.image,</span>
+        <span class="no">}</span>
+
+    <span class="no">c.DaskGateway.cluster_manager_options = Options(</span>
+        <span class="no">Integer(&quot;worker_cores&quot;, 2, min=1, max=4, label=&quot;Worker Cores&quot;),</span>
+        <span class="no">Float(&quot;worker_memory&quot;, 4, min=1, max=8, label=&quot;Worker Memory (GiB)&quot;),</span>
+        <span class="no">String(&quot;image&quot;, default=&quot;daskgateway/dask-gateway:latest&quot;, label=&quot;Image&quot;),</span>
+        <span class="no">handler=option_handler,</span>
+    <span class="no">)</span>
+</pre></div>
+</div>
+<p>For information on all available configuration options, see the
+<a class="reference internal" href="api-server.html"><span class="doc">Configuration Reference</span></a> (in particular, the <a class="reference internal" href="api-server.html#kube-cluster-manager-config"><span class="std std-ref">KubeClusterManager</span></a>
+section).</p>
 </div>
 <div class="section" id="authenticating-with-jupyterhub">
 <h3>Authenticating with JupyterHub<a class="headerlink" href="#authenticating-with-jupyterhub" title="Permalink to this headline">¶</a></h3>
@@ -481,6 +521,192 @@ object.</p>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+</div>
+<div class="section" id="helm-chart-reference">
+<span id="id1"></span><h2>Helm chart reference<a class="headerlink" href="#helm-chart-reference" title="Permalink to this headline">¶</a></h2>
+<p>The full <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default values.yaml file</a> for the dask-gateway Helm chart is included
+here for reference:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
+  <span class="c1"># Annotations to apply to the gateway-server pod.</span>
+  <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+  <span class="c1"># A 32 byte hex-encoded secret token for encrypting cookies.</span>
+  <span class="c1"># Sets `c.DaskGateway.cookie_secret`.</span>
+  <span class="nt">cookieSecret</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+  <span class="c1"># A 32 byte hex-encoded secret token for authenticating with the proxies.</span>
+  <span class="c1"># Sets `c.WebProxy.auth_token` and `c.SchedulerProxy.auth_token`.</span>
+  <span class="nt">proxyToken</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+  <span class="c1"># Resource requests/limits for the gateway-server pod.</span>
+  <span class="nt">resources</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+  <span class="c1"># The image to use for the gateway-server pod.</span>
+  <span class="nt">image</span><span class="p">:</span>
+    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span>
+    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.5.0</span>
+    <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+
+  <span class="nt">auth</span><span class="p">:</span>
+    <span class="c1"># The auth type to use. One of {dummy, kerberos, jupyterhub, custom}.</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
+
+    <span class="nt">dummy</span><span class="p">:</span>
+      <span class="c1"># A shared password to use for all users.</span>
+      <span class="nt">password</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+    <span class="nt">kerberos</span><span class="p">:</span>
+      <span class="c1"># Path to the HTTP keytab for this node.</span>
+      <span class="nt">keytab</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+    <span class="nt">jupyterhub</span><span class="p">:</span>
+      <span class="c1"># A JupyterHub api token for dask-gateway to use. See</span>
+      <span class="c1"># https://gateway.dask.org/install-kube.html#authenticating-with-jupyterhub.</span>
+      <span class="nt">apiToken</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+      <span class="c1"># JupyterHub&#39;s api url. Inferred from JupyterHub&#39;s service name if running</span>
+      <span class="c1"># in the same namespace.</span>
+      <span class="nt">apiUrl</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+    <span class="nt">custom</span><span class="p">:</span>
+      <span class="c1"># The full authenticator class name.</span>
+      <span class="nt">class</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+      <span class="c1"># Configuration fields to set on the authenticator class.</span>
+      <span class="nt">options</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+  <span class="nt">clusterManager</span><span class="p">:</span>
+    <span class="c1"># Timeout (in seconds) for starting a cluster.</span>
+    <span class="c1"># Sets `c.KubeClusterManager.cluster_start_timeout`.</span>
+    <span class="nt">clusterStartTimeout</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+    <span class="c1"># Timeout (in seconds) for starting a worker.</span>
+    <span class="c1"># Sets `c.KubeClusterManager.worker_start_timeout`.</span>
+    <span class="nt">workerStartTimeout</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+    <span class="c1"># The image to use for both schedulers and workers.</span>
+    <span class="nt">image</span><span class="p">:</span>
+      <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway</span>
+      <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.5.0</span>
+      <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+
+    <span class="c1"># A mapping of environment variables to set for both schedulers and workers.</span>
+    <span class="nt">environment</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+    <span class="nt">scheduler</span><span class="p">:</span>
+      <span class="c1"># Any extra configuration for the scheduler pod. Sets</span>
+      <span class="c1"># `c.KubeClusterManager.scheduler_extra_pod_config`.</span>
+      <span class="nt">extraPodConfig</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+      <span class="c1"># Any extra configuration for the scheduler container.</span>
+      <span class="c1"># Sets `c.KubeClusterManager.scheduler_extra_container_config`.</span>
+      <span class="nt">extraContainerConfig</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+      <span class="c1"># Cores request/limit for the scheduler.</span>
+      <span class="nt">cores</span><span class="p">:</span>
+        <span class="nt">request</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+        <span class="nt">limit</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+      <span class="c1"># Memory request/limit for the scheduler.</span>
+      <span class="nt">memory</span><span class="p">:</span>
+        <span class="nt">request</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+        <span class="nt">limit</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+    <span class="nt">worker</span><span class="p">:</span>
+      <span class="c1"># Any extra configuration for the worker pod. Sets</span>
+      <span class="c1"># `c.KubeClusterManager.worker_extra_pod_config`.</span>
+      <span class="nt">extraPodConfig</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+      <span class="c1"># Any extra configuration for the worker container. Sets</span>
+      <span class="c1"># `c.KubeClusterManager.worker_extra_container_config`.</span>
+      <span class="nt">extraContainerConfig</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+      <span class="c1"># Cores request/limit for each worker.</span>
+      <span class="nt">cores</span><span class="p">:</span>
+        <span class="nt">request</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+        <span class="nt">limit</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+      <span class="c1"># Memory request/limit for each worker.</span>
+      <span class="nt">memory</span><span class="p">:</span>
+        <span class="nt">request</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+        <span class="nt">limit</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+  <span class="c1"># Any extra configuration code to append to the generated `dask_gateway_config.py`</span>
+  <span class="c1"># file. Can be either a single code-block, or a map of key -&gt; code-block</span>
+  <span class="c1"># (code-blocks are run in alphabetical order by key, the key value itself is</span>
+  <span class="c1"># meaningless). The map version is useful as it supports merging multiple</span>
+  <span class="c1"># `values.yaml` files, but is unnecessary in other cases.</span>
+  <span class="nt">extraConfig</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+<span class="nt">schedulerProxy</span><span class="p">:</span>
+  <span class="c1"># Annotations to apply to the scheduler-proxy pod.</span>
+  <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+  <span class="c1"># Resource requests/limits for the scheduler-proxy pod.</span>
+  <span class="nt">resources</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+  <span class="c1"># The image to use for the scheduler-proxy.</span>
+  <span class="nt">image</span><span class="p">:</span>
+    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span>
+    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.5.0</span>
+    <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+
+  <span class="c1"># Service configuration for the scheduler-proxy service. See</span>
+  <span class="c1"># https://kubernetes.io/docs/concepts/services-networking/service/ for more</span>
+  <span class="c1"># information.</span>
+  <span class="nt">service</span><span class="p">:</span>
+    <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">LoadBalancer</span>
+    <span class="nt">nodePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+    <span class="nt">loadBalancerIP</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+<span class="nt">webProxy</span><span class="p">:</span>
+  <span class="c1"># Annotations to apply to the web-proxy pod.</span>
+  <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+  <span class="c1"># Resource requests/limits for the web-proxy pod.</span>
+  <span class="nt">resources</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+  <span class="c1"># The image to use for the web-proxy.</span>
+  <span class="nt">image</span><span class="p">:</span>
+    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span>
+    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.5.0</span>
+    <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+
+  <span class="c1"># Service configuration for the web-proxy service. See</span>
+  <span class="c1"># https://kubernetes.io/docs/concepts/services-networking/service/ for more</span>
+  <span class="c1"># information.</span>
+  <span class="nt">service</span><span class="p">:</span>
+    <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">LoadBalancer</span>
+    <span class="nt">nodePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+    <span class="nt">loadBalancerIP</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+
+<span class="nt">rbac</span><span class="p">:</span>
+  <span class="c1"># Whether to enable RBAC.</span>
+  <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="nt">ingress</span><span class="p">:</span>
+  <span class="c1"># Whether an Ingress object should be used.</span>
+  <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+
+  <span class="c1"># Annotations to apply to the Ingress.</span>
+  <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+
+  <span class="c1"># A list of hosts to route requests to the proxy.</span>
+  <span class="nt">hosts</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
+
+  <span class="c1"># TLS configuration for ingress. See</span>
+  <span class="c1"># https://kubernetes.io/docs/concepts/services-networking/ingress/#tls for more</span>
+  <span class="c1"># information.</span>
+  <span class="nt">tls</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
+
+  <span class="c1"># The path to use when adding the gateway to the Ingress rules. See</span>
+  <span class="c1"># https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules</span>
+  <span class="c1"># for more information.</span>
+  <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/</span>
+</pre></div>
 </div>
 </div>
 </div>
