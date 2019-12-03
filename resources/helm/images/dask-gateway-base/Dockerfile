@@ -1,8 +1,8 @@
 FROM debian:10.1-slim
 LABEL MAINTAINER="Jim Crist"
 
-ENV CONDA_VERSION 4.7.10
-ENV CONDA_MD5 1c945f2b3335c7b2b15130b1b2dc5cf4
+ENV CONDA_VERSION 4.7.12.1
+ENV CONDA_MD5 81c773ff87af5cfac79ab862942ab6b3
 
 # We do the following all in one block:
 # - Create user dask
