@@ -38,7 +38,7 @@ RUN useradd -m -U -u 1000 dask \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-USER dask:dask
+USER 1000:1000
 ENV PATH="/opt/conda/bin:$PATH"
 WORKDIR /home/dask/
 
