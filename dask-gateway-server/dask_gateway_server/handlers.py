@@ -202,7 +202,7 @@ class ClustersHandler(BaseHandler):
                     return
         self.write(cluster_model(self.gateway, cluster, full=True))
 
-    @authenticated(user=True)
+    @authenticated(user=True, token=True)
     async def delete(self, cluster_name):
         # Only accept urls of the form /api/clusters/{cluster_name}
         if not cluster_name:

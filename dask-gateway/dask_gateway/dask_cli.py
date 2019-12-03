@@ -1,5 +1,6 @@
 from __future__ import print_function, division, absolute_import
 
+import asyncio
 import argparse
 import collections
 import json
@@ -225,11 +226,15 @@ class Adaptive(object):
 
 
 class GatewaySchedulerService(object):
-    def __init__(self, scheduler, io_loop=None, gateway=None, adaptive_period=3):
+    def __init__(
+        self, scheduler, io_loop=None, gateway=None, adaptive_period=3, idle_timeout=0
+    ):
         self.scheduler = scheduler
         self.adaptive = Adaptive(self, period=adaptive_period)
         self.gateway = gateway
         self.loop = io_loop or scheduler.loop
+        self.idle_timeout = max(0, idle_timeout)
+        self.check_idle_task = None
 
         routes = [
             ("/api/scale_down", ScaleDownHandler),
@@ -268,10 +273,36 @@ class GatewaySchedulerService(object):
         assert len(ports) == 1, "Only a single port allowed"
         self.port = ports.pop()
 
+        if self.idle_timeout > 0:
+            self.check_idle_task = asyncio.ensure_future(self.check_idle())
+
     def stop(self):
         if self.server is not None:
             self.server.stop()
             self.server = None
+        if self.check_idle_task is not None:
+            self.check_idle_task.cancel()
+
+    async def check_idle(self):
+        while True:
+            await asyncio.sleep(self.idle_timeout / 4)
+            if any(ws.processing for ws in self.scheduler.workers.values()):
+                return
+            if self.scheduler.unrunnable:
+                return
+
+            last_action = (
+                self.scheduler.transition_log[-1][-1]
+                if self.scheduler.transition_log
+                else self.scheduler.time_started
+            )
+
+            if self.loop.time() - last_action > self.idle_timeout:
+                logger.warning(
+                    "Cluster has been idle for %.2f seconds, shutting down",
+                    self.idle_timeout,
+                )
+                await self.gateway.shutdown()
 
     def add_pending_workers(self, workers):
         self.plan.update(workers)
@@ -470,6 +501,14 @@ class GatewayClient(object):
         data = json.loads(resp.body.decode("utf8", "replace"))
         return data["added"]
 
+    async def shutdown(self):
+        client = AsyncHTTPClient()
+        url = "%s/clusters/%s" % (self.api_url, self.cluster_name)
+        req = HTTPRequest(
+            url, method="DELETE", headers={"Authorization": "token %s" % self.token}
+        )
+        await client.fetch(req)
+
 
 scheduler_parser = argparse.ArgumentParser(
     prog="dask-gateway-scheduler", description="Start a dask-gateway scheduler"
@@ -480,6 +519,12 @@ scheduler_parser.add_argument(
     type=float,
     default=3,
     help="Period (in seconds) between adaptive scaling calls",
+)
+scheduler_parser.add_argument(
+    "--idle-timeout",
+    type=float,
+    default=0,
+    help="Idle timeout (in seconds) before shutting down the cluster",
 )
 
 
@@ -532,7 +577,10 @@ def scheduler(argv=None):
 
     async def run():
         scheduler = await start_scheduler(
-            gateway, security, adaptive_period=args.adaptive_period
+            gateway,
+            security,
+            adaptive_period=args.adaptive_period,
+            idle_timeout=args.idle_timeout,
         )
         await scheduler.finished()
 
@@ -542,12 +590,18 @@ def scheduler(argv=None):
         pass
 
 
-async def start_scheduler(gateway, security, adaptive_period=3, exit_on_failure=True):
+async def start_scheduler(
+    gateway, security, adaptive_period=3, idle_timeout=0, exit_on_failure=True
+):
     loop = IOLoop.current()
     services = {
         ("gateway", 0): (
             GatewaySchedulerService,
-            {"gateway": gateway, "adaptive_period": adaptive_period},
+            {
+                "gateway": gateway,
+                "adaptive_period": adaptive_period,
+                "idle_timeout": idle_timeout,
+            },
         )
     }
     dashboard = False

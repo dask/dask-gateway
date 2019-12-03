@@ -112,6 +112,17 @@ class ClusterManager(LoggingConfigurable):
         config=True,
     )
 
+    idle_timeout = Float(
+        0,
+        min=0,
+        help="""
+        Time (in seconds) before an idle cluster is automatically shutdown.
+
+        Set to 0 (default) for no idle timeout.
+        """,
+        config=True,
+    )
+
     adaptive_period = Float(
         3,
         min=0,
@@ -171,7 +182,13 @@ class ClusterManager(LoggingConfigurable):
     @property
     def scheduler_command_list(self):
         """The full command (as an arg list) to launch a dask scheduler"""
-        return [self.scheduler_cmd, "--adaptive-period", str(self.adaptive_period)]
+        return [
+            self.scheduler_cmd,
+            "--adaptive-period",
+            str(self.adaptive_period),
+            "--idle-timeout",
+            str(self.idle_timeout),
+        ]
 
     @property
     def worker_command(self):

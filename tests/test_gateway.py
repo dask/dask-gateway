@@ -963,3 +963,32 @@ async def test_adaptive_scaling(tmpdir):
 
             # Shutdown the cluster
             await cluster.shutdown()
+
+
+@pytest.mark.asyncio
+async def test_idle_timeout(tmpdir):
+    config = Config()
+    config.DaskGateway.cluster_manager_class = InProcessClusterManager
+    config.DaskGateway.temp_dir = str(tmpdir)
+    config.InProcessClusterManager.idle_timeout = 2
+    async with temp_gateway(config=config) as gateway_proc:
+        async with Gateway(
+            address=gateway_proc.public_urls.connect_url,
+            proxy_address=gateway_proc.gateway_urls.connect_url,
+            asynchronous=True,
+        ) as gateway:
+            # Start a cluster
+            cluster = await gateway.new_cluster()
+            # Add some workers
+            await cluster.scale(2)
+            await wait_for_workers(cluster, atleast=1)
+
+            waited = 0
+            while await gateway.list_clusters():
+                await asyncio.sleep(0.25)
+                waited += 0.25
+                if waited >= 5:
+                    assert False, "Failed to automatically shutdown in time"
+
+            # Calling shutdown doesn't break anything
+            await cluster.shutdown()
