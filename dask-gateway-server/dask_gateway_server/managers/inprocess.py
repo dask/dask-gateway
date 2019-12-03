@@ -36,6 +36,7 @@ class InProcessClusterManager(UnsafeLocalClusterManager):
             security,
             exit_on_failure=False,
             adaptive_period=self.adaptive_period,
+            idle_timeout=self.idle_timeout,
         )
         yield {}
 
