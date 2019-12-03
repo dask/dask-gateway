@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+19.g7476fdb documentation</title>
+  <title>Configuration Reference &mdash; Dask Gateway 0.5.0+20.g17f5610 documentation</title>
   
 
   
@@ -125,7 +125,7 @@
             
             
               <div class="version">
-                0.5.0+19.g7476fdb
+                0.5.0+20.g17f5610
               </div>
             
           
@@ -580,6 +580,13 @@ of failures.</p>
 </dd></dl>
 
 <dl class="data">
+<dt id="c.ClusterManager.idle_timeout">
+<code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">idle_timeout</code><em class="property"> = Float(0)</em><a class="headerlink" href="#c.ClusterManager.idle_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) before an idle cluster is automatically shutdown.</p>
+<p>Set to 0 (default) for no idle timeout.</p>
+</dd></dl>
+
+<dl class="data">
 <dt id="c.ClusterManager.scheduler_cmd">
 <code class="sig-prename descclassname">c.ClusterManager.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.ClusterManager.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway scheduler.</p>
@@ -688,6 +695,13 @@ subdirectory will be removed.</p>
 <dt id="c.LocalClusterManager.environment">
 <code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.LocalClusterManager.environment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.LocalClusterManager.idle_timeout">
+<code class="sig-prename descclassname">c.LocalClusterManager.</code><code class="sig-name descname">idle_timeout</code><em class="property"> = Float(0)</em><a class="headerlink" href="#c.LocalClusterManager.idle_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) before an idle cluster is automatically shutdown.</p>
+<p>Set to 0 (default) for no idle timeout.</p>
 </dd></dl>
 
 <dl class="data">
@@ -828,6 +842,13 @@ subdirectory will be removed.</p>
 </dd></dl>
 
 <dl class="data">
+<dt id="c.UnsafeLocalClusterManager.idle_timeout">
+<code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">idle_timeout</code><em class="property"> = Float(0)</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.idle_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) before an idle cluster is automatically shutdown.</p>
+<p>Set to 0 (default) for no idle timeout.</p>
+</dd></dl>
+
+<dl class="data">
 <dt id="c.UnsafeLocalClusterManager.inherited_environment">
 <code class="sig-prename descclassname">c.UnsafeLocalClusterManager.</code><code class="sig-name descname">inherited_environment</code><em class="property"> = List('')</em><a class="headerlink" href="#c.UnsafeLocalClusterManager.inherited_environment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whitelist of environment variables for the scheduler and worker
@@ -955,6 +976,13 @@ of failures.</p>
 <dt id="c.YarnClusterManager.environment">
 <code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.YarnClusterManager.environment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.YarnClusterManager.idle_timeout">
+<code class="sig-prename descclassname">c.YarnClusterManager.</code><code class="sig-name descname">idle_timeout</code><em class="property"> = Float(0)</em><a class="headerlink" href="#c.YarnClusterManager.idle_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) before an idle cluster is automatically shutdown.</p>
+<p>Set to 0 (default) for no idle timeout.</p>
 </dd></dl>
 
 <dl class="data">
@@ -1124,6 +1152,13 @@ of failures.</p>
 <dt id="c.KubeClusterManager.environment">
 <code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterManager.environment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.KubeClusterManager.idle_timeout">
+<code class="sig-prename descclassname">c.KubeClusterManager.</code><code class="sig-name descname">idle_timeout</code><em class="property"> = Float(0)</em><a class="headerlink" href="#c.KubeClusterManager.idle_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) before an idle cluster is automatically shutdown.</p>
+<p>Set to 0 (default) for no idle timeout.</p>
 </dd></dl>
 
 <dl class="data">
@@ -1379,6 +1414,13 @@ local host in PBS directives.</p>
 </dd></dl>
 
 <dl class="data">
+<dt id="c.PBSClusterManager.idle_timeout">
+<code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">idle_timeout</code><em class="property"> = Float(0)</em><a class="headerlink" href="#c.PBSClusterManager.idle_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) before an idle cluster is automatically shutdown.</p>
+<p>Set to 0 (default) for no idle timeout.</p>
+</dd></dl>
+
+<dl class="data">
 <dt id="c.PBSClusterManager.project">
 <code class="sig-prename descclassname">c.PBSClusterManager.</code><code class="sig-name descname">project</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.PBSClusterManager.project" title="Permalink to this definition">¶</a></dt>
 <dd><p>Project associated with each job.</p>
@@ -1567,6 +1609,13 @@ of failures.</p>
 <dt id="c.SlurmClusterManager.environment">
 <code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.SlurmClusterManager.environment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Environment variables to set for both the worker and scheduler processes.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="c.SlurmClusterManager.idle_timeout">
+<code class="sig-prename descclassname">c.SlurmClusterManager.</code><code class="sig-name descname">idle_timeout</code><em class="property"> = Float(0)</em><a class="headerlink" href="#c.SlurmClusterManager.idle_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time (in seconds) before an idle cluster is automatically shutdown.</p>
+<p>Set to 0 (default) for no idle timeout.</p>
 </dd></dl>
 
 <dl class="data">
