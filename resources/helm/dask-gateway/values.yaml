@@ -16,7 +16,7 @@ gateway:
   # The image to use for the gateway-server pod.
   image:
     name: daskgateway/dask-gateway-server
-    tag: 0.5.0
+    tag: 0.6.0
     pullPolicy: IfNotPresent
 
   auth:
@@ -59,7 +59,7 @@ gateway:
     # The image to use for both schedulers and workers.
     image:
       name: daskgateway/dask-gateway
-      tag: 0.5.0
+      tag: 0.6.0
       pullPolicy: IfNotPresent
 
     # A mapping of environment variables to set for both schedulers and workers.
@@ -120,7 +120,7 @@ schedulerProxy:
   # The image to use for the scheduler-proxy.
   image:
     name: daskgateway/dask-gateway-server
-    tag: 0.5.0
+    tag: 0.6.0
     pullPolicy: IfNotPresent
 
   # Service configuration for the scheduler-proxy service. See
@@ -142,7 +142,7 @@ webProxy:
   # The image to use for the web-proxy.
   image:
     name: daskgateway/dask-gateway-server
-    tag: 0.5.0
+    tag: 0.6.0
     pullPolicy: IfNotPresent
 
   # Service configuration for the web-proxy service. See
