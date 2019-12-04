@@ -318,6 +318,31 @@ async def test_create_cluster_with_GatewayCluster_constructor(tmpdir):
 
 
 @pytest.mark.asyncio
+async def test_sync_constructors(tmpdir):
+    def test():
+        with Gateway(
+            address=gateway_proc.public_urls.connect_url,
+            proxy_address=gateway_proc.gateway_urls.connect_url,
+        ) as gateway:
+            with gateway.new_cluster() as cluster:
+                cluster.scale(1)
+                client = cluster.get_client()
+                res = client.submit(lambda x: x + 1, 1).result()
+                assert res == 2
+
+                with gateway.connect(cluster.name) as cluster2:
+                    client2 = cluster2.get_client()
+                    res = client2.submit(lambda x: x + 1, 1).result()
+                    assert res == 2
+
+    async with temp_gateway(
+        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
+    ) as gateway_proc:
+        loop = get_running_loop()
+        await loop.run_in_executor(None, test)
+
+
+@pytest.mark.asyncio
 async def test_GatewayCluster_shutdown_on_close(tmpdir):
     async with temp_gateway(
         cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
