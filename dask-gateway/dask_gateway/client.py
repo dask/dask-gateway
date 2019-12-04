@@ -760,8 +760,6 @@ class GatewayCluster(object):
             asynchronous=asynchronous,
             loop=loop,
         )
-        if not self.asynchronous:
-            self.gateway.sync(self._start_internal)
 
     @classmethod
     def from_name(
@@ -851,6 +849,8 @@ class GatewayCluster(object):
 
         if name is not None:
             self.status = "starting"
+        if not self.asynchronous:
+            self.gateway.sync(self._start_internal)
 
     @property
     def loop(self):
