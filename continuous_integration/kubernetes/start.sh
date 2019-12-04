@@ -18,7 +18,13 @@ k3d create \
     --publish 30201:30201 \
     --name k3s-default
 
-export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
+for i in {1..5}; do
+    export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
+    if [[ $KUBECONFIG != "" ]]; then
+        break;
+    fi
+    sleep 1
+done
 
 # Fixup the kubeconfig file, since k3d doesn't do it properly
 if [[ "$DOCKER_MACHINE_NAME" != "" ]]; then
@@ -103,4 +109,4 @@ spec:
 EOF
 
 echo "Waiting for testing pod to start"
-kubectl wait -n dask-gateway --for=condition=Ready pod/dask-gateway-tests --timeout=60s
+kubectl wait -n dask-gateway --for=condition=Ready pod/dask-gateway-tests --timeout=90s
