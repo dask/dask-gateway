@@ -5,7 +5,7 @@ this_dir="$(dirname "${BASH_SOURCE[0]}")"
 full_path_this_dir="$(cd "${this_dir}" && pwd)"
 git_root="$(cd "${full_path_this_dir}/../.." && pwd)"
 
-if [[ "$TRAVIS" != "true" ]]; then
+if [[ "$TRAVIS" == "true" ]]; then
     echo "Installing kubectl and k3d"
     $this_dir/install-k3d.sh
 fi
