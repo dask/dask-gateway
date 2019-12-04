@@ -18,7 +18,7 @@ k3d create \
     --publish 30201:30201 \
     --name k3s-default
 
-for i in {1..5}; do
+for i in {1..10}; do
     export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
     if [[ $KUBECONFIG != "" ]]; then
         break;
