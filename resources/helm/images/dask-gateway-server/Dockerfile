@@ -3,7 +3,7 @@ LABEL MAINTAINER="Jim Crist"
 
 # Install dask-gateway
 RUN /opt/conda/bin/pip install --no-cache-dir \
-    dask-gateway-server[kubernetes]==0.6.0
+    dask-gateway-server[kubernetes]==0.6.1
 
 # Setup working directory
 USER root
