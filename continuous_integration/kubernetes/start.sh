@@ -1,46 +1,49 @@
 #!/usr/bin/env bash
 set -e
 
-KUBE_VERSION=1.13.0
-
 this_dir="$(dirname "${BASH_SOURCE[0]}")"
 full_path_this_dir="$(cd "${this_dir}" && pwd)"
 git_root="$(cd "${full_path_this_dir}/../.." && pwd)"
 
-echo "Starting minikube"
-
 if [[ "$TRAVIS" == "true" ]]; then
-    # Install minikube
-    $this_dir/install-minikube.sh
-
-    # Start with no VM driver on Travis CI
-    sudo CHANGE_MINIKUBE_NONE_USER=true minikube start \
-        --kubernetes-version=v${KUBE_VERSION} \
-        --extra-config=apiserver.authorization-mode=RBAC \
-        --vm-driver=none
-
-    # Ensure the travis user owns the minikube configuration directory
-    sudo chown -R travis: /home/travis/.minikube/
-
-    DASK_GATEWAY_SOURCE="$git_root"
-else
-    # Mount the repo in minikube
-    minikube start \
-        --kubernetes-version=v${KUBE_VERSION} \
-        --extra-config=apiserver.authorization-mode=RBAC \
-        --mount-string "$git_root:/dask-gateway-host" \
-        --mount
-    DASK_GATEWAY_SOURCE="/dask-gateway-host"
+    echo "Installing kubectl and k3d"
+    $this_dir/install-k3d.sh
 fi
 
-minikube update-context
+echo "Starting k3d"
 
-echo "Waiting for minikube..."
+k3d create \
+    -v $git_root:/dask-gateway-host \
+    --publish 30200:30200 \
+    --publish 30201:30201 \
+    --name k3s-default
+
+for i in {1..10}; do
+    export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
+    if [[ $KUBECONFIG != "" ]]; then
+        break;
+    fi
+    sleep 1
+done
+
+# Fixup the kubeconfig file, since k3d doesn't do it properly
+if [[ "$DOCKER_MACHINE_NAME" != "" ]]; then
+    api_host=$(docker-machine ip $DOCKER_MACHINE_NAME)
+    echo "Patching kubeconfig file"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i "" "s/127.0.0.1/$api_host/g" $KUBECONFIG
+    else
+        sed -i "s/127.0.0.1/$api_host/g" $KUBECONFIG
+    fi
+fi
+
+echo "Waiting for k3d..."
 
 JSONPATH='{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}'
 until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do
   sleep 0.5
 done
+echo "k3d is running!"
 
 kubectl get nodes
 
@@ -92,7 +95,7 @@ spec:
   containers:
     - name: dask-gateway-tests
       image: daskgateway/dask-gateway-base:latest
-      args: 
+      args:
         - sleep
         - infinity
       volumeMounts:
@@ -100,10 +103,10 @@ spec:
           mountPath: /working
   volumes:
     - name: dask-gateway-source
-      hostPath: 
-        path: $DASK_GATEWAY_SOURCE
+      hostPath:
+        path: /dask-gateway-host
         type: Directory
 EOF
 
 echo "Waiting for testing pod to start"
-kubectl wait -n dask-gateway --for=condition=Ready pod/dask-gateway-tests
+kubectl wait -n dask-gateway --for=condition=Ready pod/dask-gateway-tests --timeout=90s
