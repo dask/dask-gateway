@@ -18,4 +18,4 @@ RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
 
 # Install dask-gateway
 RUN /opt/conda/bin/pip install --no-cache-dir --no-deps \
-    dask-gateway==0.6.0
+    dask-gateway==0.6.1
