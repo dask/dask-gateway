@@ -1,17 +1,16 @@
-import json
 import os
 import base64
 from urllib.parse import quote
 
-from tornado import web
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+import aiohttp
+from aiohttp import web
 from traitlets import Unicode, default
 from traitlets.config import LoggingConfigurable
 
 __all__ = (
     "Authenticator",
+    "SimpleAuthenticator",
     "KerberosAuthenticator",
-    "DummyAuthenticator",
     "JupyterHubAuthenticator",
 )
 
@@ -19,20 +18,74 @@ __all__ = (
 class Authenticator(LoggingConfigurable):
     """Base class for authenticators"""
 
-    def authenticate(self, handler):
+    async def on_startup(self):
+        """Called when the application starts up.
+
+        Do any initialization here."""
+        pass
+
+    async def on_shutdown(self):
+        """Called when the application shutsdown.
+
+        Do any cleanup here."""
+        pass
+
+    def authenticate(self, request):
         """Perform the authentication process.
 
         Parameters
         ----------
-        handler : tornado.web.RequestHandler
-            The current request handler.
+        request : aiohttp.web.Request
+            The current request.
 
         Returns
         -------
-        user : str
-            The user name.
+        user : dict
+            A dict with "name", "groups", and "admin" fields corresponding to
+            the authenticating user.
         """
         pass
+
+
+def unauthorized(kind):
+    return web.HTTPUnauthorized(
+        headers={"WWW-Authenticate": kind}, reason="Authentication required"
+    )
+
+
+class SimpleAuthenticator(Authenticator):
+    """A simple authenticator that uses Basic Auth.
+
+    This is highly insecure, use only for testing!!!
+    """
+
+    password = Unicode(
+        None,
+        allow_none=True,
+        help="""
+        If set, a global password that all users must provide.
+
+        If unset (default), the password field is completely ignored.
+        """,
+        config=True,
+    )
+
+    def authenticate(self, request):
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            raise unauthorized("Basic")
+
+        auth_type, auth_key = auth_header.split(" ", 1)
+        if auth_type != "Basic":
+            raise unauthorized("Basic")
+
+        auth_key = base64.b64decode(auth_key).decode("ascii")
+        user, password = auth_key.split(":", 1)
+
+        if self.password and password != self.password:
+            raise unauthorized("Basic")
+
+        return {"name": user, "groups": [], "admin": False}
 
 
 class KerberosAuthenticator(Authenticator):
@@ -50,30 +103,23 @@ class KerberosAuthenticator(Authenticator):
         "dask_gateway.keytab", help="The path to the keytab file", config=True
     )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    async def on_startup(self):
         os.environ["KRB5_KTNAME"] = self.keytab
 
     def raise_auth_error(self, err):
         self.log.error("Kerberos failure: %s", err)
-        raise web.HTTPError(500, "Error during kerberos authentication")
+        raise web.HTTPInternalServerError(reason="Error during kerberos authentication")
 
-    def raise_auth_required(self, handler):
-        handler.set_status(401)
-        handler.write("Authentication required")
-        handler.set_header("WWW-Authenticate", "Negotiate")
-        raise web.Finish()
-
-    def authenticate(self, handler):
+    def authenticate(self, request):
         import kerberos
 
-        auth_header = handler.request.headers.get("Authorization")
+        auth_header = request.headers.get("Authorization")
         if not auth_header:
-            return self.raise_auth_required(handler)
+            raise unauthorized("Negotiate")
 
         auth_type, auth_key = auth_header.split(" ", 1)
         if auth_type != "Negotiate":
-            return self.raise_auth_required(handler)
+            raise unauthorized("Negotiate")
 
         gss_context = None
         try:
@@ -88,16 +134,12 @@ class KerberosAuthenticator(Authenticator):
             # to match its docs, but they likely never will trigger.
 
             if rc != kerberos.AUTH_GSS_COMPLETE:
-                return self.raise_auth_error(
-                    "GSS server init failed, return code = %r" % rc
-                )
+                self.raise_auth_error("GSS server init failed, return code = %r" % rc)
 
             # Challenge step
             rc = kerberos.authGSSServerStep(gss_context, auth_key)
             if rc != kerberos.AUTH_GSS_COMPLETE:
-                return self.raise_auth_error(
-                    "GSS server step failed, return code = %r" % rc
-                )
+                self.raise_auth_error("GSS server step failed, return code = %r" % rc)
             gss_key = kerberos.authGSSServerResponse(gss_context)
 
             # Retrieve user name
@@ -105,55 +147,14 @@ class KerberosAuthenticator(Authenticator):
             user = fulluser.split("@", 1)[0]
 
             # Complete the protocol by responding with the Negotiate header
-            handler.set_header("WWW-Authenticate", "Negotiate %s" % gss_key)
+            request["auth-headers"] = {"WWW-Authenticate": "Negotiate %s" % gss_key}
         except kerberos.GSSError as err:
-            return self.raise_auth_error(err)
+            self.raise_auth_error(err)
         finally:
             if gss_context is not None:
                 kerberos.authGSSServerClean(gss_context)
 
-        return user
-
-
-class DummyAuthenticator(Authenticator):
-    """A simple authenticator that uses Basic Auth.
-
-    This is highly insecure, use only for testing!!!
-    """
-
-    password = Unicode(
-        None,
-        allow_none=True,
-        help="""
-        If set, a global password that all users must provide.
-
-        If unset (default), the password field is completely ignored.
-        """,
-        config=True,
-    )
-
-    def raise_auth_required(self, handler):
-        handler.set_status(401)
-        handler.write("Authentication required")
-        handler.set_header("WWW-Authenticate", "Basic")
-        raise web.Finish()
-
-    def authenticate(self, handler):
-        auth_header = handler.request.headers.get("Authorization")
-        if not auth_header:
-            self.raise_auth_required(handler)
-
-        auth_type, auth_key = auth_header.split(" ", 1)
-        if auth_type != "Basic":
-            self.raise_auth_required(handler)
-
-        auth_key = base64.b64decode(auth_key).decode("ascii")
-        user, password = auth_key.split(":", 1)
-
-        if self.password and password != self.password:
-            self.raise_auth_required(handler)
-
-        return user
+        return {"name": user, "groups": [], "admin": False}
 
 
 class JupyterHubAuthenticator(Authenticator):
@@ -224,60 +225,73 @@ class JupyterHubAuthenticator(Authenticator):
         config=True,
     )
 
-    def raise_auth_required(self, handler):
-        handler.set_status(401)
-        handler.write("Authentication required")
-        handler.set_header("WWW-Authenticate", "jupyterhub")
-        raise web.Finish()
+    async def on_startup(self):
+        self.session = aiohttp.ClientSession()
+        if self.tls_cert and self.tls_key:
+            import ssl
 
-    def get_token(self, handler):
-        auth_header = handler.request.headers.get("Authorization")
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            ssl_context.load_cert_chain(self.tls_cert, keyfile=self.tls_key)
+            if self.tls_ca:
+                ssl_context.load_verify_locations(self.tls_ca)
+        else:
+            ssl_context = None
+        self.ssl_context = ssl_context
+
+    async def on_shutdown(self):
+        if hasattr(self, "session"):
+            await self.session.close()
+
+    def get_token(self, request):
+        auth_header = request.headers.get("Authorization")
         if auth_header:
             auth_type, auth_key = auth_header.split(" ", 1)
             if auth_type == "jupyterhub":
                 return auth_key
         return None
 
-    async def authenticate(self, handler):
-        token = self.get_token(handler)
+    async def authenticate(self, request):
+        token = self.get_token(request)
         if token is None:
-            self.raise_auth_required(handler)
+            raise unauthorized("jupyterhub")
 
         url = "%s/authorizations/token/%s" % (
             self.jupyterhub_api_url,
             quote(token, safe=""),
         )
 
-        req = HTTPRequest(
-            url,
-            method="GET",
-            headers={"Authorization": "token %s" % self.jupyterhub_api_token},
-        )
+        kwargs = {
+            "headers": {"Authorization": "token %s" % self.jupyterhub_api_token},
+            "ssl_context": self.ssl_context,
+        }
 
-        kwargs = {}
-        if self.tls_cert and self.tls_key:
-            kwargs.update({"client_cert": self.tls_cert, "client_key": self.tls_key})
-            if self.tls_ca:
-                kwargs["ca_certs"] = self.tls_ca
-
-        client = AsyncHTTPClient()
-        resp = await client.fetch(req, raise_error=False, **kwargs)
+        resp = await self.session.get(url, **kwargs)
 
         if resp.code < 400:
-            return json.loads(resp.body)["name"]
+            data = await resp.json()
+            return {
+                "name": data["name"],
+                "groups": data["groups"],
+                "admin": data["admin"],
+            }
         elif resp.code == 404:
             self.log.debug("Token for non-existant user requested")
-            self.raise_auth_required(handler)
+            raise unauthorized("jupyterhub")
         else:
             if resp.code == 403:
-                msg = "Permission failure verifying user's JupyterHub API token"
-                code = 500
+                err = web.HTTPInternalServerError(
+                    reason="Permission failure verifying user's JupyterHub API token"
+                )
             elif resp.code >= 500:
-                msg = "Upstream failure verifying user's JupyterHub API token"
-                code = 502
+                err = web.HTTPBadGateway(
+                    reason="Upstream failure verifying user's JupyterHub API token"
+                )
             else:
-                msg = "Failure verifying user's JupyterHub API token"
-                code = 500
+                err = web.HTTPInternalServerError(
+                    reason="Failure verifying user's JupyterHub API token"
+                )
 
-            self.log.error("%s - code: %s, reason: %s", msg, resp.code, resp.reason)
-            raise web.HTTPError(code, msg)
+            self.log.error(
+                "%s - code: %s, reason: %s", err.reason, resp.code, resp.reason
+            )
+            raise err

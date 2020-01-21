@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import logging
 import os
 import signal
@@ -10,6 +11,7 @@ from traitlets import Unicode, Bool, Bytes, Float, List, default, validate
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
+from . import models
 from .auth import Authenticator
 from .backends import Backend
 from .proxy import SchedulerProxy, WebProxy
@@ -123,7 +125,7 @@ class DaskGateway(Application):
     )
 
     authenticator_class = Type(
-        "dask_gateway_server.auth.DummyAuthenticator",
+        "dask_gateway_server.auth.SimpleAuthenticator",
         klass="dask_gateway_server.auth.Authenticator",
         help="The gateway authenticator class to use",
         config=True,
@@ -342,6 +344,16 @@ class DaskGateway(Application):
         for s in (signal.SIGTERM, signal.SIGINT):
             loop.add_signal_handler(s, self.handle_shutdown_signal, s)
 
+        # Start the proxies
+        await self.scheduler_proxy.start()
+        await self.web_proxy.start()
+
+        # Start the authenticator
+        await self.authenticator.on_startup()
+
+        # Start the backend
+        await self.backend.on_startup()
+
         # Start the aiohttp application
         self.runner = web.AppRunner(self.app, handle_signals=False)
         await self.runner.setup()
@@ -355,13 +367,6 @@ class DaskGateway(Application):
         )
         await site.start()
         self.log.info("Gateway private API serving at %s", self.private_urls.bind_url)
-
-        # Start the proxies
-        await self.scheduler_proxy.start()
-        await self.web_proxy.start()
-
-        # Start the backend
-        await self.backend.on_startup()
 
         # Add the private url to the proxy
         await self.web_proxy.add_route(
@@ -389,6 +394,10 @@ class DaskGateway(Application):
             self.scheduler_proxy.stop()
         if hasattr(self, "web_proxy"):
             self.web_proxy.stop()
+
+        # Shutdown authenticator
+        if hasattr(self, "authenticator"):
+            await self.authenticator.on_shutdown()
 
         # Shutdown backend
         if hasattr(self, "backend"):
@@ -427,6 +436,13 @@ class DaskGateway(Application):
     async def health(self):
         # TODO: add runtime checks here
         return {"status": "pass"}
+
+    async def authenticate(self, request):
+        """Authenticate the request."""
+        user = self.authenticator.authenticate(request)
+        if inspect.isawaitable(user):
+            user = await user
+        return models.User(**user)
 
 
 main = DaskGateway.launch_instance

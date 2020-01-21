@@ -22,8 +22,10 @@ class ClusterStatus(IntEnum):
 
 
 class User(object):
-    def __init__(self, name):
+    def __init__(self, name, groups=(), admin=False):
         self.name = name
+        self.groups = set(groups)
+        self.admin = bool(admin)
 
 
 class Cluster(object):
