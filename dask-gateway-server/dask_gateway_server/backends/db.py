@@ -1,6 +1,4 @@
-import asyncio
 import base64
-import enum
 import json
 import time
 import uuid
@@ -11,8 +9,6 @@ from sqlalchemy import (
     Table,
     Column,
     Integer,
-    Float,
-    Boolean,
     Unicode,
     BINARY,
     ForeignKey,
@@ -25,8 +21,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.pool import StaticPool
 
-from .compat import get_running_loop
-from .tls import new_keypair
+from .. import models
+from ..models import ClusterStatus
+from ..tls import new_keypair
 
 
 def timestamp():
@@ -53,27 +50,7 @@ def normalize_encrypt_key(key):
     )
 
 
-class _IntEnum(enum.IntEnum):
-    @classmethod
-    def from_name(cls, name):
-        """Create an enum value from a name"""
-        try:
-            return cls[name.upper()]
-        except KeyError:
-            pass
-        raise ValueError("%r is not a valid %s" % (name, cls.__name__))
-
-
-class ClusterStatus(_IntEnum):
-    STARTING = 1
-    STARTED = 2
-    RUNNING = 3
-    STOPPING = 4
-    STOPPED = 5
-    FAILED = 6
-
-
-class WorkerStatus(_IntEnum):
+class WorkerStatus(models.IntEnum):
     STARTING = 1
     STARTED = 2
     RUNNING = 3
@@ -119,7 +96,6 @@ users = Table(
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("name", Unicode(255), nullable=False, unique=True),
-    Column("cookie", Unicode(32), nullable=False, unique=True),
 )
 
 clusters = Table(
@@ -138,9 +114,6 @@ clusters = Table(
     Column("dashboard_address", Unicode(255), nullable=False),
     Column("api_address", Unicode(255), nullable=False),
     Column("tls_credentials", LargeBinary, nullable=False),
-    Column("adaptive", Boolean, nullable=False),
-    Column("memory", Integer, nullable=False),
-    Column("cores", Float, nullable=False),
     Column("start_time", Integer, nullable=False),
     Column("stop_time", Integer, nullable=True),
 )
@@ -153,8 +126,6 @@ workers = Table(
     Column("cluster_id", ForeignKey("clusters.id", ondelete="CASCADE"), nullable=False),
     Column("status", IntEnum(WorkerStatus), nullable=False),
     Column("state", JSON, nullable=False),
-    Column("memory", Integer, nullable=False),
-    Column("cores", Float, nullable=False),
     Column("start_time", Integer, nullable=False),
     Column("stop_time", Integer, nullable=True),
 )
@@ -199,18 +170,19 @@ class DataManager(object):
         self.db = engine
 
         self.username_to_user = {}
-        self.cookie_to_user = {}
         self.token_to_cluster = {}
         self.name_to_cluster = {}
         self.id_to_cluster = {}
+
+        # Init database
+        self.load_database_state()
 
     def load_database_state(self):
         # Load all existing users into memory
         id_to_user = {}
         for u in self.db.execute(users.select()):
-            user = User(id=u.id, name=u.name, cookie=u.cookie)
+            user = User(id=u.id, name=u.name)
             self.username_to_user[user.name] = user
-            self.cookie_to_user[user.cookie] = user
             id_to_user[user.id] = user
 
         # Next load all existing clusters into memory
@@ -231,9 +203,6 @@ class DataManager(object):
                 api_address=c.api_address,
                 tls_cert=tls_cert,
                 tls_key=tls_key,
-                adaptive=c.adaptive,
-                memory=c.memory,
-                cores=c.cores,
                 start_time=c.start_time,
                 stop_time=c.stop_time,
             )
@@ -251,14 +220,10 @@ class DataManager(object):
                 status=w.status,
                 cluster=cluster,
                 state=w.state,
-                memory=w.memory,
-                cores=w.cores,
                 start_time=w.start_time,
                 stop_time=w.stop_time,
             )
             cluster.workers[worker.name] = worker
-            if w.status == WorkerStatus.STARTING:
-                cluster.pending.add(worker.name)
 
     def cleanup_expired(self, max_age_in_seconds):
         cutoff = timestamp() - max_age_in_seconds * 1000
@@ -303,20 +268,39 @@ class DataManager(object):
     def decode_token(self, data):
         return self.decrypt(data).decode()
 
-    def user_from_cookie(self, cookie):
-        """Lookup a user from a cookie"""
-        return self.cookie_to_user.get(cookie)
-
     def get_or_create_user(self, username):
         """Lookup a user if they exist, otherwise create a new user"""
         user = self.username_to_user.get(username)
         if user is None:
-            cookie = uuid.uuid4().hex
-            res = self.db.execute(users.insert().values(name=username, cookie=cookie))
-            user = User(id=res.inserted_primary_key[0], name=username, cookie=cookie)
-            self.cookie_to_user[cookie] = user
+            res = self.db.execute(users.insert().values(name=username))
+            user = User(id=res.inserted_primary_key[0], name=username)
             self.username_to_user[username] = user
         return user
+
+    def get_cluster(self, cluster_id):
+        cluster = self.name_to_cluster.get(cluster_id)
+        if cluster is None:
+            raise ValueError(f"Unknown cluster {cluster_id}")
+        return cluster
+
+    def list_clusters(self, username=None, statuses=None):
+        if statuses is None:
+            select = lambda x: x.is_active()
+        else:
+            statuses = set(statuses)
+            select = lambda x: x.status in statuses
+        if username is None:
+            return [
+                cluster
+                for user in self.username_to_user.values()
+                for cluster in user.clusters.values()
+                if select(cluster)
+            ]
+        else:
+            user = self.username_to_user.get(username)
+            if user is None:
+                raise ValueError(f"Unknown user {username}")
+            return [cluster for cluster in user.clusters.values() if select(cluster)]
 
     def cluster_from_token(self, token):
         """Lookup a cluster from a token"""
@@ -332,7 +316,7 @@ class DataManager(object):
                 if cluster.is_active():
                     yield cluster
 
-    def create_cluster(self, user, options, memory, cores):
+    def create_cluster(self, user, options):
         """Create a new cluster for a user"""
         cluster_name = uuid.uuid4().hex
         token = uuid.uuid4().hex
@@ -349,9 +333,6 @@ class DataManager(object):
             "scheduler_address": "",
             "dashboard_address": "",
             "api_address": "",
-            "memory": memory,
-            "cores": cores,
-            "adaptive": False,
             "start_time": timestamp(),
         }
 
@@ -379,7 +360,7 @@ class DataManager(object):
 
         return cluster
 
-    def create_worker(self, cluster, memory, cores):
+    def create_worker(self, cluster):
         """Create a new worker for a cluster"""
         worker_name = uuid.uuid4().hex
 
@@ -387,15 +368,12 @@ class DataManager(object):
             "name": worker_name,
             "status": WorkerStatus.STARTING,
             "state": {},
-            "memory": memory,
-            "cores": cores,
             "start_time": timestamp(),
         }
 
         with self.db.begin() as conn:
             res = conn.execute(workers.insert().values(cluster_id=cluster.id, **common))
             worker = Worker(id=res.inserted_primary_key[0], cluster=cluster, **common)
-            cluster.pending.add(worker.name)
             cluster.workers[worker.name] = worker
 
         return worker
@@ -420,10 +398,9 @@ class DataManager(object):
 
 
 class User(object):
-    def __init__(self, id=None, name=None, cookie=None):
+    def __init__(self, id=None, name=None):
         self.id = id
         self.name = name
-        self.cookie = cookie
         self.clusters = {}
 
     def active_clusters(self):
@@ -447,9 +424,6 @@ class Cluster(object):
         api_address="",
         tls_cert=b"",
         tls_key=b"",
-        adaptive=False,
-        memory=None,
-        cores=None,
         start_time=None,
         stop_time=None,
     ):
@@ -465,33 +439,30 @@ class Cluster(object):
         self.api_address = api_address
         self.tls_cert = tls_cert
         self.tls_key = tls_key
-        self.adaptive = adaptive
-        self.memory = memory
-        self.cores = cores
         self.start_time = start_time
         self.stop_time = stop_time
-
-        self.pending = set()
         self.workers = {}
-
-        # The cluster manager instance
-        self.manager = None
-
-        loop = get_running_loop()
-        self.lock = asyncio.Lock(loop=loop)
-        self._start_future = loop.create_future()
-        self._connect_future = loop.create_future()
-        self._status_monitor = None
-        if status >= ClusterStatus.RUNNING:
-            # Already running, create finished futures to mark
-            self._start_future.set_result(True)
-            self._connect_future.set_result(None)
 
     def active_workers(self):
         return [w for w in self.workers.values() if w.is_active()]
 
     def is_active(self):
         return self.status < ClusterStatus.STOPPING
+
+    def to_model(self):
+        return models.Cluster(
+            name=self.name,
+            user=self.user.name,
+            options=self.options,
+            status=self.status,
+            scheduler_address=self.scheduler_address,
+            dashboard_address=self.dashboard_address,
+            api_address=self.api_address,
+            tls_cert=self.tls_cert,
+            tls_key=self.tls_key,
+            start_time=self.start_time,
+            stop_time=self.stop_time,
+        )
 
 
 class Worker(object):
@@ -502,8 +473,6 @@ class Worker(object):
         cluster=None,
         status=None,
         state=None,
-        memory=None,
-        cores=None,
         start_time=None,
         stop_time=None,
     ):
@@ -512,20 +481,8 @@ class Worker(object):
         self.cluster = cluster
         self.status = status
         self.state = state
-        self.memory = memory
-        self.cores = cores
         self.start_time = start_time
         self.stop_time = stop_time
-
-        loop = get_running_loop()
-
-        self._start_future = loop.create_future()
-        self._connect_future = loop.create_future()
-
-        if status >= WorkerStatus.RUNNING:
-            # Already running, create finished future to mark
-            self._start_future.set_result(True)
-            self._connect_future.set_result(None)
 
     def is_active(self):
         return self.status < WorkerStatus.STOPPING
