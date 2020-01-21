@@ -89,7 +89,7 @@ class clean(_clean):
         _clean.run(self)
 
 
-install_requires = ["cryptography", "tornado", "traitlets", "sqlalchemy"]
+install_requires = ["cryptography", "tornado", "traitlets", "sqlalchemy", "colorlog"]
 
 extras_require = {
     "kerberos": ["pykerberos"],

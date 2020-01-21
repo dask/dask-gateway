@@ -6,10 +6,9 @@ import signal
 from functools import partial
 from urllib.parse import urlparse
 
+from colorlog import ColoredFormatter
 from tornado import web
-from tornado.log import LogFormatter
 from tornado.gen import IOLoop
-from tornado.platform.asyncio import AsyncIOMainLoop
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from traitlets import Unicode, Bool, Bytes, Float, List, Instance, default, validate
 from traitlets.config import Application, catch_config_error
@@ -43,8 +42,8 @@ from .utils import (
 # Override default values for logging
 Application.log_level.default_value = "INFO"
 Application.log_format.default_value = (
-    "%(color)s[%(levelname)1.1s %(asctime)s.%(msecs).03d "
-    "%(name)s]%(end_color)s %(message)s"
+    "%(log_color)s[%(levelname)1.1s %(asctime)s.%(msecs).03d "
+    "%(name)s]%(reset)s %(message)s"
 )
 
 
@@ -412,7 +411,7 @@ class DaskGateway(Application):
         allow_none=True,
     )
 
-    _log_formatter_cls = LogFormatter
+    _log_formatter_cls = ColoredFormatter
 
     classes = List([ClusterManager, Authenticator, WebProxy, SchedulerProxy])
 
@@ -654,7 +653,6 @@ class DaskGateway(Application):
     def start(self):
         if self.subapp is not None:
             return self.subapp.start()
-        AsyncIOMainLoop().install()
         loop = IOLoop.current()
         loop.add_callback(self.start_or_exit)
         try:
