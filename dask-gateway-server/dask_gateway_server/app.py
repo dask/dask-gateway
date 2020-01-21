@@ -6,7 +6,6 @@ import sys
 from urllib.parse import urlparse
 
 from aiohttp import web
-from colorlog import ColoredFormatter
 from traitlets import Unicode, Bool, Bytes, Float, List, default, validate
 from traitlets.config import Application, catch_config_error
 
@@ -15,23 +14,7 @@ from .auth import Authenticator
 from .backends import Backend
 from .proxy import SchedulerProxy, WebProxy
 from .routes import default_routes
-from .utils import classname, TaskPool, Type, ServerUrls
-
-
-class LogFormatter(ColoredFormatter):
-    def __init__(self, fmt=None, datefmt=None):
-        super().__init__(
-            fmt=fmt,
-            datefmt=datefmt,
-            reset=False,
-            log_colors={
-                "DEBUG": "blue",
-                "INFO": "green",
-                "WARNING": "yellow",
-                "ERROR": "red",
-                "CRITICAL": "red,bg_white",
-            },
-        )
+from .utils import classname, TaskPool, Type, ServerUrls, LogFormatter
 
 
 # Override default values for logging
@@ -345,6 +328,7 @@ class DaskGateway(Application):
         # Initialize aiohttp application
         self.app = web.Application(logger=self.log)
         self.app.add_routes(default_routes)
+        self.app["gateway"] = self
         self.app["backend"] = self.backend
         self.app["authenticator"] = self.authenticator
 
@@ -439,6 +423,10 @@ class DaskGateway(Application):
             except Exception:
                 self.log.error("Error while shutting down:", exc_info=True)
             loop.close()
+
+    async def health(self):
+        # TODO: add runtime checks here
+        return {"status": "pass"}
 
 
 main = DaskGateway.launch_instance

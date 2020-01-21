@@ -3,6 +3,7 @@ import socket
 import weakref
 from urllib.parse import urlparse
 
+from colorlog import ColoredFormatter
 from traitlets import Integer, TraitError, Type as _Type
 
 from .compat import get_running_loop
@@ -292,3 +293,19 @@ class nullcontext(object):
 
     async def __aexit__(self, *args):
         pass
+
+
+class LogFormatter(ColoredFormatter):
+    def __init__(self, fmt=None, datefmt=None):
+        super().__init__(
+            fmt=fmt,
+            datefmt=datefmt,
+            reset=False,
+            log_colors={
+                "DEBUG": "blue",
+                "INFO": "green",
+                "WARNING": "yellow",
+                "ERROR": "red",
+                "CRITICAL": "red,bg_white",
+            },
+        )
