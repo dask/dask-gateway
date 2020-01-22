@@ -1,5 +1,4 @@
 import asyncio
-import inspect
 import logging
 import os
 import signal
@@ -7,11 +6,10 @@ import sys
 from urllib.parse import urlparse
 
 from aiohttp import web
-from traitlets import Unicode, Bool, Bytes, Float, List, default, validate
+from traitlets import Unicode, Bool, List, validate
 from traitlets.config import Application, catch_config_error
 
 from . import __version__ as VERSION
-from . import models
 from .auth import Authenticator
 from .backends import Backend
 from .proxy import SchedulerProxy, WebProxy
@@ -218,47 +216,6 @@ class DaskGateway(Application):
         config=True,
     )
 
-    cookie_secret = Bytes(
-        help="""The cookie secret to use to encrypt cookies.
-
-        A 32 byte hex-encoded random string. Commonly created with the
-        ``openssl`` CLI:
-
-        .. code-block:: shell
-
-            $ openssl rand -hex 32
-
-        Loaded from the DASK_GATEWAY_COOKIE_SECRET environment variable by
-        default.
-        """,
-        config=True,
-    )
-
-    @default("cookie_secret")
-    def _cookie_secret_default(self):
-        secret = os.environb.get(b"DASK_GATEWAY_COOKIE_SECRET", b"")
-        if not secret:
-            self.log.debug("Generating new cookie secret")
-            secret = os.urandom(32)
-        return secret
-
-    @validate("cookie_secret")
-    def _cookie_secret_validate(self, proposal):
-        if len(proposal["value"]) != 32:
-            raise ValueError(
-                "Cookie secret is %d bytes, it must be "
-                "32 bytes" % len(proposal["value"])
-            )
-        return proposal["value"]
-
-    cookie_max_age_days = Float(
-        7,
-        help="""Number of days for a login cookie to be valid.
-        Default is one week.
-        """,
-        config=True,
-    )
-
     temp_dir = Unicode(
         None,
         help="""
@@ -349,7 +306,7 @@ class DaskGateway(Application):
         await self.web_proxy.start()
 
         # Start the authenticator
-        await self.authenticator.on_startup()
+        await self.authenticator.startup()
 
         # Start the backend
         await self.backend.on_startup()
@@ -397,7 +354,7 @@ class DaskGateway(Application):
 
         # Shutdown authenticator
         if hasattr(self, "authenticator"):
-            await self.authenticator.on_shutdown()
+            await self.authenticator.shutdown()
 
         # Shutdown backend
         if hasattr(self, "backend"):
@@ -436,13 +393,6 @@ class DaskGateway(Application):
     async def health(self):
         # TODO: add runtime checks here
         return {"status": "pass"}
-
-    async def authenticate(self, request):
-        """Authenticate the request."""
-        user = self.authenticator.authenticate(request)
-        if inspect.isawaitable(user):
-            user = await user
-        return models.User(**user)
 
 
 main = DaskGateway.launch_instance

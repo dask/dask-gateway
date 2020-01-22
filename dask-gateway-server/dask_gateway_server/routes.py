@@ -11,9 +11,8 @@ def authenticated(handler):
 
     @wraps(handler)
     async def inner(request):
-        user = await request.app["gateway"].authenticate(request)
-        request["user"] = user
-        return await handler(request)
+        auth = request.app["authenticator"]
+        return await auth.authenticate_and_handle(request, handler)
 
     return inner
 

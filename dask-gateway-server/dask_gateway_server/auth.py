@@ -1,11 +1,15 @@
 import os
 import base64
+import time
+import uuid
 from urllib.parse import quote
 
 import aiohttp
 from aiohttp import web
-from traitlets import Unicode, default
+from traitlets import Unicode, Integer, default
 from traitlets.config import LoggingConfigurable
+
+from .models import User
 
 __all__ = (
     "Authenticator",
@@ -15,8 +19,90 @@ __all__ = (
 )
 
 
+class UserCache(object):
+    def __init__(self, max_age):
+        self.max_age = max_age
+        self.name_to_cookie = {}
+        self.cookie_to_user = {}
+
+    def get(self, cookie):
+        user = self.cookie_to_user.get(cookie)
+        if user is None:
+            return None
+        timestamp, user = self.cookie_to_user[cookie]
+        if timestamp + self.max_age < time.monotonic():
+            del self.cookie_to_user[cookie]
+            del self.name_to_cookie[user.name]
+            return None
+        return user
+
+    def put(self, user):
+        cookie = self.name_to_cookie.get(user.name)
+        if cookie is None:
+            cookie = uuid.uuid4().hex
+            now = time.monotonic()
+            self.name_to_cookie[user.name] = cookie
+            self.cookie_to_user[cookie] = (now, user)
+        return cookie
+
+
 class Authenticator(LoggingConfigurable):
     """Base class for authenticators"""
+
+    cookie_name = Unicode(
+        help="The cookie name to use for caching authentication information.",
+        config=True,
+    )
+
+    @default("cookie_name")
+    def _default_cookie_name(self):
+        return "dask-gateway-%s" % uuid.uuid4().hex
+
+    cache_max_age = Integer(
+        300,
+        help="""The maximum time in seconds to cache authentication information.
+
+        Helps reduce load on the backing authentication service by caching
+        responses between requests. After this time the user will need to be
+        reauthenticated before making additional requests (note this is usually
+        transparent to the user).
+        """,
+        config=True,
+    )
+
+    async def startup(self):
+        self.cache = UserCache(max_age=self.cache_max_age)
+        await self.on_startup()
+
+    async def shutdown(self):
+        await self.on_shutdown()
+
+    async def authenticate_and_handle(self, request, handler):
+        # Try to authenticate with the cookie first
+        cookie = request.cookies.get(self.cookie_name)
+        if cookie is not None:
+            user = self.cache.get(cookie)
+            if user is not None:
+                request["user"] = user
+                return await handler(request)
+
+        # Otherwise go through full authentication process
+        user = await self.authenticate(request)
+        if type(user) is tuple:
+            user, context = user
+        else:
+            context = None
+
+        user = User(**user)
+
+        request["user"] = user
+        response = await handler(request)
+
+        await self.pre_response(request, response, context)
+        cookie = self.cache.put(user)
+        response.set_cookie(self.cookie_name, cookie, max_age=self.cache_max_age * 2)
+
+        return response
 
     async def on_startup(self):
         """Called when the application starts up.
@@ -30,7 +116,7 @@ class Authenticator(LoggingConfigurable):
         Do any cleanup here."""
         pass
 
-    def authenticate(self, request):
+    async def authenticate(self, request):
         """Perform the authentication process.
 
         Parameters
@@ -43,6 +129,32 @@ class Authenticator(LoggingConfigurable):
         user : dict
             A dict with "name", "groups", and "admin" fields corresponding to
             the authenticating user.
+        context : object, optional
+            If necessary, may optionally return an opaque object storing
+            additional context needed to complete the authentication process.
+            This will be passed to ``pre_response``.
+        """
+        raise NotImplementedError
+
+    async def pre_response(self, request, response, context=None):
+        """Called before returning a response.
+
+        Allows modifying the outgoing response in-place to add additional
+        headers, etc...
+
+        Note that this is only called if ``authenticate`` was applied for this
+        request.
+
+        Parameters
+        ----------
+        request : aiohttp.web.Request
+            The current request.
+        response : aiohttp.web.Response
+            The current response. May be modified in-place.
+        context : object or None
+            If present, the extra return value of ``authenticate``, providing
+            any additional context needed to complete the authentication
+            process.
         """
         pass
 
@@ -70,7 +182,7 @@ class SimpleAuthenticator(Authenticator):
         config=True,
     )
 
-    def authenticate(self, request):
+    async def authenticate(self, request):
         auth_header = request.headers.get("Authorization")
         if not auth_header:
             raise unauthorized("Basic")
@@ -110,7 +222,7 @@ class KerberosAuthenticator(Authenticator):
         self.log.error("Kerberos failure: %s", err)
         raise web.HTTPInternalServerError(reason="Error during kerberos authentication")
 
-    def authenticate(self, request):
+    async def authenticate(self, request):
         import kerberos
 
         auth_header = request.headers.get("Authorization")
@@ -145,16 +257,16 @@ class KerberosAuthenticator(Authenticator):
             # Retrieve user name
             fulluser = kerberos.authGSSServerUserName(gss_context)
             user = fulluser.split("@", 1)[0]
-
-            # Complete the protocol by responding with the Negotiate header
-            request["auth-headers"] = {"WWW-Authenticate": "Negotiate %s" % gss_key}
         except kerberos.GSSError as err:
             self.raise_auth_error(err)
         finally:
             if gss_context is not None:
                 kerberos.authGSSServerClean(gss_context)
 
-        return {"name": user, "groups": [], "admin": False}
+        return {"name": user, "groups": [], "admin": False}, gss_key
+
+    async def pre_response(self, request, response, context):
+        response.headers["WWW-Authenticate"] = "Negotiate %s" % context
 
 
 class JupyterHubAuthenticator(Authenticator):
