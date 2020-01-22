@@ -1,15 +1,14 @@
+import asyncio
 import os
-import json
-import socket
 import subprocess
 import uuid
 
-from tornado import gen
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
+import aiohttp
 from traitlets.config import LoggingConfigurable, Application, catch_config_error
 from traitlets import default, Unicode, CaselessStrEnum, Float, Bool, Instance
 
 from .. import __version__ as VERSION
+from ..compat import get_running_loop
 from ..utils import ServerUrls
 
 
@@ -137,8 +136,9 @@ class ProxyBase(LoggingConfigurable):
         env["DASK_GATEWAY_PROXY_TOKEN"] = self.auth_token
         return env
 
-    async def start(self):
+    async def startup(self):
         """Start the proxy."""
+        self.session = aiohttp.ClientSession()
         if not self.externally_managed:
             command = self.get_start_command()
             env = self.get_start_env()
@@ -169,15 +169,15 @@ class ProxyBase(LoggingConfigurable):
         await self.wait_until_up()
 
     async def wait_until_up(self):
-        loop = gen.IOLoop.current()
+        loop = get_running_loop()
         deadline = loop.time() + self.connect_timeout
         dt = 0.1
         while True:
             try:
                 await self.get_all_routes()
                 return
-            except HTTPError as e:
-                if e.code == 403:
+            except aiohttp.ClientResponseError as e:
+                if e.status == 403:
                     raise RuntimeError(
                         "Failed to connect to %s proxy api at %s due to "
                         "authentication failure, please ensure that "
@@ -185,12 +185,12 @@ class ProxyBase(LoggingConfigurable):
                         "the proxy process and the gateway"
                         % (self._subcommand, self.api_urls.connect_url)
                     )
-                elif e.code != 599:
+                else:
                     raise RuntimeError(
                         "Error while connecting to %s proxy api at %s: %s"
                         % (self._subcommand, self.api_urls.connect_url, e)
                     )
-            except (OSError, socket.error):
+            except aiohttp.ClientConnectionError:
                 # Failed to connect, see if the process erred out
                 exitcode = (
                     self.proxy_process.poll()
@@ -207,29 +207,28 @@ class ProxyBase(LoggingConfigurable):
                 break
             # Exponential backoff
             dt = min(dt * 2, 5, remaining)
-            await gen.sleep(dt)
+            await asyncio.sleep(dt)
         raise RuntimeError(
             "Failed to connect to %s proxy at %s in %d secs"
             % (self._subcommand, self.api_urls.connect_url, self.connect_timeout)
         )
 
-    def stop(self):
+    async def shutdown(self):
         """Stop the proxy."""
+        if hasattr(self, "session"):
+            await self.session.close()
         if hasattr(self, "proxy_process"):
             self.log.info("Stopping the Dask gateway %s proxy", self._subcommand)
             self.proxy_process.terminate()
 
-    async def _api_request(self, url, method="GET", body=None):
-        client = AsyncHTTPClient()
-        if isinstance(body, dict):
-            body = json.dumps(body)
-        req = HTTPRequest(
+    async def _api_request(self, method, url, **kwargs):
+        return await self.session.request(
+            method,
             url,
-            method=method,
             headers={"Authorization": "token %s" % self.auth_token},
-            body=body,
+            raise_for_status=True,
+            **kwargs,
         )
-        return await client.fetch(req)
 
     async def add_route(self, route, target):
         """Add a route to the proxy.
@@ -243,9 +242,9 @@ class ProxyBase(LoggingConfigurable):
         """
         self.log.debug("Adding route %r -> %r", route, target)
         await self._api_request(
-            url="%s/api/routes%s" % (self.api_urls.connect_url, route),
-            method="PUT",
-            body={"target": target},
+            "PUT",
+            "%s/api/routes%s" % (self.api_urls.connect_url, route),
+            json={"target": target},
         )
 
     async def delete_route(self, route):
@@ -260,7 +259,7 @@ class ProxyBase(LoggingConfigurable):
         """
         self.log.debug("Removing route %r", route)
         await self._api_request(
-            url="%s/api/routes%s" % (self.api_urls.connect_url, route), method="DELETE"
+            "DELETE", "%s/api/routes%s" % (self.api_urls.connect_url, route)
         )
 
     async def get_all_routes(self):
@@ -272,9 +271,9 @@ class ProxyBase(LoggingConfigurable):
             A dict of route -> target for all routes in the proxy.
         """
         resp = await self._api_request(
-            url="%s/api/routes" % self.api_urls.connect_url, method="GET"
+            "GET", "%s/api/routes" % self.api_urls.connect_url
         )
-        return json.loads(resp.body.decode("utf8", "replace"))
+        return await resp.json()
 
 
 class SchedulerProxy(ProxyBase):

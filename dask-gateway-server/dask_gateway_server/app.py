@@ -302,8 +302,8 @@ class DaskGateway(Application):
             loop.add_signal_handler(s, self.handle_shutdown_signal, s)
 
         # Start the proxies
-        await self.scheduler_proxy.start()
-        await self.web_proxy.start()
+        await self.scheduler_proxy.startup()
+        await self.web_proxy.startup()
 
         # Start the authenticator
         await self.authenticator.startup()
@@ -348,9 +348,9 @@ class DaskGateway(Application):
 
         # Shutdown the proxies
         if hasattr(self, "scheduler_proxy"):
-            self.scheduler_proxy.stop()
+            await self.scheduler_proxy.shutdown()
         if hasattr(self, "web_proxy"):
-            self.web_proxy.stop()
+            await self.web_proxy.shutdown()
 
         # Shutdown authenticator
         if hasattr(self, "authenticator"):
