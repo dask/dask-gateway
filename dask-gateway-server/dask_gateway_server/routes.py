@@ -27,7 +27,7 @@ async def health(request):
     return web.json_response(health, status=status)
 
 
-@default_routes.get("/api/hello")
+@default_routes.get("/api/clusters/")
 @authenticated
-async def hello(request):
-    return web.json_response({"user": request["user"].name})
+async def clusters(request):
+    return web.json_response({})

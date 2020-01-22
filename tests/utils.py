@@ -8,9 +8,7 @@ import uuid
 import pytest
 
 from tornado import web
-from traitlets.config import Config
 
-from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.utils import random_port, get_ip, TaskPool, timeout
 from dask_gateway_server.tls import new_keypair
 from dask_gateway_server.objects import (
@@ -21,6 +19,8 @@ from dask_gateway_server.objects import (
     WorkerStatus,
 )
 from dask_gateway_server.managers.local import UnsafeLocalClusterManager
+
+from .utils_test import temp_gateway  # noqa
 
 
 _PIDS = set()
@@ -430,37 +430,3 @@ class ClusterManagerTests(object):
     async def test_cancel_during_worker_startup(self, gateway):
         for fail_stage in range(self.num_start_worker_stages()):
             await self.check_cancel_during_worker_startup(gateway, fail_stage)
-
-
-class temp_gateway(object):
-    def __init__(self, **kwargs):
-        config = Config()
-        config2 = kwargs.pop("config", None)
-
-        options = {
-            "gateway_url": "tls://127.0.0.1:%d" % random_port(),
-            "private_url": "http://127.0.0.1:%d" % random_port(),
-            "public_url": "http://127.0.0.1:%d" % random_port(),
-            "db_url": "sqlite:///:memory:",
-            "authenticator_class": "dask_gateway_server.auth.DummyAuthenticator",
-            "cluster_manager_class": (
-                "dask_gateway_server.managers.inprocess.InProcessClusterManager"
-            ),
-        }
-        options.update(kwargs)
-        config["DaskGateway"].update(options)
-
-        if config2:
-            config.merge(config2)
-
-        self.config = config
-
-    async def __aenter__(self):
-        self.gateway = DaskGateway.instance(config=self.config)
-        self.gateway.initialize([])
-        await self.gateway.start_async()
-        return self.gateway
-
-    async def __aexit__(self, *args):
-        await self.gateway.stop_async(stop_event_loop=False)
-        DaskGateway.clear_instance()

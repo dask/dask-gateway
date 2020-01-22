@@ -379,22 +379,22 @@ class JupyterHubAuthenticator(Authenticator):
 
         resp = await self.session.get(url, **kwargs)
 
-        if resp.code < 400:
+        if resp.status < 400:
             data = await resp.json()
             return {
                 "name": data["name"],
                 "groups": data["groups"],
                 "admin": data["admin"],
             }
-        elif resp.code == 404:
+        elif resp.status == 404:
             self.log.debug("Token for non-existant user requested")
             raise unauthorized("jupyterhub")
         else:
-            if resp.code == 403:
+            if resp.status == 403:
                 err = web.HTTPInternalServerError(
                     reason="Permission failure verifying user's JupyterHub API token"
                 )
-            elif resp.code >= 500:
+            elif resp.status >= 500:
                 err = web.HTTPBadGateway(
                     reason="Upstream failure verifying user's JupyterHub API token"
                 )
@@ -404,6 +404,6 @@ class JupyterHubAuthenticator(Authenticator):
                 )
 
             self.log.error(
-                "%s - code: %s, reason: %s", err.reason, resp.code, resp.reason
+                "%s - code: %s, reason: %s", err.reason, resp.status, resp.reason
             )
             raise err

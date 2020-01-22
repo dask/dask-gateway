@@ -9,7 +9,7 @@ from dask_gateway import Gateway
 from dask_gateway.auth import BasicAuth, JupyterHubAuth
 from dask_gateway_server.utils import random_port
 
-from .utils import temp_gateway
+from .utils_test import temp_gateway
 
 try:
     import kerberos
@@ -54,9 +54,9 @@ async def test_basic_auth_password(tmpdir):
     config = Config()
     config.DaskGateway.temp_dir = str(tmpdir)
     config.DaskGateway.authenticator_class = (
-        "dask_gateway_server.auth.DummyAuthenticator"
+        "dask_gateway_server.auth.SimpleAuthenticator"
     )
-    config.DummyAuthenticator.password = "mypass"
+    config.SimpleAuthenticator.password = "mypass"
 
     async with temp_gateway(config=config) as gateway_proc:
         auth = BasicAuth()
