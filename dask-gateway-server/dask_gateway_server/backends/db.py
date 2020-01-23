@@ -252,11 +252,8 @@ class DataManager(object):
     def decode_token(self, data):
         return self.decrypt(data).decode()
 
-    def get_cluster(self, cluster_id):
-        cluster = self.name_to_cluster.get(cluster_id)
-        if cluster is None:
-            raise ValueError(f"Unknown cluster {cluster_id}")
-        return cluster
+    def get_cluster(self, cluster_name):
+        return self.name_to_cluster.get(cluster_name)
 
     def list_clusters(self, username=None, statuses=None):
         if statuses is None:
@@ -288,7 +285,7 @@ class DataManager(object):
                 if cluster.is_active():
                     yield cluster
 
-    def create_cluster(self, user, options):
+    def create_cluster(self, username, options):
         """Create a new cluster for a user"""
         cluster_name = uuid.uuid4().hex
         token = uuid.uuid4().hex
@@ -311,7 +308,7 @@ class DataManager(object):
         with self.db.begin() as conn:
             res = conn.execute(
                 clusters.insert().values(
-                    user_id=user.id,
+                    username=username,
                     tls_credentials=tls_credentials,
                     token=enc_token,
                     **common,
@@ -319,7 +316,7 @@ class DataManager(object):
             )
             cluster = Cluster(
                 id=res.inserted_primary_key[0],
-                user=user,
+                username=username,
                 token=token,
                 tls_cert=tls_cert,
                 tls_key=tls_key,
@@ -328,7 +325,7 @@ class DataManager(object):
             self.id_to_cluster[cluster.id] = cluster
             self.token_to_cluster[token] = cluster
             self.name_to_cluster[cluster_name] = cluster
-            user.clusters[cluster_name] = cluster
+            self.username_to_clusters[username][cluster_name] = cluster
 
         return cluster
 

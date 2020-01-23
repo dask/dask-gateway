@@ -31,6 +31,10 @@ class Backend(LoggingConfigurable):
         Do any cleanup tasks in this method"""
         pass
 
+    async def process_cluster_options(self, user, cluster_options):
+        options = await self.get_cluster_options(user)
+        return options.parse_options(cluster_options)
+
     async def get_cluster_options(self, user):
         """Get cluster options available to this user.
 
@@ -43,7 +47,7 @@ class Backend(LoggingConfigurable):
         -------
         options_spec : dict
         """
-        raise NotImplementedError
+        return self.cluster_options
 
     async def user_has_cluster_permissions(self, user, cluster_id):
         """Check if a user has permissions to interact with a cluster.

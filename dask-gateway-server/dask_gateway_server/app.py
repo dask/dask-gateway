@@ -13,7 +13,7 @@ from . import __version__ as VERSION
 from .auth import Authenticator
 from .backends import Backend
 from .proxy import SchedulerProxy, WebProxy
-from .routes import default_routes, default_middleware
+from .routes import default_routes
 from .utils import classname, TaskPool, Type, ServerUrls, LogFormatter
 
 
@@ -285,13 +285,12 @@ class DaskGateway(Application):
         self.backend = self.backend_class(parent=self, log=self.log)
 
         # Initialize aiohttp application
-        self.app = web.Application(
-            logger=self.log, middlewares=list(default_middleware)
-        )
+        self.app = web.Application(logger=self.log)
         self.app.add_routes(default_routes)
         self.app["gateway"] = self
         self.app["backend"] = self.backend
         self.app["authenticator"] = self.authenticator
+        self.app["log"] = self.log
 
     def handle_shutdown_signal(self, sig):
         self.log.warning("Received signal %s, initiating shutdown...", sig.name)

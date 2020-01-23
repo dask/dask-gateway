@@ -4,6 +4,7 @@ from traitlets import Unicode, Bool, List, Float, validate, default
 
 from . import db
 from .base import Backend
+from .. import models
 
 
 class DatabaseBackend(Backend):
@@ -85,4 +86,20 @@ class DatabaseBackend(Backend):
         )
 
     async def list_clusters(self, user=None, statuses=None):
-        return self.db.list_clusters(username=user.name, statuses=statuses)
+        clusters = self.db.list_clusters(username=user.name, statuses=statuses)
+        return [c.to_model() for c in clusters]
+
+    async def start_cluster(self, user, cluster_options):
+        options = await self.process_cluster_options(user, cluster_options)
+        cluster = self.db.create_cluster(user.name, options)
+        return cluster.name
+
+    async def get_cluster(self, cluster_name):
+        cluster = self.db.get_cluster(cluster_name)
+        return None if cluster is None else cluster.to_model()
+
+    async def stop_cluster(self, cluster_name):
+        cluster = self.db.get_cluster(cluster_name)
+        if cluster is None:
+            return
+        self.db.update_cluster(cluster, status=models.ClusterStatus.STOPPING)

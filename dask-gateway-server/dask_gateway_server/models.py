@@ -27,6 +27,9 @@ class User(object):
         self.groups = set(groups)
         self.admin = bool(admin)
 
+    def has_permissions(self, cluster):
+        return self.name == cluster.username
+
 
 class Cluster(object):
     def __init__(
@@ -54,3 +57,26 @@ class Cluster(object):
         self.tls_key = tls_key
         self.start_time = start_time
         self.stop_time = stop_time
+
+    def to_dict(self, full=True):
+        if self.status == ClusterStatus.RUNNING and self.dashboard_address:
+            dashboard = "/gateway/clusters/%s/status" % self.name
+        else:
+            dashboard = None
+        out = {
+            "name": self.name,
+            "dashboard_route": dashboard,
+            "status": self.status.name,
+            "start_time": self.start_time,
+            "stop_time": self.stop_time,
+            "options": self.options,
+        }
+        if full:
+            if self.status == ClusterStatus.RUNNING:
+                tls_cert = self.tls_cert.decode()
+                tls_key = self.tls_key.decode()
+            else:
+                tls_cert = tls_key = None
+            out["tls_cert"] = tls_cert
+            out["tls_key"] = tls_key
+        return out
