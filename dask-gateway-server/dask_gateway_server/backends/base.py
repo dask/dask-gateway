@@ -45,6 +45,22 @@ class Backend(LoggingConfigurable):
         """
         raise NotImplementedError
 
+    async def user_has_cluster_permissions(self, user, cluster_id):
+        """Check if a user has permissions to interact with a cluster.
+
+        Parameters
+        ----------
+        user : User
+            The user to check.
+        cluster_id : str
+            The cluster to check
+
+        Returns
+        -------
+        has_permissions : bool
+        """
+        raise NotImplementedError
+
     async def list_clusters(self, user=None, statuses=None):
         """List known clusters.
 

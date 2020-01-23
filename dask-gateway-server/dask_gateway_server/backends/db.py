@@ -2,6 +2,7 @@ import base64
 import json
 import time
 import uuid
+from collections import defaultdict
 
 from cryptography.fernet import MultiFernet, Fernet
 from sqlalchemy import (
@@ -91,21 +92,12 @@ class JSON(TypeDecorator):
 
 metadata = MetaData()
 
-users = Table(
-    "users",
-    metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("name", Unicode(255), nullable=False, unique=True),
-)
-
 clusters = Table(
     "clusters",
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("name", Unicode(255), nullable=False, unique=True),
-    Column(
-        "user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    ),
+    Column("username", Unicode(255), nullable=False),
     Column("status", IntEnum(ClusterStatus), nullable=False),
     Column("options", JSON, nullable=False),
     Column("state", JSON, nullable=False),
@@ -169,7 +161,7 @@ class DataManager(object):
 
         self.db = engine
 
-        self.username_to_user = {}
+        self.username_to_clusters = defaultdict(dict)
         self.token_to_cluster = {}
         self.name_to_cluster = {}
         self.id_to_cluster = {}
@@ -178,22 +170,14 @@ class DataManager(object):
         self.load_database_state()
 
     def load_database_state(self):
-        # Load all existing users into memory
-        id_to_user = {}
-        for u in self.db.execute(users.select()):
-            user = User(id=u.id, name=u.name)
-            self.username_to_user[user.name] = user
-            id_to_user[user.id] = user
-
         # Next load all existing clusters into memory
         for c in self.db.execute(clusters.select()):
-            user = id_to_user[c.user_id]
             tls_cert, tls_key = self.decode_tls_credentials(c.tls_credentials)
             token = self.decode_token(c.token)
             cluster = Cluster(
                 id=c.id,
                 name=c.name,
-                user=user,
+                username=c.username,
                 token=token,
                 options=c.options,
                 status=c.status,
@@ -206,10 +190,10 @@ class DataManager(object):
                 start_time=c.start_time,
                 stop_time=c.stop_time,
             )
+            self.username_to_clusters[cluster.username][cluster.name] = cluster
             self.id_to_cluster[cluster.id] = cluster
             self.token_to_cluster[cluster.token] = cluster
             self.name_to_cluster[cluster.name] = cluster
-            user.clusters[cluster.name] = cluster
 
         # Next load all existing workers into memory
         for w in self.db.execute(workers.select()):
@@ -268,15 +252,6 @@ class DataManager(object):
     def decode_token(self, data):
         return self.decrypt(data).decode()
 
-    def get_or_create_user(self, username):
-        """Lookup a user if they exist, otherwise create a new user"""
-        user = self.username_to_user.get(username)
-        if user is None:
-            res = self.db.execute(users.insert().values(name=username))
-            user = User(id=res.inserted_primary_key[0], name=username)
-            self.username_to_user[username] = user
-        return user
-
     def get_cluster(self, cluster_id):
         cluster = self.name_to_cluster.get(cluster_id)
         if cluster is None:
@@ -291,16 +266,13 @@ class DataManager(object):
             select = lambda x: x.status in statuses
         if username is None:
             return [
-                cluster
-                for user in self.username_to_user.values()
-                for cluster in user.clusters.values()
-                if select(cluster)
+                cluster for cluster in self.name_to_cluster.values() if select(cluster)
             ]
         else:
-            user = self.username_to_user.get(username)
-            if user is None:
-                raise ValueError(f"Unknown user {username}")
-            return [cluster for cluster in user.clusters.values() if select(cluster)]
+            clusters = self.username_to_clusters.get(username)
+            if clusters is None:
+                return []
+            return [cluster for cluster in clusters.values() if select(cluster)]
 
     def cluster_from_token(self, token):
         """Lookup a cluster from a token"""
@@ -397,24 +369,12 @@ class DataManager(object):
                 setattr(worker, k, v)
 
 
-class User(object):
-    def __init__(self, id=None, name=None):
-        self.id = id
-        self.name = name
-        self.clusters = {}
-
-    def active_clusters(self):
-        for cluster in self.clusters.values():
-            if cluster.is_active():
-                yield cluster
-
-
 class Cluster(object):
     def __init__(
         self,
         id=None,
         name=None,
-        user=None,
+        username=None,
         token=None,
         options=None,
         status=None,
@@ -429,7 +389,7 @@ class Cluster(object):
     ):
         self.id = id
         self.name = name
-        self.user = user
+        self.username = username
         self.token = token
         self.options = options
         self.status = status
@@ -452,7 +412,7 @@ class Cluster(object):
     def to_model(self):
         return models.Cluster(
             name=self.name,
-            user=self.user.name,
+            username=self.username,
             options=self.options,
             status=self.status,
             scheduler_address=self.scheduler_address,

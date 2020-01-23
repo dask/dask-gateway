@@ -32,7 +32,7 @@ class Cluster(object):
     def __init__(
         self,
         name,
-        user,
+        username,
         options,
         status,
         scheduler_address="",
@@ -44,7 +44,7 @@ class Cluster(object):
         stop_time=None,
     ):
         self.name = name
-        self.user = user
+        self.username = username
         self.options = options
         self.status = status
         self.scheduler_address = scheduler_address
