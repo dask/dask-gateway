@@ -13,6 +13,7 @@ from cryptography.fernet import MultiFernet, Fernet
 from .base import Backend
 from .. import models
 from ..tls import new_keypair
+from ..utils import FrozenAttrDict
 
 
 def timestamp():
@@ -89,6 +90,7 @@ class Cluster(object):
         username=None,
         token=None,
         options=None,
+        config=None,
         status=None,
         target=None,
         state=None,
@@ -105,6 +107,7 @@ class Cluster(object):
         self.username = username
         self.token = token
         self.options = options
+        self.config = config
         self.status = status
         self.target = target
         self.state = state
@@ -193,6 +196,7 @@ clusters = sa.Table(
     sa.Column("status", _IntEnum(JobStatus), nullable=False),
     sa.Column("target", _IntEnum(JobStatus), nullable=False),
     sa.Column("options", _JSON, nullable=False),
+    sa.Column("config", _JSON, nullable=False),
     sa.Column("state", _JSON, nullable=False),
     sa.Column("token", sa.BINARY(140), nullable=False, unique=True),
     sa.Column("scheduler_address", sa.Unicode(255), nullable=False),
@@ -263,6 +267,7 @@ class DataManager(object):
                 username=c.username,
                 token=token,
                 options=c.options,
+                config=FrozenAttrDict(c.config),
                 status=c.status,
                 target=c.target,
                 state=c.state,
@@ -370,7 +375,7 @@ class DataManager(object):
                 if cluster.is_active():
                     yield cluster
 
-    def create_cluster(self, username, options):
+    def create_cluster(self, username, options, config):
         """Create a new cluster for a user"""
         cluster_name = uuid.uuid4().hex
         token = uuid.uuid4().hex
@@ -381,6 +386,7 @@ class DataManager(object):
 
         common = {
             "name": cluster_name,
+            "username": username,
             "options": options,
             "status": JobStatus.CREATED,
             "target": JobStatus.RUNNING,
@@ -394,18 +400,18 @@ class DataManager(object):
         with self.db.begin() as conn:
             res = conn.execute(
                 clusters.insert().values(
-                    username=username,
                     tls_credentials=tls_credentials,
                     token=enc_token,
+                    config=config,
                     **common,
                 )
             )
             cluster = Cluster(
                 id=res.inserted_primary_key[0],
-                username=username,
                 token=token,
                 tls_cert=tls_cert,
                 tls_key=tls_key,
+                config=FrozenAttrDict(config),
                 **common,
             )
             self.id_to_cluster[cluster.id] = cluster
@@ -552,7 +558,7 @@ class DatabaseBackend(Backend):
         config=True,
     )
 
-    async def on_startup(self):
+    async def startup(self):
         self.db = DataManager(
             url=self.db_url, echo=self.db_debug, encrypt_keys=self.db_encrypt_keys
         )
@@ -560,8 +566,10 @@ class DatabaseBackend(Backend):
         self.tasks = [
             asyncio.ensure_future(self.reconciler_loop(q)) for q in self.queues
         ]
+        await self.handle_setup()
 
-    async def on_shutdown(self):
+    async def shutdown(self):
+        await self.handle_cleanup()
         for t in self.tasks:
             t.cancel()
         await asyncio.gather(*self.tasks, return_exceptions=True)
@@ -571,8 +579,8 @@ class DatabaseBackend(Backend):
         return [c.to_model() for c in clusters]
 
     async def start_cluster(self, user, cluster_options):
-        options = await self.process_cluster_options(user, cluster_options)
-        cluster = self.db.create_cluster(user.name, options)
+        options, config = await self.process_cluster_options(user, cluster_options)
+        cluster = self.db.create_cluster(user.name, options, config)
         await self.enqueue(cluster)
         return cluster.name
 
@@ -653,10 +661,10 @@ class DatabaseBackend(Backend):
         self.db.update_cluster(cluster, status=status)
 
     # Subclasses should implement these methods
-    async def handle_on_startup(self):
+    async def handle_setup(self):
         pass
 
-    async def handle_on_shutdown(self):
+    async def handle_cleanup(self):
         pass
 
     async def handle_cluster_start(self, cluster):

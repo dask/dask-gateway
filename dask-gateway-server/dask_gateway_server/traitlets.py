@@ -1,0 +1,62 @@
+from traitlets import TraitError, TraitType, Integer, Type as _Type
+
+
+# Adapted from JupyterHub
+class MemoryLimit(Integer):
+    """A specification of a memory limit, with optional units.
+
+    Supported units are:
+      - K -> Kibibytes
+      - M -> Mebibytes
+      - G -> Gibibytes
+      - T -> Tebibytes
+    """
+
+    UNIT_SUFFIXES = {"K": 2 ** 10, "M": 2 ** 20, "G": 2 ** 30, "T": 2 ** 40}
+
+    def validate(self, obj, value):
+        if isinstance(value, (int, float)):
+            return int(value)
+
+        try:
+            num = float(value[:-1])
+        except ValueError:
+            raise TraitError(
+                "{val} is not a valid memory specification. Must be an int or "
+                "a string with suffix K, M, G, T".format(val=value)
+            )
+        suffix = value[-1]
+
+        if suffix not in self.UNIT_SUFFIXES:
+            raise TraitError(
+                "{val} is not a valid memory specification. Must be an int or "
+                "a string with suffix K, M, G, T".format(val=value)
+            )
+        return int(float(num) * self.UNIT_SUFFIXES[suffix])
+
+
+class Callable(TraitType):
+    """A trait which is callable"""
+
+    info_text = "a callable"
+
+    def validate(self, obj, value):
+        if callable(value):
+            return value
+        else:
+            self.error(obj, value)
+
+
+class Type(_Type):
+    """An implementation of `Type` with better errors"""
+
+    def validate(self, obj, value):
+        if isinstance(value, str):
+            try:
+                value = self._resolve_string(value)
+            except ImportError as exc:
+                raise TraitError(
+                    "Failed to import %r for trait '%s.%s':\n\n%s"
+                    % (value, type(obj).__name__, self.name, exc)
+                )
+        return super().validate(obj, value)

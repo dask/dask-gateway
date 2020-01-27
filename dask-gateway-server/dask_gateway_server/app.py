@@ -14,7 +14,8 @@ from .auth import Authenticator
 from .backends import Backend
 from .proxy import SchedulerProxy, WebProxy
 from .routes import default_routes
-from .utils import classname, TaskPool, Type, ServerUrls, LogFormatter
+from .traitlets import Type
+from .utils import classname, TaskPool, ServerUrls, LogFormatter
 
 
 # Override default values for logging
@@ -310,7 +311,7 @@ class DaskGateway(Application):
         await self.authenticator.startup()
 
         # Start the backend
-        await self.backend.on_startup()
+        await self.backend.startup()
 
         # Start the aiohttp application
         self.runner = web.AppRunner(self.app, handle_signals=False)
@@ -359,7 +360,7 @@ class DaskGateway(Application):
 
         # Shutdown backend
         if hasattr(self, "backend"):
-            await self.backend.on_shutdown()
+            await self.backend.shutdown()
 
         # Close task pool
         if hasattr(self, "task_pool"):

@@ -1,10 +1,12 @@
 import asyncio
 import socket
 import weakref
+from collections.abc import Mapping
+from inspect import isawaitable
+from keyword import iskeyword
 from urllib.parse import urlparse
 
 from colorlog import ColoredFormatter
-from traitlets import Integer, TraitError, Type as _Type
 
 from .compat import get_running_loop
 
@@ -206,40 +208,6 @@ async def cancel_task(task):
         pass
 
 
-# Adapted from JupyterHub
-class MemoryLimit(Integer):
-    """A specification of a memory limit, with optional units.
-
-    Supported units are:
-      - K -> Kibibytes
-      - M -> Mebibytes
-      - G -> Gibibytes
-      - T -> Tebibytes
-    """
-
-    UNIT_SUFFIXES = {"K": 2 ** 10, "M": 2 ** 20, "G": 2 ** 30, "T": 2 ** 40}
-
-    def validate(self, obj, value):
-        if isinstance(value, (int, float)):
-            return int(value)
-
-        try:
-            num = float(value[:-1])
-        except ValueError:
-            raise TraitError(
-                "{val} is not a valid memory specification. Must be an int or "
-                "a string with suffix K, M, G, T".format(val=value)
-            )
-        suffix = value[-1]
-
-        if suffix not in self.UNIT_SUFFIXES:
-            raise TraitError(
-                "{val} is not a valid memory specification. Must be an int or "
-                "a string with suffix K, M, G, T".format(val=value)
-            )
-        return int(float(num) * self.UNIT_SUFFIXES[suffix])
-
-
 def format_bytes(nbytes):
     """Format ``nbytes`` as a human-readable string with units"""
     if nbytes > 2 ** 50:
@@ -253,21 +221,6 @@ def format_bytes(nbytes):
     if nbytes > 2 ** 10:
         return "%0.2f KiB" % (nbytes / 2 ** 10)
     return "%d B" % nbytes
-
-
-class Type(_Type):
-    """An implementation of `Type` with better errors"""
-
-    def validate(self, obj, value):
-        if isinstance(value, str):
-            try:
-                value = self._resolve_string(value)
-            except ImportError as exc:
-                raise TraitError(
-                    "Failed to import %r for trait '%s.%s':\n\n%s"
-                    % (value, type(obj).__name__, self.name, exc)
-                )
-        return super().validate(obj, value)
 
 
 def classname(cls):
@@ -309,3 +262,37 @@ class LogFormatter(ColoredFormatter):
                 "CRITICAL": "red,bg_white",
             },
         )
+
+
+async def awaitable(obj):
+    if isawaitable(obj):
+        return await obj
+    return obj
+
+
+class FrozenAttrDict(Mapping):
+    """A dict that also allows attribute access for keys"""
+
+    __slots__ = ("_mapping",)
+
+    def __init__(self, mapping):
+        self._mapping = mapping
+
+    def __getattr__(self, k):
+        if k in self._mapping:
+            return self._mapping[k]
+        raise AttributeError(k)
+
+    def __getitem__(self, k):
+        return self._mapping[k]
+
+    def __iter__(self):
+        return iter(self._mapping)
+
+    def __len__(self):
+        return len(self._mapping)
+
+    def __dir__(self):
+        out = set(dir(type(self)))
+        out.update(k for k in self if k.isidentifier() and not iskeyword(k))
+        return list(out)

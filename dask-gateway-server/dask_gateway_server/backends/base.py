@@ -1,13 +1,14 @@
-from traitlets import Instance
-from traitlets.config import LoggingConfigurable
+from traitlets import Instance, Integer, Dict, Union
+from traitlets.config import LoggingConfigurable, Configurable
 
 from ..options import Options
+from ..traitlets import MemoryLimit, Type, Callable
+from ..utils import awaitable
 
 
 class Backend(LoggingConfigurable):
-    cluster_options = Instance(
-        Options,
-        args=(),
+    cluster_options = Union(
+        [Callable(), Instance(Options, args=())],
         help="""
         User options for configuring an individual cluster.
 
@@ -19,35 +20,35 @@ class Backend(LoggingConfigurable):
         config=True,
     )
 
-    async def on_startup(self):
+    cluster_config_class = Type(
+        "dask_gateway_server.backends.base.ClusterConfig",
+        klass="dask_gateway_server.backends.base.ClusterConfig",
+        help="The cluster config class to use",
+        config=True,
+    )
+
+    async def process_cluster_options(self, user, request):
+        if callable(self.cluster_options):
+            options = await awaitable(self.cluster_options(user))
+        else:
+            options = self.cluster_options
+
+        cluster_options = options.parse_options(request)
+        overrides = options.get_configuration(cluster_options)
+        config = self.cluster_config_class(**overrides).to_dict()
+        return cluster_options, config
+
+    async def startup(self):
         """Called when the server is starting up.
 
         Do any setup tasks in this method"""
         pass
 
-    async def on_shutdown(self):
+    async def shutdown(self):
         """Called when the server is shutting down.
 
         Do any cleanup tasks in this method"""
         pass
-
-    async def process_cluster_options(self, user, cluster_options):
-        options = await self.get_cluster_options(user)
-        return options.parse_options(cluster_options)
-
-    async def get_cluster_options(self, user):
-        """Get cluster options available to this user.
-
-        Parameters
-        ----------
-        user : str
-            The user making the request.
-
-        Returns
-        -------
-        options_spec : dict
-        """
-        return self.cluster_options
 
     async def list_clusters(self, user=None, statuses=None):
         """List known clusters.
@@ -144,3 +145,65 @@ class Backend(LoggingConfigurable):
             Set to False to disable adaptive scaling.
         """
         raise NotImplementedError
+
+
+class ClusterConfig(Configurable):
+    environment = Dict(
+        help="""
+        Environment variables to set for both the worker and scheduler processes.
+        """,
+        config=True,
+    )
+
+    worker_memory = MemoryLimit(
+        "2 G",
+        help="""
+        Number of bytes available for a dask worker. Allows the following
+        suffixes:
+
+        - K -> Kibibytes
+        - M -> Mebibytes
+        - G -> Gibibytes
+        - T -> Tebibytes
+        """,
+        config=True,
+    )
+
+    worker_cores = Integer(
+        1,
+        min=1,
+        help="""
+        Number of cpu-cores available for a dask worker.
+        """,
+        config=True,
+    )
+
+    scheduler_memory = MemoryLimit(
+        "2 G",
+        help="""
+        Number of bytes available for a dask scheduler. Allows the following
+        suffixes:
+
+        - K -> Kibibytes
+        - M -> Mebibytes
+        - G -> Gibibytes
+        - T -> Tebibytes
+        """,
+        config=True,
+    )
+
+    scheduler_cores = Integer(
+        1,
+        min=1,
+        help="""
+        Number of cpu-cores available for a dask scheduler.
+        """,
+        config=True,
+    )
+
+    def to_dict(self):
+        return {
+            k: getattr(self, k)
+            for k in self.trait_names()
+            if k not in {"parent", "config"}
+        }

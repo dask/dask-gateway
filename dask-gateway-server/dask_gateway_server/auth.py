@@ -6,7 +6,7 @@ from urllib.parse import quote
 
 import aiohttp
 from aiohttp import web
-from traitlets import Unicode, Integer, default
+from traitlets import Unicode, Integer, default, Instance
 from traitlets.config import LoggingConfigurable
 
 from .models import User
@@ -70,12 +70,11 @@ class Authenticator(LoggingConfigurable):
         config=True,
     )
 
-    async def startup(self):
-        self.cache = UserCache(max_age=self.cache_max_age)
-        await self.on_startup()
+    cache = Instance(UserCache)
 
-    async def shutdown(self):
-        await self.on_shutdown()
+    @default("cache")
+    def _default_cache(self):
+        return UserCache(max_age=self.cache_max_age)
 
     async def authenticate_and_handle(self, request, handler):
         # Try to authenticate with the cookie first
@@ -104,13 +103,13 @@ class Authenticator(LoggingConfigurable):
 
         return response
 
-    async def on_startup(self):
+    async def startup(self):
         """Called when the application starts up.
 
         Do any initialization here."""
         pass
 
-    async def on_shutdown(self):
+    async def shutdown(self):
         """Called when the application shutsdown.
 
         Do any cleanup here."""
@@ -215,7 +214,7 @@ class KerberosAuthenticator(Authenticator):
         "dask_gateway.keytab", help="The path to the keytab file", config=True
     )
 
-    async def on_startup(self):
+    async def startup(self):
         os.environ["KRB5_KTNAME"] = self.keytab
 
     def raise_auth_error(self, err):
@@ -337,7 +336,7 @@ class JupyterHubAuthenticator(Authenticator):
         config=True,
     )
 
-    async def on_startup(self):
+    async def startup(self):
         self.session = aiohttp.ClientSession()
         if self.tls_cert and self.tls_key:
             import ssl
@@ -350,7 +349,7 @@ class JupyterHubAuthenticator(Authenticator):
             ssl_context = None
         self.ssl_context = ssl_context
 
-    async def on_shutdown(self):
+    async def shutdown(self):
         if hasattr(self, "session"):
             await self.session.close()
 
