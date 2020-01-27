@@ -283,7 +283,9 @@ class DaskGateway(Application):
         self.log.info("Authenticator: %r", classname(self.authenticator_class))
         self.authenticator = self.authenticator_class(parent=self, log=self.log)
         self.log.info("Backend: %r", classname(self.backend_class))
-        self.backend = self.backend_class(parent=self, log=self.log)
+        self.backend = self.backend_class(
+            parent=self, log=self.log, api_url=self.api_url
+        )
 
         # Initialize aiohttp application
         self.app = web.Application(logger=self.log)

@@ -1,4 +1,4 @@
-from traitlets import Instance, Integer, Dict, Union
+from traitlets import Instance, Integer, Dict, Union, Unicode
 from traitlets.config import LoggingConfigurable, Configurable
 
 from ..options import Options
@@ -26,6 +26,9 @@ class Backend(LoggingConfigurable):
         help="The cluster config class to use",
         config=True,
     )
+
+    # Forwarded from the main application
+    api_url = Unicode()
 
     async def process_cluster_options(self, user, request):
         if callable(self.cluster_options):
@@ -148,6 +151,18 @@ class Backend(LoggingConfigurable):
 
 
 class ClusterConfig(Configurable):
+    scheduler_cmd = Unicode(
+        "dask-gateway-scheduler",
+        help="Shell command to start a dask-gateway scheduler.",
+        config=True,
+    )
+
+    worker_cmd = Unicode(
+        "dask-gateway-worker",
+        help="Shell command to start a dask-gateway worker.",
+        config=True,
+    )
+
     environment = Dict(
         help="""
         Environment variables to set for both the worker and scheduler processes.
