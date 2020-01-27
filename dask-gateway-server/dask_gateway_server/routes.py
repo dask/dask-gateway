@@ -81,7 +81,7 @@ async def create_cluster(request):
         cluster_name = await backend.start_cluster(user, cluster_options)
     except Exception as exc:
         reason = str(exc)
-        request["log"].warning(
+        request.app["log"].warning(
             "Error creating new cluster for user %s: %s", user.name, reason
         )
         raise web.HTTPUnprocessableEntity(reason=reason)

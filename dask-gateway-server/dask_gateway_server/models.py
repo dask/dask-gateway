@@ -13,12 +13,11 @@ class IntEnum(enum.IntEnum):
 
 
 class ClusterStatus(IntEnum):
-    STARTING = 1
-    STARTED = 2
-    RUNNING = 3
-    STOPPING = 4
-    STOPPED = 5
-    FAILED = 6
+    PENDING = 1
+    RUNNING = 2
+    STOPPING = 3
+    STOPPED = 4
+    FAILED = 5
 
 
 class User(object):
