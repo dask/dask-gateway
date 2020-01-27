@@ -41,13 +41,13 @@ class Backend(LoggingConfigurable):
         config = self.cluster_config_class(**overrides).to_dict()
         return cluster_options, config
 
-    async def startup(self):
+    async def setup(self):
         """Called when the server is starting up.
 
         Do any setup tasks in this method"""
         pass
 
-    async def shutdown(self):
+    async def cleanup(self):
         """Called when the server is shutting down.
 
         Do any cleanup tasks in this method"""

@@ -313,7 +313,7 @@ class DaskGateway(Application):
         await self.authenticator.startup()
 
         # Start the backend
-        await self.backend.startup()
+        await self.backend.setup(self.app)
 
         # Start the aiohttp application
         self.runner = web.AppRunner(self.app, handle_signals=False)
@@ -362,7 +362,7 @@ class DaskGateway(Application):
 
         # Shutdown backend
         if hasattr(self, "backend"):
-            await self.backend.shutdown()
+            await self.backend.cleanup()
 
         # Close task pool
         if hasattr(self, "task_pool"):

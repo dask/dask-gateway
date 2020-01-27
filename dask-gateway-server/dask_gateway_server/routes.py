@@ -1,4 +1,4 @@
-from functools import wraps
+from functools import wraps, partial
 
 from aiohttp import web
 
@@ -29,12 +29,45 @@ def _wrap_authenticated(handler):
     return inner
 
 
-def api_handler(handler=None, authenticated=True):
-    if handler is None:
-        return lambda handler: api_handler(handler, authenticated=authenticated)
+def _wrap_token_authenticated(handler):
+    @wraps(handler)
+    async def inner(request):
+        backend = request.app["backend"]
 
-    if authenticated:
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
+
+        auth_type, auth_token = auth_header.split(" ", 1)
+        if auth_type != "token":
+            raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
+
+        cluster_name = request.match_info["cluster_name"]
+        cluster = await backend.get_cluster(cluster_name)
+        if cluster is None:
+            raise web.HTTPNotFound(reason=f"Cluster {cluster_name} not found")
+
+        if cluster.token != auth_token:
+            raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
+
+        return await handler(request)
+
+    return inner
+
+
+def api_handler(handler=None, user_authenticated=False, token_authenticated=False):
+    if handler is None:
+        return partial(
+            api_handler,
+            user_authenticated=user_authenticated,
+            token_authenticated=token_authenticated,
+        )
+
+    if user_authenticated:
         handler = _wrap_authenticated(handler)
+    elif token_authenticated:
+        handler = _wrap_token_authenticated(handler)
+
     return _wrap_error_handler(handler)
 
 
@@ -42,7 +75,7 @@ default_routes = web.RouteTableDef()
 
 
 @default_routes.get("/api/health")
-@api_handler(authenticated=False)
+@api_handler
 async def health(request):
     health = await request.app["gateway"].health()
     if health["status"] == "fail":
@@ -53,7 +86,7 @@ async def health(request):
 
 
 @default_routes.get("/api/clusters/")
-@api_handler
+@api_handler(user_authenticated=True)
 async def list_clusters(request):
     user = request["user"]
     backend = request.app["backend"]
@@ -70,7 +103,7 @@ async def list_clusters(request):
 
 
 @default_routes.post("/api/clusters/")
-@api_handler
+@api_handler(user_authenticated=True)
 async def create_cluster(request):
     user = request["user"]
     backend = request.app["backend"]
@@ -90,7 +123,7 @@ async def create_cluster(request):
 
 
 @default_routes.get("/api/clusters/{cluster_name}")
-@api_handler
+@api_handler(user_authenticated=True)
 async def get_cluster(request):
     user = request["user"]
     cluster_name = request.match_info["cluster_name"]
@@ -106,7 +139,7 @@ async def get_cluster(request):
 
 
 @default_routes.delete("/api/clusters/{cluster_name}")
-@api_handler
+@api_handler(user_authenticated=True)
 async def delete_cluster(request):
     user = request["user"]
     cluster_name = request.match_info["cluster_name"]

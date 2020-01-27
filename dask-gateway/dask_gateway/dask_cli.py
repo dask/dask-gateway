@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import sys
-from urllib.parse import urlparse, quote
+from urllib.parse import urlparse
 
 from tornado import web
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
@@ -227,14 +227,22 @@ class Adaptive(object):
 
 class GatewaySchedulerService(object):
     def __init__(
-        self, scheduler, io_loop=None, gateway=None, adaptive_period=3, idle_timeout=0
+        self,
+        scheduler,
+        io_loop=None,
+        gateway=None,
+        adaptive_period=3,
+        idle_timeout=0,
+        heartbeat_period=15,
     ):
         self.scheduler = scheduler
         self.adaptive = Adaptive(self, period=adaptive_period)
         self.gateway = gateway
         self.loop = io_loop or scheduler.loop
+        self.heartbeat_period = heartbeat_period
         self.idle_timeout = max(0, idle_timeout)
         self.check_idle_task = None
+        self.heartbeat_task = None
 
         routes = [
             ("/api/scale_down", ScaleDownHandler),
@@ -275,6 +283,8 @@ class GatewaySchedulerService(object):
 
         if self.idle_timeout > 0:
             self.check_idle_task = asyncio.ensure_future(self.check_idle())
+        if self.heartbeat_period > 0:
+            self.heartbeat_task = asyncio.ensure_future(self.heartbeat_loop())
 
     def stop(self):
         if self.server is not None:
@@ -282,6 +292,8 @@ class GatewaySchedulerService(object):
             self.server = None
         if self.check_idle_task is not None:
             self.check_idle_task.cancel()
+        if self.heartbeat_task is not None:
+            self.heratbeat_task.cancel()
 
     async def check_idle(self):
         while True:
@@ -303,6 +315,36 @@ class GatewaySchedulerService(object):
                     self.idle_timeout,
                 )
                 await self.gateway.shutdown()
+
+    async def heartbeat_loop(self):
+        period = 0.25
+        while True:
+            await asyncio.sleep(period)
+
+            scheduler_address = self.scheduler.address
+            host = urlparse(scheduler_address).hostname
+            api_address = "http://%s:%d" % (host, self.port)
+
+            try:
+                dashboard_port = self.scheduler.services["dashboard"].port
+                dashboard_address = "http://%s:%d" % (host, dashboard_port)
+            except KeyError:
+                dashboard_address = ""
+
+            workers = [
+                ws.name
+                for ws in self.scheduler.workers.values()
+                if ws.status != "closed"
+            ]
+
+            try:
+                await self.gateway.heartbeat(
+                    scheduler_address, dashboard_address, api_address, workers
+                )
+                period = self.heartbeat_period
+            except Exception as exc:
+                logger.warning("Failed to send heartbeat", exc_info=exc)
+                period = min(period * 2, self.heartbeat_period)
 
     def add_pending_workers(self, workers):
         self.plan.update(workers)
@@ -407,72 +449,18 @@ class GatewayClient(object):
         self.token = api_token
         self.api_url = api_url
 
-    async def send_addresses(self, scheduler, dashboard, api):
+    async def heartbeat(self, scheduler, dashboard, api, workers):
         client = AsyncHTTPClient()
         body = json.dumps(
             {
                 "scheduler_address": scheduler,
                 "dashboard_address": dashboard,
                 "api_address": api,
+                "workers": workers,
             }
         )
-        url = "%s/clusters/%s/addresses" % (self.api_url, self.cluster_name)
-        req = HTTPRequest(
-            url,
-            method="PUT",
-            headers={
-                "Authorization": "token %s" % self.token,
-                "Content-type": "application/json",
-            },
-            body=body,
-        )
-        await client.fetch(req)
-
-    async def get_scheduler_address(self):
-        client = AsyncHTTPClient()
-        url = "%s/clusters/%s/addresses" % (self.api_url, self.cluster_name)
-        req = HTTPRequest(
-            url, method="GET", headers={"Authorization": "token %s" % self.token}
-        )
-        resp = await client.fetch(req)
-        data = json.loads(resp.body.decode("utf8", "replace"))
-        return data["scheduler_address"]
-
-    async def notify_worker_added(self, ws):
-        client = AsyncHTTPClient()
-        body = json.dumps({"name": ws.name, "address": ws.address})
-        url = "%s/clusters/%s/workers/%s" % (
-            self.api_url,
-            self.cluster_name,
-            quote(ws.name),
-        )
-        req = HTTPRequest(
-            url,
-            method="PUT",
-            headers={
-                "Authorization": "token %s" % self.token,
-                "Content-type": "application/json",
-            },
-            body=body,
-        )
-        await client.fetch(req)
-
-    async def notify_worker_removed(self, ws):
-        client = AsyncHTTPClient()
-        url = "%s/clusters/%s/workers/%s" % (
-            self.api_url,
-            self.cluster_name,
-            quote(ws.name),
-        )
-        req = HTTPRequest(
-            url, method="DELETE", headers={"Authorization": "token %s" % self.token}
-        )
-        await client.fetch(req)
-
-    async def remove_workers(self, workers):
-        client = AsyncHTTPClient()
-        body = json.dumps({"remove_workers": workers})
-        url = "%s/clusters/%s/scale" % (self.api_url, self.cluster_name)
+        url = "%s/clusters/%s/heartbeat" % (self.api_url, self.cluster_name)
+        logger.warning("Sending request to %s", url)
         req = HTTPRequest(
             url,
             method="POST",
@@ -481,31 +469,6 @@ class GatewayClient(object):
                 "Content-type": "application/json",
             },
             body=body,
-        )
-        await client.fetch(req)
-
-    async def scale_up(self, n):
-        client = AsyncHTTPClient()
-        body = json.dumps({"worker_count": n, "is_adapt": True})
-        url = "%s/clusters/%s/scale" % (self.api_url, self.cluster_name)
-        req = HTTPRequest(
-            url,
-            method="POST",
-            headers={
-                "Authorization": "token %s" % self.token,
-                "Content-type": "application/json",
-            },
-            body=body,
-        )
-        resp = await client.fetch(req)
-        data = json.loads(resp.body.decode("utf8", "replace"))
-        return data["added"]
-
-    async def shutdown(self):
-        client = AsyncHTTPClient()
-        url = "%s/clusters/%s" % (self.api_url, self.cluster_name)
-        req = HTTPRequest(
-            url, method="DELETE", headers={"Authorization": "token %s" % self.token}
         )
         await client.fetch(req)
 
@@ -519,6 +482,12 @@ scheduler_parser.add_argument(
     type=float,
     default=3,
     help="Period (in seconds) between adaptive scaling calls",
+)
+scheduler_parser.add_argument(
+    "--heartbeat-period",
+    type=float,
+    default=15,
+    help="Period (in seconds) between heartbeat calls",
 )
 scheduler_parser.add_argument(
     "--idle-timeout",
@@ -580,6 +549,7 @@ def scheduler(argv=None):
             gateway,
             security,
             adaptive_period=args.adaptive_period,
+            heartbeat_period=args.heartbeat_period,
             idle_timeout=args.idle_timeout,
         )
         await scheduler.finished()
@@ -591,7 +561,12 @@ def scheduler(argv=None):
 
 
 async def start_scheduler(
-    gateway, security, adaptive_period=3, idle_timeout=0, exit_on_failure=True
+    gateway,
+    security,
+    adaptive_period=3,
+    heartbeat_period=15,
+    idle_timeout=0,
+    exit_on_failure=True,
 ):
     loop = IOLoop.current()
     services = {
@@ -600,38 +575,18 @@ async def start_scheduler(
             {
                 "gateway": gateway,
                 "adaptive_period": adaptive_period,
+                "heartbeat_period": heartbeat_period,
                 "idle_timeout": idle_timeout,
             },
         )
     }
-    dashboard = False
     with ignoring(ImportError):
         from distributed.dashboard.scheduler import BokehScheduler
 
         services[("dashboard", 0)] = (BokehScheduler, {})
-        dashboard = True
 
     scheduler = Scheduler(loop=loop, services=services, security=security)
-    await scheduler
-
-    host = urlparse(scheduler.address).hostname
-    gateway_port = scheduler.services["gateway"].port
-    api_address = "http://%s:%d" % (host, gateway_port)
-
-    if dashboard:
-        dashboard_port = scheduler.services["dashboard"].port
-        dashboard_address = "http://%s:%d" % (host, dashboard_port)
-    else:
-        dashboard_address = ""
-
-    try:
-        await gateway.send_addresses(scheduler.address, dashboard_address, api_address)
-    except Exception as exc:
-        logger.error("Failed to send addresses to gateway", exc_info=exc)
-        if exit_on_failure:
-            sys.exit(1)
-
-    return scheduler
+    return await scheduler
 
 
 worker_parser = argparse.ArgumentParser(

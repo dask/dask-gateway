@@ -35,6 +35,7 @@ class Cluster(object):
         self,
         name,
         username,
+        token,
         options,
         status,
         scheduler_address="",
@@ -47,6 +48,7 @@ class Cluster(object):
     ):
         self.name = name
         self.username = username
+        self.token = token
         self.options = options
         self.status = status
         self.scheduler_address = scheduler_address

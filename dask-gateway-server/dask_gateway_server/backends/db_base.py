@@ -7,11 +7,13 @@ import uuid
 from collections import defaultdict
 
 import sqlalchemy as sa
+from aiohttp import web
 from traitlets import Unicode, Bool, List, Integer, Float, validate, default
 from cryptography.fernet import MultiFernet, Fernet
 
 from .base import Backend
 from .. import models
+from ..routes import api_handler
 from ..tls import new_keypair
 from ..utils import FrozenAttrDict
 
@@ -148,6 +150,7 @@ class Cluster(object):
         return models.Cluster(
             name=self.name,
             username=self.username,
+            token=self.token,
             options=self.options,
             status=self.model_status,
             scheduler_address=self.scheduler_address,
@@ -558,7 +561,7 @@ class DatabaseBackend(Backend):
         config=True,
     )
 
-    async def startup(self):
+    async def setup(self, app):
         self.db = DataManager(
             url=self.db_url, echo=self.db_debug, encrypt_keys=self.db_encrypt_keys
         )
@@ -566,9 +569,14 @@ class DatabaseBackend(Backend):
         self.tasks = [
             asyncio.ensure_future(self.reconciler_loop(q)) for q in self.queues
         ]
+        # Add routes to the app
+        app.add_routes(
+            [web.post("/api/clusters/{cluster_name}/heartbeat", handle_heartbeat)]
+        )
+        # Further backend-specific setup
         await self.handle_setup()
 
-    async def shutdown(self):
+    async def cleanup(self):
         await self.handle_cleanup()
         for t in self.tasks:
             t.cancel()
@@ -610,6 +618,13 @@ class DatabaseBackend(Backend):
                 await self.enqueue(obj)
 
     async def reconcile(self, cluster):
+        self.log.debug(
+            "Handling [cluster: %s, status: %s, target: %s]",
+            cluster.name,
+            cluster.status,
+            cluster.target,
+        )
+
         if cluster.status == JobStatus.CREATED:
             if cluster.target == JobStatus.RUNNING:
                 await self._start_cluster(cluster)
@@ -619,7 +634,8 @@ class DatabaseBackend(Backend):
         elif cluster.status == JobStatus.SUBMITTED:
             if cluster.target == JobStatus.RUNNING:
                 if cluster.scheduler_address:
-                    cluster.status = JobStatus.RUNNING
+                    self.log.info("Moving cluster %s to running", cluster.name)
+                    self.db.update_cluster(cluster, status=JobStatus.RUNNING)
             elif cluster.target in (JobStatus.STOPPED, JobStatus.FAILED):
                 await self._stop_cluster(cluster, cluster.target)
 
@@ -706,3 +722,26 @@ class DatabaseBackend(Backend):
 
     async def handle_worker_status(self, cluster, worker):
         raise NotImplementedError
+
+
+@api_handler(token_authenticated=True)
+async def handle_heartbeat(request):
+    backend = request.app["backend"]
+    cluster_name = request.match_info["cluster_name"]
+    cluster = backend.db.get_cluster(cluster_name)
+    msg = await request.json()
+    if cluster.status == JobStatus.SUBMITTED:
+        try:
+            scheduler = msg["scheduler_address"]
+            dashboard = msg["dashboard_address"]
+            api = msg["api_address"]
+        except (TypeError, KeyError):
+            raise web.HTTPUnprocessableEntity()
+        backend.db.update_cluster(
+            cluster,
+            scheduler_address=scheduler,
+            dashboard_address=dashboard,
+            api_address=api,
+        )
+        await backend.enqueue(cluster)
+    return web.Response()
