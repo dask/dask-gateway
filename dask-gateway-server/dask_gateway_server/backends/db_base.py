@@ -627,26 +627,25 @@ class DatabaseBackend(Backend):
 
         if cluster.status == JobStatus.CREATED:
             if cluster.target == JobStatus.RUNNING:
-                await self._start_cluster(cluster)
+                await self._cluster_to_submitted(cluster)
             elif cluster.target in (JobStatus.STOPPED, JobStatus.FAILED):
-                await self._stop_cluster(cluster, cluster.target)
+                await self._cluster_to_stopped(cluster, cluster.target)
 
         elif cluster.status == JobStatus.SUBMITTED:
             if cluster.target == JobStatus.RUNNING:
                 if cluster.scheduler_address:
-                    self.log.info("Moving cluster %s to running", cluster.name)
-                    self.db.update_cluster(cluster, status=JobStatus.RUNNING)
+                    await self._cluster_to_running(cluster)
             elif cluster.target in (JobStatus.STOPPED, JobStatus.FAILED):
-                await self._stop_cluster(cluster, cluster.target)
+                await self._cluster_to_stopped(cluster, cluster.target)
 
         elif cluster.status == JobStatus.RUNNING:
             if cluster.target in (JobStatus.STOPPED, JobStatus.FAILED):
-                await self._stop_cluster(cluster, cluster.target)
+                await self._cluster_to_stopped(cluster, cluster.target)
             else:
                 # TODO: handle scaling/adaptive requests here
                 pass
 
-    async def _start_cluster(self, cluster):
+    async def _cluster_to_submitted(self, cluster):
         try:
             self.log.info(
                 "Starting cluster %s for user %s...", cluster.name, cluster.username
@@ -664,7 +663,7 @@ class DatabaseBackend(Backend):
             self.db.update_cluster(cluster, target=JobStatus.FAILED)
             await self.enqueue(cluster)
 
-    async def _stop_cluster(self, cluster, status):
+    async def _cluster_to_stopped(self, cluster, status):
         self.log.info("Stopping cluster %s...", cluster.name)
         if cluster.status > JobStatus.CREATED:
             try:
@@ -673,8 +672,23 @@ class DatabaseBackend(Backend):
                 self.log.warning(
                     "Failed to stop cluster %s", cluster.name, exc_info=exc
                 )
+            # TODO: prefix here
+            await self.web_proxy.delete_route("/gateway/clusters/" + cluster.name)
+            await self.scheduler_proxy.delete_route("/" + cluster.name)
         self.log.info("Cluster %s stopped", cluster.name)
         self.db.update_cluster(cluster, status=status)
+
+    async def _cluster_to_running(self, cluster):
+        self.log.info("Cluster %s transitioning to RUNNING", cluster.name)
+        if cluster.dashboard_address:
+            # TODO: prefix here
+            await self.web_proxy.add_route(
+                "/gateway/clusters/" + cluster.name, cluster.dashboard_address
+            )
+        await self.scheduler_proxy.add_route(
+            "/" + cluster.name, cluster.scheduler_address
+        )
+        self.db.update_cluster(cluster, status=JobStatus.RUNNING)
 
     def get_env(self, cluster):
         """Get a dict of environment variables to set for the process"""

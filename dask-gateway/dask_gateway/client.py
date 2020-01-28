@@ -100,10 +100,8 @@ class ClusterStatus(_IntEnum):
 
     Attributes
     ----------
-    STARTING : ClusterStatus
-        The cluster is starting.
-    STARTED : ClusterStatus
-        The cluster has started, but hasn't connected to the gateway.
+    PENDING : ClusterStatus
+        The cluster is pending start.
     RUNNING : ClusterStatus
         The cluster is running.
     STOPPING : ClusterStatus
@@ -115,12 +113,11 @@ class ClusterStatus(_IntEnum):
         more information.
     """
 
-    STARTING = 1
-    STARTED = 2
-    RUNNING = 3
-    STOPPING = 4
-    STOPPED = 5
-    FAILED = 6
+    PENDING = 1
+    RUNNING = 2
+    STOPPING = 3
+    STOPPED = 4
+    FAILED = 5
 
 
 class ClusterReport(object):
@@ -138,8 +135,6 @@ class ClusterReport(object):
         The address of the scheduler, or None if not currently running.
     dashboard_link : str or None
         A link to the dashboard, or None if not currently running.
-    adaptive : bool
-        Whether the cluster is in adaptive mode.
     start_time : datetime.datetime
         The time the cluster was started.
     stop_time : datetime.datetime or None
@@ -158,7 +153,6 @@ class ClusterReport(object):
         "status",
         "scheduler_address",
         "dashboard_link",
-        "adaptive",
         "start_time",
         "stop_time",
         "tls_cert",
@@ -172,7 +166,6 @@ class ClusterReport(object):
         status,
         scheduler_address,
         dashboard_link,
-        adaptive,
         start_time,
         stop_time,
         tls_cert=None,
@@ -183,7 +176,6 @@ class ClusterReport(object):
         self.status = status
         self.scheduler_address = scheduler_address
         self.dashboard_link = dashboard_link
-        self.adaptive = adaptive
         self.start_time = start_time
         self.stop_time = stop_time
         self.tls_cert = tls_cert

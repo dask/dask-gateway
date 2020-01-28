@@ -1,4 +1,4 @@
-from traitlets import Instance, Integer, Dict, Union, Unicode
+from traitlets import Instance, Integer, Dict, Union, Unicode, Any
 from traitlets.config import LoggingConfigurable, Configurable
 
 from ..options import Options
@@ -29,6 +29,8 @@ class Backend(LoggingConfigurable):
 
     # Forwarded from the main application
     api_url = Unicode()
+    scheduler_proxy = Any()
+    web_proxy = Any()
 
     async def process_cluster_options(self, user, request):
         if callable(self.cluster_options):
