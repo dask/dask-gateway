@@ -152,3 +152,60 @@ async def delete_cluster(request):
             )
         await backend.stop_cluster(cluster_name)
     return web.Response(status=204)
+
+
+@default_routes.post("/api/clusters/{cluster_name}/scale")
+@api_handler(user_authenticated=True)
+async def scale_cluster(request):
+    user = request["user"]
+    cluster_name = request.match_info["cluster_name"]
+    backend = request.app["backend"]
+    cluster = await backend.get_cluster(cluster_name)
+    if cluster is None:
+        raise web.HTTPNotFound(reason=f"Cluster {cluster_name} not found")
+    if not user.has_permissions(cluster):
+        raise web.HTTPForbidden(
+            reason=f"User {user.name} lacks permissions to view cluster {cluster_name}"
+        )
+
+    msg = await request.json()
+    count = msg.get("count", None)
+    if not isinstance(count, int) or count < 0:
+        raise web.HTTPUnprocessableEntity(
+            reason=f"Scale expects a non-negative integer, got {count}"
+        )
+
+    try:
+        await backend.forward_message_to_scheduler(
+            cluster, {"op": "scale", "count": count}
+        )
+    except Exception as exc:
+        raise web.HTTPConflict(reason=str(exc))
+    return web.Response()
+
+
+@default_routes.post("/api/clusters/{cluster_name}/heartbeat")
+@api_handler(token_authenticated=True)
+async def handle_heartbeat(request):
+    backend = request.app["backend"]
+    cluster_name = request.match_info["cluster_name"]
+    msg = await request.json()
+    await backend.on_cluster_heartbeat(cluster_name, msg)
+    return web.Response()
+
+
+@default_routes.get("/api/clusters/{cluster_name}/addresses")
+@api_handler(token_authenticated=True)
+async def handle_addresses(request):
+    cluster_name = request.match_info["cluster_name"]
+    backend = request.app["backend"]
+    cluster = await backend.get_cluster(cluster_name)
+    if cluster is None:
+        raise web.HTTPNotFound(reason=f"Cluster {cluster_name} not found")
+    return web.json_response(
+        {
+            "api_address": cluster.api_address,
+            "dashboard_address": cluster.dashboard_address,
+            "scheduler_address": cluster.scheduler_address,
+        }
+    )

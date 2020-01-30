@@ -5,15 +5,14 @@ import os
 import time
 import uuid
 from collections import defaultdict
+from itertools import chain, islice
 
 import sqlalchemy as sa
-from aiohttp import web
 from traitlets import Unicode, Bool, List, Integer, Float, validate, default
 from cryptography.fernet import MultiFernet, Fernet
 
 from .base import Backend
 from .. import models
-from ..routes import api_handler
 from ..tls import new_keypair
 from ..utils import FrozenAttrDict
 
@@ -80,8 +79,9 @@ class JobStatus(models.IntEnum):
     CREATED = 1
     SUBMITTED = 2
     RUNNING = 3
-    STOPPED = 4
-    FAILED = 5
+    PRESTOPPED = 4  # Used only for workers!
+    STOPPED = 5
+    FAILED = 6
 
 
 class Cluster(object):
@@ -95,6 +95,7 @@ class Cluster(object):
         config=None,
         status=None,
         target=None,
+        count=0,
         state=None,
         scheduler_address="",
         dashboard_address="",
@@ -112,6 +113,7 @@ class Cluster(object):
         self.config = config
         self.status = status
         self.target = target
+        self.count = count
         self.state = state
         self.scheduler_address = scheduler_address
         self.dashboard_address = dashboard_address
@@ -198,6 +200,7 @@ clusters = sa.Table(
     sa.Column("username", sa.Unicode(255), nullable=False),
     sa.Column("status", _IntEnum(JobStatus), nullable=False),
     sa.Column("target", _IntEnum(JobStatus), nullable=False),
+    sa.Column("count", sa.Integer, nullable=False),
     sa.Column("options", _JSON, nullable=False),
     sa.Column("config", _JSON, nullable=False),
     sa.Column("state", _JSON, nullable=False),
@@ -273,6 +276,7 @@ class DataManager(object):
                 config=FrozenAttrDict(c.config),
                 status=c.status,
                 target=c.target,
+                count=c.count,
                 state=c.state,
                 scheduler_address=c.scheduler_address,
                 dashboard_address=c.dashboard_address,
@@ -393,6 +397,7 @@ class DataManager(object):
             "options": options,
             "status": JobStatus.CREATED,
             "target": JobStatus.RUNNING,
+            "count": 0,
             "state": {},
             "scheduler_address": "",
             "dashboard_address": "",
@@ -460,6 +465,21 @@ class DataManager(object):
             )
             for k, v in kwargs.items():
                 setattr(worker, k, v)
+
+    def update_workers(self, updates):
+        """Update multiple workers' states"""
+        if len(updates) == 1:
+            w, kwargs = updates[0]
+            self.update_worker(w, **kwargs)
+            return
+        with self.db.begin() as conn:
+            conn.execute(
+                clusters.update().where(clusters.c.id == sa.bindparam("_id")),
+                [{"_id": w.id, **u} for w, u in updates],
+            )
+            for w, u in updates:
+                for k, v in u.items():
+                    setattr(w, k, v)
 
 
 class UniqueQueue(asyncio.Queue):
@@ -562,6 +582,7 @@ class DatabaseBackend(Backend):
     )
 
     async def setup(self, app):
+        await super().setup(app)
         self.db = DataManager(
             url=self.db_url, echo=self.db_debug, encrypt_keys=self.db_encrypt_keys
         )
@@ -569,10 +590,6 @@ class DatabaseBackend(Backend):
         self.tasks = [
             asyncio.ensure_future(self.reconciler_loop(q)) for q in self.queues
         ]
-        # Add routes to the app
-        app.add_routes(
-            [web.post("/api/clusters/{cluster_name}/heartbeat", handle_heartbeat)]
-        )
         # Further backend-specific setup
         await self.handle_setup()
 
@@ -581,6 +598,7 @@ class DatabaseBackend(Backend):
         for t in self.tasks:
             t.cancel()
         await asyncio.gather(*self.tasks, return_exceptions=True)
+        await super().cleanup()
 
     async def list_clusters(self, user=None, statuses=None):
         clusters = self.db.list_clusters(username=user.name, statuses=statuses)
@@ -596,14 +614,80 @@ class DatabaseBackend(Backend):
         cluster = self.db.get_cluster(cluster_name)
         return None if cluster is None else cluster.to_model()
 
-    async def stop_cluster(self, cluster_name):
+    async def stop_cluster(self, cluster_name, failed=False):
         cluster = self.db.get_cluster(cluster_name)
         if cluster is None:
             return
         if cluster.target <= JobStatus.RUNNING:
-            self.db.update_cluster(cluster, target=JobStatus.STOPPED)
+            target = JobStatus.FAILED if failed else JobStatus.STOPPED
+            self.db.update_cluster(cluster, target=target)
         if cluster.status <= JobStatus.RUNNING:
             await self.enqueue(cluster)
+
+    async def on_cluster_heartbeat(self, cluster_name, msg):
+        cluster = self.db.get_cluster(cluster_name)
+        if cluster is None or cluster.target > JobStatus.RUNNING:
+            return
+
+        cluster_update = {}
+        if cluster.status <= JobStatus.RUNNING:
+            cluster_update.update(
+                {
+                    "api_address": msg["api_address"],
+                    "scheduler_address": msg["scheduler_address"],
+                    "dashboard_address": msg["dashboard_address"],
+                }
+            )
+
+        count = msg["count"]
+        active_workers = set(msg["active_workers"])
+        closing_workers = set(msg["closing_workers"])
+
+        if count != cluster.count:
+            cluster_update["count"] = count
+
+        created_workers = []
+        submitted_workers = []
+        worker_updates = []
+        for worker in cluster.workers.values():
+            if worker.status >= JobStatus.STOPPED:
+                continue
+
+            update = {}
+            if worker.name in closing_workers:
+                update["status"] = JobStatus.PRESTOPPED
+            elif worker.name in active_workers:
+                if worker.status != JobStatus.RUNNING:
+                    update["status"] = JobStatus.RUNNING
+            else:
+                if worker.status == JobStatus.RUNNING:
+                    update["target"] = JobStatus.FAILED
+                elif worker.status == JobStatus.PRESTOPPED:
+                    update["target"] = JobStatus.STOPPED
+                elif worker.status == JobStatus.SUBMITTED:
+                    submitted_workers.append(worker)
+                else:
+                    assert worker.status == JobStatus.CREATED
+                    created_workers.append(worker)
+
+            if update:
+                worker_updates.append((worker, update))
+
+        n_pending = len(created_workers) + len(submitted_workers)
+        n_to_stop = len(active_workers) + n_pending - count
+        if n_to_stop > 0:
+            for w in islice(chain(created_workers, submitted_workers), n_to_stop):
+                worker_updates.append((w, {"target": JobStatus.STOPPED}))
+
+        if cluster_update:
+            self.db.update_cluster(cluster, **cluster_update)
+            await self.enqueue(cluster)
+
+        if worker_updates:
+            self.db.update_workers(worker_updates)
+            for w, u in worker_updates:
+                if "target" in u:
+                    await self.enqueue(w)
 
     async def enqueue(self, obj):
         ind = hash(obj) % self.parallelism
@@ -617,7 +701,13 @@ class DatabaseBackend(Backend):
             except Exception:
                 await self.enqueue(obj)
 
-    async def reconcile(self, cluster):
+    async def reconcile(self, obj):
+        if isinstance(obj, Cluster):
+            await self.reconcile_cluster(obj)
+        else:
+            await self.reconcile_worker(obj)
+
+    async def reconcile_cluster(self, cluster):
         self.log.debug(
             "Handling [cluster: %s, status: %s, target: %s]",
             cluster.name,
@@ -625,25 +715,41 @@ class DatabaseBackend(Backend):
             cluster.target,
         )
 
-        if cluster.status == JobStatus.CREATED:
-            if cluster.target == JobStatus.RUNNING:
+        if cluster.status >= JobStatus.STOPPED:
+            return
+
+        if cluster.target in (JobStatus.STOPPED, JobStatus.FAILED):
+            await self._cluster_to_stopped(cluster)
+            return
+
+        if cluster.target == JobStatus.RUNNING:
+            if cluster.status == JobStatus.CREATED:
                 await self._cluster_to_submitted(cluster)
-            elif cluster.target in (JobStatus.STOPPED, JobStatus.FAILED):
-                await self._cluster_to_stopped(cluster, cluster.target)
+                return
 
-        elif cluster.status == JobStatus.SUBMITTED:
-            if cluster.target == JobStatus.RUNNING:
-                if cluster.scheduler_address:
-                    await self._cluster_to_running(cluster)
-            elif cluster.target in (JobStatus.STOPPED, JobStatus.FAILED):
-                await self._cluster_to_stopped(cluster, cluster.target)
+            if cluster.status == JobStatus.SUBMITTED and cluster.scheduler_address:
+                await self._cluster_to_running(cluster)
+            await self._check_cluster_scale(cluster)
 
-        elif cluster.status == JobStatus.RUNNING:
-            if cluster.target in (JobStatus.STOPPED, JobStatus.FAILED):
-                await self._cluster_to_stopped(cluster, cluster.target)
-            else:
-                # TODO: handle scaling/adaptive requests here
-                pass
+    async def reconcile_worker(self, worker):
+        self.log.debug(
+            "Handling [worker: %s, cluster: %s, status: %s, target: %s]",
+            worker.name,
+            worker.cluster.name,
+            worker.status,
+            worker.target,
+        )
+
+        if worker.status >= JobStatus.STOPPED:
+            return
+
+        if worker.target in (JobStatus.STOPPED, JobStatus.FAILED):
+            await self._worker_to_stopped(worker)
+            return
+
+        if worker.status == JobStatus.CREATED and worker.target == JobStatus.RUNNING:
+            await self._worker_to_submitted(worker)
+            return
 
     async def _cluster_to_submitted(self, cluster):
         try:
@@ -663,7 +769,7 @@ class DatabaseBackend(Backend):
             self.db.update_cluster(cluster, target=JobStatus.FAILED)
             await self.enqueue(cluster)
 
-    async def _cluster_to_stopped(self, cluster, status):
+    async def _cluster_to_stopped(self, cluster):
         self.log.info("Stopping cluster %s...", cluster.name)
         if cluster.status > JobStatus.CREATED:
             try:
@@ -676,7 +782,8 @@ class DatabaseBackend(Backend):
             await self.web_proxy.delete_route("/gateway/clusters/" + cluster.name)
             await self.scheduler_proxy.delete_route("/" + cluster.name)
         self.log.info("Cluster %s stopped", cluster.name)
-        self.db.update_cluster(cluster, status=status)
+        self.db.update_cluster(cluster, status=cluster.target)
+        # TODO: update all workers to stopped as well
 
     async def _cluster_to_running(self, cluster):
         self.log.info("Cluster %s transitioning to RUNNING", cluster.name)
@@ -689,6 +796,41 @@ class DatabaseBackend(Backend):
             "/" + cluster.name, cluster.scheduler_address
         )
         self.db.update_cluster(cluster, status=JobStatus.RUNNING)
+
+    async def _check_cluster_scale(self, cluster):
+        active = cluster.active_workers()
+        if cluster.count > len(active):
+            for _ in range(cluster.count - len(active)):
+                worker = self.db.create_worker(cluster)
+                await self.enqueue(worker)
+
+    async def _worker_to_submitted(self, worker):
+        try:
+            self.log.info(
+                "Starting worker %s for cluster %s...", worker.name, worker.cluster.name
+            )
+
+            # Walk through the startup process, saving state as updates occur
+            async for state in self.handle_worker_start(worker):
+                self.log.debug("State update for worker %s", worker.name)
+                self.db.update_worker(worker, state=state)
+
+            # Move worker to submitted
+            self.db.update_worker(worker, status=JobStatus.SUBMITTED)
+        except Exception as exc:
+            self.log.warning("Failed to submit worker %s", worker.name, exc_info=exc)
+            self.db.update_worker(worker, target=JobStatus.FAILED)
+            await self.enqueue(worker)
+
+    async def _worker_to_stopped(self, worker):
+        self.log.info("Stopping worker %s...", worker.name)
+        if worker.status > JobStatus.CREATED:
+            try:
+                await self.handle_worker_stop(worker)
+            except Exception as exc:
+                self.log.warning("Failed to stop worker %s", worker.name, exc_info=exc)
+        self.log.info("Worker %s stopped", worker.name)
+        self.db.update_worker(worker, status=worker.target)
 
     def get_env(self, cluster):
         """Get a dict of environment variables to set for the process"""
@@ -728,34 +870,11 @@ class DatabaseBackend(Backend):
     async def handle_cluster_status(self, cluster):
         raise NotImplementedError
 
-    async def handle_worker_start(self, cluster, worker):
+    async def handle_worker_start(self, worker):
         raise NotImplementedError
 
-    async def handle_worker_stop(self, cluster, worker):
+    async def handle_worker_stop(self, worker):
         raise NotImplementedError
 
-    async def handle_worker_status(self, cluster, worker):
+    async def handle_worker_status(self, worker):
         raise NotImplementedError
-
-
-@api_handler(token_authenticated=True)
-async def handle_heartbeat(request):
-    backend = request.app["backend"]
-    cluster_name = request.match_info["cluster_name"]
-    cluster = backend.db.get_cluster(cluster_name)
-    msg = await request.json()
-    if cluster.status == JobStatus.SUBMITTED:
-        try:
-            scheduler = msg["scheduler_address"]
-            dashboard = msg["dashboard_address"]
-            api = msg["api_address"]
-        except (TypeError, KeyError):
-            raise web.HTTPUnprocessableEntity()
-        backend.db.update_cluster(
-            cluster,
-            scheduler_address=scheduler,
-            dashboard_address=dashboard,
-            api_address=api,
-        )
-        await backend.enqueue(cluster)
-    return web.Response()

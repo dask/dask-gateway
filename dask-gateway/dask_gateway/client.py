@@ -603,13 +603,10 @@ class Gateway(object):
         req = HTTPRequest(
             url=url,
             method="POST",
-            body=json.dumps({"worker_count": n}),
+            body=json.dumps({"count": n}),
             headers=HTTPHeaders({"Content-type": "application/json"}),
         )
-        resp = await self._fetch(req)
-        msg = json.loads(resp.body)
-        if msg["message"]:
-            warnings.warn(GatewayWarning(msg["message"]))
+        await self._fetch(req)
 
     def scale_cluster(self, cluster_name, n, **kwargs):
         """Scale a cluster to n workers.

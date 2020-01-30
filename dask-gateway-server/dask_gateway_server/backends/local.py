@@ -175,12 +175,16 @@ class LocalBackend(DatabaseBackend):
 
         self.set_file_permissions(paths, cluster.username)
 
+        self.log.debug(
+            "Working directory %s for cluster %s created", workdir, cluster.name
+        )
         return workdir
 
     def cleanup_working_directory(self, workdir):
         if os.path.exists(workdir):
             try:
                 shutil.rmtree(workdir)
+                self.log.debug("Working directory %s removed", workdir)
             except Exception:  # pragma: nocover
                 self.log.warn("Failed to remove working directory %r", workdir)
 
@@ -258,12 +262,35 @@ class LocalBackend(DatabaseBackend):
         yield {"workdir": workdir, "pid": pid}
 
     async def handle_cluster_stop(self, cluster):
+        workers = cluster.active_workers()
+        res = await asyncio.gather(
+            *(self.handle_worker_stop(w) for w in workers), return_exceptions=True
+        )
+        for w, r in zip(res, workers):
+            if isinstance(res, Exception):
+                self.log.warning("Failed to stop worker %s", w.name, exc_info=res)
+
         pid = cluster.state.get("pid")
         if pid is not None:
             await self.stop_process(pid)
+
         workdir = cluster.state.get("workdir")
         if workdir is not None:
             self.cleanup_working_directory(workdir)
+
+    async def handle_worker_start(self, worker):
+        cmd = self.get_worker_command(worker.cluster)
+        env = self.get_env(worker.cluster)
+        env["DASK_GATEWAY_WORKER_NAME"] = worker.name
+        pid = await self.start_process(
+            worker.cluster, cmd, env, "worker-%s" % worker.name
+        )
+        yield {"pid": pid}
+
+    async def handle_worker_stop(self, worker):
+        pid = worker.state.get("pid")
+        if pid is not None:
+            await self.stop_process(pid)
 
 
 class UnsafeLocalBackend(LocalBackend):
