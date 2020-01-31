@@ -13,6 +13,7 @@ from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 from tornado.ioloop import IOLoop, TimeoutError
 
 from distributed import Scheduler, Worker, Nanny
+from distributed.diagnostics.plugin import SchedulerPlugin
 from distributed.security import Security
 from distributed.utils import ignoring
 from distributed.cli.utils import install_signal_handlers
@@ -20,7 +21,6 @@ from distributed.proctitle import (
     enable_proctitle_on_children,
     enable_proctitle_on_current,
 )
-
 from . import __version__ as VERSION
 
 
@@ -86,6 +86,17 @@ class CommHandler(BaseHandler):
         self.set_status(200)
 
 
+class GatewayPlugin(SchedulerPlugin):
+    def __init__(self, service):
+        self.service = service
+
+    def add_worker(self, scheduler, worker):
+        self.service.worker_added(worker)
+
+    def remove_worker(self, scheduler, worker):
+        self.service.worker_removed(worker)
+
+
 class GatewaySchedulerService(object):
     def __init__(
         self,
@@ -106,14 +117,22 @@ class GatewaySchedulerService(object):
         self.check_idle_task = None
         self.heartbeat_task = None
 
+        self.active_workers = set()
+        self.closed_workers = set()
+        self.scheduler.add_plugin(GatewayPlugin(self))
+
         routes = [("/api/comm", CommHandler)]
         self.app = web.Application(
             routes, gateway_service=self, auth_token=self.gateway.token
         )
         self.server = None
 
-    def active_workers(self):
-        return [w.name for w in self.scheduler.workers.values() if w.status != "closed"]
+    def worker_added(self, worker):
+        self.active_workers.add(worker.name)
+
+    def worker_removed(self, worker):
+        self.active_workers.discard(worker.name)
+        self.closed_workers.add(worker.name)
 
     @property
     def dashboard_address(self):
@@ -174,24 +193,23 @@ class GatewaySchedulerService(object):
                 await self.gateway.shutdown()
 
     async def heartbeat(self):
-        workers = self.active_workers()
-        count = self.count
-
-        if count < len(workers):
+        if self.count < len(self.active_workers):
             closing_workers = self.scheduler.workers_to_close(
-                target=count, attribute="name"
+                target=self.count, attribute="name"
             )
-            workers = list(set(workers).difference(closing_workers))
+            active_workers = list(self.active_workers.difference(closing_workers))
         else:
             closing_workers = []
+            active_workers = list(self.active_workers)
 
         msg = {
             "scheduler_address": self.scheduler.address,
             "dashboard_address": self.dashboard_address,
             "api_address": self.api_address,
-            "count": count,
-            "active_workers": workers,
+            "count": self.count,
+            "active_workers": active_workers,
             "closing_workers": closing_workers,
+            "closed_workers": list(self.closed_workers),
         }
 
         await self.gateway.heartbeat(msg)
