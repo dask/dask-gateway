@@ -152,9 +152,6 @@ class Cluster(object):
     def all_workers_at_least(self, status):
         return all(w.status >= status for w in self.workers.values())
 
-    def worker_targets_before(self, target):
-        return [w for w in self.workers.values() if w.target < target]
-
     @property
     def model_status(self):
         return self._status_map[self.status, self.target]
@@ -484,6 +481,8 @@ class DataManager(object):
 
     def update_workers(self, updates):
         """Update multiple workers' states"""
+        if not updates:
+            return
         if len(updates) == 1:
             w, kwargs = updates[0]
             self.update_worker(w, **kwargs)
@@ -627,6 +626,7 @@ class DatabaseBackend(Backend):
     async def start_cluster(self, user, cluster_options):
         options, config = await self.process_cluster_options(user, cluster_options)
         cluster = self.db.create_cluster(user.name, options, config)
+        self.log.info("Created cluster %s for user %s", cluster.name, user.name)
         await self.enqueue(cluster)
         return cluster.name
 
@@ -674,7 +674,7 @@ class DatabaseBackend(Backend):
             update = {}
             if worker.name in closing_workers:
                 update["close_expected"] = True
-                if worker.status != JobStatus.RUNNING:
+                if worker.status < JobStatus.RUNNING:
                     update["status"] = JobStatus.RUNNING
             elif worker.name in active_workers:
                 if worker.status < JobStatus.RUNNING:
@@ -704,11 +704,10 @@ class DatabaseBackend(Backend):
             self.db.update_cluster(cluster, **cluster_update)
             await self.enqueue(cluster)
 
-        if worker_updates:
-            self.db.update_workers(worker_updates)
-            for w, u in worker_updates:
-                if "target" in u:
-                    await self.enqueue(w)
+        self.db.update_workers(worker_updates)
+        for w, u in worker_updates:
+            if "target" in u:
+                await self.enqueue(w)
 
     async def enqueue(self, obj):
         ind = hash(obj) % self.parallelism
@@ -717,25 +716,29 @@ class DatabaseBackend(Backend):
     async def reconciler_loop(self, queue):
         while True:
             obj = await queue.get()
-            try:
-                await self.reconcile(obj)
-            except Exception:
-                self.log.warning("Failure in reconciler loop", exc_info=True)
+            if isinstance(obj, Cluster):
+                method = self.reconcile_cluster
+                kind = "cluster"
+            else:
+                method = self.reconcile_worker
+                kind = "worker"
 
-    async def reconcile(self, obj):
-        if isinstance(obj, Cluster):
-            await self.reconcile_cluster(obj)
-        else:
-            await self.reconcile_worker(obj)
+            self.log.debug(
+                "Reconciling %s %s, %s -> %s",
+                kind,
+                obj.name,
+                obj.status.name,
+                obj.target.name,
+            )
+
+            try:
+                await method(obj)
+            except Exception:
+                self.log.warning(
+                    "Error while reconciling %s %s", kind, obj.name, exc_info=True
+                )
 
     async def reconcile_cluster(self, cluster):
-        self.log.debug(
-            "Handling [cluster: %s, status: %s, target: %s]",
-            cluster.name,
-            cluster.status,
-            cluster.target,
-        )
-
         if cluster.status >= JobStatus.STOPPED:
             return
 
@@ -743,20 +746,9 @@ class DatabaseBackend(Backend):
             if cluster.status == JobStatus.CLOSING:
                 if self.is_cluster_ready_to_close(cluster):
                     await self._cluster_to_stopped(cluster)
-                return
             else:
-                target = (
-                    JobStatus.CLOSING
-                    if self.supports_bulk_shutdown
-                    else JobStatus.STOPPED
-                )
-                workers = cluster.worker_targets_before(target)
-                if workers:
-                    self.db.update_workers([(w, {"target": target}) for w in workers])
-                    for w in workers:
-                        await self.enqueue(w)
-                self.db.update_cluster(cluster, status=JobStatus.CLOSING)
-                await self.enqueue(cluster)
+                await self._cluster_to_closing(cluster)
+            return
 
         if cluster.target == JobStatus.RUNNING:
             if cluster.status == JobStatus.CREATED:
@@ -768,14 +760,6 @@ class DatabaseBackend(Backend):
             await self._check_cluster_scale(cluster)
 
     async def reconcile_worker(self, worker):
-        self.log.debug(
-            "Handling [worker: %s, cluster: %s, status: %s, target: %s]",
-            worker.name,
-            worker.cluster.name,
-            worker.status,
-            worker.target,
-        )
-
         if worker.status >= JobStatus.STOPPED:
             return
 
@@ -807,21 +791,29 @@ class DatabaseBackend(Backend):
         )
 
     async def _cluster_to_submitted(self, cluster):
+        self.log.info("Submitting cluster %s...", cluster.name)
         try:
-            self.log.info(
-                "Starting cluster %s for user %s...", cluster.name, cluster.username
-            )
-
-            # Walk through the startup process, saving state as updates occur
             async for state in self.handle_cluster_start(cluster):
                 self.log.debug("State update for cluster %s", cluster.name)
                 self.db.update_cluster(cluster, state=state)
-
-            # Move cluster to submitted
             self.db.update_cluster(cluster, status=JobStatus.SUBMITTED)
+            self.log.info("Cluster %s submitted", cluster.name)
         except Exception as exc:
             self.log.warning("Failed to submit cluster %s", cluster.name, exc_info=exc)
             self.db.update_cluster(cluster, target=JobStatus.FAILED)
+            await self.enqueue(cluster)
+
+    async def _cluster_to_closing(self, cluster):
+        self.log.debug("Preparing to stop cluster %s", cluster.name)
+        target = JobStatus.CLOSING if self.supports_bulk_shutdown else JobStatus.STOPPED
+        workers = [w for w in cluster.workers.values() if w.target < target]
+        self.db.update_workers([(w, {"target": target}) for w in workers])
+        for w in workers:
+            await self.enqueue(w)
+        self.db.update_cluster(cluster, status=JobStatus.CLOSING)
+        if not workers:
+            # If there are workers, the cluster will be enqueued after the last one closed
+            # If there are no workers, re-enqueue now
             await self.enqueue(cluster)
 
     async def _cluster_to_stopped(self, cluster):
@@ -831,19 +823,23 @@ class DatabaseBackend(Backend):
                 await self.handle_cluster_stop(cluster)
             except Exception as exc:
                 self.log.warning(
-                    "Failed to stop cluster %s", cluster.name, exc_info=exc
+                    "Exception while stopping cluster %s", cluster.name, exc_info=exc
                 )
-            # TODO: prefix here
             await self.web_proxy.delete_route("/gateway/clusters/" + cluster.name)
             await self.scheduler_proxy.delete_route("/" + cluster.name)
         self.log.info("Cluster %s stopped", cluster.name)
-        self.db.update_cluster(cluster, status=cluster.target)
-        # TODO: update all workers to stopped as well
+        self.db.update_workers(
+            [
+                (w, {"status": JobStatus.STOPPED, "target": JobStatus.STOPPED})
+                for w in cluster.workers.values()
+                if w.status < JobStatus.STOPPED
+            ]
+        )
+        self.db.update_cluster(cluster, status=cluster.target, stop_time=timestamp())
 
     async def _cluster_to_running(self, cluster):
-        self.log.info("Cluster %s transitioning to RUNNING", cluster.name)
+        self.log.info("Cluster %s is running, adding routes to proxies", cluster.name)
         if cluster.dashboard_address:
-            # TODO: prefix here
             await self.web_proxy.add_route(
                 "/gateway/clusters/" + cluster.name, cluster.dashboard_address
             )
@@ -857,21 +853,19 @@ class DatabaseBackend(Backend):
         if cluster.count > len(active):
             for _ in range(cluster.count - len(active)):
                 worker = self.db.create_worker(cluster)
+                self.log.info(
+                    "Created worker %s for cluster %s", worker.name, cluster.name
+                )
                 await self.enqueue(worker)
 
     async def _worker_to_submitted(self, worker):
+        self.log.info("Submitting worker %s...", worker.name)
         try:
-            self.log.info(
-                "Starting worker %s for cluster %s...", worker.name, worker.cluster.name
-            )
-
-            # Walk through the startup process, saving state as updates occur
             async for state in self.handle_worker_start(worker):
                 self.log.debug("State update for worker %s", worker.name)
                 self.db.update_worker(worker, state=state)
-
-            # Move worker to submitted
             self.db.update_worker(worker, status=JobStatus.SUBMITTED)
+            self.log.info("Worker %s submitted", worker.name)
         except Exception as exc:
             self.log.warning("Failed to submit worker %s", worker.name, exc_info=exc)
             self.db.update_worker(worker, target=JobStatus.FAILED)
@@ -883,7 +877,9 @@ class DatabaseBackend(Backend):
             try:
                 await self.handle_worker_stop(worker)
             except Exception as exc:
-                self.log.warning("Failed to stop worker %s", worker.name, exc_info=exc)
+                self.log.warning(
+                    "Exception while stopping worker %s", worker.name, exc_info=exc
+                )
         self.log.info("Worker %s stopped", worker.name)
         self.db.update_worker(worker, status=worker.target)
 
