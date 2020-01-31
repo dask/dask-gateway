@@ -122,6 +122,11 @@ class Cluster(object):
         self.tls_key = tls_key
         self.start_time = start_time
         self.stop_time = stop_time
+
+        if self.status == JobStatus.RUNNING:
+            self.last_heartbeat = timestamp()
+        else:
+            self.last_heartbeat = None
         self.workers = {}
 
     _status_map = {
@@ -389,10 +394,9 @@ class DataManager(object):
         return self.name_to_cluster.get(name)
 
     def active_clusters(self):
-        for user in self.username_to_user.values():
-            for cluster in user.clusters.values():
-                if cluster.is_active():
-                    yield cluster
+        for cluster in self.name_to_cluster.values():
+            if cluster.is_active():
+                yield cluster
 
     def create_cluster(self, username, options, config):
         """Create a new cluster for a user"""
@@ -470,6 +474,23 @@ class DataManager(object):
             for k, v in kwargs.items():
                 setattr(cluster, k, v)
 
+    def update_clusters(self, updates):
+        """Update multiple clusters' states"""
+        if not updates:
+            return
+        if len(updates) == 1:
+            c, kwargs = updates[0]
+            self.update_cluster(c, **kwargs)
+            return
+        with self.db.begin() as conn:
+            conn.execute(
+                clusters.update().where(clusters.c.id == sa.bindparam("_id")),
+                [{"_id": c.id, **u} for c, u in updates],
+            )
+            for c, u in updates:
+                for k, v in u.items():
+                    setattr(c, k, v)
+
     def update_worker(self, worker, **kwargs):
         """Update a worker's state"""
         with self.db.begin() as conn:
@@ -489,7 +510,7 @@ class DataManager(object):
             return
         with self.db.begin() as conn:
             conn.execute(
-                clusters.update().where(clusters.c.id == sa.bindparam("_id")),
+                workers.update().where(workers.c.id == sa.bindparam("_id")),
                 [{"_id": w.id, **u} for w, u in updates],
             )
             for w, u in updates:
@@ -588,6 +609,63 @@ class DatabaseBackend(Backend):
         config=True,
     )
 
+    cluster_heartbeat_period = Integer(
+        help="""
+        Time (in seconds) between cluster heartbeats to the gateway.
+
+        This should be less than ``cluster_heartbeat_timeout``, defaults to
+        half of ``cluster_heartbeat_timeout``.
+        """,
+        config=True,
+    )
+
+    @default("cluster_heartbeat_period")
+    def _default_cluster_heartbeat_period(self):
+        return max(1, self.cluster_heartbeat_timeout // 2)
+
+    cluster_heartbeat_timeout = Float(
+        10,
+        help="""
+        Timeout (in seconds) before killing a dask cluster that's failed to heartbeat.
+        """,
+        config=True,
+    )
+
+    cluster_start_timeout = Float(
+        60,
+        help="""
+        Timeout (in seconds) before giving up on a starting dask cluster.
+        """,
+        config=True,
+    )
+
+    worker_start_timeout = Float(
+        60,
+        help="""
+        Timeout (in seconds) before giving up on a starting dask worker.
+        """,
+        config=True,
+    )
+
+    check_timeouts_period = Float(
+        help="""
+        Time (in seconds) between timeout checks.
+
+        This shouldn't be too small (to keep the overhead low), but should be
+        smaller than ``cluster_heartbeat_timeout``, ``cluster_start_timeout``,
+        and ``worker_start_timeout``.
+        """
+    )
+
+    @default("check_timeouts_period")
+    def _default_check_timeouts_period(self):
+        min_timeout = min(
+            self.cluster_heartbeat_timeout,
+            self.cluster_start_timeout,
+            self.worker_start_timeout,
+        )
+        return min(20, min_timeout / 2)
+
     parallelism = Integer(
         20,
         help="""
@@ -605,6 +683,7 @@ class DatabaseBackend(Backend):
         self.tasks = [
             asyncio.ensure_future(self.reconciler_loop(q)) for q in self.queues
         ]
+        self.tasks.append(asyncio.ensure_future(self.check_timeouts_loop()))
         # Further backend-specific setup
         await self.handle_setup()
 
@@ -644,6 +723,8 @@ class DatabaseBackend(Backend):
         cluster = self.db.get_cluster(cluster_name)
         if cluster is None:
             return
+
+        cluster.last_heartbeat = timestamp()
 
         if cluster.target > JobStatus.RUNNING:
             return
@@ -711,6 +792,53 @@ class DatabaseBackend(Backend):
                 await self.enqueue(w)
             elif u.get("status") == JobStatus.RUNNING:
                 self.log.info("Worker %s is running", w.name)
+
+    async def check_timeouts_loop(self):
+        while True:
+            await asyncio.sleep(self.check_timeouts_period)
+            try:
+                await self.check_timeouts()
+            except Exception as exc:
+                self.log.warning(
+                    "Exception while checking for timed out clusters/workers",
+                    exc_info=exc,
+                )
+
+    async def check_timeouts(self):
+        self.log.debug("Checking timeouts")
+        now = timestamp()
+        cluster_heartbeat_cutoff = now - self.cluster_heartbeat_timeout * 1000
+        cluster_start_cutoff = now - self.cluster_start_timeout * 1000
+        worker_start_cutoff = now - self.worker_start_timeout * 1000
+        cluster_updates = []
+        worker_updates = []
+        for cluster in self.db.active_clusters():
+            if cluster.status == JobStatus.SUBMITTED:
+                # Check if submitted clusters have timed out
+                if cluster.start_time < cluster_start_cutoff:
+                    self.log.info("Cluster %s startup timed out", cluster.name)
+                    cluster_updates.append((cluster, {"target": JobStatus.FAILED}))
+            elif cluster.status == JobStatus.RUNNING:
+                # Check if running clusters have missed a heartbeat
+                if cluster.last_heartbeat < cluster_heartbeat_cutoff:
+                    self.log.info("Cluster %s heartbeat timed out", cluster.name)
+                    cluster_updates.append((cluster, {"target": JobStatus.FAILED}))
+                else:
+                    for w in cluster.workers.values():
+                        # Check if submitted workers have timed out
+                        if (
+                            w.status == JobStatus.SUBMITTED
+                            and w.target == JobStatus.RUNNING
+                            and w.start_time < worker_start_cutoff
+                        ):
+                            self.log.info("Worker %s startup timed out", w.name)
+                            worker_updates.append((w, {"target": JobStatus.FAILED}))
+        self.db.update_clusters(cluster_updates)
+        for c, _ in cluster_updates:
+            await self.enqueue(c)
+        self.db.update_workers(worker_updates)
+        for w, _ in worker_updates:
+            await self.enqueue(w)
 
     async def enqueue(self, obj):
         ind = hash(obj) % self.parallelism
@@ -907,7 +1035,11 @@ class DatabaseBackend(Backend):
         return out
 
     def get_scheduler_command(self, cluster):
-        return [cluster.config.scheduler_cmd]
+        return [
+            cluster.config.scheduler_cmd,
+            "--heartbeat-period",
+            str(self.cluster_heartbeat_period),
+        ]
 
     def get_worker_command(self, cluster):
         return [cluster.config.worker_cmd]
