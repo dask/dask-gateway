@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 class Waiter(object):
     def __init__(self):
         self.task = None
+        self.timer = None
 
     async def wait(self, t):
         self.task = asyncio.ensure_future(asyncio.sleep(t))
@@ -37,11 +38,24 @@ class Waiter(object):
             await self.task
         except asyncio.CancelledError:
             pass
+        if self.timer is not None:
+            self.timer.cancel()
+            self.timer = None
         return
 
     def interrupt(self):
-        self.task.cancel()
-        self.task = None
+        if self.task is not None:
+            self.task.cancel()
+            self.task = None
+
+    def interrupt_soon(self):
+        if self.timer is not None:
+            return
+        self.timer = asyncio.ensure_future(self._interrupt_soon())
+
+    async def _interrupt_soon(self):
+        await asyncio.sleep(3)
+        self.interrupt()
 
 
 class BaseHandler(web.RequestHandler):
@@ -117,7 +131,9 @@ class GatewaySchedulerService(object):
         self.check_idle_task = None
         self.heartbeat_task = None
 
+        self.address_to_worker = {}
         self.active_workers = set()
+        self.closing_workers = set()
         self.closed_workers = set()
         self.scheduler.add_plugin(GatewayPlugin(self))
 
@@ -127,12 +143,22 @@ class GatewaySchedulerService(object):
         )
         self.server = None
 
-    def worker_added(self, worker):
-        self.active_workers.add(worker.name)
+    def worker_added(self, worker_address):
+        ws = self.scheduler.workers[worker_address]
+        self.address_to_worker[worker_address] = ws
+        self.active_workers.add(ws.name)
+        self.closing_workers.discard(ws.name)
+        self.closed_workers.discard(ws.name)
 
-    def worker_removed(self, worker):
-        self.active_workers.discard(worker.name)
-        self.closed_workers.add(worker.name)
+    def worker_removed(self, worker_address):
+        ws = self.address_to_worker.pop(worker_address)
+        self.active_workers.discard(ws.name)
+        self.closed_workers.add(ws.name)
+        if ws.name in self.closing_workers:
+            self.closing_workers.discard(ws.name)
+        else:
+            # Unexpected failure, let gateway know soon, rather than later.
+            self.waiter.interrupt_soon()
 
     @property
     def dashboard_address(self):
@@ -197,6 +223,7 @@ class GatewaySchedulerService(object):
             closing_workers = self.scheduler.workers_to_close(
                 target=self.count, attribute="name"
             )
+            self.closing_workers.update(closing_workers)
             active_workers = list(self.active_workers.difference(closing_workers))
         else:
             closing_workers = []

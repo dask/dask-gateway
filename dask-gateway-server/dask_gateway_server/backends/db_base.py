@@ -640,6 +640,7 @@ class DatabaseBackend(Backend):
             await self.enqueue(cluster)
 
     async def on_cluster_heartbeat(self, cluster_name, msg):
+        self.log.debug("Cluster %s heartbeat: %r", cluster_name, msg)
         cluster = self.db.get_cluster(cluster_name)
         if cluster is None:
             return
@@ -708,6 +709,8 @@ class DatabaseBackend(Backend):
         for w, u in worker_updates:
             if "target" in u:
                 await self.enqueue(w)
+            elif u.get("status") == JobStatus.RUNNING:
+                self.log.info("Worker %s is running", w.name)
 
     async def enqueue(self, obj):
         ind = hash(obj) % self.parallelism
@@ -773,6 +776,10 @@ class DatabaseBackend(Backend):
         if worker.target in (JobStatus.STOPPED, JobStatus.FAILED):
             await self._worker_to_stopped(worker)
             if self.is_cluster_ready_to_close(worker.cluster):
+                await self.enqueue(worker.cluster)
+            elif (
+                worker.cluster.target == JobStatus.RUNNING and not worker.close_expected
+            ):
                 await self.enqueue(worker.cluster)
             return
 
