@@ -14,7 +14,7 @@ from cryptography.fernet import MultiFernet, Fernet
 from .base import Backend
 from .. import models
 from ..tls import new_keypair
-from ..utils import FrozenAttrDict
+from ..utils import FrozenAttrDict, TaskPool
 
 
 def timestamp():
@@ -609,6 +609,30 @@ class DatabaseBackend(Backend):
         config=True,
     )
 
+    cluster_status_period = Float(
+        30,
+        help="""
+        Time (in seconds) between cluster status checks.
+
+        A smaller period will detect failed clusters sooner, but will use more
+        resources. A larger period will provide slower feedback in the presence
+        of failures.
+        """,
+        config=True,
+    )
+
+    worker_status_period = Float(
+        30,
+        help="""
+        Time (in seconds) between worker status checks.
+
+        A smaller period will detect failed workers sooner, but will use more
+        resources. A larger period will provide slower feedback in the presence
+        of failures.
+        """,
+        config=True,
+    )
+
     cluster_heartbeat_period = Integer(
         help="""
         Time (in seconds) between cluster heartbeats to the gateway.
@@ -621,7 +645,7 @@ class DatabaseBackend(Backend):
 
     @default("cluster_heartbeat_period")
     def _default_cluster_heartbeat_period(self):
-        return max(1, self.cluster_heartbeat_timeout // 2)
+        return max(1, int(self.cluster_heartbeat_timeout // 2))
 
     cluster_heartbeat_timeout = Float(
         10,
@@ -680,18 +704,18 @@ class DatabaseBackend(Backend):
             url=self.db_url, echo=self.db_debug, encrypt_keys=self.db_encrypt_keys
         )
         self.queues = [UniqueQueue() for _ in range(self.parallelism)]
-        self.tasks = [
-            asyncio.ensure_future(self.reconciler_loop(q)) for q in self.queues
-        ]
-        self.tasks.append(asyncio.ensure_future(self.check_timeouts_loop()))
+        self.task_pool = TaskPool()
+        for q in self.queues:
+            self.task_pool.create_background_task(self.reconciler_loop(q))
+        self.task_pool.create_background_task(self.check_timeouts_loop())
+        self.task_pool.create_background_task(self.check_clusters_loop())
+        self.task_pool.create_background_task(self.check_workers_loop())
         # Further backend-specific setup
         await self.handle_setup()
 
     async def cleanup(self):
         await self.handle_cleanup()
-        for t in self.tasks:
-            t.cancel()
-        await asyncio.gather(*self.tasks, return_exceptions=True)
+        await self.task_pool.close()
         await super().cleanup()
 
     async def list_clusters(self, user=None, statuses=None):
@@ -797,15 +821,16 @@ class DatabaseBackend(Backend):
         while True:
             await asyncio.sleep(self.check_timeouts_period)
             try:
-                await self.check_timeouts()
+                await self._check_timeouts()
+            except asyncio.CancelledError:
+                raise
             except Exception as exc:
                 self.log.warning(
                     "Exception while checking for timed out clusters/workers",
                     exc_info=exc,
                 )
 
-    async def check_timeouts(self):
-        self.log.debug("Checking timeouts")
+    async def _check_timeouts(self):
         now = timestamp()
         cluster_heartbeat_cutoff = now - self.cluster_heartbeat_timeout * 1000
         cluster_start_cutoff = now - self.cluster_start_timeout * 1000
@@ -839,6 +864,66 @@ class DatabaseBackend(Backend):
         self.db.update_workers(worker_updates)
         for w, _ in worker_updates:
             await self.enqueue(w)
+
+    async def check_clusters_loop(self):
+        while True:
+            await asyncio.sleep(self.cluster_status_period)
+            self.log.debug("Checking pending cluster statuses")
+            try:
+                clusters = [
+                    c
+                    for c in self.db.active_clusters()
+                    if c.status == JobStatus.SUBMITTED
+                ]
+                statuses = await self.handle_check_clusters(clusters)
+                updates = [
+                    (c, {"target": JobStatus.FAILED})
+                    for c, ok in zip(clusters, statuses)
+                    if not ok
+                ]
+                self.db.update_clusters(updates)
+                for c, _ in updates:
+                    self.log.info("Cluster %s failed during startup", c.name)
+                    await self.enqueue(c)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                self.log.warning(
+                    "Exception while checking cluster statuses", exc_info=exc
+                )
+
+    async def check_workers_loop(self):
+        while True:
+            await asyncio.sleep(self.worker_status_period)
+            self.log.debug("Checking pending worker statuses")
+            try:
+                clusters = (
+                    c
+                    for c in self.db.active_clusters()
+                    if c.status == JobStatus.RUNNING
+                )
+                workers = [
+                    w
+                    for c in clusters
+                    for w in c.active_workers()
+                    if w.status == JobStatus.SUBMITTED
+                ]
+                statuses = await self.handle_check_workers(workers)
+                updates = [
+                    (w, {"target": JobStatus.FAILED})
+                    for w, ok in zip(workers, statuses)
+                    if not ok
+                ]
+                self.db.update_workers(updates)
+                for w, _ in updates:
+                    self.log.info("Worker %s failed during startup", w.name)
+                    await self.enqueue(w)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                self.log.warning(
+                    "Exception while checking worker statuses", exc_info=exc
+                )
 
     async def enqueue(self, obj):
         ind = hash(obj) % self.parallelism
@@ -1059,7 +1144,7 @@ class DatabaseBackend(Backend):
     async def handle_cluster_stop(self, cluster):
         raise NotImplementedError
 
-    async def handle_cluster_status(self, cluster):
+    async def handle_check_clusters(self, clusters):
         raise NotImplementedError
 
     async def handle_worker_start(self, worker):
@@ -1068,5 +1153,5 @@ class DatabaseBackend(Backend):
     async def handle_worker_stop(self, worker):
         raise NotImplementedError
 
-    async def handle_worker_status(self, worker):
+    async def handle_check_workers(self, workers):
         raise NotImplementedError

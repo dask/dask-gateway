@@ -278,6 +278,13 @@ class LocalBackend(DatabaseBackend):
         if workdir is not None:
             self.cleanup_working_directory(workdir)
 
+    def _check_status(self, o):
+        pid = o.state.get("pid")
+        return pid is not None and is_running(pid)
+
+    async def handle_check_clusters(self, clusters):
+        return [self._check_status(c) for c in clusters]
+
     async def handle_worker_start(self, worker):
         cmd = self.get_worker_command(worker.cluster)
         env = self.get_env(worker.cluster)
@@ -291,6 +298,9 @@ class LocalBackend(DatabaseBackend):
         pid = worker.state.get("pid")
         if pid is not None:
             await self.stop_process(pid)
+
+    async def handle_check_workers(self, workers):
+        return [self._check_status(w) for w in workers]
 
 
 class UnsafeLocalBackend(LocalBackend):
