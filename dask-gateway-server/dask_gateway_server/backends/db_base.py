@@ -13,6 +13,7 @@ from cryptography.fernet import MultiFernet, Fernet
 
 from .base import Backend
 from .. import models
+from ..compat import get_running_loop
 from ..tls import new_keypair
 from ..utils import FrozenAttrDict, TaskPool
 
@@ -128,6 +129,9 @@ class Cluster(object):
         else:
             self.last_heartbeat = None
         self.workers = {}
+        self.ready = Flag()
+        if self.status >= JobStatus.RUNNING:
+            self.ready.set()
 
     _status_map = {
         (JobStatus.CREATED, JobStatus.RUNNING): models.ClusterStatus.PENDING,
@@ -518,6 +522,20 @@ class DataManager(object):
                     setattr(w, k, v)
 
 
+class Flag(object):
+    """A simpler version of asyncio.Event"""
+
+    def __init__(self):
+        self._future = get_running_loop().create_future()
+
+    def set(self):
+        if not self._future.done():
+            self._future.set_result(None)
+
+    def __await__(self):
+        return asyncio.shield(self._future)
+
+
 class UniqueQueue(asyncio.Queue):
     """A queue that may only contain each item once."""
 
@@ -634,26 +652,30 @@ class DatabaseBackend(Backend):
     )
 
     cluster_heartbeat_period = Integer(
+        15,
         help="""
         Time (in seconds) between cluster heartbeats to the gateway.
 
-        This should be less than ``cluster_heartbeat_timeout``, defaults to
-        half of ``cluster_heartbeat_timeout``.
+        A smaller period will detect failed workers sooner, but will use more
+        resources. A larger period will provide slower feedback in the presence
+        of failures.
         """,
         config=True,
     )
-
-    @default("cluster_heartbeat_period")
-    def _default_cluster_heartbeat_period(self):
-        return max(1, int(self.cluster_heartbeat_timeout // 2))
 
     cluster_heartbeat_timeout = Float(
-        10,
         help="""
         Timeout (in seconds) before killing a dask cluster that's failed to heartbeat.
+
+        This should be greater than ``cluster_heartbeat_period``.  Defaults to
+        ``2 * cluster_heartbeat_period``.
         """,
         config=True,
     )
+
+    @default("cluster_heartbeat_timeout")
+    def _default_cluster_heartbeat_timeout(self):
+        return self.cluster_heartbeat_period * 2
 
     cluster_start_timeout = Float(
         60,
@@ -722,9 +744,16 @@ class DatabaseBackend(Backend):
         clusters = self.db.list_clusters(username=user.name, statuses=statuses)
         return [c.to_model() for c in clusters]
 
-    async def get_cluster(self, cluster_name):
+    async def get_cluster(self, cluster_name, wait=False):
         cluster = self.db.get_cluster(cluster_name)
-        return None if cluster is None else cluster.to_model()
+        if cluster is None:
+            return None
+        if wait:
+            try:
+                await asyncio.wait_for(cluster.ready, 20)
+            except asyncio.TimeoutError:
+                pass
+        return cluster.to_model()
 
     async def start_cluster(self, user, cluster_options):
         options, config = await self.process_cluster_options(user, cluster_options)
@@ -831,6 +860,7 @@ class DatabaseBackend(Backend):
                 )
 
     async def _check_timeouts(self):
+        self.log.debug("Checking for timed out clusters/workers")
         now = timestamp()
         cluster_heartbeat_cutoff = now - self.cluster_heartbeat_timeout * 1000
         cluster_start_cutoff = now - self.cluster_start_timeout * 1000
@@ -1035,6 +1065,7 @@ class DatabaseBackend(Backend):
             # If there are workers, the cluster will be enqueued after the last one closed
             # If there are no workers, re-enqueue now
             await self.enqueue(cluster)
+        cluster.ready.set()
 
     async def _cluster_to_stopped(self, cluster):
         self.log.info("Stopping cluster %s...", cluster.name)
@@ -1056,6 +1087,7 @@ class DatabaseBackend(Backend):
             ]
         )
         self.db.update_cluster(cluster, status=cluster.target, stop_time=timestamp())
+        cluster.ready.set()
 
     async def _cluster_to_running(self, cluster):
         self.log.info("Cluster %s is running, adding routes to proxies", cluster.name)
@@ -1067,6 +1099,7 @@ class DatabaseBackend(Backend):
             "/" + cluster.name, cluster.scheduler_address
         )
         self.db.update_cluster(cluster, status=JobStatus.RUNNING)
+        cluster.ready.set()
 
     async def _check_cluster_scale(self, cluster):
         active = cluster.active_workers()

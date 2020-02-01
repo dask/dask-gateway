@@ -122,13 +122,27 @@ async def create_cluster(request):
     return web.json_response({"name": cluster_name}, status=201)
 
 
+def _parse_query_flag(val):
+    if val is None:
+        return False
+    elif val == "":
+        return True
+    else:
+        try:
+            return bool(int(val))
+        except Exception:
+            return False
+
+
 @default_routes.get("/api/clusters/{cluster_name}")
 @api_handler(user_authenticated=True)
 async def get_cluster(request):
     user = request["user"]
     cluster_name = request.match_info["cluster_name"]
     backend = request.app["backend"]
-    cluster = await backend.get_cluster(cluster_name)
+    wait = request.query.get("wait")
+    wait = _parse_query_flag(wait)
+    cluster = await backend.get_cluster(cluster_name, wait=wait)
     if cluster is None:
         raise web.HTTPNotFound(reason=f"Cluster {cluster_name} not found")
     if not user.has_permissions(cluster):
