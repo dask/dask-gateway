@@ -2,6 +2,7 @@ from __future__ import print_function, division, absolute_import
 
 import asyncio
 import argparse
+import collections
 import json
 import logging
 import os
@@ -15,16 +16,22 @@ from tornado.ioloop import IOLoop, TimeoutError
 from distributed import Scheduler, Worker, Nanny
 from distributed.diagnostics.plugin import SchedulerPlugin
 from distributed.security import Security
+from distributed.scheduler import logger as scheduler_logger
 from distributed.utils import ignoring
 from distributed.cli.utils import install_signal_handlers
 from distributed.proctitle import (
     enable_proctitle_on_children,
     enable_proctitle_on_current,
 )
+
 from . import __version__ as VERSION
+from .utils import cancel_task
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.propagate = True
+logger.parent = scheduler_logger
 
 
 class Waiter(object):
@@ -43,9 +50,9 @@ class Waiter(object):
             self.timer = None
         return
 
-    def interrupt(self):
+    async def interrupt(self):
         if self.task is not None:
-            self.task.cancel()
+            await cancel_task(self.task)
             self.task = None
 
     def interrupt_soon(self):
@@ -55,7 +62,7 @@ class Waiter(object):
 
     async def _interrupt_soon(self):
         await asyncio.sleep(3)
-        self.interrupt()
+        await self.interrupt()
 
 
 class BaseHandler(web.RequestHandler):
@@ -91,10 +98,12 @@ class CommHandler(BaseHandler):
             count = msg.get("count", 0)
             await self.gateway_service.scale(count)
         elif op == "adapt":
-            min = msg.get("min")
-            max = msg.get("max")
+            minimum = msg.get("minimum")
+            maximum = msg.get("maximum")
             active = msg.get("active", True)
-            await self.gateway_service.adapt(min=min, max=max, active=active)
+            await self.gateway_service.adapt(
+                minimum=minimum, maximum=maximum, active=active
+            )
         else:
             raise web.HTTPError(422, reason="op must be one of {scale, adapt}")
         self.set_status(200)
@@ -118,6 +127,8 @@ class GatewaySchedulerService(object):
         io_loop=None,
         gateway=None,
         adaptive_period=3,
+        adaptive_window=3,
+        target_duration=5,
         idle_timeout=0,
         heartbeat_period=15,
     ):
@@ -131,6 +142,15 @@ class GatewaySchedulerService(object):
         self.check_idle_task = None
         self.heartbeat_task = None
 
+        # adaptive
+        self.minimum = None
+        self.maximum = None
+        self.target_duration = target_duration
+        self.adaptive_period = adaptive_period
+        self.adaptive_window = adaptive_window
+        self.adapt_task = None
+
+        # internal state
         self.address_to_worker = {}
         self.active_workers = set()
         self.closing_workers = set()
@@ -195,7 +215,9 @@ class GatewaySchedulerService(object):
         if self.check_idle_task is not None:
             self.check_idle_task.cancel()
         if self.heartbeat_task is not None:
-            self.heratbeat_task.cancel()
+            self.heartbeat_task.cancel()
+        if self.adapt_task is not None:
+            self.adapt_task.cancel()
 
     async def check_idle(self):
         while True:
@@ -258,9 +280,57 @@ class GatewaySchedulerService(object):
                 period = min(period * 2, self.heartbeat_period)
 
     async def scale(self, count):
+        # When scale is called explicitly, disable adaptive scaling
+        await self.adapt(active=False)
+        await self._scale(count)
+
+    async def _scale(self, count):
         if count != self.count:
-            self.waiter.interrupt()
-        self.count = count
+            logger.info("Requesting scale to %s workers from %s", count, self.count)
+            self.count = count
+            await self.waiter.interrupt()
+
+    async def adapt(self, minimum=None, maximum=None, active=True):
+        if active:
+            logger.info(
+                "Enabling adaptive scaling, minimum=%r, maximum=%r", minimum, maximum
+            )
+            self.minimum = minimum
+            self.maximum = maximum
+            if self.adapt_task is None:
+                self.adapt_task = asyncio.ensure_future(self.adapt_loop())
+        else:
+            if self.adapt_task is not None:
+                logger.info("Disabling adaptive scaling")
+                await cancel_task(self.adapt_task)
+                self.adapt_task = None
+
+    async def adapt_loop(self):
+        window = collections.deque(maxlen=self.adaptive_window)
+        while True:
+            try:
+                target = self.scheduler.adaptive_target(
+                    target_duration=self.target_duration
+                )
+                if self.minimum is not None:
+                    target = max(self.minimum, target)
+                if self.maximum is not None:
+                    target = min(self.maximum, target)
+
+                window.append(target)
+
+                if target > self.count:
+                    await self._scale(target)
+                elif target < self.count:
+                    max_window = max(window)
+                    if max_window < self.count:
+                        await self._scale(max_window)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                logger.warning("Error in adaptive loop", exc_info=exc)
+
+            await asyncio.sleep(self.adaptive_period)
 
 
 class GatewayClient(object):

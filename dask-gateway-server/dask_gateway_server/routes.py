@@ -198,6 +198,35 @@ async def scale_cluster(request):
     return web.Response()
 
 
+@default_routes.post("/api/clusters/{cluster_name}/adapt")
+@api_handler(user_authenticated=True)
+async def adapt_cluster(request):
+    user = request["user"]
+    cluster_name = request.match_info["cluster_name"]
+    backend = request.app["backend"]
+    cluster = await backend.get_cluster(cluster_name)
+    if cluster is None:
+        raise web.HTTPNotFound(reason=f"Cluster {cluster_name} not found")
+    if not user.has_permissions(cluster):
+        raise web.HTTPForbidden(
+            reason=f"User {user.name} lacks permissions to view cluster {cluster_name}"
+        )
+
+    msg = await request.json()
+    minimum = msg.get("minimum", None)
+    maximum = msg.get("maximum", None)
+    active = msg.get("active", True)
+
+    try:
+        await backend.forward_message_to_scheduler(
+            cluster,
+            {"op": "adapt", "minimum": minimum, "maximum": maximum, "active": active},
+        )
+    except Exception as exc:
+        raise web.HTTPConflict(reason=str(exc))
+    return web.Response()
+
+
 @default_routes.post("/api/clusters/{cluster_name}/heartbeat")
 @api_handler(token_authenticated=True)
 async def handle_heartbeat(request):

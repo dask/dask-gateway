@@ -391,9 +391,8 @@ class Gateway(object):
         ----------
         status : ClusterStatus, str, or list, optional
             The cluster status (or statuses) to select. Valid options are
-            'starting', 'started', 'running', 'stopping', 'stopped', 'failed'.
-            By default selects active clusters ('starting', 'started',
-            'running').
+            'pending', 'running', 'stopping', 'stopped', 'failed'.
+            By default selects active clusters ('pending', 'running').
 
         Returns
         -------
