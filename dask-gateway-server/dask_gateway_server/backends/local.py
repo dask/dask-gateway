@@ -262,14 +262,6 @@ class LocalBackend(DatabaseBackend):
         yield {"workdir": workdir, "pid": pid}
 
     async def handle_cluster_stop(self, cluster):
-        workers = cluster.active_workers()
-        res = await asyncio.gather(
-            *(self.handle_worker_stop(w) for w in workers), return_exceptions=True
-        )
-        for w, r in zip(res, workers):
-            if isinstance(res, Exception):
-                self.log.warning("Failed to stop worker %s", w.name, exc_info=res)
-
         pid = cluster.state.get("pid")
         if pid is not None:
             await self.stop_process(pid)

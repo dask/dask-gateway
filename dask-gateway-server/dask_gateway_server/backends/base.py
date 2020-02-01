@@ -1,7 +1,7 @@
 import asyncio
 
 import aiohttp
-from traitlets import Instance, Integer, Dict, Union, Unicode, Any
+from traitlets import Instance, Integer, Float, Dict, Union, Unicode, Any
 from traitlets.config import LoggingConfigurable, Configurable
 
 from .. import models
@@ -261,6 +261,30 @@ class ClusterConfig(Configurable):
         min=1,
         help="""
         Number of cpu-cores available for a dask scheduler.
+        """,
+        config=True,
+    )
+
+    adaptive_period = Float(
+        3,
+        min=0,
+        help="""
+        Time (in seconds) between adaptive scaling checks.
+
+        A smaller period will decrease scale up/down latency when responding to
+        cluster load changes, but may also result in higher load on the gateway
+        server.
+        """,
+        config=True,
+    )
+
+    idle_timeout = Float(
+        0,
+        min=0,
+        help="""
+        Time (in seconds) before an idle cluster is automatically shutdown.
+
+        Set to 0 (default) for no idle timeout.
         """,
         config=True,
     )

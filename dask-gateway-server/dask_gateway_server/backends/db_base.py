@@ -1157,6 +1157,10 @@ class DatabaseBackend(Backend):
             cluster.config.scheduler_cmd,
             "--heartbeat-period",
             str(self.cluster_heartbeat_period),
+            "--adaptive-period",
+            str(cluster.config.adaptive_period),
+            "--idle-timeout",
+            str(cluster.config.idle_timeout),
         ]
 
     def get_worker_command(self, cluster):
