@@ -40,11 +40,13 @@ class Waiter(object):
         self.timer = None
 
     async def wait(self, t):
+        self.triggered = False
         self.task = asyncio.ensure_future(asyncio.sleep(t))
         try:
             await self.task
         except asyncio.CancelledError:
-            pass
+            if not self.triggered:
+                raise
         if self.timer is not None:
             self.timer.cancel()
             self.timer = None
@@ -52,6 +54,7 @@ class Waiter(object):
 
     async def interrupt(self):
         if self.task is not None:
+            self.triggered = True
             await cancel_task(self.task)
             self.task = None
 
@@ -275,6 +278,8 @@ class GatewaySchedulerService(object):
             try:
                 await self.heartbeat()
                 period = self.heartbeat_period
+            except asyncio.CancelledError:
+                break
             except Exception as exc:
                 logger.warning("Failed to send heartbeat", exc_info=exc)
                 period = min(period * 2, self.heartbeat_period)
@@ -326,7 +331,7 @@ class GatewaySchedulerService(object):
                     if max_window < self.count:
                         await self._scale(max_window)
             except asyncio.CancelledError:
-                raise
+                break
             except Exception as exc:
                 logger.warning("Error in adaptive loop", exc_info=exc)
 

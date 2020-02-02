@@ -389,14 +389,6 @@ class DataManager(object):
                 return []
             return [cluster for cluster in clusters.values() if select(cluster)]
 
-    def cluster_from_token(self, token):
-        """Lookup a cluster from a token"""
-        return self.token_to_cluster.get(token)
-
-    def cluster_from_name(self, name):
-        """Lookup a cluster by name"""
-        return self.name_to_cluster.get(name)
-
     def active_clusters(self):
         for cluster in self.name_to_cluster.values():
             if cluster.is_active():
@@ -482,10 +474,6 @@ class DataManager(object):
         """Update multiple clusters' states"""
         if not updates:
             return
-        if len(updates) == 1:
-            c, kwargs = updates[0]
-            self.update_cluster(c, **kwargs)
-            return
         with self.db.begin() as conn:
             conn.execute(
                 clusters.update().where(clusters.c.id == sa.bindparam("_id")),
@@ -507,10 +495,6 @@ class DataManager(object):
     def update_workers(self, updates):
         """Update multiple workers' states"""
         if not updates:
-            return
-        if len(updates) == 1:
-            w, kwargs = updates[0]
-            self.update_worker(w, **kwargs)
             return
         with self.db.begin() as conn:
             conn.execute(
@@ -801,24 +785,24 @@ class DatabaseBackend(Backend):
 
         created_workers = []
         submitted_workers = []
-        worker_updates = []
+        target_updates = []
+        newly_running = []
+        close_expected = []
         for worker in cluster.workers.values():
             if worker.status >= JobStatus.STOPPED:
                 continue
-
-            update = {}
-            if worker.name in closing_workers:
-                update["close_expected"] = True
+            elif worker.name in closing_workers:
                 if worker.status < JobStatus.RUNNING:
-                    update["status"] = JobStatus.RUNNING
+                    newly_running.append(worker)
+                close_expected.append(worker)
             elif worker.name in active_workers:
                 if worker.status < JobStatus.RUNNING:
-                    update["status"] = JobStatus.RUNNING
+                    newly_running.append(worker)
             elif worker.name in closed_workers:
-                if worker.close_expected:
-                    update["target"] = JobStatus.STOPPED
-                else:
-                    update["target"] = JobStatus.FAILED
+                target = (
+                    JobStatus.STOPPED if worker.close_expected else JobStatus.FAILED
+                )
+                target_updates.append((worker, {"target": target}))
             else:
                 if worker.status == JobStatus.SUBMITTED:
                     submitted_workers.append(worker)
@@ -826,25 +810,27 @@ class DatabaseBackend(Backend):
                     assert worker.status == JobStatus.CREATED
                     created_workers.append(worker)
 
-            if update:
-                worker_updates.append((worker, update))
-
         n_pending = len(created_workers) + len(submitted_workers)
         n_to_stop = len(active_workers) + n_pending - count
         if n_to_stop > 0:
             for w in islice(chain(created_workers, submitted_workers), n_to_stop):
-                worker_updates.append((w, {"target": JobStatus.STOPPED}))
+                target_updates.append((w, {"target": JobStatus.STOPPED}))
 
         if cluster_update:
             self.db.update_cluster(cluster, **cluster_update)
             await self.enqueue(cluster)
 
-        self.db.update_workers(worker_updates)
-        for w, u in worker_updates:
-            if "target" in u:
-                await self.enqueue(w)
-            elif u.get("status") == JobStatus.RUNNING:
-                self.log.info("Worker %s is running", w.name)
+        self.db.update_workers(target_updates)
+        for w, u in target_updates:
+            await self.enqueue(w)
+
+        self.db.update_workers(
+            [(w, {"status": JobStatus.RUNNING}) for w in newly_running]
+        )
+        for w in newly_running:
+            self.log.info("Worker %s is running", w.name)
+
+        self.db.update_workers([(w, {"close_expected": True}) for w in close_expected])
 
     async def check_timeouts_loop(self):
         while True:
