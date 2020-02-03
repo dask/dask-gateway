@@ -47,16 +47,17 @@ class Backend(LoggingConfigurable):
     scheduler_proxy = Any()
     web_proxy = Any()
 
-    async def process_cluster_options(self, user, request):
+    async def get_cluster_options(self, user):
         if callable(self.cluster_options):
-            options = await awaitable(self.cluster_options(user))
-        else:
-            options = self.cluster_options
+            return await awaitable(self.cluster_options(user))
+        return self.cluster_options
 
-        cluster_options = options.parse_options(request)
-        overrides = options.get_configuration(cluster_options)
+    async def process_cluster_options(self, user, request):
+        cluster_options = await self.get_cluster_options(user)
+        requested_options = cluster_options.parse_options(request)
+        overrides = cluster_options.get_configuration(requested_options)
         config = self.cluster_config_class(parent=self, **overrides).to_dict()
-        return cluster_options, config
+        return requested_options, config
 
     async def forward_message_to_scheduler(self, cluster, msg):
         if cluster.status != models.ClusterStatus.RUNNING:

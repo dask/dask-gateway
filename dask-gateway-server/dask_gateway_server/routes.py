@@ -85,6 +85,16 @@ async def health(request):
     return web.json_response(health, status=status)
 
 
+@default_routes.get("/api/options")
+@api_handler(user_authenticated=True)
+async def cluster_options(request):
+    user = request["user"]
+    backend = request.app["backend"]
+    cluster_options = await backend.get_cluster_options(user)
+    spec = cluster_options.get_specification()
+    return web.json_response({"cluster_options": spec})
+
+
 @default_routes.get("/api/clusters/")
 @api_handler(user_authenticated=True)
 async def list_clusters(request):

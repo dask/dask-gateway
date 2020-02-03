@@ -419,7 +419,7 @@ class Gateway(object):
         return {k: format_template(v) for k, v in opts.items()}
 
     async def _cluster_options(self, use_local_defaults=True):
-        url = "%s/gateway/api/clusters/options" % self.address
+        url = "%s/gateway/api/options" % self.address
         req = HTTPRequest(url=url, method="GET")
         resp = await self._fetch(req)
         data = json.loads(resp.body)
