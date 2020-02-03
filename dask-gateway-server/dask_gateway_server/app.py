@@ -369,6 +369,10 @@ class DaskGateway(Application):
         if hasattr(self, "runner"):
             await self.runner.cleanup()
 
+        # Shutdown backend
+        if hasattr(self, "backend"):
+            await self.backend.cleanup()
+
         # Shutdown the proxies
         if hasattr(self, "scheduler_proxy"):
             await self.scheduler_proxy.shutdown()
@@ -378,10 +382,6 @@ class DaskGateway(Application):
         # Shutdown authenticator
         if hasattr(self, "authenticator"):
             await self.authenticator.shutdown()
-
-        # Shutdown backend
-        if hasattr(self, "backend"):
-            await self.backend.cleanup()
 
         # Close task pool
         if hasattr(self, "task_pool"):

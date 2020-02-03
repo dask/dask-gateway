@@ -129,9 +129,13 @@ class Cluster(object):
         else:
             self.last_heartbeat = None
         self.workers = {}
+
         self.ready = Flag()
         if self.status >= JobStatus.RUNNING:
             self.ready.set()
+        self.shutdown = Flag()
+        if self.status >= JobStatus.STOPPED:
+            self.shutdown.set()
 
     _status_map = {
         (JobStatus.CREATED, JobStatus.RUNNING): models.ClusterStatus.PENDING,
@@ -513,7 +517,7 @@ class Flag(object):
             self._future.set_result(None)
 
     def __await__(self):
-        return asyncio.shield(self._future)
+        return asyncio.shield(self._future).__await__()
 
 
 class UniqueQueue(asyncio.Queue):
@@ -606,6 +610,26 @@ class DatabaseBackend(Backend):
         """,
         config=True,
     )
+
+    stop_clusters_on_shutdown = Bool(
+        True,
+        help="""
+        Whether to stop active clusters on gateway shutdown.
+
+        If true, all active clusters will be stopped before shutting down the
+        gateway. Set to False to leave active clusters running.
+        """,
+        config=True,
+    )
+
+    @validate("stop_clusters_on_shutdown")
+    def _stop_clusters_on_shutdown_validate(self, proposal):
+        if not proposal.value and _is_in_memory_db(self.db_url):
+            raise ValueError(
+                "When using an in-memory database, `stop_clusters_on_shutdown` "
+                "must be True"
+            )
+        return proposal.value
 
     cluster_status_period = Float(
         30,
@@ -725,6 +749,26 @@ class DatabaseBackend(Backend):
         await self.handle_setup()
 
     async def cleanup(self):
+        if self.stop_clusters_on_shutdown:
+            # Request all active clusters be stopped
+            active = list(self.db.active_clusters())
+            if active:
+                self.log.info("Stopping %d active clusters...", len(active))
+                self.db.update_clusters(
+                    [(c, {"target": JobStatus.FAILED}) for c in active]
+                )
+                for c in active:
+                    await self.enqueue(c)
+
+            # Wait until all clusters are shutdown
+            pending_shutdown = [
+                c
+                for c in self.db.name_to_cluster.values()
+                if c.status < JobStatus.STOPPED
+            ]
+            if pending_shutdown:
+                await asyncio.wait([c.shutdown for c in pending_shutdown])
+
         await self.handle_cleanup()
         await self.task_pool.close()
         await super().cleanup()
@@ -1085,6 +1129,7 @@ class DatabaseBackend(Backend):
         )
         self.db.update_cluster(cluster, status=cluster.target, stop_time=timestamp())
         cluster.ready.set()
+        cluster.shutdown.set()
 
     async def _cluster_to_running(self, cluster):
         self.log.info("Cluster %s is running, adding routes to proxies", cluster.name)
