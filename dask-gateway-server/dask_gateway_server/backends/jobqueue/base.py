@@ -83,7 +83,7 @@ class JobQueueBackend(DatabaseBackend):
 
     def get_tls_paths(self, cluster):
         """Get the absolute paths to the tls cert and key files."""
-        staging_dir = self.get_staging_directory()
+        staging_dir = self.get_staging_directory(cluster)
         cert_path = os.path.join(staging_dir, "dask.crt")
         key_path = os.path.join(staging_dir, "dask.pem")
         return cert_path, key_path

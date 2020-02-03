@@ -27,6 +27,8 @@ def format_resource_list(template, cores, memory):
 
 
 class PBSClusterConfig(JobQueueClusterConfig):
+    """Dask cluster configuration options when running on PBS"""
+
     queue = Unicode("", help="The queue to submit jobs to.", config=True)
 
     account = Unicode(
@@ -75,7 +77,7 @@ class PBSClusterConfig(JobQueueClusterConfig):
 
 
 class PBSBackend(JobQueueBackend):
-    """A cluster manager for deploying Dask on a PBS cluster."""
+    """A backend for deploying Dask on a PBS cluster."""
 
     cluster_config_class = Type(
         "dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig",

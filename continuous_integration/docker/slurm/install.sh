@@ -8,10 +8,11 @@ cd /working
 conda install psutil
 
 pip install \
+    aiohttp \
+    colorlog \
     dask \
     distributed \
     cryptography \
-    tornado \
     traitlets \
     sqlalchemy \
     pytest \
