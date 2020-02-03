@@ -8,10 +8,11 @@ cd /working
 conda install psutil pykerberos
 
 pip install \
+    aiohttp \
+    colorlog \
     dask \
     distributed \
     cryptography \
-    tornado \
     traitlets \
     sqlalchemy \
     skein \

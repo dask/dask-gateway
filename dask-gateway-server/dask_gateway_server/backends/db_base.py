@@ -1178,6 +1178,10 @@ class DatabaseBackend(Backend):
         self.log.info("Worker %s stopped", worker.name)
         self.db.update_worker(worker, status=worker.target)
 
+    def get_tls_paths(self, cluster):
+        """Return the paths to the cert and key files for this cluster"""
+        return "dask.crt", "dask.pem"
+
     def get_env(self, cluster):
         """Get a dict of environment variables to set for the process"""
         out = dict(cluster.config.environment)

@@ -55,7 +55,7 @@ class Backend(LoggingConfigurable):
 
         cluster_options = options.parse_options(request)
         overrides = options.get_configuration(cluster_options)
-        config = self.cluster_config_class(**overrides).to_dict()
+        config = self.cluster_config_class(parent=self, **overrides).to_dict()
         return cluster_options, config
 
     async def forward_message_to_scheduler(self, cluster, msg):

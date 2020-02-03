@@ -1,6 +1,7 @@
 import asyncio
 import socket
 import weakref
+from collections import OrderedDict
 from collections.abc import Mapping
 from inspect import isawaitable
 from keyword import iskeyword
@@ -296,3 +297,32 @@ class FrozenAttrDict(Mapping):
         out = set(dir(type(self)))
         out.update(k for k in self if k.isidentifier() and not iskeyword(k))
         return list(out)
+
+
+class LRUCache(object):
+    """A LRU cache"""
+
+    def __init__(self, max_size):
+        self.cache = OrderedDict()
+        self.max_size = max_size
+
+    def get(self, key):
+        """Get an item from the cache. Returns None if not present"""
+        try:
+            self.cache.move_to_end(key)
+            return self.cache[key]
+        except KeyError:
+            return None
+
+    def put(self, key, value):
+        """Add an item to the cache"""
+        self.cache[key] = value
+        if len(self.cache) > self.max_size:
+            self.cache.popitem(False)
+
+    def discard(self, key):
+        """Remove an item from the cache. No-op if not present."""
+        try:
+            del self.cache[key]
+        except KeyError:
+            pass
