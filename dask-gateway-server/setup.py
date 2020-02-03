@@ -89,12 +89,13 @@ class clean(_clean):
         _clean.run(self)
 
 
-install_requires = ["cryptography", "tornado", "traitlets", "sqlalchemy", "colorlog"]
+install_requires = ["aiohttp", "colorlog", "cryptography", "traitlets"]
 
 extras_require = {
     "kerberos": ["pykerberos"],
-    "kubernetes": ["kubernetes >= 9"],
-    "yarn": ["skein >= 0.7.3"],
+    "jobqueue": ["sqlalchemy"],
+    "local": ["sqlalchemy"],
+    "yarn": ["sqlalchemy", "skein >= 0.7.3"],
 }
 
 # Due to quirks in setuptools/distutils dependency ordering, to get the go
