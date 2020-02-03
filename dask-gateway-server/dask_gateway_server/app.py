@@ -5,6 +5,7 @@ import signal
 import sys
 from urllib.parse import urlparse
 
+import aiohttp.abc
 from aiohttp import web
 from traitlets import Unicode, Bool, List, validate
 from traitlets.config import Application, catch_config_error
@@ -24,6 +25,18 @@ Application.log_format.default_value = (
     "%(log_color)s[%(levelname)1.1s %(asctime)s.%(msecs).03d "
     "%(name)s]%(reset)s %(message)s"
 )
+
+
+class AccessLogger(aiohttp.abc.AbstractAccessLogger):
+    def log(self, request, response, time):
+        self.logger.info(
+            "%d %s %s (%s) %.3fms",
+            response.status,
+            request.method,
+            request.path_qs,
+            request.remote or "-",
+            time,
+        )
 
 
 class GenerateConfig(Application):
@@ -320,7 +333,9 @@ class DaskGateway(Application):
         await self.backend.setup(self.app)
 
         # Start the aiohttp application
-        self.runner = web.AppRunner(self.app, handle_signals=False)
+        self.runner = web.AppRunner(
+            self.app, handle_signals=False, access_log_class=AccessLogger
+        )
         await self.runner.setup()
 
         site = web.TCPSite(

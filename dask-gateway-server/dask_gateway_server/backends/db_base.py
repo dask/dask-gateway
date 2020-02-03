@@ -751,20 +751,17 @@ class DatabaseBackend(Backend):
         if cluster is None:
             return
         if cluster.target <= JobStatus.RUNNING:
+            self.log.info("Stopping cluster %s", cluster.name)
             target = JobStatus.FAILED if failed else JobStatus.STOPPED
             self.db.update_cluster(cluster, target=target)
             await self.enqueue(cluster)
 
     async def on_cluster_heartbeat(self, cluster_name, msg):
-        self.log.debug("Cluster %s heartbeat: %r", cluster_name, msg)
         cluster = self.db.get_cluster(cluster_name)
-        if cluster is None:
+        if cluster is None or cluster.target > JobStatus.RUNNING:
             return
 
         cluster.last_heartbeat = timestamp()
-
-        if cluster.target > JobStatus.RUNNING:
-            return
 
         if cluster.status == JobStatus.RUNNING:
             cluster_update = {}
@@ -779,6 +776,15 @@ class DatabaseBackend(Backend):
         active_workers = set(msg["active_workers"])
         closing_workers = set(msg["closing_workers"])
         closed_workers = set(msg["closed_workers"])
+
+        self.log.info(
+            "Cluster %s heartbeat [count: %d, n_active: %d, n_closing: %d, n_closed: %d]",
+            cluster_name,
+            count,
+            len(active_workers),
+            len(closing_workers),
+            len(closed_workers),
+        )
 
         if count != cluster.count:
             cluster_update["count"] = count
