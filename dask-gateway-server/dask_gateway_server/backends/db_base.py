@@ -279,7 +279,6 @@ class DataManager(object):
         self.db = engine
 
         self.username_to_clusters = defaultdict(dict)
-        self.token_to_cluster = {}
         self.name_to_cluster = {}
         self.id_to_cluster = {}
 
@@ -308,7 +307,6 @@ class DataManager(object):
             )
             self.username_to_clusters[cluster.username][cluster.name] = cluster
             self.id_to_cluster[cluster.id] = cluster
-            self.token_to_cluster[cluster.token] = cluster
             self.name_to_cluster[cluster.name] = cluster
 
         # Next load all existing workers into memory
@@ -344,7 +342,6 @@ class DataManager(object):
 
                 for i in to_delete:
                     cluster = self.id_to_cluster.pop(i)
-                    del self.token_to_cluster[cluster.token]
                     del self.name_to_cluster[cluster.name]
                     del cluster.user.clusters[cluster.name]
 
@@ -435,7 +432,6 @@ class DataManager(object):
                 **common,
             )
             self.id_to_cluster[cluster.id] = cluster
-            self.token_to_cluster[token] = cluster
             self.name_to_cluster[cluster_name] = cluster
             self.username_to_clusters[username][cluster_name] = cluster
 
@@ -716,6 +712,15 @@ class DatabaseBackend(Backend):
         self.task_pool.create_background_task(self.check_timeouts_loop())
         self.task_pool.create_background_task(self.check_clusters_loop())
         self.task_pool.create_background_task(self.check_workers_loop())
+
+        # Load all active clusters/workers into reconcilation queues
+        for cluster in self.db.name_to_cluster.values():
+            if cluster.status < JobStatus.STOPPED:
+                await self.enqueue(cluster)
+                for worker in cluster.workers.values():
+                    if worker.status < JobStatus.STOPPED:
+                        await self.enqueue(worker)
+
         # Further backend-specific setup
         await self.handle_setup()
 
@@ -1159,13 +1164,13 @@ class DatabaseBackend(Backend):
         return [cluster.config.worker_cmd]
 
     # Subclasses should implement these methods
+    supports_bulk_shutdown = False
+
     async def handle_setup(self):
         pass
 
     async def handle_cleanup(self):
         pass
-
-    supports_bulk_shutdown = False
 
     async def handle_cluster_start(self, cluster):
         raise NotImplementedError
