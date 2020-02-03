@@ -156,7 +156,7 @@ setup(
             "dask-gateway-server = dask_gateway_server.app:main",
             (
                 "dask-gateway-jobqueue-launcher = "
-                "dask_gateway_server.managers.jobqueue.launcher:main"
+                "dask_gateway_server.backends.jobqueue.launcher:main"
             ),
         ]
     },
