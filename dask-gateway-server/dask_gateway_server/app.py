@@ -230,19 +230,6 @@ class DaskGateway(Application):
         config=True,
     )
 
-    temp_dir = Unicode(
-        None,
-        help="""
-        The directory to use when creating temporary runtime files.
-
-        Defaults to the platform's temporary directory, see
-        https://docs.python.org/3/library/tempfile.html#tempfile.gettempdir for
-        more information.
-        """,
-        config=True,
-        allow_none=True,
-    )
-
     _log_formatter_cls = LogFormatter
 
     classes = List([Backend, Authenticator, WebProxy, SchedulerProxy])

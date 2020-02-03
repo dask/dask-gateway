@@ -11,10 +11,18 @@ import tempfile
 
 from traitlets import List, Unicode, Integer
 
+from .base import ClusterConfig
 from .db_base import DatabaseBackend
+from ..traitlets import Type
 
 
-__all__ = ("LocalBackend", "UnsafeLocalBackend")
+__all__ = ("LocalClusterConfig", "LocalBackend", "UnsafeLocalBackend")
+
+
+class LocalClusterConfig(ClusterConfig):
+    """Dask cluster configuration options when running as local processes"""
+
+    pass
 
 
 def _signal(pid, sig):
@@ -57,6 +65,13 @@ class LocalBackend(DatabaseBackend):
     Requires super-user permissions in order to run processes for the
     requesting username.
     """
+
+    cluster_config_class = Type(
+        "dask_gateway_server.backends.local.LocalClusterConfig",
+        klass="dask_gateway_server.backends.base.ClusterConfig",
+        help="The cluster config class to use",
+        config=True,
+    )
 
     sigint_timeout = Integer(
         10,

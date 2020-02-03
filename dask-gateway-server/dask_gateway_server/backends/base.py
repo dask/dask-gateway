@@ -11,6 +11,17 @@ from ..utils import awaitable
 
 
 class Backend(LoggingConfigurable):
+    """Base class for defining dask-gateway backends.
+
+    Subclasses should implement the following methods:
+
+    - setup
+    - cleanup
+    - start_cluster
+    - stop_cluster
+    - on_cluster_heartbeat
+    """
+
     cluster_options = Union(
         [Callable(), Instance(Options, args=())],
         help="""
@@ -108,7 +119,7 @@ class Backend(LoggingConfigurable):
 
         Parameters
         ----------
-        user : str, optional
+        username : str, optional
             A user name to filter on. If not provided, defaults to
             all users.
         statuses : list, optional
@@ -121,13 +132,19 @@ class Backend(LoggingConfigurable):
         """
         raise NotImplementedError
 
-    async def get_cluster(self, cluster_id):
+    async def get_cluster(self, cluster_name, wait=False):
         """Get information about a cluster.
 
         Parameters
         ----------
-        cluster_id : str
-            The cluster ID.
+        cluster_name : str
+            The cluster name.
+        wait : bool, optional
+            If True, wait until the cluster has started or failed before
+            returning. If waiting is not possible (or waiting for a long period
+            of time would be expensive) it is valid to return early with a
+            Cluster object in a state prior to RUNNING (the client will retry
+            in this case). Default is False.
 
         Returns
         -------
@@ -136,18 +153,18 @@ class Backend(LoggingConfigurable):
         raise NotImplementedError
 
     async def start_cluster(self, user, cluster_options):
-        """Start a new cluster.
+        """Submit a new cluster.
 
         Parameters
         ----------
-        user : str
+        user : User
             The user making the request.
         cluster_options : dict
             Any additional options provided by the user.
 
         Returns
         -------
-        cluster_id : str
+        cluster_name : str
         """
         raise NotImplementedError
 
@@ -158,49 +175,30 @@ class Backend(LoggingConfigurable):
 
         Parameters
         ----------
-        user : str
-            The user making the request.
-        cluster_id : str
-            The cluster ID.
+        cluster_name : str
+            The cluster name.
+        failed : bool, optional
+            If True, the cluster should be marked as FAILED after stopping. If
+            False (default) it should be marked as STOPPED.
         """
         raise NotImplementedError
 
-    async def scale_cluster(self, user, cluster_id, n):
-        """Scale a cluster.
+    async def on_cluster_heartbeat(self, cluster_name, msg):
+        """Handle a cluster heartbeat.
 
         Parameters
         ----------
-        user : str
-            The user making the request.
-        cluster_id : str
-            The cluster ID.
-        n : int
-            The number of workers to scale to.
-        """
-        raise NotImplementedError
-
-    async def adapt_cluster(
-        self, user, cluster_id, minimum=None, maximum=None, active=True
-    ):
-        """Adaptively scale a cluster.
-
-        Parameters
-        ----------
-        user : str
-            The user making the request.
-        cluster_id : str
-            The cluster ID.
-        minimum : int, optional
-            The minimum number of workers to adaptively scale to. Defaults to 0.
-        maximum : int, optional
-            The maximum number of workers to adaptively scale to. Defaults to infinity.
-        active : bool, optional
-            Set to False to disable adaptive scaling.
+        cluster_name : str
+            The cluster name.
+        msg : dict
+            The heartbeat message.
         """
         raise NotImplementedError
 
 
 class ClusterConfig(Configurable):
+    """Base class for holding individual Dask cluster configurations"""
+
     scheduler_cmd = Unicode(
         "dask-gateway-scheduler",
         help="Shell command to start a dask-gateway scheduler.",
