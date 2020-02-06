@@ -1,80 +1,90 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"net/rpc"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 )
 
+type RoutesMsg struct {
+	Routes []Route
+	Id     uint64
+}
+
+type EventsMsg struct {
+	Events []Event
+}
+
+type Event struct {
+	Id    uint64
+	Type  string
+	Route Route
+}
+
 type Route struct {
+	Kind      string `json:"kind"`
 	SNI       string `json:"sni,omitempty"`
 	Path      string `json:"path,omitempty"`
 	Target    string `json:"target"`
 	targetURL *url.URL
-	target    string
 }
 
-var errBadTarget = errors.New("Failed to parse `target` in route")
+func (r *Route) String() string {
+	return fmt.Sprintf(
+		"{kind: %q, sni: %q, path: %q, target: %q}",
+		r.Kind, r.SNI, r.Path, r.Target,
+	)
+}
+
 var errMissingTarget = errors.New("Must specify `target`")
-var errMissingRoute = errors.New("Must specify either `sni` or `path`")
-var errExtraRoute = errors.New("Cannot specify both `sni` and `path`")
+var errMissingSNI = errors.New("Must specify `sni`")
+var errMissingPath = errors.New("Must specify `path`")
+var errUnknownKind = errors.New("Unknown route kind")
+var errInvalidScheme = errors.New("Scheme must be `http` or `https`")
 
 func (r *Route) Validate(full bool) error {
-	if r.SNI != "" {
-		if r.Path != "" {
-			return errExtraRoute
+	if r.Kind == "SNI" {
+		if r.SNI == "" {
+			return errMissingSNI
 		}
-
-	} else if r.Path == "" {
-		return errMissingRoute
+	} else if r.Kind == "PATH" {
+		if r.Path == "" {
+			return errMissingPath
+		}
+	} else {
+		return errUnknownKind
 	}
 	if full {
 		if r.Target == "" {
 			return errMissingTarget
 		}
-		if r.SNI != "" {
-			r.target = strings.TrimPrefix(r.Target, "tls://")
+		if r.Kind == "SNI" {
+			r.Target = strings.TrimPrefix(r.Target, "tls://")
 		} else {
 			targetURL, err := url.Parse(r.Target)
 			if err != nil {
-				return errBadTarget
+				return err
 			}
-			r.targetURL = targetURL
+			if targetURL.Scheme != "http" && targetURL.Scheme != "https" {
+				return errInvalidScheme
+			}
 		}
 	}
 	return nil
-}
-
-type Request struct {
-	Routes []*Route `json:"routes"`
-	Reset  bool     `json:"reset"`
-}
-
-func (req *Request) Validate(full bool) (err error) {
-	for _, r := range req.Routes {
-		if err = r.Validate(full); err != nil {
-			return
-		}
-	}
-	return
-}
-
-type EmptyMsg struct {
-}
-
-type GetResp struct {
-	Routes []*Route `json:"routes"`
 }
 
 type Proxy struct {
@@ -111,89 +121,229 @@ func awaitShutdown() {
 	}
 }
 
-func (p *Proxy) run(httpAddress, tlsAddress, apiAddress, token, tlsCert, tlsKey string, isChildProcess bool) {
-	rpc.RegisterName("Proxy", &ProxyHandlers{p})
+func (p *Proxy) run(httpAddress, tlsAddress, apiURL, apiToken, tlsCert, tlsKey string, isChildProcess bool) {
 	if isChildProcess {
 		go awaitShutdown()
 	}
 	go p.runHTTP(httpAddress, tlsCert, tlsKey)
 	go p.runTLS(tlsAddress)
-	listener, _ := net.Listen("tcp", apiAddress)
-	defer listener.Close()
-	p.logger.Infof("API serving at tcp://%s", apiAddress)
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			return
-		}
-		go ServeRpcConn(token, p.logger, conn)
-	}
+	p.watchRoutes(apiURL, apiToken, 15*time.Second)
 }
 
-type ProxyHandlers struct {
-	proxy *Proxy
+func (p *Proxy) clearRoutes() {
+	p.logger.Infof("Resetting routing table")
+	p.sniRoutes = make(map[string]string)
+	p.router = NewRouter()
 }
 
-func clearRoutes(proxy *Proxy) {
-	proxy.sniRoutes = make(map[string]string)
-	proxy.router = NewRouter()
-}
-
-func (h *ProxyHandlers) Update(req *Request, res *EmptyMsg) (err error) {
-	if err = req.Validate(true); err != nil {
+func (p *Proxy) putRoute(route *Route) {
+	if err := route.Validate(true); err != nil {
+		p.logger.Warnf("Invalid route %s: %s", route, err)
 		return
 	}
-	h.proxy.routesLock.Lock()
-	defer h.proxy.routesLock.Unlock()
-	if req.Reset {
-		clearRoutes(h.proxy)
+
+	p.logger.Infof("Adding route %s", route)
+
+	if route.Kind == "SNI" {
+		p.sniRoutes[route.SNI] = route.Target
+	} else {
+		p.router.Put(route.Path, route.targetURL)
 	}
-	for _, route := range req.Routes {
-		if route.SNI != "" {
-			h.proxy.sniRoutes[route.SNI] = route.target
-		} else {
-			h.proxy.router.Put(route.Path, route.targetURL)
-		}
+}
+
+func (p *Proxy) deleteRoute(route *Route) {
+	if err := route.Validate(false); err != nil {
+		p.logger.Warnf("Invalid route %s: %s", route, err)
+		return
+	}
+
+	p.logger.Infof("Removing route %s", route)
+
+	if route.Kind == "SNI" {
+		delete(p.sniRoutes, route.SNI)
+	} else {
+		p.router.Delete(route.Path)
+	}
+}
+
+func (p *Proxy) UpdateFromRoutes(routes []Route) {
+	p.routesLock.Lock()
+	defer p.routesLock.Unlock()
+	p.clearRoutes()
+	for _, route := range routes {
+		p.putRoute(&route)
 	}
 	return
 }
 
-func (h *ProxyHandlers) Delete(req *Request, res *EmptyMsg) (err error) {
-	if err = req.Validate(false); err != nil {
-		return
+func (p *Proxy) UpdateFromEvents(events []Event) {
+	p.routesLock.Lock()
+	defer p.routesLock.Unlock()
+	for _, event := range events {
+		if event.Type == "PUT" {
+			p.putRoute(&event.Route)
+		} else if event.Type == "DELETE" {
+			p.deleteRoute(&event.Route)
+		} else {
+			p.logger.Warnf("Unknown event type %s", event.Type)
+		}
 	}
-	h.proxy.routesLock.Lock()
-	defer h.proxy.routesLock.Unlock()
-	if req.Reset {
-		clearRoutes(h.proxy)
-	} else {
-		for _, route := range req.Routes {
-			if route.SNI != "" {
-				delete(h.proxy.sniRoutes, route.SNI)
-			} else {
-				h.proxy.router.Delete(route.Path)
+}
+
+// Tracker implementation
+type apiClient struct {
+	client   *http.Client
+	apiURL   string
+	apiToken string
+}
+
+func NewApiClient(apiURL string, apiToken string) *apiClient {
+	return &apiClient{
+		client: &http.Client{
+			Timeout: 60 * time.Second,
+		},
+		apiURL:   apiURL,
+		apiToken: apiToken,
+	}
+}
+
+func (c *apiClient) getRoutingTable() (*RoutesMsg, error) {
+	req, err := http.NewRequest("GET", c.apiURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authentication", "token "+c.apiToken)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var msg RoutesMsg
+	err = json.NewDecoder(resp.Body).Decode(&msg)
+	return &msg, err
+}
+
+type evIter struct {
+	body    io.ReadCloser
+	scanner *bufio.Scanner
+	events  []Event
+	err     error
+}
+
+func NewEvIter(body io.ReadCloser) *evIter {
+	return &evIter{
+		body:    body,
+		scanner: bufio.NewScanner(body),
+	}
+}
+
+func (it *evIter) Next() bool {
+	if ok := it.scanner.Scan(); !ok {
+		it.body.Close()
+		return false
+	}
+	var msg EventsMsg
+	if err := json.Unmarshal(it.scanner.Bytes(), &msg); err != nil {
+		it.err = err
+		it.body.Close()
+		return false
+	}
+	it.events = msg.Events
+	return true
+}
+
+func (it *evIter) Err() error {
+	return it.err
+}
+
+func (it *evIter) Events() []Event {
+	return it.events
+}
+
+var errTooOld = errors.New("Routes `last_id` is too old, retry")
+
+func (c *apiClient) watchRoutingEvents(lastId uint64) (*evIter, error) {
+	url := c.apiURL + "?watch=1&last_id=" + strconv.FormatUint(lastId, 10)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authentication", "token "+c.apiToken)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == 410 {
+		resp.Body.Close()
+		return nil, errTooOld
+	}
+	if resp.StatusCode >= 400 {
+		resp.Body.Close()
+		if resp.StatusCode == 410 {
+			return nil, errTooOld
+		}
+		return nil, errors.New(resp.Status)
+	}
+	return NewEvIter(resp.Body), nil
+}
+
+func (p *Proxy) watchRoutes(apiURL, apiToken string, maxBackoff time.Duration) {
+	initialBackoff := 500 * time.Millisecond
+	backoff := initialBackoff
+
+	doBackoff := func(msg string, err error) {
+		p.logger.Warnf(msg, backoff.Seconds(), err)
+		time.Sleep(backoff)
+		backoff = backoff * 2
+		if backoff > maxBackoff {
+			backoff = maxBackoff
+		}
+	}
+
+	resetBackoff := func() {
+		backoff = initialBackoff
+	}
+
+	client := NewApiClient(apiURL, apiToken)
+	for {
+		msg, err := client.getRoutingTable()
+		if err != nil {
+			doBackoff("Unexpected failure fetching routing table, retrying in %.1fs: %s", err)
+			continue
+		}
+		resetBackoff()
+
+		p.UpdateFromRoutes(msg.Routes)
+
+		last_id := msg.Id
+
+		for {
+			it, err := client.watchRoutingEvents(last_id)
+			if err == errTooOld {
+				p.logger.Infof("last_id is too old, fetching whole routing table")
+				break
+			} else if err != nil {
+				doBackoff("Unexpected failure fetching routing events, retrying in %.1fs: %s", err)
+				break
+			}
+			for it.Next() {
+				events := it.Events()
+				if len(events) > 0 {
+					p.UpdateFromEvents(events)
+					last_id = events[len(events)-1].Id
+				}
+			}
+			if err := it.Err(); err != nil {
+				doBackoff("Unexpected failure streaming routing events, retrying in %.1fs: %s", err)
+				break
 			}
 		}
 	}
-	return
-}
-
-func (h *ProxyHandlers) Get(req *EmptyMsg, res *GetResp) (err error) {
-	h.proxy.routesLock.RLock()
-	defer h.proxy.routesLock.RUnlock()
-
-	routes := make([]*Route, 0)
-	for sni, target := range h.proxy.sniRoutes {
-		routes = append(routes, &Route{SNI: sni, Target: target})
-	}
-	h.proxy.router.traverse(
-		"",
-		func(path string, url *url.URL) {
-			routes = append(routes, &Route{Path: path, Target: url.String()})
-		},
-	)
-	res.Routes = routes
-	return
 }
 
 // HTTP Proxy Implementation
@@ -387,7 +537,7 @@ func main() {
 	var (
 		httpAddress    string
 		tlsAddress     string
-		apiAddress     string
+		apiURL         string
 		logLevelString string
 		isChildProcess bool
 		tlsCert        string
@@ -398,7 +548,7 @@ func main() {
 	command := flag.NewFlagSet("dask-gateway-proxy web", flag.ExitOnError)
 	command.StringVar(&httpAddress, "address", ":8000", "HTTP proxy listening address")
 	command.StringVar(&tlsAddress, "tls-address", ":8786", "TLS proxy listening address")
-	command.StringVar(&apiAddress, "api-address", ":8787", "API listening address")
+	command.StringVar(&apiURL, "api-url", "", "The URL the proxy should watch for updating the routing table")
 	command.StringVar(&logLevelString, "log-level", "INFO",
 		"The log level. One of {DEBUG, INFO, WARN, ERROR}")
 	command.BoolVar(&isChildProcess, "is-child-process", false,
@@ -420,7 +570,14 @@ func main() {
 		panic("Both -tls-cert and -tls-key must be set to use HTTPS")
 	}
 
+	if apiURL == "" {
+		panic("-api-url must be set")
+	}
+	if _, err := url.Parse(apiURL); err != nil {
+		panic("Invalid -api-url: " + err.Error())
+	}
+
 	proxy := NewProxy(tlsTimeout, logLevel)
 
-	proxy.run(httpAddress, tlsAddress, apiAddress, token, tlsCert, tlsKey, isChildProcess)
+	proxy.run(httpAddress, tlsAddress, apiURL, token, tlsCert, tlsKey, isChildProcess)
 }
