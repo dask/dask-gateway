@@ -82,6 +82,7 @@ func (r *Route) Validate(full bool) error {
 			if targetURL.Scheme != "http" && targetURL.Scheme != "https" {
 				return errInvalidScheme
 			}
+			r.targetURL = targetURL
 		}
 	}
 	return nil
@@ -213,13 +214,17 @@ func (c *apiClient) getRoutingTable() (*RoutesMsg, error) {
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authentication", "token "+c.apiToken)
+	req.Header.Set("Authorization", "token "+c.apiToken)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return nil, errors.New(resp.Status)
+	}
 
 	var msg RoutesMsg
 	err = json.NewDecoder(resp.Body).Decode(&msg)
@@ -272,15 +277,11 @@ func (c *apiClient) watchRoutingEvents(lastId uint64) (*evIter, error) {
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authentication", "token "+c.apiToken)
+	req.Header.Set("Authorization", "token "+c.apiToken)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
-	}
-	if resp.StatusCode == 410 {
-		resp.Body.Close()
-		return nil, errTooOld
 	}
 	if resp.StatusCode >= 400 {
 		resp.Body.Close()
@@ -293,6 +294,8 @@ func (c *apiClient) watchRoutingEvents(lastId uint64) (*evIter, error) {
 }
 
 func (p *Proxy) watchRoutes(apiURL, apiToken string, maxBackoff time.Duration) {
+	p.logger.Infof("Watching %s for routing table updates...", apiURL)
+
 	initialBackoff := 500 * time.Millisecond
 	backoff := initialBackoff
 
@@ -325,7 +328,7 @@ func (p *Proxy) watchRoutes(apiURL, apiToken string, maxBackoff time.Duration) {
 		for {
 			it, err := client.watchRoutingEvents(last_id)
 			if err == errTooOld {
-				p.logger.Infof("last_id is too old, fetching whole routing table")
+				p.logger.Debugf("last_id is too old, fetching whole routing table")
 				break
 			} else if err != nil {
 				doBackoff("Unexpected failure fetching routing events, retrying in %.1fs: %s", err)
@@ -360,6 +363,11 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	target, path := p.router.Match(req.URL.Path)
 	p.routesLock.RUnlock()
 
+	var uri string
+	if p.logger.level >= DEBUG {
+		uri = req.URL.RequestURI()
+	}
+
 	if target != nil {
 		targetQuery := target.RawQuery
 		req.URL.Scheme = target.Scheme
@@ -371,11 +379,12 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		} else {
 			req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
 		}
+		p.logger.Infof("%s -> %s", uri, req.URL)
 		p.proxy.ServeHTTP(w, req)
-		return
+	} else {
+		p.logger.Infof("%s not found", uri)
+		http.Error(w, "Not Found", http.StatusNotFound)
 	}
-
-	http.Error(w, "Not Found", http.StatusNotFound)
 }
 
 func singleJoiningSlash(a, b string) string {
@@ -436,21 +445,17 @@ const (
 )
 
 func (p *Proxy) sendAlert(c *tlsConn, alert tlsAlert, format string, args ...interface{}) {
-	if alert == unrecognizedName {
-		p.logger.Debugf(format, args...)
-	} else {
-		p.logger.Warnf(format, args...)
-	}
+	p.logger.Debugf(format, args...)
 
 	alertMsg := []byte{21, 3, byte(c.tlsMinor), 0, 2, 2, byte(alert)}
 
 	if err := c.inConn.SetWriteDeadline(time.Now().Add(p.tlsTimeout)); err != nil {
-		p.logger.Warnf("Error while setting write deadline during abort: %s", err)
+		p.logger.Debugf("Error while setting write deadline during abort: %s", err)
 		return
 	}
 
 	if _, err := c.inConn.Write(alertMsg); err != nil {
-		p.logger.Warnf("Error while sending alert: %s", err)
+		p.logger.Debugf("Error while sending alert: %s", err)
 	}
 }
 
@@ -480,11 +485,11 @@ func (p *Proxy) handleConnection(c *tlsConn) {
 	c.outAddr = p.sniRoutes[c.sni]
 	p.routesLock.RUnlock()
 	if c.outAddr == "" {
-		p.sendAlert(c, unrecognizedName, "No destination found for %q", c.sni)
+		p.sendAlert(c, unrecognizedName, "SNI %q not found", c.sni)
 		return
 	}
 
-	p.logger.Debugf("Routing connection to %q", c.outAddr)
+	p.logger.Infof("SNI %q -> %q", c.sni, c.outAddr)
 
 	outConn, err := net.DialTimeout("tcp", c.outAddr, 10*time.Second)
 	if err != nil {
@@ -509,7 +514,7 @@ func (p *Proxy) handleConnection(c *tlsConn) {
 func (p *Proxy) proxyConnections(wg *sync.WaitGroup, in, out *net.TCPConn) {
 	defer wg.Done()
 	if _, err := io.Copy(in, out); err != nil {
-		p.logger.Warnf("Error proxying %q -> %q: %s", in.RemoteAddr(), out.RemoteAddr(), err)
+		p.logger.Debugf("Error proxying %q -> %q: %s", in.RemoteAddr(), out.RemoteAddr(), err)
 	}
 	in.CloseRead()
 	out.CloseWrite()
@@ -525,7 +530,7 @@ func (p *Proxy) runTLS(tlsAddress string) {
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			p.logger.Warnf("Failed to accept new connection: %s", err)
+			p.logger.Debugf("Failed to accept new connection: %s", err)
 		}
 
 		conn := &tlsConn{inConn: c.(*net.TCPConn)}
@@ -545,7 +550,7 @@ func main() {
 		tlsTimeout     time.Duration
 	)
 
-	command := flag.NewFlagSet("dask-gateway-proxy web", flag.ExitOnError)
+	command := flag.NewFlagSet("dask-gateway-proxy", flag.ExitOnError)
 	command.StringVar(&httpAddress, "address", ":8000", "HTTP proxy listening address")
 	command.StringVar(&tlsAddress, "tls-address", ":8786", "TLS proxy listening address")
 	command.StringVar(&apiURL, "api-url", "", "The URL the proxy should watch for updating the routing table")

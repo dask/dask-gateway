@@ -1,7 +1,7 @@
 import asyncio
 
 import aiohttp
-from traitlets import Instance, Integer, Float, Dict, Union, Unicode, Any
+from traitlets import Instance, Integer, Float, Dict, Union, Unicode, default
 from traitlets.config import LoggingConfigurable, Configurable
 
 from .. import models
@@ -53,10 +53,20 @@ class Backend(LoggingConfigurable):
         """,
     )
 
+    api_url = Unicode(
+        help="""
+        The address that internal components (e.g. dask clusters)
+        will use when contacting the gateway.
+        """,
+        config=True,
+    )
+
     # Forwarded from the main application
-    api_url = Unicode()
-    scheduler_proxy = Any()
-    web_proxy = Any()
+    gateway_address = Unicode()
+
+    @default("gateway_address")
+    def _gateway_address_default(self):
+        return self.parent.address
 
     async def get_cluster_options(self, user):
         if callable(self.cluster_options):

@@ -70,6 +70,7 @@ func (router *Router) Match(path string) (*url.URL, string) {
 	node := router
 	out := node.url
 	n := 0
+	offset2 := 0
 	for {
 		part, i := getSegment(path2, n)
 		node = node.branches[part]
@@ -78,9 +79,13 @@ func (router *Router) Match(path string) (*url.URL, string) {
 		}
 		if node.url != nil {
 			out = node.url
+			if i == -1 {
+				offset2 = len(path2)
+			} else {
+				offset2 = i
+			}
 		}
 		if i == -1 {
-			n = len(path2)
 			break
 		}
 		n = i
@@ -88,11 +93,15 @@ func (router *Router) Match(path string) (*url.URL, string) {
 	if out == nil {
 		return nil, ""
 	}
-	return out, path[n+offset:]
+	return out, path[offset+offset2:]
 }
 
 func (router *Router) Put(path string, url *url.URL) {
 	path, _ = normalizePath(path)
+	if path == "" {
+		router.url = url
+		return
+	}
 	node := router
 	for part, i := getSegment(path, 0); ; part, i = getSegment(path, i) {
 		child, _ := node.branches[part]
@@ -113,6 +122,13 @@ func (router *Router) Put(path string, url *url.URL) {
 
 func (router *Router) Delete(path string) {
 	path, _ = normalizePath(path)
+
+	if path == "" {
+		// Handle root node
+		router.url = nil
+		return
+	}
+
 	type record struct {
 		node *Router
 		part string

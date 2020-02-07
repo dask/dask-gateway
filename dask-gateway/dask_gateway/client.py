@@ -376,7 +376,7 @@ class Gateway(object):
         else:
             query = ""
 
-        url = "%s/gateway/api/clusters/%s" % (self.address, query)
+        url = "%s/api/clusters/%s" % (self.address, query)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
         return [
@@ -419,7 +419,7 @@ class Gateway(object):
         return {k: format_template(v) for k, v in opts.items()}
 
     async def _cluster_options(self, use_local_defaults=True):
-        url = "%s/gateway/api/options" % self.address
+        url = "%s/api/options" % self.address
         req = HTTPRequest(url=url, method="GET")
         resp = await self._fetch(req)
         data = json.loads(resp.body)
@@ -447,7 +447,7 @@ class Gateway(object):
         )
 
     async def _submit(self, cluster_options=None, **kwargs):
-        url = "%s/gateway/api/clusters/" % self.address
+        url = "%s/api/clusters/" % self.address
         if cluster_options is not None:
             if not isinstance(cluster_options, Options):
                 raise TypeError(
@@ -494,7 +494,7 @@ class Gateway(object):
 
     async def _cluster_report(self, cluster_name, wait=False):
         params = "?wait" if wait else ""
-        url = "%s/gateway/api/clusters/%s%s" % (self.address, cluster_name, params)
+        url = "%s/api/clusters/%s%s" % (self.address, cluster_name, params)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
         return ClusterReport._from_json(
@@ -583,7 +583,7 @@ class Gateway(object):
         )
 
     async def _stop_cluster(self, cluster_name):
-        url = "%s/gateway/api/clusters/%s" % (self.address, cluster_name)
+        url = "%s/api/clusters/%s" % (self.address, cluster_name)
         req = HTTPRequest(url=url, method="DELETE")
         await self._fetch(req)
 
@@ -598,7 +598,7 @@ class Gateway(object):
         return self.sync(self._stop_cluster, cluster_name, **kwargs)
 
     async def _scale_cluster(self, cluster_name, n):
-        url = "%s/gateway/api/clusters/%s/scale" % (self.address, cluster_name)
+        url = "%s/api/clusters/%s/scale" % (self.address, cluster_name)
         req = HTTPRequest(
             url=url,
             method="POST",
@@ -622,7 +622,7 @@ class Gateway(object):
     async def _adapt_cluster(
         self, cluster_name, minimum=None, maximum=None, active=True
     ):
-        url = "%s/gateway/api/clusters/%s/adapt" % (self.address, cluster_name)
+        url = "%s/api/clusters/%s/adapt" % (self.address, cluster_name)
         req = HTTPRequest(
             url=url,
             method="POST",

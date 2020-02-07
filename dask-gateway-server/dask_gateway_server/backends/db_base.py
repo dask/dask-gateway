@@ -13,9 +13,9 @@ from cryptography.fernet import MultiFernet, Fernet
 
 from .base import Backend
 from .. import models
-from ..compat import get_running_loop
+from ..proxy import Proxy
 from ..tls import new_keypair
-from ..utils import FrozenAttrDict, TaskPool
+from ..utils import FrozenAttrDict, TaskPool, Flag, normalize_address
 
 
 def timestamp():
@@ -128,6 +128,7 @@ class Cluster(object):
             self.last_heartbeat = timestamp()
         else:
             self.last_heartbeat = None
+        self.added_to_proxies = False
         self.workers = {}
 
         self.ready = Flag()
@@ -506,20 +507,6 @@ class DataManager(object):
                     setattr(w, k, v)
 
 
-class Flag(object):
-    """A simpler version of asyncio.Event"""
-
-    def __init__(self):
-        self._future = get_running_loop().create_future()
-
-    def set(self):
-        if not self._future.done():
-            self._future.set_result(None)
-
-    def __await__(self):
-        return asyncio.shield(self._future).__await__()
-
-
 class UniqueQueue(asyncio.Queue):
     """A queue that may only contain each item once."""
 
@@ -724,18 +711,41 @@ class DatabaseBackend(Backend):
         config=True,
     )
 
+    api_url = Unicode(
+        help="""
+        The address that internal components (e.g. dask clusters)
+        will use when contacting the gateway.
+
+        Defaults to `{proxy_address}/{prefix}/api`, set manually if a different
+        address should be used.
+        """,
+        config=True,
+    )
+
+    @default("api_url")
+    def _api_url_default(self):
+        proxy = self.proxy
+        scheme = "https" if proxy.tls_cert else "http"
+        address = normalize_address(proxy.address, resolve_host=True)
+        return f"{scheme}://{address}{proxy.prefix}/api"
+
     async def setup(self, app):
         await super().setup(app)
+        # Start the proxy
+        self.proxy = Proxy(parent=self)
+        await self.proxy.setup(app)
+
+        # Load the database
         self.db = DataManager(
             url=self.db_url, echo=self.db_debug, encrypt_keys=self.db_encrypt_keys
         )
         self.queues = [UniqueQueue() for _ in range(self.parallelism)]
         self.task_pool = TaskPool()
         for q in self.queues:
-            self.task_pool.create_background_task(self.reconciler_loop(q))
-        self.task_pool.create_background_task(self.check_timeouts_loop())
-        self.task_pool.create_background_task(self.check_clusters_loop())
-        self.task_pool.create_background_task(self.check_workers_loop())
+            self.task_pool.spawn(self.reconciler_loop(q))
+        self.task_pool.spawn(self.check_timeouts_loop())
+        self.task_pool.spawn(self.check_clusters_loop())
+        self.task_pool.spawn(self.check_workers_loop())
 
         # Load all active clusters/workers into reconcilation queues
         for cluster in self.db.name_to_cluster.values():
@@ -747,6 +757,10 @@ class DatabaseBackend(Backend):
 
         # Further backend-specific setup
         await self.handle_setup()
+
+        self.log.info(
+            "Backend started, clusters will contact api server at %s", self.api_url
+        )
 
     async def cleanup(self):
         if self.stop_clusters_on_shutdown:
@@ -771,6 +785,8 @@ class DatabaseBackend(Backend):
 
         await self.handle_cleanup()
         await self.task_pool.close()
+        if hasattr(self, "proxy"):
+            await self.proxy.cleanup()
         await super().cleanup()
 
     async def list_clusters(self, user=None, statuses=None):
@@ -1044,7 +1060,10 @@ class DatabaseBackend(Backend):
 
             if cluster.status == JobStatus.SUBMITTED and cluster.scheduler_address:
                 await self._cluster_to_running(cluster)
-            await self._check_cluster_scale(cluster)
+
+            if cluster.status == JobStatus.RUNNING:
+                await self._check_cluster_proxied(cluster)
+                await self._check_cluster_scale(cluster)
 
     async def reconcile_worker(self, worker):
         if worker.status >= JobStatus.STOPPED:
@@ -1117,8 +1136,8 @@ class DatabaseBackend(Backend):
                 self.log.warning(
                     "Exception while stopping cluster %s", cluster.name, exc_info=exc
                 )
-            await self.web_proxy.delete_route("/gateway/clusters/" + cluster.name)
-            await self.scheduler_proxy.delete_route("/" + cluster.name)
+            await self.proxy.remove_route(kind="PATH", path=f"/clusters/{cluster.name}")
+            await self.proxy.remove_route(kind="SNI", sni=cluster.name)
         self.log.info("Cluster %s stopped", cluster.name)
         self.db.update_workers(
             [
@@ -1132,16 +1151,23 @@ class DatabaseBackend(Backend):
         cluster.shutdown.set()
 
     async def _cluster_to_running(self, cluster):
-        self.log.info("Cluster %s is running, adding routes to proxies", cluster.name)
-        if cluster.dashboard_address:
-            await self.web_proxy.add_route(
-                "/gateway/clusters/" + cluster.name, cluster.dashboard_address
-            )
-        await self.scheduler_proxy.add_route(
-            "/" + cluster.name, cluster.scheduler_address
-        )
+        self.log.info("Cluster %s is running", cluster.name)
         self.db.update_cluster(cluster, status=JobStatus.RUNNING)
         cluster.ready.set()
+
+    async def _check_cluster_proxied(self, cluster):
+        if not cluster.added_to_proxies:
+            self.log.info("Adding cluster %s routes to proxies", cluster.name)
+            if cluster.dashboard_address:
+                await self.proxy.add_route(
+                    kind="PATH",
+                    path=f"/clusters/{cluster.name}",
+                    target=cluster.dashboard_address,
+                )
+            await self.proxy.add_route(
+                kind="SNI", sni=cluster.name, target=cluster.scheduler_address
+            )
+            cluster.added_to_proxies = True
 
     async def _check_cluster_scale(self, cluster):
         active = cluster.active_workers()

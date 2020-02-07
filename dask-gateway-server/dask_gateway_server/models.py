@@ -61,7 +61,7 @@ class Cluster(object):
 
     def to_dict(self, full=True):
         if self.status == ClusterStatus.RUNNING and self.dashboard_address:
-            dashboard = "/gateway/clusters/%s/status" % self.name
+            dashboard = "/clusters/%s/status" % self.name
         else:
             dashboard = None
         out = {

@@ -1,1 +1,1 @@
-from .core import SchedulerProxy, WebProxy
+from .core import Proxy

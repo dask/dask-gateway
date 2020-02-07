@@ -56,6 +56,9 @@ func TestMatch2(t *testing.T) {
 	r := NewRouter()
 
 	// Add nested routes
+	rootV := &url.URL{Scheme: "http", Host: "root-val.com"}
+	r.Put("/", rootV)
+
 	aV := &url.URL{Scheme: "http", Host: "a-val.com"}
 	r.Put("/foo/a/", aV)
 
@@ -64,6 +67,9 @@ func TestMatch2(t *testing.T) {
 
 	cV := &url.URL{Scheme: "http", Host: "c-val.com"}
 	r.Put("/foo/a/b/c/", cV)
+
+	dV := &url.URL{Scheme: "http", Host: "d-val.com"}
+	r.Put("/foo/other/stuff/d/", dV)
 
 	testMatch := func(path string, urlSol *url.URL, pathSol string) {
 		assert.True(t, r.HasMatch(path))
@@ -80,11 +86,21 @@ func TestMatch2(t *testing.T) {
 
 	testMatch("/foo/a/b/c", cV, "")
 	testMatch("/foo/a/b/c/d", cV, "d")
+
+	testMatch("", rootV, "")
+	testMatch("/", rootV, "/")
+	testMatch("/bar", rootV, "bar")
+	testMatch("/bar/baz", rootV, "bar/baz")
+	testMatch("/foo/other", rootV, "foo/other")
+	testMatch("/foo/other/stuff", rootV, "foo/other/stuff")
+
+	testMatch("/foo/other/stuff/d", dV, "")
+	testMatch("/foo/other/stuff/d/here", dV, "here")
 }
 
 func TestRemove(t *testing.T) {
 	r := NewRouter()
-	paths := []string{"/1", "/2", "/a/b/c/d", "/a/b/", "/b", "/b/c", "/b/c/d"}
+	paths := []string{"/", "/1", "/2", "/a/b/c/d", "/a/b/", "/b", "/b/c", "/b/c/d"}
 	pathmap := make(map[string]*url.URL)
 	for i, path := range paths {
 		val := &url.URL{Scheme: "http", Host: fmt.Sprintf("http://v%d.com", i)}
@@ -92,14 +108,18 @@ func TestRemove(t *testing.T) {
 		pathmap[path] = val
 	}
 
+	// Original path matches
 	target, rest := r.Match("/b/foo")
 	assert.Equal(t, pathmap["/b"], target)
 	assert.Equal(t, "foo", rest)
 
+	// After deletion, matches on the root node
 	r.Delete("/b")
 	target, rest = r.Match("/b/foo")
-	assert.Nil(t, target)
-	assert.Equal(t, "", rest)
+	assert.Equal(t, pathmap["/"], target)
+	assert.Equal(t, "b/foo", rest)
+
+	// Specific sub-matches still work though
 	target, rest = r.Match("/b/c/foo")
 	assert.Equal(t, pathmap["/b/c"], target)
 	assert.Equal(t, "foo", rest)
@@ -107,6 +127,7 @@ func TestRemove(t *testing.T) {
 	// Smoketest double delete
 	r.Delete("/b")
 
+	// Original path matches
 	target, rest = r.Match("/a/b/c/d/foo")
 	assert.Equal(t, pathmap["/a/b/c/d"], target)
 	assert.Equal(t, "foo", rest)
@@ -114,11 +135,15 @@ func TestRemove(t *testing.T) {
 	// Deleted leaf node pares the tree
 	assert.Nil(t, r.branches["a"].branches["b"].branches)
 
-	// Delete root node does nothing
+	// Delete root node doesn't break things
 	r.Delete("/")
 	target, rest = r.Match("/b/c/foo")
 	assert.Equal(t, pathmap["/b/c"], target)
 	assert.Equal(t, "foo", rest)
+	// But it does remove root node matches
+	target, rest = r.Match("/b/foo")
+	assert.Nil(t, target)
+	assert.Equal(t, "", rest)
 }
 
 func BenchmarkRouterGet(b *testing.B) {

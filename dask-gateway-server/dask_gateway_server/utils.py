@@ -14,40 +14,19 @@ from .compat import get_running_loop
 
 class TaskPool(object):
     def __init__(self):
-        self.pending_tasks = weakref.WeakSet()
-        self.background_tasks = weakref.WeakSet()
+        self.tasks = weakref.WeakSet()
 
-    def create_task(self, task):
+    def spawn(self, task):
         out = asyncio.ensure_future(task)
-        self.pending_tasks.add(out)
-        return out
-
-    def create_background_task(self, task):
-        out = asyncio.ensure_future(task)
-        self.background_tasks.add(out)
+        self.tasks.add(out)
         return out
 
     async def close(self, timeout=5):
-        # Cancel all background tasks
-        for task in self.background_tasks:
+        # Stop all tasks
+        for task in self.tasks:
             task.cancel()
-
-        # Wait for a short period for any ongoing tasks to complete, before
-        # canceling them
-        try:
-            await asyncio.wait_for(
-                asyncio.gather(*self.pending_tasks, return_exceptions=True), timeout
-            )
-        except (asyncio.TimeoutError, asyncio.CancelledError):
-            pass
-
-        # Now wait for all tasks to be actually completed
-        try:
-            await asyncio.gather(
-                *self.pending_tasks, *self.background_tasks, return_exceptions=True
-            )
-        except asyncio.CancelledError:
-            pass
+        await asyncio.gather(*self.tasks, return_exceptions=True)
+        self.tasks.clear()
 
 
 class timeout(object):
@@ -119,6 +98,22 @@ def get_ip():
         sock.close()
 
     raise ValueError("Failed to determine local IP address")
+
+
+def normalize_address(address, resolve_host=False):
+    try:
+        host, port = address.split(":")
+        port = int(port)
+        if resolve_host and host in {"", "0.0.0.0"}:
+            host = socket.gethostname()
+        if port == 0:
+            port = random_port()
+    except Exception:
+        raise ValueError(
+            f"Invalid address `{address}`, should be of form `{host}:{port}`"
+        )
+
+    return f"{host}:{port}"
 
 
 class ServerUrls(object):
@@ -202,6 +197,8 @@ class ServerUrls(object):
 
 
 async def cancel_task(task):
+    if task.done():
+        return
     task.cancel()
     try:
         await task
@@ -326,3 +323,20 @@ class LRUCache(object):
             del self.cache[key]
         except KeyError:
             pass
+
+
+class Flag(object):
+    """A simpler version of asyncio.Event"""
+
+    def __init__(self):
+        self._future = get_running_loop().create_future()
+
+    def set(self):
+        if not self._future.done():
+            self._future.set_result(None)
+
+    def __await__(self):
+        return asyncio.shield(self._future).__await__()
+
+    def is_set(self):
+        return self._future.done()
