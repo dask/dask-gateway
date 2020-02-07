@@ -15,7 +15,7 @@ from .base import Backend
 from .. import models
 from ..proxy import Proxy
 from ..tls import new_keypair
-from ..utils import FrozenAttrDict, TaskPool, Flag, normalize_address
+from ..utils import FrozenAttrDict, TaskPool, Flag, normalize_address, UniqueQueue
 
 
 def timestamp():
@@ -505,24 +505,6 @@ class DataManager(object):
             for w, u in updates:
                 for k, v in u.items():
                     setattr(w, k, v)
-
-
-class UniqueQueue(asyncio.Queue):
-    """A queue that may only contain each item once."""
-
-    def __init__(self, maxsize=0, *, loop=None):
-        super().__init__(maxsize=maxsize, loop=loop)
-        self._items = set()
-
-    def _put(self, item):
-        if item not in self._items:
-            self._items.add(item)
-            super()._put(item)
-
-    def _get(self):
-        item = super()._get()
-        self._items.discard(item)
-        return item
 
 
 class DatabaseBackend(Backend):
