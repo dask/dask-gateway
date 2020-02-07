@@ -6,9 +6,10 @@ from dask_gateway_server.utils import random_port
 
 
 class aiohttp_server(object):
-    def __init__(self, routes, host="localhost", port=None):
-        self.app = web.Application()
-        self.app.add_routes(routes)
+    def __init__(self, routes=None, app=None, host="localhost", port=None):
+        self.app = app or web.Application()
+        if routes is not None:
+            self.app.add_routes(routes)
         self.runner = web.AppRunner(self.app)
         self.host = host
         self.port = port or random_port()

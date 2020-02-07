@@ -8,31 +8,65 @@ from distributed.security import Security
 from distributed.deploy.local import LocalCluster
 
 from dask_gateway.client import GatewaySecurity
-from dask_gateway_server.proxy import SchedulerProxy, WebProxy
+from dask_gateway_server.proxy import Proxy
 from dask_gateway_server.tls import new_keypair
 from dask_gateway_server.utils import random_port
 
 from .utils_test import aiohttp_server
 
 
-@pytest.fixture
-async def scheduler_proxy():
-    proxy = SchedulerProxy(public_url="tls://127.0.0.1:%s" % random_port())
-    try:
-        await proxy.startup()
-        yield proxy
-    finally:
-        await proxy.shutdown()
+async def with_retries(f, n):
+    for i in range(n):
+        try:
+            await f()
+            break
+        except Exception:
+            if i < n - 1:
+                await asyncio.sleep(0.1)
+            else:
+                raise
+
+
+class temp_proxy(object):
+    def __init__(self, **kwargs):
+        self._port = random_port()
+        self.proxy = Proxy(
+            address="127.0.0.1:0",
+            prefix="/foobar",
+            scheduler_address="127.0.0.1:0",
+            gateway_address=f"127.0.0.1:{self._port}",
+            log_level="debug",
+            proxy_status_period=0.5,
+            **kwargs,
+        )
+        self.ready = asyncio.Event()
+
+        @web.middleware
+        async def ready_middleware(request, handler):
+            resp = await handler(request)
+            self.ready.set()
+            return resp
+
+        self.app = web.Application(middlewares=[ready_middleware])
+        self.runner = web.AppRunner(self.app)
+
+    async def __aenter__(self):
+        await self.proxy.setup(self.app)
+        await self.runner.setup()
+        self.site = web.TCPSite(self.runner, "127.0.0.1", self._port)
+        await self.site.start()
+        await self.ready.wait()
+        return self.proxy
+
+    async def __aexit__(self, *args):
+        await self.runner.cleanup()
+        await self.proxy.cleanup()
 
 
 @pytest.fixture
-async def web_proxy():
-    proxy = WebProxy(public_url="http://127.0.0.1:%s" % random_port())
-    try:
-        await proxy.startup()
+async def proxy():
+    async with temp_proxy() as proxy:
         yield proxy
-    finally:
-        await proxy.shutdown()
 
 
 @pytest.fixture
@@ -80,69 +114,54 @@ async def hello(request):
 
 
 @pytest.mark.asyncio
-async def test_web_proxy(web_proxy):
-    assert not await web_proxy.get_all_routes()
-
+async def test_web_proxy(proxy):
     async with ClientSession() as client, aiohttp_server(hello_routes) as server:
         # Add a route
-        await web_proxy.add_route("/hello", server.address)
-        routes = await web_proxy.get_all_routes()
-        assert routes == {"/hello": server.address}
+        await proxy.add_route(kind="PATH", path="/hello", target=server.address)
+
+        proxied_addr = f"http://{proxy.address}{proxy.prefix}/hello"
 
         # Proxy works
-        proxied_addr = web_proxy.public_url + "/hello"
-        resp = await client.get(proxied_addr)
-        assert resp.status == 200
-        body = await resp.text()
-        assert "Hello world" == body
+        async def test_works():
+            resp = await client.get(proxied_addr)
+            assert resp.status == 200
+            body = await resp.text()
+            assert "Hello world" == body
+
+        await with_retries(test_works, 5)
 
         # Remove the route
-        await web_proxy.delete_route("/hello")
-        assert not await web_proxy.get_all_routes()
+        await proxy.remove_route(kind="PATH", path="/hello")
         # Delete idempotent
-        await web_proxy.delete_route("/hello")
+        await proxy.remove_route(kind="PATH", path="/hello")
 
         # Route no longer available
-        resp = await client.get(proxied_addr)
-        assert resp.status == 404
+        async def test_fails():
+            resp = await client.get(proxied_addr)
+            assert resp.status == 404
+
+        await with_retries(test_fails, 5)
 
 
 @pytest.mark.asyncio
-async def test_web_proxy_bad_target(web_proxy):
-    assert not await web_proxy.get_all_routes()
-
+async def test_web_proxy_bad_target(proxy):
     async with ClientSession() as client:
+        # Add a bad route
         addr = "http://127.0.0.1:%d" % random_port()
-        proxied_addr = web_proxy.public_url + "/hello"
+        await proxy.add_route(kind="PATH", path="/hello", target=addr)
 
-        await web_proxy.add_route("/hello", addr)
-        routes = await web_proxy.get_all_routes()
-        assert routes == {"/hello": addr}
+        proxied_addr = f"http://{proxy.address}{proxy.prefix}/hello"
 
         # Route not available
-        resp = await client.get(proxied_addr)
-        assert resp.status == 502
+        async def test_502():
+            resp = await client.get(proxied_addr)
+            assert resp.status == 502
 
-
-@pytest.mark.asyncio
-async def test_web_proxy_api_auth(web_proxy):
-    assert not await web_proxy.get_all_routes()
-
-    auth_token = web_proxy.auth_token
-    web_proxy.auth_token = "abcdefg"
-
-    # Authentication fails
-    with pytest.raises(Exception) as exc:
-        await web_proxy.add_route("/foo", "http://127.0.0.1:12345")
-    assert exc.value.status == 403
-
-    web_proxy.auth_token = auth_token
-    # Route not added
-    assert not await web_proxy.get_all_routes()
+        await with_retries(test_502, 5)
 
 
 @pytest.fixture
-async def ca_and_tls_web_proxy(tmpdir_factory):
+async def ca_and_tls_proxy(tmpdir_factory):
     trustme = pytest.importorskip("trustme")
     ca = trustme.CA()
     cert = ca.issue_cert("127.0.0.1")
@@ -154,146 +173,89 @@ async def ca_and_tls_web_proxy(tmpdir_factory):
     cert.private_key_pem.write_to_path(tls_key)
     cert.cert_chain_pems[0].write_to_path(tls_cert)
 
-    public_url = "https://127.0.0.1:%s" % random_port()
-
-    proxy = WebProxy(public_url=public_url, tls_key=tls_key, tls_cert=tls_cert)
-    try:
-        await proxy.startup()
+    async with temp_proxy(tls_key=tls_key, tls_cert=tls_cert) as proxy:
         yield ca, proxy
-    finally:
-        await proxy.shutdown()
 
 
 @pytest.mark.asyncio
-async def test_web_proxy_public_tls(ca_and_tls_web_proxy):
-    ca, web_proxy = ca_and_tls_web_proxy
-
-    assert not await web_proxy.get_all_routes()
+async def test_web_proxy_public_tls(ca_and_tls_proxy):
+    ca, proxy = ca_and_tls_proxy
 
     async with ClientSession() as client, aiohttp_server(hello_routes) as server:
-        # Add a route
-        await web_proxy.add_route("/hello", server.address)
-        routes = await web_proxy.get_all_routes()
-        assert routes == {"/hello": server.address}
-
-        # Proxy works
-        proxied_addr = web_proxy.public_url + "/hello"
         ctx = ssl.create_default_context()
         ca.configure_trust(ctx)
-        resp = await client.get(proxied_addr, ssl=ctx)
-        assert resp.status == 200
-        body = await resp.text()
-        assert "Hello world" == body
+
+        # Add a route
+        await proxy.add_route(kind="PATH", path="/hello", target=server.address)
+
+        proxied_addr = f"https://{proxy.address}{proxy.prefix}/hello"
+
+        # Proxy works
+        async def test_works():
+            resp = await client.get(proxied_addr, ssl=ctx)
+            assert resp.status == 200
+            body = await resp.text()
+            assert "Hello world" == body
+
+        await with_retries(test_works, 5)
 
         # Remove the route
-        await web_proxy.delete_route("/hello")
-        assert not await web_proxy.get_all_routes()
+        await proxy.remove_route(kind="PATH", path="/hello")
         # Delete idempotent
-        await web_proxy.delete_route("/hello")
+        await proxy.remove_route(kind="PATH", path="/hello")
 
         # Route no longer available
-        resp = await client.get(proxied_addr, ssl=ctx)
-        assert resp.status == 404
+        async def test_fails():
+            resp = await client.get(proxied_addr, ssl=ctx)
+            assert resp.status == 404
 
-
-@pytest.fixture
-async def two_proxies():
-    kwargs = {
-        "public_url": "http://127.0.0.1:%s" % random_port(),
-        "api_url": "http://127.0.0.1:%s" % random_port(),
-        "auth_token": "abcdefg",
-    }
-    try:
-        proxy = WebProxy(**kwargs)
-        proxy2 = WebProxy(externally_managed=True, **kwargs)
-        yield proxy, proxy2
-    finally:
-        await proxy.shutdown()
-        await proxy2.shutdown()
+        await with_retries(test_fails, 5)
 
 
 @pytest.mark.asyncio
-async def test_proxy_externally_managed(two_proxies):
-    proxy, proxy2 = two_proxies
-
-    # Connect times out
-    proxy2.connect_timeout = 0.3
-    with pytest.raises(RuntimeError):
-        await proxy2.startup()
-
-    # Start the proxy sometime in the future
-    async def start_proxy():
-        await asyncio.sleep(0.5)
-        await proxy.startup()
-
-    start_task = asyncio.ensure_future(start_proxy())
-
-    # Wait for proxy to start
-    proxy2.connect_timeout = 2
-    await proxy2.startup()
-
-    # Connected proxy works
-    routes = await proxy2.get_all_routes()
-    assert not routes
-
-    # Stop proxy2
-    await proxy2.shutdown()
-
-    # Change the auth_token so connection fails
-    proxy2.auth_token = "badvalue"
-    with pytest.raises(RuntimeError) as exc:
-        await proxy2.startup()
-    assert "authentication" in str(exc.value)
-    assert "DASK_GATEWAY_PROXY_TOKEN" in str(exc.value)
-
-    # Wait for task to finish to cleanup resources
-    await start_task
-
-
-@pytest.mark.asyncio
-async def test_scheduler_proxy(scheduler_proxy, cluster_and_security):
+async def test_scheduler_proxy(proxy, cluster_and_security):
     cluster, security = cluster_and_security
 
-    assert not await scheduler_proxy.get_all_routes()
-
-    addr = cluster.scheduler_address
-    proxied_addr = "gateway://%s/temp" % scheduler_proxy.public_url.replace(
-        "tls://", ""
-    )
+    proxied_addr = f"gateway://{proxy.scheduler_address}/temp"
 
     # Add a route
-    await scheduler_proxy.add_route("/temp", addr)
-    routes = await scheduler_proxy.get_all_routes()
-    assert routes == {"temp": addr.replace("tls://", "")}
+    await proxy.add_route(kind="SNI", sni="temp", target=cluster.scheduler_address)
 
     # Proxy works
-    async with Client(proxied_addr, security=security, asynchronous=True) as client:
-        res = await client.run_on_scheduler(lambda x: x + 1, 1)
-        assert res == 2
+    async def test_works():
+        async with Client(proxied_addr, security=security, asynchronous=True) as client:
+            res = await client.run_on_scheduler(lambda x: x + 1, 1)
+            assert res == 2
+
+    await with_retries(test_works, 5)
 
     # Remove the route
-    await scheduler_proxy.delete_route("/temp")
-    assert not await scheduler_proxy.get_all_routes()
-    # Delete idempotent
-    await scheduler_proxy.delete_route("/temp")
+    await proxy.remove_route(kind="SNI", sni="temp")
+    await proxy.remove_route(kind="SNI", sni="temp")
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "cls, scheme, kind",
-    [
-        (SchedulerProxy, "tls", "public"),
-        (SchedulerProxy, "http", "api"),
-        (WebProxy, "http", "public"),
-        (WebProxy, "http", "api"),
-    ],
-)
-async def test_proxy_exits_with_error_code(cls, scheme, kind):
-    kwargs = {"%s_url" % kind: "%s://bad-hostname-here" % scheme}
-    proxy = cls(**kwargs)
-    try:
-        with pytest.raises(RuntimeError) as exc:
-            await proxy.startup()
-        assert "exit code 1" in str(exc.value)
-    finally:
-        await proxy.shutdown()
+async def test_resilient_to_proxy_death(proxy):
+    async with ClientSession() as client, aiohttp_server(hello_routes) as server:
+        # Add a route
+        await proxy.add_route(kind="PATH", path="/hello", target=server.address)
+
+        proxied_addr = f"http://{proxy.address}{proxy.prefix}/hello"
+
+        # Proxy works
+        async def test_works():
+            resp = await client.get(proxied_addr)
+            assert resp.status == 200
+            body = await resp.text()
+            assert "Hello world" == body
+
+        await with_retries(test_works, 5)
+
+        # Kill the proxy process
+        proxy.proxy_process.terminate()
+
+        # Give a bit of time to restart
+        await asyncio.sleep(2)
+
+        # Process restarts, fetches routing table, and things work again
+        await with_retries(test_works, 5)
