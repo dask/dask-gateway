@@ -39,15 +39,7 @@ class temp_proxy(object):
             proxy_status_period=0.5,
             **kwargs,
         )
-        self.ready = asyncio.Event()
-
-        @web.middleware
-        async def ready_middleware(request, handler):
-            resp = await handler(request)
-            self.ready.set()
-            return resp
-
-        self.app = web.Application(middlewares=[ready_middleware])
+        self.app = web.Application()
         self.runner = web.AppRunner(self.app)
 
     async def __aenter__(self):
@@ -55,7 +47,7 @@ class temp_proxy(object):
         await self.runner.setup()
         self.site = web.TCPSite(self.runner, "127.0.0.1", self._port)
         await self.site.start()
-        await self.ready.wait()
+        await self.proxy._proxy_contacted
         return self.proxy
 
     async def __aexit__(self, *args):
