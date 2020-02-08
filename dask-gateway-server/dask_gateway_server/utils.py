@@ -44,9 +44,7 @@ def normalize_address(address, resolve_host=False):
         if port == 0:
             port = random_port()
     except Exception:
-        raise ValueError(
-            f"Invalid address `{address}`, should be of form `{host}:{port}`"
-        )
+        raise ValueError(f"Invalid address `{address}`, should be of form `host:port`")
 
     return f"{host}:{port}"
 

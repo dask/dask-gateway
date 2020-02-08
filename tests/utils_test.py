@@ -30,28 +30,30 @@ class aiohttp_server(object):
 
 class temp_gateway(object):
     def __init__(self, **kwargs):
-        config = Config()
+        c = Config()
         config2 = kwargs.pop("config", None)
 
-        options = {
-            "gateway_url": "tls://127.0.0.1:%d" % random_port(),
-            "private_url": "http://127.0.0.1:%d" % random_port(),
-            "public_url": "http://127.0.0.1:%d" % random_port(),
-            "authenticator_class": "dask_gateway_server.auth.SimpleAuthenticator",
-        }
-        options.update(kwargs)
-        config["DaskGateway"].update(options)
+        c.DaskGateway.address = "127.0.0.1:0"
+        c.Proxy.address = "127.0.0.1:0"
+        c.Proxy.scheduler_address = "127.0.0.1:0"
+        c.DaskGateway.authenticator_class = (
+            "dask_gateway_server.auth.SimpleAuthenticator"
+        )
+        c.DaskGateway.update(kwargs)
 
         if config2:
-            config.merge(config2)
+            c.merge(config2)
 
-        self.config = config
+        self.config = c
 
     async def __aenter__(self):
         self.gateway = DaskGateway(config=self.config)
         self.gateway.initialize([])
         await self.gateway.start_async()
-        return self.gateway
+        await self.gateway.backend.proxy._proxy_contacted
+        self.address = f"http://{self.gateway.backend.proxy.address}"
+        self.proxy_address = f"tls://{self.gateway.backend.proxy.scheduler_address}"
+        return self
 
     async def __aexit__(self, *args):
         await self.gateway.stop_async()

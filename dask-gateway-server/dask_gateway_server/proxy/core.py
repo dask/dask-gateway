@@ -18,7 +18,7 @@ from traitlets import (
 )
 
 from .. import __version__ as VERSION
-from ..utils import TaskPool, normalize_address
+from ..utils import TaskPool, Flag, normalize_address
 
 
 __all__ = ("Proxy", "ProxyApp")
@@ -263,6 +263,8 @@ class Proxy(LoggingConfigurable):
     async def setup(self, app):
         """Start the proxy."""
         self.task_pool = TaskPool()
+        # Exposed for testing
+        self._proxy_contacted = Flag()
         if not self.externally_managed:
             self.start_proxy_process()
             self.task_pool.spawn(self.monitor_proxy_process())
@@ -357,6 +359,7 @@ class Proxy(LoggingConfigurable):
             return None
 
     async def routes_handler(self, request):
+        self._proxy_contacted.set()
         # Authenticate the api request
         auth_header = request.headers.get("Authorization")
         if not auth_header:

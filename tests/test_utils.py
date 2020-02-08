@@ -28,6 +28,12 @@ def test_normalize_address():
     assert h == "localhost"
     assert int(p) > 0
 
+    with pytest.raises(ValueError):
+        normalize_address("http://foo.bar:80")
+
+    with pytest.raises(ValueError):
+        normalize_address("http://foo.bar")
+
 
 def test_format_bytes():
     assert format_bytes(105) == "105 B"

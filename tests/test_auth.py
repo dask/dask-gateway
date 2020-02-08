@@ -38,11 +38,11 @@ def kdestroy():
 
 
 @pytest.mark.asyncio
-async def test_basic_auth(tmpdir):
-    async with temp_gateway(temp_dir=str(tmpdir)) as gateway_proc:
+async def test_basic_auth():
+    async with temp_gateway() as g:
         async with Gateway(
-            address=gateway_proc.public_urls.connect_url,
-            proxy_address=gateway_proc.gateway_urls.connect_url,
+            address=g.address,
+            proxy_address=g.proxy_address,
             asynchronous=True,
             auth="basic",
         ) as gateway:
@@ -50,19 +50,18 @@ async def test_basic_auth(tmpdir):
 
 
 @pytest.mark.asyncio
-async def test_basic_auth_password(tmpdir):
+async def test_basic_auth_password():
     config = Config()
-    config.DaskGateway.temp_dir = str(tmpdir)
     config.DaskGateway.authenticator_class = (
         "dask_gateway_server.auth.SimpleAuthenticator"
     )
     config.SimpleAuthenticator.password = "mypass"
 
-    async with temp_gateway(config=config) as gateway_proc:
+    async with temp_gateway(config=config) as g:
         auth = BasicAuth()
         async with Gateway(
-            address=gateway_proc.public_urls.connect_url,
-            proxy_address=gateway_proc.gateway_urls.connect_url,
+            address=g.address,
+            proxy_address=g.proxy_address,
             asynchronous=True,
             auth=auth,
         ) as gateway:
@@ -77,19 +76,18 @@ async def test_basic_auth_password(tmpdir):
 
 @pytest.mark.asyncio
 @requires_kerberos
-async def test_kerberos_auth(tmpdir):
+async def test_kerberos_auth():
     config = Config()
-    config.DaskGateway.public_url = "http://master.example.com:0"
-    config.DaskGateway.temp_dir = str(tmpdir)
+    config.Proxy.address = "master.example.com:0"
     config.DaskGateway.authenticator_class = (
         "dask_gateway_server.auth.KerberosAuthenticator"
     )
     config.KerberosAuthenticator.keytab = KEYTAB_PATH
 
-    async with temp_gateway(config=config) as gateway_proc:
+    async with temp_gateway(config=config) as g:
         async with Gateway(
-            address=gateway_proc.public_urls.connect_url,
-            proxy_address=gateway_proc.gateway_urls.connect_url,
+            address=g.address,
+            proxy_address=g.proxy_address,
             asynchronous=True,
             auth="kerberos",
         ) as gateway:
@@ -136,16 +134,15 @@ class temp_hub(object):
 
 @pytest.mark.skipif(not hub_mocking, reason="JupyterHub not installed")
 @pytest.mark.asyncio
-async def test_jupyterhub_auth(tmpdir, monkeypatch):
+async def test_jupyterhub_auth(monkeypatch):
     from jupyterhub.tests.utils import add_user
 
-    gateway_address = "http://127.0.0.1:%d" % random_port()
     jhub_api_token = uuid.uuid4().hex
     jhub_bind_url = "http://127.0.0.1:%i/@/space%%20word/" % random_port()
 
     hub_config = Config()
     hub_config.JupyterHub.services = [
-        {"name": "dask-gateway", "url": gateway_address, "api_token": jhub_api_token}
+        {"name": "dask-gateway", "api_token": jhub_api_token}
     ]
     hub_config.JupyterHub.bind_url = jhub_bind_url
 
@@ -157,15 +154,13 @@ async def test_jupyterhub_auth(tmpdir, monkeypatch):
 
     # Configure gateway
     config = Config()
-    config.DaskGateway.public_url = gateway_address + "/services/dask-gateway/"
-    config.DaskGateway.temp_dir = str(tmpdir)
     config.DaskGateway.authenticator_class = (
         "dask_gateway_server.auth.JupyterHubAuthenticator"
     )
     config.JupyterHubAuthenticator.jupyterhub_api_token = jhub_api_token
     config.JupyterHubAuthenticator.jupyterhub_api_url = jhub_bind_url + "api/"
 
-    async with temp_gateway(config=config) as gateway_proc:
+    async with temp_gateway(config=config) as g:
         async with temp_hub(hub):
             # Create a new jupyterhub user alice, and get the api token
             u = add_user(hub.db, name="alice")
@@ -176,8 +171,8 @@ async def test_jupyterhub_auth(tmpdir, monkeypatch):
             auth = JupyterHubAuth(api_token=uuid.uuid4().hex)
 
             async with Gateway(
-                address=gateway_proc.public_urls.connect_url,
-                proxy_address=gateway_proc.gateway_urls.connect_url,
+                address=g.address,
+                proxy_address=g.proxy_address,
                 asynchronous=True,
                 auth=auth,
             ) as gateway:
