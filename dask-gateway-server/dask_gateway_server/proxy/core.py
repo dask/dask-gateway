@@ -439,11 +439,13 @@ class ProxyApp(Application):
     @catch_config_error
     def initialize(self, argv=None):
         super().initialize(argv)
-        self.load_config_file(self.config_file)
-        self.parent.config.update(self.config)
+        self.parent.load_config_file(self.config_file)
+        self.parent.config.merge(self.config)
 
     def start(self):
-        proxy = Proxy(parent=self.parent, log=self.parent.log)
+        proxy = Proxy(
+            parent=self.parent, log=self.parent.log, gateway_address=self.parent.address
+        )
         command = proxy.get_start_command(is_child_process=False)
         env = proxy.get_start_env()
         exe = command[0]

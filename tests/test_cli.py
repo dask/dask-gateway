@@ -3,7 +3,7 @@ import pytest
 
 from dask_gateway_server import __version__ as VERSION
 from dask_gateway_server.app import DaskGateway
-from dask_gateway_server.proxy.core import SchedulerProxyApp, WebProxyApp, _PROXY_EXE
+from dask_gateway_server.proxy.core import ProxyApp, _PROXY_EXE
 from dask_gateway.dask_cli import worker, scheduler
 
 
@@ -36,31 +36,22 @@ def test_generate_config(tmpdir, capfd):
     with open(cfg_file) as f:
         cfg_text = f.read()
 
-    assert "DaskGateway.cluster_manager_class" in cfg_text
-    assert "ClusterManager.worker_start_timeout" in cfg_text
+    assert "DaskGateway.backend_class" in cfg_text
+    assert "Backend.cluster_options" in cfg_text
 
 
-@pytest.mark.parametrize("kind", ["web", "scheduler"])
-def test_proxy_cli(kind, tmpdir, monkeypatch):
+def test_proxy_cli(tmpdir, monkeypatch):
     cfg_file = str(tmpdir.join("dask_gateway_config.py"))
 
     text = (
-        "c.DaskGateway.gateway_url = 'tls://127.0.0.1:8786'\n"
-        "c.DaskGateway.public_url = 'http://127.0.0.1:8888'\n"
-        "c.SchedulerProxy.api_url = 'http://127.0.0.1:8866'\n"
-        "c.WebProxy.api_url = 'http://127.0.0.1:8867'\n"
-        "c.ProxyBase.log_level = 'debug'\n"
-        "c.ProxyBase.auth_token = 'abcde'"
+        "c.DaskGateway.address = '127.0.0.1:8888'\n"
+        "c.Proxy.address = '127.0.0.1:8866'\n"
+        "c.Proxy.scheduler_address = '127.0.0.1:8867'\n"
+        "c.Proxy.log_level = 'debug'\n"
+        "c.Proxy.api_token = 'abcde'"
     )
     with open(cfg_file, "w") as f:
         f.write(text)
-
-    if kind == "web":
-        address = "127.0.0.1:8888"
-        api_address = "127.0.0.1:8867"
-    else:
-        address = "127.0.0.1:8786"
-        api_address = "127.0.0.1:8866"
 
     called_with = []
 
@@ -68,10 +59,9 @@ def test_proxy_cli(kind, tmpdir, monkeypatch):
         called_with.extend(args)
 
     monkeypatch.setattr(os, "execle", mock_execle)
-    DaskGateway.launch_instance([kind + "-proxy", "-f", cfg_file])
+    DaskGateway.launch_instance(["proxy", "-f", cfg_file, "--log-level", "warn"])
     DaskGateway.clear_instance()
-    SchedulerProxyApp.clear_instance()
-    WebProxyApp.clear_instance()
+    ProxyApp.clear_instance()
 
     assert called_with
     env = called_with.pop()
@@ -79,13 +69,14 @@ def test_proxy_cli(kind, tmpdir, monkeypatch):
     assert called_with == [
         _PROXY_EXE,
         "dask-gateway-proxy",
-        kind,
         "-address",
-        address,
-        "-api-address",
-        api_address,
+        "127.0.0.1:8866",
+        "-tls-address",
+        "127.0.0.1:8867",
+        "-api-url",
+        "http://127.0.0.1:8888/api/routes",
         "-log-level",
-        "debug",
+        "warn",
     ]
 
     assert "DASK_GATEWAY_PROXY_TOKEN" in env
