@@ -6,12 +6,11 @@ import dask
 from dask_gateway.auth import get_auth, BasicAuth, KerberosAuth, JupyterHubAuth
 from dask_gateway.client import Gateway, GatewayCluster, cleanup_lingering_clusters
 from dask_gateway_server.compat import get_running_loop
-from dask_gateway_server.managers.inprocess import InProcessClusterManager
 from dask_gateway_server.utils import random_port
 from tornado import web
 from tornado.httpclient import HTTPRequest
 
-from .utils import temp_gateway
+from .utils_test import temp_gateway
 
 
 def test_get_auth():
@@ -198,25 +197,16 @@ async def test_client_fetch_timeout():
 
 
 @pytest.mark.asyncio
-async def test_client_reprs(tmpdir):
-    async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
-    ) as gateway_proc:
-        async with Gateway(
-            address=gateway_proc.public_urls.connect_url,
-            proxy_address=gateway_proc.gateway_urls.connect_url,
-            asynchronous=True,
-        ) as gateway:
+async def test_client_reprs():
+    async with temp_gateway() as g:
+        async with g.gateway_client() as gateway:
             cluster = await gateway.new_cluster()
 
             # Plain repr
             assert cluster.name in repr(cluster)
 
             # HTML repr with dashboard
-            cluster.dashboard_link = "%s/gateway/clusters/%s/status" % (
-                gateway_proc.public_url,
-                cluster.name,
-            )
+            cluster.dashboard_link = f"{g.address}/clusters/{cluster.name}/status"
             assert cluster.name in cluster._repr_html_()
             assert cluster.dashboard_link in cluster._repr_html_()
 
@@ -226,13 +216,12 @@ async def test_client_reprs(tmpdir):
 
 
 @pytest.mark.asyncio
-async def test_cluster_widget(tmpdir):
+async def test_cluster_widget():
     pytest.importorskip("ipywidgets")
 
     def test():
         with GatewayCluster(
-            address=gateway_proc.public_urls.connect_url,
-            proxy_address=gateway_proc.gateway_urls.connect_url,
+            address=g.address, proxy_address=g.proxy_address
         ) as cluster:
             # Smoke test widget
             cluster._widget()
@@ -251,31 +240,27 @@ async def test_cluster_widget(tmpdir):
 
             assert (template % 1) in cluster._widget_status()
 
-    async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
-    ) as gateway_proc:
+    async with temp_gateway() as g:
         loop = get_running_loop()
         await loop.run_in_executor(None, test)
 
 
 @pytest.mark.asyncio
-async def test_dashboard_link_from_public_address(tmpdir):
+async def test_dashboard_link_from_public_address():
     pytest.importorskip("bokeh")
 
-    async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
-    ) as gateway_proc:
+    async with temp_gateway() as g:
         with dask.config.set(
-            gateway__address=gateway_proc.public_urls.connect_url,
+            gateway__address=g.address,
             gateway__public_address="/services/dask-gateway/",
-            gateway__proxy_address=gateway_proc.gateway_urls.connect_url,
+            gateway__proxy_address=g.proxy_address,
         ):
             async with Gateway(asynchronous=True) as gateway:
                 assert gateway._public_address == "/services/dask-gateway"
 
                 cluster = await gateway.new_cluster()
 
-                sol = "/services/dask-gateway/gateway/clusters/%s/status" % cluster.name
+                sol = "/services/dask-gateway/clusters/%s/status" % cluster.name
                 assert cluster.dashboard_link == sol
 
                 clusters = await gateway.list_clusters()
@@ -284,14 +269,10 @@ async def test_dashboard_link_from_public_address(tmpdir):
 
 
 @pytest.mark.asyncio
-async def test_create_cluster_with_GatewayCluster_constructor(tmpdir):
-    async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
-    ) as gateway_proc:
+async def test_create_cluster_with_GatewayCluster_constructor():
+    async with temp_gateway() as g:
         async with GatewayCluster(
-            address=gateway_proc.public_urls.connect_url,
-            proxy_address=gateway_proc.gateway_urls.connect_url,
-            asynchronous=True,
+            address=g.address, proxy_address=g.proxy_address, asynchronous=True
         ) as cluster:
 
             # Cluster is now present in list
@@ -307,23 +288,16 @@ async def test_create_cluster_with_GatewayCluster_constructor(tmpdir):
 
         assert cluster.status == "closed"
 
-        async with Gateway(
-            address=gateway_proc.public_urls.connect_url,
-            proxy_address=gateway_proc.gateway_urls.connect_url,
-            asynchronous=True,
-        ) as gateway:
+        async with g.gateway_client() as gateway:
             # No cluster running
             clusters = await gateway.list_clusters()
             assert not clusters
 
 
 @pytest.mark.asyncio
-async def test_sync_constructors(tmpdir):
+async def test_sync_constructors():
     def test():
-        with Gateway(
-            address=gateway_proc.public_urls.connect_url,
-            proxy_address=gateway_proc.gateway_urls.connect_url,
-        ) as gateway:
+        with g.gateway_client(asynchronous=False) as gateway:
             with gateway.new_cluster() as cluster:
                 cluster.scale(1)
                 client = cluster.get_client()
@@ -335,24 +309,17 @@ async def test_sync_constructors(tmpdir):
                     res = client2.submit(lambda x: x + 1, 1).result()
                     assert res == 2
 
-    async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
-    ) as gateway_proc:
+    async with temp_gateway() as g:
         loop = get_running_loop()
         await loop.run_in_executor(None, test)
 
 
 @pytest.mark.asyncio
-async def test_GatewayCluster_shutdown_on_close(tmpdir):
-    async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
-    ) as gateway_proc:
+async def test_GatewayCluster_shutdown_on_close():
+    async with temp_gateway() as g:
 
         def test():
-            cluster = GatewayCluster(
-                address=gateway_proc.public_urls.connect_url,
-                proxy_address=gateway_proc.gateway_urls.connect_url,
-            )
+            cluster = GatewayCluster(address=g.address, proxy_address=g.proxy_address)
             assert cluster.shutdown_on_close
             assert cluster in GatewayCluster._instances
 
@@ -361,27 +328,18 @@ async def test_GatewayCluster_shutdown_on_close(tmpdir):
 
         assert len(GatewayCluster._instances) == 0
 
-        async with Gateway(
-            address=gateway_proc.public_urls.connect_url,
-            proxy_address=gateway_proc.gateway_urls.connect_url,
-            asynchronous=True,
-        ) as gateway:
+        async with g.gateway_client() as gateway:
             # No cluster running
             clusters = await gateway.list_clusters()
             assert not clusters
 
 
 @pytest.mark.asyncio
-async def test_GatewayCluster_cleanup_atexit(tmpdir):
-    async with temp_gateway(
-        cluster_manager_class=InProcessClusterManager, temp_dir=str(tmpdir)
-    ) as gateway_proc:
+async def test_GatewayCluster_cleanup_atexit():
+    async with temp_gateway() as g:
 
         def test():
-            return GatewayCluster(
-                address=gateway_proc.public_urls.connect_url,
-                proxy_address=gateway_proc.gateway_urls.connect_url,
-            )
+            return GatewayCluster(address=g.address, proxy_address=g.proxy_address)
 
         loop = get_running_loop()
         cluster = await loop.run_in_executor(None, test)
@@ -406,11 +364,7 @@ async def test_GatewayCluster_cleanup_atexit(tmpdir):
 
         await loop.run_in_executor(None, test_cleanup)
 
-        async with Gateway(
-            address=gateway_proc.public_urls.connect_url,
-            proxy_address=gateway_proc.gateway_urls.connect_url,
-            asynchronous=True,
-        ) as gateway:
+        async with g.gateway_client() as gateway:
             # No cluster running
             clusters = await gateway.list_clusters()
             assert not clusters

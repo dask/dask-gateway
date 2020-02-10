@@ -5,7 +5,6 @@ import uuid
 import pytest
 from traitlets.config import Config
 
-from dask_gateway import Gateway
 from dask_gateway.auth import BasicAuth, JupyterHubAuth
 from dask_gateway_server.utils import random_port
 
@@ -40,12 +39,7 @@ def kdestroy():
 @pytest.mark.asyncio
 async def test_basic_auth():
     async with temp_gateway() as g:
-        async with Gateway(
-            address=g.address,
-            proxy_address=g.proxy_address,
-            asynchronous=True,
-            auth="basic",
-        ) as gateway:
+        async with g.gateway_client(auth="basic") as gateway:
             await gateway.list_clusters()
 
 
@@ -59,13 +53,7 @@ async def test_basic_auth_password():
 
     async with temp_gateway(config=config) as g:
         auth = BasicAuth()
-        async with Gateway(
-            address=g.address,
-            proxy_address=g.proxy_address,
-            asynchronous=True,
-            auth=auth,
-        ) as gateway:
-
+        async with g.gateway_client(auth=auth) as gateway:
             with pytest.raises(Exception):
                 await gateway.list_clusters()
 
@@ -85,13 +73,7 @@ async def test_kerberos_auth():
     config.KerberosAuthenticator.keytab = KEYTAB_PATH
 
     async with temp_gateway(config=config) as g:
-        async with Gateway(
-            address=g.address,
-            proxy_address=g.proxy_address,
-            asynchronous=True,
-            auth="kerberos",
-        ) as gateway:
-
+        async with g.gateway_client(auth="kerberos") as gateway:
             kdestroy()
 
             with pytest.raises(Exception):
@@ -170,13 +152,7 @@ async def test_jupyterhub_auth(monkeypatch):
             # Configure auth with incorrect api token
             auth = JupyterHubAuth(api_token=uuid.uuid4().hex)
 
-            async with Gateway(
-                address=g.address,
-                proxy_address=g.proxy_address,
-                asynchronous=True,
-                auth=auth,
-            ) as gateway:
-
+            async with g.gateway_client(auth=auth) as gateway:
                 # Auth fails with bad token
                 with pytest.raises(Exception):
                     await gateway.list_clusters()
