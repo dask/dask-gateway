@@ -355,8 +355,11 @@ class DataManager(object):
 
                 for i in to_delete:
                     cluster = self.id_to_cluster.pop(i)
-                    del self.name_to_cluster[cluster.name]
-                    del cluster.user.clusters[cluster.name]
+                    self.name_to_cluster.pop(cluster.name, None)
+                    user_clusters = self.username_to_clusters[cluster.username]
+                    user_clusters.pop(cluster.name)
+                    if not user_clusters:
+                        self.username_to_clusters.pop(cluster.username)
 
         return len(to_delete)
 
@@ -745,6 +748,7 @@ class DatabaseBackend(Backend):
         self.task_pool.spawn(self.check_timeouts_loop())
         self.task_pool.spawn(self.check_clusters_loop())
         self.task_pool.spawn(self.check_workers_loop())
+        self.task_pool.spawn(self.cleanup_db_loop())
 
         # Load all active clusters/workers into reconcilation queues
         for cluster in self.db.name_to_cluster.values():
@@ -1022,6 +1026,18 @@ class DatabaseBackend(Backend):
                     "Exception while checking worker statuses", exc_info=exc
                 )
 
+    async def cleanup_db_loop(self):
+        while True:
+            try:
+                n = self.db.cleanup_expired(self.db_cluster_max_age)
+            except Exception as exc:
+                self.log.error(
+                    "Error while cleaning expired database records", exc_info=exc
+                )
+            else:
+                self.log.debug("Removed %d expired clusters from the database", n)
+            await asyncio.sleep(self.db_cleanup_period)
+
     async def enqueue(self, obj):
         ind = hash(obj) % self.parallelism
         await self.queues[ind].put(obj)
@@ -1233,7 +1249,7 @@ class DatabaseBackend(Backend):
                     "Exception while stopping worker %s", worker.name, exc_info=exc
                 )
         self.log.info("Worker %s stopped", worker.name)
-        self.db.update_worker(worker, status=worker.target)
+        self.db.update_worker(worker, status=worker.target, stop_time=timestamp())
 
     def get_tls_paths(self, cluster):
         """Return the paths to the cert and key files for this cluster"""

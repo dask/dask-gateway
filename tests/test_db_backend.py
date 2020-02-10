@@ -1,7 +1,9 @@
 import asyncio
+import base64
 import os
 import signal
 import time
+from collections import defaultdict
 
 import pytest
 from cryptography.fernet import Fernet
@@ -11,8 +13,14 @@ from traitlets.config import Config
 import dask
 from dask_gateway import GatewayClusterError, GatewayCluster
 from dask_gateway_server.app import DaskGateway
+from dask_gateway_server.backends import db_base
 from dask_gateway_server.backends.base import ClusterConfig
-from dask_gateway_server.backends.db_base import DatabaseBackend
+from dask_gateway_server.backends.db_base import (
+    DatabaseBackend,
+    timestamp,
+    JobStatus,
+    DataManager,
+)
 from dask_gateway_server.backends.inprocess import InProcessBackend
 from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.utils import random_port
@@ -196,6 +204,169 @@ def test_resume_clusters_forbid_in_memory_db():
         gateway.initialize([])
 
     assert "stop_clusters_on_shutdown" in str(exc.value)
+
+
+@pytest.mark.asyncio
+async def test_encryption(tmpdir):
+    db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
+    encrypt_keys = [Fernet.generate_key() for i in range(3)]
+    db = DataManager(url=db_url, encrypt_keys=encrypt_keys)
+
+    assert db.fernet is not None
+
+    data = b"my secret data"
+    encrypted = db.encrypt(data)
+    assert encrypted != data
+
+    data2 = db.decrypt(encrypted)
+    assert data == data2
+
+    c = db.create_cluster("alice", {}, {})
+    assert c.tls_cert is not None
+    assert c.tls_key is not None
+
+    # Check database state is encrypted
+    with db.db.begin() as conn:
+        res = conn.execute(
+            db_base.clusters.select(db_base.clusters.c.id == c.id)
+        ).fetchone()
+    assert res.tls_credentials != b";".join((c.tls_cert, c.tls_key))
+    cert, key = db.decrypt(res.tls_credentials).split(b";")
+    token = db.decrypt(res.token).decode()
+    assert cert == c.tls_cert
+    assert key == c.tls_key
+    assert token == c.token
+
+    # Check can reload database with keys
+    db2 = DataManager(url=db_url, encrypt_keys=encrypt_keys)
+    c2 = db2.id_to_cluster[c.id]
+    assert c2.tls_cert == c.tls_cert
+    assert c2.tls_key == c.tls_key
+    assert c2.token == c.token
+
+
+def test_normalize_encrypt_key():
+    key = Fernet.generate_key()
+    # b64 bytes
+    assert db_base._normalize_encrypt_key(key) == key
+    # b64 string
+    assert db_base._normalize_encrypt_key(key.decode()) == key
+    # raw bytes
+    raw = base64.urlsafe_b64decode(key)
+    assert db_base._normalize_encrypt_key(raw) == key
+
+    # Too short
+    with pytest.raises(ValueError) as exc:
+        db_base._normalize_encrypt_key(b"abcde")
+    assert "DASK_GATEWAY_ENCRYPT_KEYS" in str(exc.value)
+
+    # Too short decoded
+    with pytest.raises(ValueError) as exc:
+        db_base._normalize_encrypt_key(b"\x00" * 43 + b"=")
+    assert "DASK_GATEWAY_ENCRYPT_KEYS" in str(exc.value)
+
+    # Invalid b64 encode
+    with pytest.raises(ValueError) as exc:
+        db_base._normalize_encrypt_key(b"=" + b"a" * 43)
+    assert "DASK_GATEWAY_ENCRYPT_KEYS" in str(exc.value)
+
+
+def check_db_consistency(db):
+    clusters = db.db.execute(db_base.clusters.select()).fetchall()
+    workers = db.db.execute(db_base.workers.select()).fetchall()
+
+    for u, clusters in db.username_to_clusters:
+        # Users without clusters are flushed
+        assert clusters
+
+    # Check cluster state
+    for c in clusters:
+        cluster = db.id_to_cluster[c.id]
+        assert db.name_to_cluster[c.name] is cluster
+        assert db.username_to_clusters[c.username][c.name] is cluster
+    assert len(db.id_to_cluster) == len(clusters)
+    assert len(db.name_to_cluster) == len(clusters)
+    assert sum(map(len, db.username_to_clusters.values())) == len(clusters)
+
+    # Check worker state
+    cluster_to_workers = defaultdict(set)
+    for w in workers:
+        cluster = db.id_to_cluster[w.cluster_id]
+        cluster_to_workers[cluster.name].add(w.name)
+    for cluster in db.id_to_cluster.values():
+        expected = cluster_to_workers[cluster.name]
+        assert set(cluster.workers) == expected
+
+
+@pytest.mark.asyncio
+async def test_cleanup_expired_clusters(monkeypatch):
+    db = DataManager()
+
+    current_time = time.time()
+
+    def mytime():
+        nonlocal current_time
+        current_time += 0.5
+        return current_time
+
+    monkeypatch.setattr(time, "time", mytime)
+
+    def add_cluster(user, stop=True):
+        c = db.create_cluster(user, {}, {})
+        for _ in range(5):
+            w = db.create_worker(c)
+            if stop:
+                db.update_worker(
+                    w,
+                    target=JobStatus.STOPPED,
+                    status=JobStatus.STOPPED,
+                    stop_time=timestamp(),
+                )
+        if stop:
+            db.update_cluster(
+                c,
+                status=JobStatus.STOPPED,
+                target=JobStatus.STOPPED,
+                stop_time=timestamp(),
+            )
+        return c
+
+    add_cluster("alice", stop=True)  # c1
+    add_cluster("alice", stop=True)  # c2
+    add_cluster("bob", stop=True)  # c3
+    c4 = add_cluster("alice", stop=False)
+
+    cutoff = mytime()
+
+    c5 = add_cluster("alice", stop=True)
+    c6 = add_cluster("alice", stop=False)
+
+    check_db_consistency(db)
+
+    # Set time to always return same value
+    now = mytime()
+    monkeypatch.setattr(time, "time", lambda: now)
+
+    # 3 clusters are expired
+    max_age = now - cutoff
+    n = db.cleanup_expired(max_age)
+    assert n == 3
+
+    check_db_consistency(db)
+
+    # Only alice remains, bob is removed since they have no clusters
+    assert "alice" in db.username_to_clusters
+    assert "bob" not in db.username_to_clusters
+
+    # c4, c5, c6 are all that remains
+    assert set(db.id_to_cluster) == {c4.id, c5.id, c6.id}
+
+    # Running again expires no clusters
+    max_age = now - cutoff
+    n = db.cleanup_expired(max_age)
+    assert n == 0
+
+    check_db_consistency(db)
 
 
 @pytest.mark.asyncio
