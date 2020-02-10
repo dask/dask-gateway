@@ -18,7 +18,7 @@ from traitlets import (
 )
 
 from .. import __version__ as VERSION
-from ..utils import TaskPool, Flag, normalize_address
+from ..utils import TaskPool, Flag, normalize_address, CancelGroup
 
 
 __all__ = ("Proxy", "ProxyApp")
@@ -262,6 +262,7 @@ class Proxy(LoggingConfigurable):
 
     async def setup(self, app):
         """Start the proxy."""
+        self.cg = CancelGroup()
         self.task_pool = TaskPool()
         # Exposed for testing
         self._proxy_contacted = Flag()
@@ -285,6 +286,7 @@ class Proxy(LoggingConfigurable):
 
     async def _on_shutdown(self, app):
         await self.task_pool.close()
+        await self.cg.cancel()
 
     async def cleanup(self):
         """Stop the proxy."""
@@ -395,14 +397,11 @@ class Proxy(LoggingConfigurable):
                 )
                 await response.prepare(request)
 
-                async def stream():
+                async with self.cg.cancellable():
                     while True:
                         events = await queue.get()
                         msg = {"events": events}
                         await response.write(json.dumps(msg).encode() + b"\n")
-
-                # Spawn as task so that it can be cancelled on shutdown
-                await self.task_pool.spawn(stream())
             finally:
                 self._watchers.discard(queue)
 

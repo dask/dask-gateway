@@ -16,7 +16,14 @@ from .base import Backend
 from .. import models
 from ..proxy import Proxy
 from ..tls import new_keypair
-from ..utils import FrozenAttrDict, TaskPool, Flag, normalize_address, UniqueQueue
+from ..utils import (
+    FrozenAttrDict,
+    TaskPool,
+    Flag,
+    normalize_address,
+    UniqueQueue,
+    CancelGroup,
+)
 
 
 def timestamp():
@@ -715,6 +722,15 @@ class DatabaseBackend(Backend):
 
     async def setup(self, app):
         await super().setup(app)
+
+        # Setup reconcilation queues
+        self.cg = CancelGroup()
+
+        self.queues = [UniqueQueue() for _ in range(self.parallelism)]
+        self.reconcilers = [
+            asyncio.ensure_future(self.reconciler_loop(q)) for q in self.queues
+        ]
+
         # Start the proxy
         self.proxy = Proxy(parent=self, log=self.log)
         await self.proxy.setup(app)
@@ -723,10 +739,9 @@ class DatabaseBackend(Backend):
         self.db = DataManager(
             url=self.db_url, echo=self.db_debug, encrypt_keys=self.db_encrypt_keys
         )
-        self.queues = [UniqueQueue() for _ in range(self.parallelism)]
+
+        # Start background tasks
         self.task_pool = TaskPool()
-        for q in self.queues:
-            self.task_pool.spawn(self.reconciler_loop(q))
         self.task_pool.spawn(self.check_timeouts_loop())
         self.task_pool.spawn(self.check_clusters_loop())
         self.task_pool.spawn(self.check_workers_loop())
@@ -747,6 +762,10 @@ class DatabaseBackend(Backend):
         )
 
     async def cleanup(self):
+        if hasattr(self, "task_pool"):
+            # Stop background tasks
+            await self.task_pool.close()
+
         if hasattr(self, "db"):
             if self.stop_clusters_on_shutdown:
                 # Request all active clusters be stopped
@@ -768,10 +787,12 @@ class DatabaseBackend(Backend):
                 if pending_shutdown:
                     await asyncio.wait([c.shutdown for c in pending_shutdown])
 
-        await self.do_cleanup()
+        if hasattr(self, "cg"):
+            # Stop reconcilation queues
+            await self.cg.cancel()
+            await asyncio.gather(*self.reconcilers, return_exceptions=True)
 
-        if hasattr(self, "task_pool"):
-            await self.task_pool.close()
+        await self.do_cleanup()
 
         if hasattr(self, "proxy"):
             await self.proxy.cleanup()
@@ -1007,7 +1028,8 @@ class DatabaseBackend(Backend):
 
     async def reconciler_loop(self, queue):
         while True:
-            obj = await queue.get()
+            async with self.cg.cancellable():
+                obj = await queue.get()
             if isinstance(obj, Cluster):
                 method = self.reconcile_cluster
                 kind = "cluster"

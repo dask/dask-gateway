@@ -18,20 +18,63 @@ class TaskPool(object):
 
     def spawn(self, task):
         out = asyncio.ensure_future(task)
-        # TODO: remove the need for this
-        if self.closed:
-            out.cancel()
-        else:
-            self.tasks.add(out)
+        self.tasks.add(out)
         return out
 
-    async def close(self, timeout=5):
+    async def close(self):
         # Stop all tasks
         self.closed = True
         for task in self.tasks:
             task.cancel()
         await asyncio.gather(*self.tasks, return_exceptions=True)
         self.tasks.clear()
+
+
+class CancelGroup(object):
+    def __init__(self):
+        self.tasks = set()
+        self.cancelled = False
+
+    def cancellable(self):
+        return _cancel_context(self)
+
+    async def cancel(self):
+        if self.cancelled:
+            raise asyncio.CancelledError
+        else:
+            self.cancelled = True
+            tasks = [t._task for t in self.tasks if t._task is not None]
+            for t in tasks:
+                t.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            self.tasks.clear()
+
+    def _register(self, it):
+        self.tasks.add(it)
+
+    def _unregister(self, it):
+        self.tasks.discard(it)
+
+
+class _cancel_context(object):
+    def __init__(self, context):
+        self.context = context
+        self._task = None
+
+    async def __aenter__(self):
+        if self.context.cancelled:
+            raise asyncio.CancelledError
+        loop = get_running_loop()
+        try:
+            self._task = asyncio.current_task(loop=loop)
+        except AttributeError:
+            self._task = asyncio.Task.current_task(loop=loop)
+        self.context._register(self)
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self.context._unregister(self)
+        self._task = None
 
 
 def random_port():

@@ -14,6 +14,7 @@ from dask_gateway_server.utils import (
     UniqueQueue,
     Flag,
     FrozenAttrDict,
+    CancelGroup,
 )
 
 
@@ -196,3 +197,37 @@ def test_frozenattrdict():
 
     with pytest.raises(AttributeError):
         a.missing = 1
+
+
+@pytest.mark.asyncio
+async def test_cancel_group():
+    cg = CancelGroup()
+
+    async def waiter(cg):
+        async with cg.cancellable():
+            await asyncio.sleep(1000)
+
+    async def noop(cg):
+        async with cg.cancellable():
+            pass
+
+    task1 = asyncio.ensure_future(waiter(cg))
+    task2 = asyncio.ensure_future(waiter(cg))
+    task3 = asyncio.ensure_future(noop(cg))
+
+    await cancel_task(task2)
+
+    assert not task1.done()
+    assert task2.done()
+    assert task3.done()
+
+    await cg.cancel()
+
+    assert task1.done()
+
+    try:
+        # Further use of the cancel group raises immediately
+        async with cg.cancellable():
+            assert False
+    except asyncio.CancelledError:
+        pass

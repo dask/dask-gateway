@@ -148,6 +148,10 @@ def test_shutdown_on_startup_error(tmpdir, capsys):
         gateway.start()
     assert exc.value.code == 1
 
+    captured = capsys.readouterr()
+
+    assert "tls_cert" in captured.err
+
 
 def test_db_encrypt_keys_required(tmpdir, capsys):
     c = Config()
@@ -563,7 +567,6 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
 
             async with gateway.new_cluster():
                 pass
-        await asyncio.sleep(2)
 
     active_clusters = {c.name: c for c in g.gateway.backend.db.active_clusters()}
 
