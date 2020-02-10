@@ -32,11 +32,11 @@ class InProcessBackend(UnsafeLocalBackend):
             out.append(ok)
         return out
 
-    async def handle_setup(self):
+    async def do_setup(self):
         self.schedulers = {}
         self.workers = {}
 
-    async def handle_cluster_start(self, cluster):
+    async def do_start_cluster(self, cluster):
         workdir = self.setup_working_directory(cluster)
         yield {"workdir": workdir}
 
@@ -54,7 +54,7 @@ class InProcessBackend(UnsafeLocalBackend):
         self.schedulers[cluster.name] = scheduler
         yield {"workdir": workdir, "started": True}
 
-    async def handle_cluster_stop(self, cluster):
+    async def do_stop_cluster(self, cluster):
         scheduler = self.schedulers.pop(cluster.name)
 
         await scheduler.close(fast=True)
@@ -64,10 +64,10 @@ class InProcessBackend(UnsafeLocalBackend):
         if workdir is not None:
             self.cleanup_working_directory(workdir)
 
-    async def handle_check_clusters(self, clusters):
+    async def do_check_clusters(self, clusters):
         return self._check_status(clusters, self.schedulers)
 
-    async def handle_worker_start(self, worker):
+    async def do_start_worker(self, worker):
         security = self.get_security(worker.cluster)
         gateway_client = self.get_gateway_client(worker.cluster)
         workdir = worker.cluster.state["workdir"]
@@ -77,7 +77,7 @@ class InProcessBackend(UnsafeLocalBackend):
         self.workers[worker.name] = worker
         yield {"started": True}
 
-    async def handle_worker_stop(self, worker):
+    async def do_stop_worker(self, worker):
         worker = self.workers.pop(worker.name, None)
         if worker is None:
             return
@@ -86,7 +86,7 @@ class InProcessBackend(UnsafeLocalBackend):
         except gen.TimeoutError:
             pass
 
-    async def handle_check_workers(self, workers):
+    async def do_check_workers(self, workers):
         return self._check_status(workers, self.workers)
 
     async def worker_status(self, worker_name, worker_state, cluster_state):

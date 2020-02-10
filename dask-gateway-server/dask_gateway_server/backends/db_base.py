@@ -8,6 +8,7 @@ from collections import defaultdict
 from itertools import chain, islice
 
 import sqlalchemy as sa
+from async_timeout import timeout
 from traitlets import Unicode, Bool, List, Integer, Float, validate, default
 from cryptography.fernet import MultiFernet, Fernet
 
@@ -673,7 +674,8 @@ class DatabaseBackend(Backend):
         This shouldn't be too small (to keep the overhead low), but should be
         smaller than ``cluster_heartbeat_timeout``, ``cluster_start_timeout``,
         and ``worker_start_timeout``.
-        """
+        """,
+        config=True,
     )
 
     @default("check_timeouts_period")
@@ -714,7 +716,7 @@ class DatabaseBackend(Backend):
     async def setup(self, app):
         await super().setup(app)
         # Start the proxy
-        self.proxy = Proxy(parent=self)
+        self.proxy = Proxy(parent=self, log=self.log)
         await self.proxy.setup(app)
 
         # Load the database
@@ -738,37 +740,42 @@ class DatabaseBackend(Backend):
                         await self.enqueue(worker)
 
         # Further backend-specific setup
-        await self.handle_setup()
+        await self.do_setup()
 
         self.log.info(
             "Backend started, clusters will contact api server at %s", self.api_url
         )
 
     async def cleanup(self):
-        if self.stop_clusters_on_shutdown:
-            # Request all active clusters be stopped
-            active = list(self.db.active_clusters())
-            if active:
-                self.log.info("Stopping %d active clusters...", len(active))
-                self.db.update_clusters(
-                    [(c, {"target": JobStatus.FAILED}) for c in active]
-                )
-                for c in active:
-                    await self.enqueue(c)
+        if hasattr(self, "db"):
+            if self.stop_clusters_on_shutdown:
+                # Request all active clusters be stopped
+                active = list(self.db.active_clusters())
+                if active:
+                    self.log.info("Stopping %d active clusters...", len(active))
+                    self.db.update_clusters(
+                        [(c, {"target": JobStatus.FAILED}) for c in active]
+                    )
+                    for c in active:
+                        await self.enqueue(c)
 
-            # Wait until all clusters are shutdown
-            pending_shutdown = [
-                c
-                for c in self.db.name_to_cluster.values()
-                if c.status < JobStatus.STOPPED
-            ]
-            if pending_shutdown:
-                await asyncio.wait([c.shutdown for c in pending_shutdown])
+                # Wait until all clusters are shutdown
+                pending_shutdown = [
+                    c
+                    for c in self.db.name_to_cluster.values()
+                    if c.status < JobStatus.STOPPED
+                ]
+                if pending_shutdown:
+                    await asyncio.wait([c.shutdown for c in pending_shutdown])
 
-        await self.handle_cleanup()
-        await self.task_pool.close()
+        await self.do_cleanup()
+
+        if hasattr(self, "task_pool"):
+            await self.task_pool.close()
+
         if hasattr(self, "proxy"):
             await self.proxy.cleanup()
+
         await super().cleanup()
 
     async def list_clusters(self, user=None, statuses=None):
@@ -944,7 +951,7 @@ class DatabaseBackend(Backend):
                     for c in self.db.active_clusters()
                     if c.status == JobStatus.SUBMITTED
                 ]
-                statuses = await self.handle_check_clusters(clusters)
+                statuses = await self.do_check_clusters(clusters)
                 updates = [
                     (c, {"target": JobStatus.FAILED})
                     for c, ok in zip(clusters, statuses)
@@ -977,7 +984,7 @@ class DatabaseBackend(Backend):
                     for w in c.active_workers()
                     if w.status == JobStatus.SUBMITTED
                 ]
-                statuses = await self.handle_check_workers(workers)
+                statuses = await self.do_check_workers(workers)
                 updates = [
                     (w, {"target": JobStatus.FAILED})
                     for w, ok in zip(workers, statuses)
@@ -1085,14 +1092,24 @@ class DatabaseBackend(Backend):
     async def _cluster_to_submitted(self, cluster):
         self.log.info("Submitting cluster %s...", cluster.name)
         try:
-            async for state in self.handle_cluster_start(cluster):
-                self.log.debug("State update for cluster %s", cluster.name)
-                self.db.update_cluster(cluster, state=state)
+            async with timeout(self.cluster_start_timeout):
+                async for state in self.do_start_cluster(cluster):
+                    self.log.debug("State update for cluster %s", cluster.name)
+                    self.db.update_cluster(cluster, state=state)
             self.db.update_cluster(cluster, status=JobStatus.SUBMITTED)
             self.log.info("Cluster %s submitted", cluster.name)
+        except asyncio.CancelledError:
+            raise
         except Exception as exc:
-            self.log.warning("Failed to submit cluster %s", cluster.name, exc_info=exc)
-            self.db.update_cluster(cluster, target=JobStatus.FAILED)
+            if isinstance(exc, asyncio.TimeoutError):
+                self.log.info("Cluster %s startup timed out", cluster.name)
+            else:
+                self.log.warning(
+                    "Failed to submit cluster %s", cluster.name, exc_info=exc
+                )
+            self.db.update_cluster(
+                cluster, status=JobStatus.SUBMITTED, target=JobStatus.FAILED
+            )
             await self.enqueue(cluster)
 
     async def _cluster_to_closing(self, cluster):
@@ -1113,7 +1130,7 @@ class DatabaseBackend(Backend):
         self.log.info("Stopping cluster %s...", cluster.name)
         if cluster.status > JobStatus.CREATED:
             try:
-                await self.handle_cluster_stop(cluster)
+                await self.do_stop_cluster(cluster)
             except Exception as exc:
                 self.log.warning(
                     "Exception while stopping cluster %s", cluster.name, exc_info=exc
@@ -1164,21 +1181,31 @@ class DatabaseBackend(Backend):
     async def _worker_to_submitted(self, worker):
         self.log.info("Submitting worker %s...", worker.name)
         try:
-            async for state in self.handle_worker_start(worker):
-                self.log.debug("State update for worker %s", worker.name)
-                self.db.update_worker(worker, state=state)
+            async with timeout(self.worker_start_timeout):
+                async for state in self.do_start_worker(worker):
+                    self.log.debug("State update for worker %s", worker.name)
+                    self.db.update_worker(worker, state=state)
             self.db.update_worker(worker, status=JobStatus.SUBMITTED)
             self.log.info("Worker %s submitted", worker.name)
+        except asyncio.CancelledError:
+            raise
         except Exception as exc:
-            self.log.warning("Failed to submit worker %s", worker.name, exc_info=exc)
-            self.db.update_worker(worker, target=JobStatus.FAILED)
+            if isinstance(exc, asyncio.TimeoutError):
+                self.log.info("Worker %s startup timed out", worker.name)
+            else:
+                self.log.warning(
+                    "Failed to submit worker %s", worker.name, exc_info=exc
+                )
+            self.db.update_worker(
+                worker, status=JobStatus.SUBMITTED, target=JobStatus.FAILED
+            )
             await self.enqueue(worker)
 
     async def _worker_to_stopped(self, worker):
         self.log.info("Stopping worker %s...", worker.name)
         if worker.status > JobStatus.CREATED:
             try:
-                await self.handle_worker_stop(worker)
+                await self.do_stop_worker(worker)
             except Exception as exc:
                 self.log.warning(
                     "Exception while stopping worker %s", worker.name, exc_info=exc
@@ -1223,26 +1250,26 @@ class DatabaseBackend(Backend):
     # Subclasses should implement these methods
     supports_bulk_shutdown = False
 
-    async def handle_setup(self):
+    async def do_setup(self):
         pass
 
-    async def handle_cleanup(self):
+    async def do_cleanup(self):
         pass
 
-    async def handle_cluster_start(self, cluster):
+    async def do_start_cluster(self, cluster):
         raise NotImplementedError
 
-    async def handle_cluster_stop(self, cluster):
+    async def do_stop_cluster(self, cluster):
         raise NotImplementedError
 
-    async def handle_check_clusters(self, clusters):
+    async def do_check_clusters(self, clusters):
         raise NotImplementedError
 
-    async def handle_worker_start(self, worker):
+    async def do_start_worker(self, worker):
         raise NotImplementedError
 
-    async def handle_worker_stop(self, worker):
+    async def do_stop_worker(self, worker):
         raise NotImplementedError
 
-    async def handle_check_workers(self, workers):
+    async def do_check_workers(self, workers):
         raise NotImplementedError

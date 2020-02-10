@@ -182,9 +182,9 @@ class DaskGateway(Application):
 
         # Initialize authenticator and backend
         self.log.info("Authenticator: %r", classname(self.authenticator_class))
-        self.authenticator = self.authenticator_class(parent=self)
+        self.authenticator = self.authenticator_class(parent=self, log=self.log)
         self.log.info("Backend: %r", classname(self.backend_class))
-        self.backend = self.backend_class(parent=self)
+        self.backend = self.backend_class(parent=self, log=self.log)
 
         # Initialize aiohttp application
         self.app = web.Application(logger=self.log)
@@ -198,14 +198,14 @@ class DaskGateway(Application):
         self.log.warning("Received signal %s, initiating shutdown...", sig.name)
         raise web.GracefulExit
 
-    async def start_async(self):
+    async def setup(self):
         # Register signal handlers
         loop = asyncio.get_event_loop()
         for s in (signal.SIGTERM, signal.SIGINT):
             loop.add_signal_handler(s, self.handle_shutdown_signal, s)
 
         # Start the authenticator
-        await self.authenticator.startup()
+        await self.authenticator.setup(self.app)
 
         # Start the backend
         await self.backend.setup(self.app)
@@ -226,7 +226,7 @@ class DaskGateway(Application):
         self.log.info("Dask-Gateway server started")
         self.log.info("- Private API server listening at http://%s", self.address)
 
-    async def stop_async(self):
+    async def cleanup(self):
         # Shutdown the aiohttp application
         if hasattr(self, "runner"):
             await self.runner.cleanup()
@@ -237,13 +237,13 @@ class DaskGateway(Application):
 
         # Shutdown authenticator
         if hasattr(self, "authenticator"):
-            await self.authenticator.shutdown()
+            await self.authenticator.cleanup()
 
         self.log.info("Stopped successfully")
 
-    async def run_app(self):
+    async def run(self):
         try:
-            await self.start_async()
+            await self.setup()
         except Exception:
             self.log.critical("Failed to start gateway, shutting down", exc_info=True)
             sys.exit(1)
@@ -254,18 +254,19 @@ class DaskGateway(Application):
     def start(self):
         if self.subapp is not None:
             return self.subapp.start()
-        loop = asyncio.get_event_loop()
 
+        asyncio.run(self.main())
+
+    async def main(self):
         try:
-            loop.run_until_complete(self.run_app())
+            await self.run()
         except (KeyboardInterrupt, web.GracefulExit):
             pass
         finally:
             try:
-                loop.run_until_complete(self.stop_async())
+                await self.cleanup()
             except Exception:
                 self.log.error("Error while shutting down:", exc_info=True)
-            loop.close()
 
     async def health(self):
         # TODO: add runtime checks here

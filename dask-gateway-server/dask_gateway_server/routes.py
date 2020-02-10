@@ -20,37 +20,30 @@ def _wrap_error_handler(handler):
     return inner
 
 
-def _wrap_authenticated(handler):
+def _wrap_authenticated(handler, user=False, token=False):
+    if not user and not token:
+        return handler
+
     @wraps(handler)
     async def inner(request):
-        auth = request.app["authenticator"]
-        return await auth.authenticate_and_handle(request, handler)
+        if token:
+            backend = request.app["backend"]
+            auth_header = request.headers.get("Authorization")
+            if auth_header:
+                auth_type, auth_token = auth_header.split(" ", 1)
+                if auth_type == "token":
+                    cluster_name = request.match_info["cluster_name"]
+                    cluster = await backend.get_cluster(cluster_name)
+                    if cluster is not None and cluster.token == auth_token:
+                        # Use `none` to indicate api token authenticated
+                        request["user"] = None
+                        return await handler(request)
+            if not user:
+                raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
 
-    return inner
-
-
-def _wrap_token_authenticated(handler):
-    @wraps(handler)
-    async def inner(request):
-        backend = request.app["backend"]
-
-        auth_header = request.headers.get("Authorization")
-        if not auth_header:
-            raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
-
-        auth_type, auth_token = auth_header.split(" ", 1)
-        if auth_type != "token":
-            raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
-
-        cluster_name = request.match_info["cluster_name"]
-        cluster = await backend.get_cluster(cluster_name)
-        if cluster is None:
-            raise web.HTTPNotFound(reason=f"Cluster {cluster_name} not found")
-
-        if cluster.token != auth_token:
-            raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
-
-        return await handler(request)
+        if user:
+            auth = request.app["authenticator"]
+            return await auth.authenticate_and_handle(request, handler)
 
     return inner
 
@@ -63,10 +56,9 @@ def api_handler(handler=None, user_authenticated=False, token_authenticated=Fals
             token_authenticated=token_authenticated,
         )
 
-    if user_authenticated:
-        handler = _wrap_authenticated(handler)
-    elif token_authenticated:
-        handler = _wrap_token_authenticated(handler)
+    handler = _wrap_authenticated(
+        handler, user=user_authenticated, token=token_authenticated
+    )
 
     return _wrap_error_handler(handler)
 
@@ -163,14 +155,14 @@ async def get_cluster(request):
 
 
 @default_routes.delete("/api/clusters/{cluster_name}")
-@api_handler(user_authenticated=True)
+@api_handler(user_authenticated=True, token_authenticated=True)
 async def delete_cluster(request):
     user = request["user"]
     cluster_name = request.match_info["cluster_name"]
     backend = request.app["backend"]
     cluster = await backend.get_cluster(cluster_name)
     if cluster is not None:
-        if not user.has_permissions(cluster):
+        if user is not None and not user.has_permissions(cluster):
             raise web.HTTPForbidden(
                 reason=f"User {user.name} lacks permissions to stop cluster {cluster_name}"
             )

@@ -357,6 +357,14 @@ class GatewayClient(object):
         )
         await client.fetch(req)
 
+    async def shutdown(self):
+        client = AsyncHTTPClient()
+        url = "%s/clusters/%s" % (self.api_url, self.cluster_name)
+        req = HTTPRequest(
+            url, method="DELETE", headers={"Authorization": "token %s" % self.token}
+        )
+        await client.fetch(req)
+
     async def get_scheduler_address(self):
         client = AsyncHTTPClient()
         url = "%s/clusters/%s/addresses" % (self.api_url, self.cluster_name)

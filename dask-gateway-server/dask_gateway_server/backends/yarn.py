@@ -191,7 +191,7 @@ class YarnBackend(DatabaseBackend):
 
     supports_bulk_shutdown = True
 
-    async def handle_setup(self):
+    async def do_setup(self):
         self.skein_client = await self.async_apply(
             skein.Client,
             principal=self.principal,
@@ -202,10 +202,10 @@ class YarnBackend(DatabaseBackend):
         self.app_client_cache = LRUCache(self.app_client_cache_max_size)
         self.app_address_cache = {}
 
-    async def handle_cleanup(self):
+    async def do_cleanup(self):
         self.skein_client.close()
 
-    async def handle_cluster_start(self, cluster):
+    async def do_start_cluster(self, cluster):
         with NamedTemporaryFile() as cert_fil, NamedTemporaryFile() as key_fil:
             cert_fil.write(cluster.tls_cert)
             cert_fil.file.flush()
@@ -216,7 +216,7 @@ class YarnBackend(DatabaseBackend):
 
         yield {"app_id": app_id}
 
-    async def handle_cluster_stop(self, cluster):
+    async def do_stop_cluster(self, cluster):
         app_id = cluster.state.get("app_id")
         if app_id is None:
             return
@@ -226,7 +226,7 @@ class YarnBackend(DatabaseBackend):
         self.app_client_cache.discard(cluster.name)
         self.app_address_cache.pop(cluster.name, None)
 
-    async def handle_check_clusters(self, clusters):
+    async def do_check_clusters(self, clusters):
         results = []
         for cluster in clusters:
             app_id = cluster.state.get("app_id")
@@ -239,7 +239,7 @@ class YarnBackend(DatabaseBackend):
             results.append(ok)
         return results
 
-    async def handle_worker_start(self, worker):
+    async def do_start_worker(self, worker):
         app = await self._get_app_client(worker.cluster)
         container = await self.async_apply(
             app.add_container,
@@ -248,7 +248,7 @@ class YarnBackend(DatabaseBackend):
         )
         yield {"container_id": container.id}
 
-    async def handle_worker_stop(self, worker):
+    async def do_stop_worker(self, worker):
         container_id = worker.state.get("container_id")
         if container_id is None:
             return
@@ -259,7 +259,7 @@ class YarnBackend(DatabaseBackend):
         except ValueError:
             pass
 
-    async def handle_check_workers(self, workers):
+    async def do_check_workers(self, workers):
         grouped = defaultdict(list)
         for w in workers:
             grouped[w.cluster].append(w)

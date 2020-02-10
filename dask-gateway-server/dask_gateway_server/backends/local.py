@@ -134,17 +134,6 @@ class LocalBackend(DatabaseBackend):
         config=True,
     )
 
-    async def handle_startup(self):
-        self.tempdirs = set()
-
-    async def handle_shutdown(self):
-        # Cleanup any temporary directories
-        for d in self.tempdirs:
-            try:
-                shutil.rmtree(d)
-            except Exception:
-                pass
-
     def set_file_permissions(self, paths, username):
         pwnam = getpwnam(username)
         for p in paths:
@@ -264,7 +253,7 @@ class LocalBackend(DatabaseBackend):
             # all attempts failed, zombie process
             self.log.warn("Failed to stop process %d", pid)
 
-    async def handle_cluster_start(self, cluster):
+    async def do_start_cluster(self, cluster):
         workdir = self.setup_working_directory(cluster)
         yield {"workdir": workdir}
 
@@ -276,7 +265,7 @@ class LocalBackend(DatabaseBackend):
         )
         yield {"workdir": workdir, "pid": pid}
 
-    async def handle_cluster_stop(self, cluster):
+    async def do_stop_cluster(self, cluster):
         pid = cluster.state.get("pid")
         if pid is not None:
             await self.stop_process(pid)
@@ -289,10 +278,10 @@ class LocalBackend(DatabaseBackend):
         pid = o.state.get("pid")
         return pid is not None and is_running(pid)
 
-    async def handle_check_clusters(self, clusters):
+    async def do_check_clusters(self, clusters):
         return [self._check_status(c) for c in clusters]
 
-    async def handle_worker_start(self, worker):
+    async def do_start_worker(self, worker):
         cmd = self.get_worker_command(worker.cluster)
         env = self.get_env(worker.cluster)
         env["DASK_GATEWAY_WORKER_NAME"] = worker.name
@@ -301,12 +290,12 @@ class LocalBackend(DatabaseBackend):
         )
         yield {"pid": pid}
 
-    async def handle_worker_stop(self, worker):
+    async def do_stop_worker(self, worker):
         pid = worker.state.get("pid")
         if pid is not None:
             await self.stop_process(pid)
 
-    async def handle_check_workers(self, workers):
+    async def do_check_workers(self, workers):
         return [self._check_status(w) for w in workers]
 
 

@@ -14,14 +14,20 @@ from .compat import get_running_loop
 class TaskPool(object):
     def __init__(self):
         self.tasks = weakref.WeakSet()
+        self.closed = False
 
     def spawn(self, task):
         out = asyncio.ensure_future(task)
-        self.tasks.add(out)
+        # TODO: remove the need for this
+        if self.closed:
+            out.cancel()
+        else:
+            self.tasks.add(out)
         return out
 
     async def close(self, timeout=5):
         # Stop all tasks
+        self.closed = True
         for task in self.tasks:
             task.cancel()
         await asyncio.gather(*self.tasks, return_exceptions=True)

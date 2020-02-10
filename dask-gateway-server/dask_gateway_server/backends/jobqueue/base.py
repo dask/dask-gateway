@@ -168,7 +168,7 @@ class JobQueueBackend(DatabaseBackend):
             raise Exception("Job status check failed")
         return self.parse_job_states(stdout)
 
-    async def handle_cluster_start(self, cluster):
+    async def do_start_cluster(self, cluster):
         cmd, env, stdin = self.get_submit_cmd_env_stdin(cluster)
         staging_dir = self.get_staging_directory(cluster)
         files = {
@@ -181,24 +181,24 @@ class JobQueueBackend(DatabaseBackend):
         self.log.info("Job %s submitted for cluster %s", job_id, cluster.name)
         yield {"job_id": job_id, "staging_dir": staging_dir}
 
-    async def handle_cluster_stop(self, cluster):
+    async def do_stop_cluster(self, cluster):
         job_id = cluster.state.get("job_id")
         if job_id is not None:
             staging_dir = cluster.state["staging_dir"]
             await self.stop_job(cluster.username, job_id, staging_dir=staging_dir)
 
-    async def handle_worker_start(self, worker):
+    async def do_start_worker(self, worker):
         cmd, env, stdin = self.get_submit_cmd_env_stdin(worker.cluster, worker.name)
         job_id = await self.start_job(worker.cluster.username, cmd, env, stdin)
         self.log.info("Job %s submitted for worker %s", job_id, worker.name)
         yield {"job_id": job_id}
 
-    async def handle_worker_stop(self, worker):
+    async def do_stop_worker(self, worker):
         job_id = worker.state.get("job_id")
         if job_id is not None:
             await self.stop_job(worker.cluster.username, job_id)
 
-    async def _handle_check(self, objs):
+    async def _do_check(self, objs):
         id_map = {}
         for x in objs:
             job_id = x.state.get("job_id")
@@ -207,8 +207,8 @@ class JobQueueBackend(DatabaseBackend):
         states = await self.check_jobs(list(id_map.values()))
         return [states.get(id_map.get(x.name), False) for x in objs]
 
-    async def handle_check_clusters(self, clusters):
-        return await self._handle_check(clusters)
+    async def do_check_clusters(self, clusters):
+        return await self._do_check(clusters)
 
-    async def handle_check_workers(self, workers):
-        return await self._handle_check(workers)
+    async def do_check_workers(self, workers):
+        return await self._do_check(workers)

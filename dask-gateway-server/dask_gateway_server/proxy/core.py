@@ -288,6 +288,7 @@ class Proxy(LoggingConfigurable):
 
     async def cleanup(self):
         """Stop the proxy."""
+        await self.task_pool.close()
         if hasattr(self, "proxy_process"):
             self.log.info("Stopping the Dask gateway proxy")
             self.proxy_process.terminate()

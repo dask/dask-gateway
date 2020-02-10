@@ -103,13 +103,13 @@ class Authenticator(LoggingConfigurable):
 
         return response
 
-    async def startup(self):
+    async def setup(self, app):
         """Called when the application starts up.
 
         Do any initialization here."""
         pass
 
-    async def shutdown(self):
+    async def cleanup(self):
         """Called when the application shutsdown.
 
         Do any cleanup here."""
@@ -214,7 +214,7 @@ class KerberosAuthenticator(Authenticator):
         "dask_gateway.keytab", help="The path to the keytab file", config=True
     )
 
-    async def startup(self):
+    async def setup(self, app):
         os.environ["KRB5_KTNAME"] = self.keytab
 
     def raise_auth_error(self, err):
@@ -336,7 +336,7 @@ class JupyterHubAuthenticator(Authenticator):
         config=True,
     )
 
-    async def startup(self):
+    async def setup(self, app):
         self.session = aiohttp.ClientSession()
         if self.tls_cert and self.tls_key:
             import ssl
@@ -349,7 +349,7 @@ class JupyterHubAuthenticator(Authenticator):
             ssl_context = None
         self.ssl_context = ssl_context
 
-    async def shutdown(self):
+    async def cleanup(self):
         if hasattr(self, "session"):
             await self.session.close()
 
