@@ -373,7 +373,7 @@ class JupyterHubAuthenticator(Authenticator):
 
         kwargs = {
             "headers": {"Authorization": "token %s" % self.jupyterhub_api_token},
-            "ssl_context": self.ssl_context,
+            "ssl": self.ssl_context,
         }
 
         resp = await self.session.get(url, **kwargs)

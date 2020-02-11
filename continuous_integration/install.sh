@@ -3,20 +3,22 @@ set -xe
 npm install -g configurable-http-proxy
 
 pip install \
+    aiohttp \
+    black \
+    colorlog \
+    cryptography \
     dask \
     distributed \
-    cryptography \
-    tornado \
-    traitlets \
-    sqlalchemy \
+    flake8 \
+    ipywidgets \
+    jupyterhub \
+    notebook \
     pytest \
     pytest-asyncio \
-    trustme \
-    jupyterhub \
-    ipywidgets \
-    notebook \
-    black \
-    flake8
+    sqlalchemy \
+    tornado \
+    traitlets \
+    trustme
 
 pushd dask-gateway
 python setup.py develop

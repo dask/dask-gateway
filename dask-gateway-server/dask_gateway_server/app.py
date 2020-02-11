@@ -12,6 +12,7 @@ from traitlets.config import Application, catch_config_error
 from . import __version__ as VERSION
 from .auth import Authenticator
 from .backends import Backend
+from .compat import asyncio_run
 from .routes import default_routes
 from .traitlets import Type
 from .utils import classname, LogFormatter, normalize_address
@@ -241,27 +242,27 @@ class DaskGateway(Application):
 
         self.log.info("Stopped successfully")
 
-    async def run(self):
-        try:
-            await self.setup()
-        except Exception:
-            self.log.critical("Failed to start gateway, shutting down", exc_info=True)
-            sys.exit(1)
-
-        while True:
-            await asyncio.sleep(3600)
-
     def start(self):
         if self.subapp is not None:
             return self.subapp.start()
 
-        asyncio.run(self.main())
+        try:
+            asyncio_run(self.main())
+        except (KeyboardInterrupt, web.GracefulExit):
+            pass
 
     async def main(self):
         try:
-            await self.run()
-        except (KeyboardInterrupt, web.GracefulExit):
-            pass
+            try:
+                await self.setup()
+            except Exception:
+                self.log.critical(
+                    "Failed to start gateway, shutting down", exc_info=True
+                )
+                sys.exit(1)
+
+            while True:
+                await asyncio.sleep(3600)
         finally:
             try:
                 await self.cleanup()
