@@ -1,19 +1,27 @@
-import os
+import asyncio
 import json
-import socket
+import os
 import subprocess
 import uuid
 
-from tornado import gen
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
+from aiohttp import web
 from traitlets.config import LoggingConfigurable, Application, catch_config_error
-from traitlets import default, Unicode, CaselessStrEnum, Float, Bool, Instance
+from traitlets import (
+    default,
+    Unicode,
+    CaselessStrEnum,
+    Bool,
+    Integer,
+    Float,
+    List,
+    validate,
+)
 
 from .. import __version__ as VERSION
-from ..utils import ServerUrls
+from ..utils import TaskPool, Flag, normalize_address, CancelGroup
 
 
-__all__ = ("SchedulerProxy", "WebProxy")
+__all__ = ("Proxy", "ProxyApp")
 
 
 _PROXY_EXE = os.path.join(
@@ -21,9 +29,7 @@ _PROXY_EXE = os.path.join(
 )
 
 
-class ProxyBase(LoggingConfigurable):
-    """Base class for dask proxies"""
-
+class Proxy(LoggingConfigurable):
     log_level = CaselessStrEnum(
         ["error", "warn", "info", "debug"],
         default_value="warn",
@@ -31,49 +37,77 @@ class ProxyBase(LoggingConfigurable):
         config=True,
     )
 
-    # Forwarded by the main application on initialization
-    public_url = Unicode()
-    # or
-    public_urls = Instance(ServerUrls)
-
-    @default("public_urls")
-    def _default_public_urls(self):
-        return ServerUrls(self.public_url)
-
-    api_url = Unicode(
-        "http://127.0.0.1:0",
+    address = Unicode(
+        ":8000",
         help="""
-        The address for configuring the Proxy.
+        The address the HTTP/HTTPS proxy should *listen* at.
 
-        This is the address that the Dask Gateway will connect to when
-        adding/removing routes. This must be reachable from the Dask Gateway
-        server, but shouldn't be publicly accessible (if possible). Defaults
-        to ``127.0.0.1:{random-port}``.
+        Should be of the form ``{hostname}:{port}``.
+
+        Where:
+
+        - ``hostname`` sets the hostname to *listen* at. Set to ``""`` or
+          ``"0.0.0.0"`` to listen on all interfaces.
+        - ``port`` sets the port to *listen* at.
         """,
         config=True,
     )
 
-    api_connect_url = Unicode(
+    scheduler_address = Unicode(
+        ":8786",
         help="""
-        The address that the api URL can be connected to.
+        The address the scheduler proxy should *listen* at.
 
-        Useful if the address the api server should listen at is different than
-        the address it's reachable at (by e.g. the gateway).
+        Should be of the form ``{hostname}:{port}``
 
-        Defaults to ``api_url``.
+        Where:
+
+        - ``hostname`` sets the hostname to *listen* at. Set to ``""`` or
+          ``"0.0.0.0"`` to listen on all interfaces.
+        - ``port`` sets the port to *listen* at.
         """,
         config=True,
     )
 
-    api_urls = Instance(ServerUrls)
+    @validate("address", "scheduler_address")
+    def _validate_addresses(self, proposal):
+        return normalize_address(proposal.value)
 
-    @default("api_urls")
-    def _default_api_urls(self):
-        return ServerUrls(self.api_url, self.api_connect_url)
-
-    auth_token = Unicode(
+    prefix = Unicode(
+        "",
         help="""
-        The Proxy auth token
+        The path prefix the HTTP/HTTPS proxy should serve under.
+
+        This prefix will be prepended to all routes registered with the proxy.
+        """,
+        config=True,
+    )
+
+    @validate("prefix")
+    def _validate_prefix(self, proposal):
+        prefix = proposal.value
+
+        if prefix == "":
+            return prefix
+
+        if not prefix.startswith("/"):
+            raise ValueError("invalid prefix, must start with ``/``")
+
+        return prefix.rstrip("/")
+
+    gateway_url = Unicode(
+        help="The base URL the proxy should use for connecting to the gateway server",
+        config=True,
+    )
+
+    @default("gateway_url")
+    def _gateway_url_default(self):
+        address = normalize_address(self.gateway_address, resolve_host=True)
+        return f"http://{address}"
+
+    api_token = Unicode(
+        help="""
+        The Proxy api token
 
         A 32 byte hex-encoded random string. Commonly created with the
         ``openssl`` CLI:
@@ -87,18 +121,39 @@ class ProxyBase(LoggingConfigurable):
         config=True,
     )
 
-    @default("auth_token")
-    def _auth_token_default(self):
+    @default("api_token")
+    def _api_token_default(self):
         token = os.environ.get("DASK_GATEWAY_PROXY_TOKEN", "")
         if not token:
-            self.log.info("Generating new auth token for %s proxy", self._subcommand)
+            self.log.info("Generating new api token for proxy")
             token = uuid.uuid4().hex
         return token
 
-    connect_timeout = Float(
-        10.0,
+    max_events = Integer(
+        100,
         help="""
-        Timeout (in seconds) from init until the proxy process is connected.
+        The maximum number of events (proxy changes) to retain.
+
+        A proxy server that lags by more than this number will have to do a
+        full refesh.
+        """,
+        config=True,
+    )
+
+    tls_key = Unicode(
+        "",
+        help="""Path to TLS key file for the public url of the HTTP proxy.
+
+        When setting this, you should also set tls_cert.
+        """,
+        config=True,
+    )
+
+    tls_cert = Unicode(
+        "",
+        help="""Path to TLS certificate file for the public url of the HTTP proxy.
+
+        When setting this, you should also set tls_key.
         """,
         config=True,
     )
@@ -115,255 +170,284 @@ class ProxyBase(LoggingConfigurable):
         config=True,
     )
 
+    proxy_status_period = Float(
+        30,
+        help="""
+        Time (in seconds) between proxy status checks.
+
+        Only applies when ``externally_managed`` is False.
+        """,
+        config=True,
+    )
+
+    # forwarded from parent
+    gateway_address = Unicode()
+
+    @default("gateway_address")
+    def _gateway_address_default(self):
+        return self.parent.gateway_address
+
     def get_start_command(self, is_child_process=True):
-        address = self.public_urls.bind.netloc
-        api_address = self.api_urls.bind.netloc
         out = [
             _PROXY_EXE,
-            self._subcommand,
             "-address",
-            address,
-            "-api-address",
-            api_address,
+            self.address,
+            "-tls-address",
+            self.scheduler_address,
+            "-api-url",
+            self.gateway_url + "/api/routes",
             "-log-level",
             self.log_level,
         ]
         if is_child_process:
             out.append("-is-child-process")
+        if bool(self.tls_cert) != bool(self.tls_key):
+            raise ValueError("Must set both tls_cert and tls_key")
+        if self.tls_cert:
+            out.extend(["-tls-cert", self.tls_cert, "-tls-key", self.tls_key])
         return out
 
     def get_start_env(self):
         env = os.environ.copy()
-        env["DASK_GATEWAY_PROXY_TOKEN"] = self.auth_token
+        env["DASK_GATEWAY_PROXY_TOKEN"] = self.api_token
         return env
 
-    async def start(self):
-        """Start the proxy."""
-        if not self.externally_managed:
-            command = self.get_start_command()
-            env = self.get_start_env()
-            self.log.info("Starting the Dask gateway %s proxy...", self._subcommand)
-            proc = subprocess.Popen(
-                command,
-                env=env,
-                stdin=subprocess.PIPE,
-                stdout=None,
-                stderr=None,
-                start_new_session=True,
-            )
-            self.proxy_process = proc
-            self.log.info(
-                "Dask gateway %s proxy started at %r, api at %r",
-                self._subcommand,
-                self.public_urls.connect_url,
-                self.api_urls.connect_url,
-            )
-        else:
-            self.log.info(
-                "Connecting to dask gateway %s proxy at %r, api at %r",
-                self._subcommand,
-                self.public_urls.connect_url,
-                self.api_urls.connect_url,
-            )
-
-        await self.wait_until_up()
-
-    async def wait_until_up(self):
-        loop = gen.IOLoop.current()
-        deadline = loop.time() + self.connect_timeout
-        dt = 0.1
-        while True:
-            try:
-                await self.get_all_routes()
-                return
-            except HTTPError as e:
-                if e.code == 403:
-                    raise RuntimeError(
-                        "Failed to connect to %s proxy api at %s due to "
-                        "authentication failure, please ensure that "
-                        "DASK_GATEWAY_PROXY_TOKEN is the same between "
-                        "the proxy process and the gateway"
-                        % (self._subcommand, self.api_urls.connect_url)
-                    )
-                elif e.code != 599:
-                    raise RuntimeError(
-                        "Error while connecting to %s proxy api at %s: %s"
-                        % (self._subcommand, self.api_urls.connect_url, e)
-                    )
-            except (OSError, socket.error):
-                # Failed to connect, see if the process erred out
-                exitcode = (
-                    self.proxy_process.poll()
-                    if hasattr(self, "proxy_process")
-                    else None
-                )
-                if exitcode is not None:
-                    raise RuntimeError(
-                        "Failed to start %s proxy, exit code %i"
-                        % (self._subcommand, exitcode)
-                    )
-            remaining = deadline - loop.time()
-            if remaining < 0:
-                break
-            # Exponential backoff
-            dt = min(dt * 2, 5, remaining)
-            await gen.sleep(dt)
-        raise RuntimeError(
-            "Failed to connect to %s proxy at %s in %d secs"
-            % (self._subcommand, self.api_urls.connect_url, self.connect_timeout)
+    def start_proxy_process(self):
+        command = self.get_start_command()
+        env = self.get_start_env()
+        self.log.info("Starting the Dask gateway proxy...")
+        proc = subprocess.Popen(
+            command,
+            env=env,
+            stdin=subprocess.PIPE,
+            stdout=None,
+            stderr=None,
+            start_new_session=True,
+        )
+        self.proxy_process = proc
+        self.log.info("Dask gateway proxy started")
+        self.log.info(
+            "- %s routes listening at %s://%s",
+            "HTTPS" if self.tls_cert else "HTTP",
+            "https" if self.tls_cert else "http",
+            self.address,
+        )
+        self.log.info(
+            "- Scheduler routes listening at tls://%s", self.scheduler_address
         )
 
-    def stop(self):
+    async def monitor_proxy_process(self):
+        backoff = default_backoff = 0.5
+        while True:
+            retcode = self.proxy_process.poll()
+            if retcode is not None:
+                self.log.warning(
+                    "Proxy process exited unexpectedly with return code %d, restarting",
+                    retcode,
+                )
+                try:
+                    self.start_proxy_process()
+                except Exception:
+                    self.log.error(
+                        "Failed starting the proxy process, retrying in %.1f seconds...",
+                        backoff,
+                        exc_info=True,
+                    )
+                    await asyncio.sleep(backoff)
+                    backoff = min(backoff * 2, 15)
+                    continue
+
+            backoff = default_backoff
+            await asyncio.sleep(self.proxy_status_period)
+
+    async def setup(self, app):
+        """Start the proxy."""
+        self.cg = CancelGroup()
+        self.task_pool = TaskPool()
+        # Exposed for testing
+        self._proxy_contacted = Flag()
+        if not self.externally_managed:
+            self.start_proxy_process()
+            self.task_pool.spawn(self.monitor_proxy_process())
+
+        # Internal state
+        self.routes = {}
+        self.offset = 0
+        self.events = []
+        self._watchers = set()
+        self._next_id = 1
+
+        app.on_shutdown.append(self._on_shutdown)
+
+        app.add_routes([web.get("/api/routes", self.routes_handler)])
+
+        # Proxy through the gateway application
+        await self.add_route(kind="PATH", path="/", target=self.gateway_url)
+
+    async def _on_shutdown(self, app):
+        await self.task_pool.close()
+        await self.cg.cancel()
+
+    async def cleanup(self):
         """Stop the proxy."""
+        await self.task_pool.close()
         if hasattr(self, "proxy_process"):
-            self.log.info("Stopping the Dask gateway %s proxy", self._subcommand)
+            self.log.info("Stopping the Dask gateway proxy")
             self.proxy_process.terminate()
 
-    async def _api_request(self, url, method="GET", body=None):
-        client = AsyncHTTPClient()
-        if isinstance(body, dict):
-            body = json.dumps(body)
-        req = HTTPRequest(
-            url,
-            method=method,
-            headers={"Authorization": "token %s" % self.auth_token},
-            body=body,
-        )
-        return await client.fetch(req)
+    def _get_id(self):
+        o = self._next_id
+        self._next_id += 1
+        return o
 
-    async def add_route(self, route, target):
-        """Add a route to the proxy.
+    def _append_event(self, kind, route):
+        event = {"id": self._get_id(), "type": kind, "route": route}
 
-        Parameters
-        ----------
-        route : string
-            The route to add.
-        target : string
-            The ip:port to map this route to.
-        """
-        self.log.debug("Adding route %r -> %r", route, target)
-        await self._api_request(
-            url="%s/api/routes%s" % (self.api_urls.connect_url, route),
-            method="PUT",
-            body={"target": target},
-        )
+        if len(self.events) >= self.max_events:
+            n_dropped = self.max_events // 2
+            self.events = self.events[n_dropped:]
+            self.offset += n_dropped
 
-    async def delete_route(self, route):
-        """Delete a route from the proxy.
+        self.events.append(event)
 
-        Idempotent, no error is raised if the route doesn't exist.
+        for q in self._watchers:
+            q.put_nowait([event])
 
-        Parameters
-        ----------
-        route : string
-            The route to delete.
-        """
-        self.log.debug("Removing route %r", route)
-        await self._api_request(
-            url="%s/api/routes%s" % (self.api_urls.connect_url, route), method="DELETE"
-        )
+    async def add_route(self, kind=None, sni=None, path=None, target=None):
+        if target is None:
+            raise ValueError("must specify `target`")
 
-    async def get_all_routes(self):
-        """Get the proxies current routing table.
+        if kind == "SNI":
+            if sni is None:
+                raise ValueError("must specify `sni`")
+            route = {"kind": kind, "sni": sni, "target": target}
+            self.routes[(kind, sni)] = route
+        elif kind == "PATH":
+            if path is None:
+                raise ValueError("must specify `path`")
+            path = self.prefix + path
+            route = {"kind": kind, "path": path, "target": target}
+            self.routes[(kind, path)] = route
+        else:
+            raise ValueError(f"Unknown route kind {kind}")
+        self._append_event("PUT", route)
 
-        Returns
-        -------
-        routes : dict
-            A dict of route -> target for all routes in the proxy.
-        """
-        resp = await self._api_request(
-            url="%s/api/routes" % self.api_urls.connect_url, method="GET"
-        )
-        return json.loads(resp.body.decode("utf8", "replace"))
+    async def remove_route(self, kind=None, sni=None, path=None):
+        if kind == "SNI":
+            if sni is None:
+                raise ValueError("must specify `sni`")
+            route = self.routes.pop((kind, sni), None)
+            if route is not None:
+                route = {"kind": kind, "sni": sni}
+        elif kind == "PATH":
+            if path is None:
+                raise ValueError("must specify `path`")
+            path = self.prefix + path
+            route = self.routes.pop((kind, path), None)
+            if route is not None:
+                route = {"kind": kind, "path": path}
+        else:
+            raise ValueError(f"Unknown route kind {kind}")
 
+        if route is not None:
+            self._append_event("DELETE", route)
 
-class SchedulerProxy(ProxyBase):
-    """A proxy for connecting Dask clients to schedulers behind a firewall."""
+    def _events_after(self, last_id=0):
+        index = last_id - self.offset
+        if index >= 0:
+            events = self.events[index:]
+            return events
+        else:
+            # We've since dropped these events, client needs to reset
+            return None
 
-    _subcommand = "scheduler"
+    async def routes_handler(self, request):
+        self._proxy_contacted.set()
+        # Authenticate the api request
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
 
+        auth_type, auth_token = auth_header.split(" ", 1)
+        if auth_type != "token" or auth_token != self.api_token:
+            raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
 
-class WebProxy(ProxyBase):
-    """A proxy for proxying out the dashboards from behind a firewall"""
+        watch = request.query.get("watch", False)
 
-    _subcommand = "web"
-
-    # Forwarded by the main application
-    tls_cert = Unicode()
-    tls_key = Unicode()
-
-    def get_start_command(self, is_child_process=True):
-        out = super().get_start_command(is_child_process=is_child_process)
-        if bool(self.tls_cert) != bool(self.tls_key):
-            raise ValueError("Must set both tls_cert and tls_key")
-        if self.tls_cert:
-            if self.public_urls.bind.scheme != "https":
-                raise ValueError(
-                    "tls_cert & tls_key are set, but public_url doesn't have an "
-                    "https scheme"
+        if watch:
+            last_id = request.query.get("last_id", 0)
+            try:
+                last_id = int(last_id)
+            except Exception:
+                raise web.HTTPUnprocessableEntity(
+                    reason="invalid `last_id`: %s" % last_id
                 )
-            out.extend(["-tls-cert", self.tls_cert, "-tls-key", self.tls_key])
-        return out
+
+            events = self._events_after(last_id)
+            if events is None:
+                raise web.HTTPGone(reason="`last_id` is too old, full refresh required")
+
+            queue = asyncio.Queue()
+            if events:
+                queue.put_nowait(events)
+            self._watchers.add(queue)
+            try:
+                response = web.StreamResponse(
+                    headers={"Content-Type": "application/json"}
+                )
+                await response.prepare(request)
+
+                async with self.cg.cancellable():
+                    while True:
+                        events = await queue.get()
+                        msg = {"events": events}
+                        await response.write(json.dumps(msg).encode() + b"\n")
+            finally:
+                self._watchers.discard(queue)
+
+            await response.write_eof()
+            return response
+
+        else:
+            msg = {"routes": list(self.routes.values()), "id": self._next_id - 1}
+            return web.json_response(msg)
 
 
 class ProxyApp(Application):
     """Start a proxy application"""
 
+    name = "dask-gateway-server proxy"
+    description = "Start the proxy"
+    examples = """
+
+        dask-gateway-server proxy -f config.py
+    """
     version = VERSION
 
     config_file = Unicode(
         "dask_gateway_config.py", help="The config file to load", config=True
     )
 
-    aliases = {"f": "ProxyApp.config_file", "config": "ProxyApp.config_file"}
+    aliases = {
+        "f": "ProxyApp.config_file",
+        "config": "ProxyApp.config_file",
+        "log-level": "Proxy.log_level",
+    }
+
+    classes = List([Proxy])
 
     @catch_config_error
     def initialize(self, argv=None):
         super().initialize(argv)
         self.parent.load_config_file(self.config_file)
+        self.parent.config.merge(self.config)
 
     def start(self):
-        proxy = self.make_proxy()
+        proxy = Proxy(
+            parent=self.parent, log=self.parent.log, gateway_address=self.parent.address
+        )
         command = proxy.get_start_command(is_child_process=False)
         env = proxy.get_start_env()
         exe = command[0]
         args = command[1:]
         os.execle(exe, "dask-gateway-proxy", *args, env)
-
-
-class SchedulerProxyApp(ProxyApp):
-    """Start the scheduler proxy"""
-
-    name = "dask-gateway-server scheduler-proxy"
-    description = "Start the scheduler proxy"
-
-    examples = """
-
-        dask-gateway-server scheduler-proxy
-    """
-
-    def make_proxy(self):
-        return SchedulerProxy(
-            parent=self.parent, log=self.parent.log, public_url=self.parent.gateway_url
-        )
-
-
-class WebProxyApp(ProxyApp):
-    """Start the web proxy"""
-
-    name = "dask-gateway-server scheduler-proxy"
-    description = "Start the web proxy"
-
-    examples = """
-
-        dask-gateway-server web-proxy
-    """
-
-    def make_proxy(self):
-        return WebProxy(
-            parent=self.parent,
-            log=self.parent.log,
-            public_url=self.parent.public_url,
-            tls_cert=self.parent.tls_cert,
-            tls_key=self.parent.tls_key,
-        )

@@ -42,22 +42,22 @@ jobs:
           before_install:
             - ./continuous_integration/docker/hadoop/start.sh
           install:
-            - docker exec master /working/continuous_integration/docker/hadoop/install.sh
+            - ./continuous_integration/docker/hadoop/install.sh
           script:
-            - docker exec master /working/continuous_integration/docker/hadoop/script.sh
+            - ./continuous_integration/docker/hadoop/script.sh
 
-        - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-kube))
-          env:
-            - KUBERNETES-TESTS=true
-          services:
-            - docker
-          before_install:
-            - source continuous_integration/before_install.sh
-            - ./continuous_integration/kubernetes/start.sh
-          install:
-            - ./continuous_integration/kubernetes/install.sh
-          script:
-            - ./continuous_integration/kubernetes/script.sh
+        #- if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-kube))
+          #env:
+            #- KUBERNETES-TESTS=true
+          #services:
+            #- docker
+          #before_install:
+            #- source continuous_integration/before_install.sh
+            #- ./continuous_integration/kubernetes/start.sh
+          #install:
+            #- ./continuous_integration/kubernetes/install.sh
+          #script:
+            #- ./continuous_integration/kubernetes/script.sh
 
         - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-jobqueue) OR (commit_message ~= test-pbs))
           env:
@@ -67,9 +67,9 @@ jobs:
           before_install:
             - ./continuous_integration/docker/pbs/start.sh
           install:
-            - docker exec pbs /working/continuous_integration/docker/pbs/install.sh
+            - ./continuous_integration/docker/pbs/install.sh
           script:
-            - docker exec -u dask pbs /working/continuous_integration/docker/pbs/script.sh
+            - ./continuous_integration/docker/pbs/script.sh
 
         - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-jobqueue) OR (commit_message ~= test-slurm))
           env:
@@ -79,26 +79,26 @@ jobs:
           before_install:
             - ./continuous_integration/docker/slurm/start.sh
           install:
-            - docker exec slurm /working/continuous_integration/docker/slurm/install.sh
+            - ./continuous_integration/docker/slurm/install.sh
           script:
-            - docker exec -u dask slurm /working/continuous_integration/docker/slurm/script.sh
+            - ./continuous_integration/docker/slurm/script.sh
 
-        - env:
-            - DOCS=true
-          before_install:
-            - source continuous_integration/before_install.sh
-          install:
-            - source continuous_integration/install.sh
-            - pip install kubernetes skein sphinx doctr dask-sphinx-theme
-          script:
-            - |
-              set -xe
-              pushd docs
-              make html
-              popd
-              if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_EVENT_TYPE" == "push" ]]; then
-                  doctr deploy . --built-docs docs/build/html/
-              fi
+        #- env:
+            #- DOCS=true
+          #before_install:
+            #- source continuous_integration/before_install.sh
+          #install:
+            #- source continuous_integration/install.sh
+            #- pip install kubernetes skein sphinx doctr dask-sphinx-theme
+          #script:
+            #- |
+              #set -xe
+              #pushd docs
+              #make html
+              #popd
+              #if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_EVENT_TYPE" == "push" ]]; then
+                  #doctr deploy . --built-docs docs/build/html/
+              #fi
 
 notifications:
   email: false

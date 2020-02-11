@@ -2,108 +2,38 @@ import asyncio
 import socket
 
 import pytest
-from traitlets import HasTraits, TraitError
 
 from dask_gateway_server.utils import (
-    Type,
-    timeout,
     format_bytes,
     classname,
-    ServerUrls,
-    nullcontext,
+    normalize_address,
+    awaitable,
+    cancel_task,
+    TaskPool,
+    LRUCache,
+    UniqueQueue,
+    Flag,
+    FrozenAttrDict,
+    CancelGroup,
 )
 
 
-def test_Type_traitlet():
-    class Foo(HasTraits):
-        typ = Type(klass="dask_gateway_server.managers.ClusterManager")
+def test_normalize_address():
+    host = socket.gethostname()
+    assert normalize_address(":8000") == ":8000"
+    assert normalize_address(":8000", resolve_host=True) == f"{host}:8000"
+    assert normalize_address("0.0.0.0:8000", resolve_host=True) == f"{host}:8000"
+    assert normalize_address("localhost:8000", resolve_host=True) == "localhost:8000"
+    res = normalize_address("localhost:0")
+    h, p = res.split(":")
+    assert h == "localhost"
+    assert int(p) > 0
 
-    with pytest.raises(TraitError) as exc:
-        Foo(typ="dask_gateway_server.managers.not_a_real_path")
-    assert "Failed to import" in str(exc.value)
+    with pytest.raises(ValueError):
+        normalize_address("http://foo.bar:80")
 
-    Foo(typ="dask_gateway_server.managers.local.LocalClusterManager")
-
-
-def test_ServerUrls():
-    hostname = socket.gethostname()
-
-    urls = ServerUrls("http://:8000/foo/bar/")
-    assert urls.bind.scheme == "http"
-    assert urls.bind.path == "/foo/bar"
-    assert urls.bind_host == ""
-    assert urls.bind_port == 8000
-    assert urls.bind_url == "http://:8000/foo/bar"
-    assert urls.connect_url == f"http://{hostname}:8000/foo/bar"
-    assert urls._to_log == [urls.connect_url, "http://127.0.0.1:8000/foo/bar"]
-
-    urls = ServerUrls("tls://127.0.0.1:0")
-    assert urls.bind.scheme == "tls"
-    assert urls.bind.port != 0
-    assert urls.bind_port == urls.bind.port
-    assert urls.connect_url == urls.bind_url
-    assert urls._to_log == [urls.connect_url]
-
-    urls = ServerUrls("http://127.0.0.1:8000", "http://foo.com/fizz/buzz/")
-    assert urls.bind_url == "http://127.0.0.1:8000"
-    assert urls.connect_url == "http://foo.com/fizz/buzz"
-
-    # bind port chosen based on scheme
-    assert ServerUrls("http://foo.com").bind_port == 80
-    assert ServerUrls("https://foo.com").bind_port == 443
-    assert ServerUrls("tls://foo.com").bind_port == 8786
-
-
-@pytest.mark.asyncio
-async def test_timeout():
-    async def inner():
-        try:
-            await asyncio.sleep(2)
-        except asyncio.CancelledError:
-            raise
-        else:
-            assert False, "Not cancelled"
-
-    with pytest.raises(asyncio.TimeoutError):
-        async with timeout(0.01) as t:
-            await inner()
-    assert t.expired
-
-
-@pytest.mark.asyncio
-async def test_timeout_forwards_exceptions():
-    with pytest.raises(Exception):
-        async with timeout(0.01) as t:
-            raise Exception
-    assert t._waiter is None
-    assert not t.expired
-
-
-@pytest.mark.asyncio
-async def test_timeout_supports_cancellation():
-    # Unrelated CancelledError raises properly
-    with pytest.raises(asyncio.CancelledError):
-        async with timeout(0.01) as t:
-            raise asyncio.CancelledError
-    assert t._waiter is None
-    assert not t.expired
-
-    # Cancelling an outer task cancels the inner and clears the timeout
-    inner_task = asyncio.ensure_future(asyncio.sleep(2))
-
-    async def waiter():
-        try:
-            async with timeout(2) as t:
-                outer_task.cancel()
-                await inner_task
-        finally:
-            assert not t.expired
-            assert t._waiter is None
-
-    outer_task = asyncio.ensure_future(waiter())
-    with pytest.raises(asyncio.CancelledError):
-        await outer_task
-    assert inner_task.cancelled()
+    with pytest.raises(ValueError):
+        normalize_address("http://foo.bar")
 
 
 def test_format_bytes():
@@ -124,12 +54,180 @@ def test_classname():
 
 
 @pytest.mark.asyncio
-async def test_nullcontext():
-    async with nullcontext(0) as c:
-        assert c == 0
+async def test_task_pool():
+    pool = TaskPool()
 
-    with nullcontext(0) as c:
-        assert c == 0
+    async def foo():
+        return "hello"
 
-    with nullcontext() as c:
-        assert c is None
+    res = await pool.spawn(foo())
+    assert res == "hello"
+    await asyncio.sleep(0.001)
+    assert len(pool.tasks) == 0
+
+    task_stopped = False
+
+    async def background():
+        nonlocal task_stopped
+        try:
+            await asyncio.sleep(1000)
+        except asyncio.CancelledError:
+            task_stopped = True
+
+    pool.spawn(background())
+    await asyncio.sleep(0.001)
+    assert not task_stopped
+    await pool.close()
+    assert task_stopped
+    assert len(pool.tasks) == 0
+
+
+@pytest.mark.asyncio
+async def test_awaitable():
+    async def afoo():
+        return 1
+
+    def foo():
+        return 1
+
+    res = await awaitable(foo())
+    assert res == 1
+
+    res = await awaitable(afoo())
+    assert res == 1
+
+
+def test_lru_cache():
+    cache = LRUCache(2)
+    cache.put(1, 2)
+    cache.put(3, 4)
+    assert cache.get(1) == 2
+    assert cache.get(3) == 4
+    cache.put(5, 6)
+    assert cache.get(1) is None
+    assert cache.get(3) == 4
+    assert cache.get(5) == 6
+
+    cache.discard(5)
+    assert cache.get(5) is None
+    # No-op if not present
+    cache.discard(5)
+
+    cache.put(7, 8)
+    assert cache.get(3) == 4
+    assert cache.get(7) == 8
+
+
+@pytest.mark.asyncio
+async def test_unique_queue():
+    queue = UniqueQueue()
+
+    for data in [1, 3, 1, 2, 1, 2, 1, 3]:
+        await queue.put(data)
+
+    out = []
+    while not queue.empty():
+        out.append(await queue.get())
+
+    assert out == [1, 3, 2]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("use_wait", [False, True])
+async def test_flag(use_wait):
+    flag = Flag()
+
+    triggered = False
+
+    async def wait(flag):
+        nonlocal triggered
+        if use_wait:
+            await asyncio.wait([flag])
+        else:
+            await flag
+        if flag.is_set():
+            triggered = True
+
+    res = asyncio.ensure_future(wait(flag))
+
+    flag.set()
+    await res
+    assert triggered
+
+    assert flag.is_set()
+    # Further calls to set don't fail
+    flag.set()
+
+    # Further awaits trigger right away
+    await flag
+
+    # Cancelling a waiter doesn't trigger the flag
+    flag = Flag()
+    triggered = False
+
+    res = asyncio.ensure_future(wait(flag))
+    await cancel_task(res)
+    assert res.cancelled()
+    assert not triggered
+    assert not flag.is_set()
+    flag.set()
+    assert flag.is_set()
+    await flag
+
+
+def test_frozenattrdict():
+    d = {"a": 1, "b": 2, "if": 3, "has space": 4}
+
+    a = FrozenAttrDict(d)
+    assert a.a == 1
+    assert a["a"] == 1
+    assert dict(a) == d
+    assert len(a) == len(d)
+
+    tab_completion = set(dir(a))
+    assert "a" in tab_completion
+    assert "if" not in tab_completion
+    assert "has space" not in tab_completion
+
+    with pytest.raises(AttributeError):
+        a.missing
+
+    with pytest.raises(AttributeError):
+        a.b = 1
+
+    with pytest.raises(AttributeError):
+        a.missing = 1
+
+
+@pytest.mark.asyncio
+async def test_cancel_group():
+    cg = CancelGroup()
+
+    async def waiter(cg):
+        async with cg.cancellable():
+            await asyncio.sleep(1000)
+
+    async def noop(cg):
+        async with cg.cancellable():
+            pass
+
+    task1 = asyncio.ensure_future(waiter(cg))
+    task2 = asyncio.ensure_future(waiter(cg))
+    task3 = asyncio.ensure_future(noop(cg))
+
+    await cancel_task(task2)
+
+    assert not task1.done()
+    assert task2.done()
+    assert task3.done()
+
+    await cg.cancel()
+
+    assert task1.done()
+
+    try:
+        # Further use of the cancel group raises immediately
+        async with cg.cancellable():
+            assert False
+    except asyncio.CancelledError:
+        pass

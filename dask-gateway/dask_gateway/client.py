@@ -100,10 +100,8 @@ class ClusterStatus(_IntEnum):
 
     Attributes
     ----------
-    STARTING : ClusterStatus
-        The cluster is starting.
-    STARTED : ClusterStatus
-        The cluster has started, but hasn't connected to the gateway.
+    PENDING : ClusterStatus
+        The cluster is pending start.
     RUNNING : ClusterStatus
         The cluster is running.
     STOPPING : ClusterStatus
@@ -115,12 +113,11 @@ class ClusterStatus(_IntEnum):
         more information.
     """
 
-    STARTING = 1
-    STARTED = 2
-    RUNNING = 3
-    STOPPING = 4
-    STOPPED = 5
-    FAILED = 6
+    PENDING = 1
+    RUNNING = 2
+    STOPPING = 3
+    STOPPED = 4
+    FAILED = 5
 
 
 class ClusterReport(object):
@@ -138,8 +135,6 @@ class ClusterReport(object):
         The address of the scheduler, or None if not currently running.
     dashboard_link : str or None
         A link to the dashboard, or None if not currently running.
-    adaptive : bool
-        Whether the cluster is in adaptive mode.
     start_time : datetime.datetime
         The time the cluster was started.
     stop_time : datetime.datetime or None
@@ -158,7 +153,6 @@ class ClusterReport(object):
         "status",
         "scheduler_address",
         "dashboard_link",
-        "adaptive",
         "start_time",
         "stop_time",
         "tls_cert",
@@ -172,7 +166,6 @@ class ClusterReport(object):
         status,
         scheduler_address,
         dashboard_link,
-        adaptive,
         start_time,
         stop_time,
         tls_cert=None,
@@ -183,7 +176,6 @@ class ClusterReport(object):
         self.status = status
         self.scheduler_address = scheduler_address
         self.dashboard_link = dashboard_link
-        self.adaptive = adaptive
         self.start_time = start_time
         self.stop_time = stop_time
         self.tls_cert = tls_cert
@@ -384,7 +376,7 @@ class Gateway(object):
         else:
             query = ""
 
-        url = "%s/gateway/api/clusters/%s" % (self.address, query)
+        url = "%s/api/clusters/%s" % (self.address, query)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
         return [
@@ -399,9 +391,8 @@ class Gateway(object):
         ----------
         status : ClusterStatus, str, or list, optional
             The cluster status (or statuses) to select. Valid options are
-            'starting', 'started', 'running', 'stopping', 'stopped', 'failed'.
-            By default selects active clusters ('starting', 'started',
-            'running').
+            'pending', 'running', 'stopping', 'stopped', 'failed'.
+            By default selects active clusters ('pending', 'running').
 
         Returns
         -------
@@ -428,7 +419,7 @@ class Gateway(object):
         return {k: format_template(v) for k, v in opts.items()}
 
     async def _cluster_options(self, use_local_defaults=True):
-        url = "%s/gateway/api/clusters/options" % self.address
+        url = "%s/api/options" % self.address
         req = HTTPRequest(url=url, method="GET")
         resp = await self._fetch(req)
         data = json.loads(resp.body)
@@ -456,7 +447,7 @@ class Gateway(object):
         )
 
     async def _submit(self, cluster_options=None, **kwargs):
-        url = "%s/gateway/api/clusters/" % self.address
+        url = "%s/api/clusters/" % self.address
         if cluster_options is not None:
             if not isinstance(cluster_options, Options):
                 raise TypeError(
@@ -503,7 +494,7 @@ class Gateway(object):
 
     async def _cluster_report(self, cluster_name, wait=False):
         params = "?wait" if wait else ""
-        url = "%s/gateway/api/clusters/%s%s" % (self.address, cluster_name, params)
+        url = "%s/api/clusters/%s%s" % (self.address, cluster_name, params)
         req = HTTPRequest(url=url)
         resp = await self._fetch(req)
         return ClusterReport._from_json(
@@ -592,7 +583,7 @@ class Gateway(object):
         )
 
     async def _stop_cluster(self, cluster_name):
-        url = "%s/gateway/api/clusters/%s" % (self.address, cluster_name)
+        url = "%s/api/clusters/%s" % (self.address, cluster_name)
         req = HTTPRequest(url=url, method="DELETE")
         await self._fetch(req)
 
@@ -607,17 +598,14 @@ class Gateway(object):
         return self.sync(self._stop_cluster, cluster_name, **kwargs)
 
     async def _scale_cluster(self, cluster_name, n):
-        url = "%s/gateway/api/clusters/%s/scale" % (self.address, cluster_name)
+        url = "%s/api/clusters/%s/scale" % (self.address, cluster_name)
         req = HTTPRequest(
             url=url,
             method="POST",
-            body=json.dumps({"worker_count": n}),
+            body=json.dumps({"count": n}),
             headers=HTTPHeaders({"Content-type": "application/json"}),
         )
-        resp = await self._fetch(req)
-        msg = json.loads(resp.body)
-        if msg["message"]:
-            warnings.warn(GatewayWarning(msg["message"]))
+        await self._fetch(req)
 
     def scale_cluster(self, cluster_name, n, **kwargs):
         """Scale a cluster to n workers.
@@ -634,7 +622,7 @@ class Gateway(object):
     async def _adapt_cluster(
         self, cluster_name, minimum=None, maximum=None, active=True
     ):
-        url = "%s/gateway/api/clusters/%s/adapt" % (self.address, cluster_name)
+        url = "%s/api/clusters/%s/adapt" % (self.address, cluster_name)
         req = HTTPRequest(
             url=url,
             method="POST",

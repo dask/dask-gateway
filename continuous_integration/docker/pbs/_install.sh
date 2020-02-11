@@ -1,24 +1,22 @@
+#!/usr/bin/env bash
+source ~/.bashrc
+
 set -xe
 
-npm install -g configurable-http-proxy
+cd /working
+
+conda install psutil
 
 pip install \
     aiohttp \
-    black \
     colorlog \
-    cryptography \
     dask \
     distributed \
-    flake8 \
-    ipywidgets \
-    jupyterhub \
-    notebook \
-    pytest \
-    pytest-asyncio \
-    sqlalchemy \
-    tornado \
+    cryptography \
     traitlets \
-    trustme
+    sqlalchemy \
+    pytest \
+    pytest-asyncio
 
 pushd dask-gateway
 python setup.py develop

@@ -1,38 +1,11 @@
 import textwrap
 from collections import OrderedDict
-from collections.abc import Sequence, Mapping
-from keyword import iskeyword
+from collections.abc import Sequence
+
+from .utils import FrozenAttrDict
 
 
 __all__ = ("Options", "String", "Bool", "Integer", "Float", "Select")
-
-
-class FrozenAttrDict(Mapping):
-    """A dict that also allows attribute access for keys"""
-
-    __slots__ = ("_mapping",)
-
-    def __init__(self, mapping):
-        self._mapping = mapping
-
-    def __getattr__(self, k):
-        if k in self._mapping:
-            return self._mapping[k]
-        raise AttributeError(k)
-
-    def __getitem__(self, k):
-        return self._mapping[k]
-
-    def __iter__(self):
-        return iter(self._mapping)
-
-    def __len__(self):
-        return len(self._mapping)
-
-    def __dir__(self):
-        out = set(dir(type(self)))
-        out.update(k for k in self if k.isidentifier() and not iskeyword(k))
-        return list(out)
 
 
 class Options(object):

@@ -9,5 +9,7 @@ docker run --rm -d \
     --name master \
     -h master.example.com \
     -v "$git_root":/working \
+    -p 8000:8000 \
+    -p 8786:8786 \
     -p 8088:8088 \
     daskgateway/testing-hadoop

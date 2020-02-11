@@ -1,8 +1,2 @@
 #!/usr/bin/env bash
-source ~/.bashrc
-
-set -xe
-
-cd /working
-
-py.test tests/test_yarn_cluster.py tests/test_auth.py -v
+docker exec master /working/continuous_integration/docker/hadoop/_script.sh

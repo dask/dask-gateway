@@ -4,10 +4,11 @@ import socket
 
 from traitlets import Unicode, Bool, default
 
-from .base import JobQueueClusterManager, JobQueueStatusTracker
+from .base import JobQueueBackend, JobQueueClusterConfig
+from ...traitlets import Type
 
 
-__all__ = ("PBSClusterManager", "PBSStatusTracker")
+__all__ = ("PBSBackend", "PBSClusterConfig")
 
 
 def qsub_format_memory(n):
@@ -21,34 +22,12 @@ def qsub_format_memory(n):
     return "%dB" % n
 
 
-class PBSStatusTracker(JobQueueStatusTracker):
-    """A tracker for all PBS jobs submitted by the gateway"""
-
-    @default("status_command")
-    def _default_status_command(self):
-        return shutil.which("qstat") or "qstat"
-
-    def get_status_cmd_env(self, job_ids):
-        out = [self.status_command, "-x"]
-        out.extend(job_ids)
-        return out, {}
-
-    def parse_job_states(self, stdout):
-        lines = stdout.splitlines()[2:]
-
-        finished = {}
-
-        for l in lines:
-            parts = l.split()
-            job_id = parts[0]
-            status = parts[4]
-            if status not in ("R", "Q", "H"):
-                finished[job_id] = status
-        return finished
+def format_resource_list(template, cores, memory):
+    return template.format(cores=cores, memory=qsub_format_memory(memory))
 
 
-class PBSClusterManager(JobQueueClusterManager):
-    """A cluster manager for deploying Dask on a PBS cluster."""
+class PBSClusterConfig(JobQueueClusterConfig):
+    """Dask cluster configuration options when running on PBS"""
 
     queue = Unicode("", help="The queue to submit jobs to.", config=True)
 
@@ -96,8 +75,16 @@ class PBSClusterManager(JobQueueClusterManager):
         config=True,
     )
 
-    # The following fields are configurable only for just-in-case reasons. The
-    # defaults should be sufficient for most users.
+
+class PBSBackend(JobQueueBackend):
+    """A backend for deploying Dask on a PBS cluster."""
+
+    cluster_config_class = Type(
+        "dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig",
+        klass="dask_gateway_server.backends.base.ClusterConfig",
+        help="The cluster config class to use",
+        config=True,
+    )
 
     gateway_hostname = Unicode(
         help="""
@@ -119,46 +106,57 @@ class PBSClusterManager(JobQueueClusterManager):
     def _default_cancel_command(self):
         return shutil.which("qdel") or "qdel"
 
-    def format_resource_list(self, template, cores, memory):
-        return template.format(cores=cores, memory=qsub_format_memory(memory))
+    @default("status_command")
+    def _default_status_command(self):
+        return shutil.which("qstat") or "qstat"
 
-    def get_tls_paths(self):
-        """Get the absolute paths to the tls cert and key files."""
-        if self.use_stagein:
+    def get_tls_paths(self, cluster):
+        if cluster.config.use_stagein:
             return "dask.crt", "dask.pem"
-        else:
-            return super().get_tls_paths()
+        return super().get_tls_paths(cluster)
 
-    def get_submit_cmd_env_stdin(self, worker_name=None):
-        env = self.get_env()
+    def get_submit_cmd_env_stdin(self, cluster, worker_name=None):
+        env = self.get_env(cluster)
 
         cmd = [self.submit_command]
         cmd.extend(["-N", "dask-gateway"])
-        if self.queue:
-            cmd.extend(["-q", self.queue])
-        if self.account:
-            cmd.extend(["-A", self.account])
-        if self.project:
-            cmd.extend(["-P", self.project])
+        if cluster.config.queue:
+            cmd.extend(["-q", cluster.config.queue])
+        if cluster.config.account:
+            cmd.extend(["-A", cluster.config.account])
+        if cluster.config.project:
+            cmd.extend(["-P", cluster.config.project])
         cmd.extend(["-j", "eo", "-R", "eo", "-Wsandbox=PRIVATE"])
 
-        if self.use_stagein:
-            staging_dir = self.get_staging_directory()
+        if cluster.config.use_stagein:
+            staging_dir = self.get_staging_directory(cluster)
             cmd.append("-Wstagein=.@%s:%s/*" % (self.gateway_hostname, staging_dir))
 
         if worker_name:
             env["DASK_GATEWAY_WORKER_NAME"] = worker_name
-            resources = self.format_resource_list(
-                self.worker_resource_list, self.worker_cores, self.worker_memory
+            resources = format_resource_list(
+                cluster.config.worker_resource_list,
+                cluster.config.worker_cores,
+                cluster.config.worker_memory,
             )
-            script = "\n".join([self.worker_setup, self.worker_command])
+            script = "\n".join(
+                [
+                    cluster.config.worker_setup,
+                    " ".join(self.get_worker_command(cluster)),
+                ]
+            )
         else:
-            resources = self.format_resource_list(
-                self.scheduler_resource_list,
-                self.scheduler_cores,
-                self.scheduler_memory,
+            resources = format_resource_list(
+                cluster.config.scheduler_resource_list,
+                cluster.config.scheduler_cores,
+                cluster.config.scheduler_memory,
             )
-            script = "\n".join([self.scheduler_setup, self.scheduler_command])
+            script = "\n".join(
+                [
+                    cluster.config.scheduler_setup,
+                    " ".join(self.get_scheduler_command(cluster)),
+                ]
+            )
 
         cmd.extend(["-v", ",".join(sorted(env))])
         cmd.extend(["-l", resources])
@@ -169,10 +167,23 @@ class PBSClusterManager(JobQueueClusterManager):
     def get_stop_cmd_env(self, job_id):
         return [self.cancel_command, job_id], {}
 
+    def get_status_cmd_env(self, job_ids):
+        out = [self.status_command, "-x"]
+        out.extend(job_ids)
+        return out, {}
+
     def parse_job_id(self, stdout):
         return stdout.strip()
 
-    def get_status_tracker(self):
-        return PBSStatusTracker.instance(
-            parent=self.parent or self, task_pool=self.task_pool
-        )
+    def parse_job_states(self, stdout):
+        lines = stdout.splitlines()[2:]
+
+        states = {}
+
+        for l in lines:
+            parts = l.split()
+            job_id = parts[0]
+            status = parts[4]
+            states[job_id] = status in ("R", "Q", "H")
+
+        return states
