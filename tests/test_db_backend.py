@@ -26,7 +26,7 @@ from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.utils import random_port
 from dask_gateway_server import options
 
-from .utils_test import temp_gateway, LocalTestingBackend
+from .utils_test import temp_gateway, LocalTestingBackend, wait_for_workers
 
 
 @pytest.fixture(autouse=True)
@@ -781,20 +781,6 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
                 with cluster.get_client(set_as_default=False) as client:
                     res = await client.submit(lambda x: x + 1, 1)
                     assert res == 2
-
-
-async def wait_for_workers(cluster, atleast=None, exact=None, timeout=30):
-    timeout = time.time() + timeout
-    while time.time() < timeout:
-        workers = cluster.scheduler_info.get("workers")
-        nworkers = len(workers)
-        if atleast is not None and nworkers >= atleast:
-            break
-        elif exact is not None and nworkers == exact:
-            break
-        await asyncio.sleep(0.25)
-    else:
-        assert False, "scaling timed out"
 
 
 @pytest.mark.asyncio

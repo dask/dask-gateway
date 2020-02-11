@@ -42,9 +42,9 @@ jobs:
           before_install:
             - ./continuous_integration/docker/hadoop/start.sh
           install:
-            - docker exec master /working/continuous_integration/docker/hadoop/install.sh
+            - ./continuous_integration/docker/hadoop/install.sh
           script:
-            - docker exec master /working/continuous_integration/docker/hadoop/script.sh
+            - ./continuous_integration/docker/hadoop/script.sh
 
         - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-kube))
           env:
@@ -67,9 +67,9 @@ jobs:
           before_install:
             - ./continuous_integration/docker/pbs/start.sh
           install:
-            - docker exec pbs /working/continuous_integration/docker/pbs/install.sh
+            - ./continuous_integration/docker/pbs/install.sh
           script:
-            - docker exec -u dask pbs /working/continuous_integration/docker/pbs/script.sh
+            - ./continuous_integration/docker/pbs/script.sh
 
         - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-jobqueue) OR (commit_message ~= test-slurm))
           env:
@@ -79,9 +79,9 @@ jobs:
           before_install:
             - ./continuous_integration/docker/slurm/start.sh
           install:
-            - docker exec slurm /working/continuous_integration/docker/slurm/install.sh
+            - ./continuous_integration/docker/slurm/install.sh
           script:
-            - docker exec -u dask slurm /working/continuous_integration/docker/slurm/script.sh
+            - ./continuous_integration/docker/slurm/script.sh
 
         - env:
             - DOCS=true

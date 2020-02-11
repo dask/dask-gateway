@@ -1,6 +1,8 @@
+import asyncio
 import atexit
 import os
 import signal
+import time
 
 from aiohttp import web
 from traitlets.config import Config
@@ -104,3 +106,29 @@ class LocalTestingBackend(UnsafeLocalBackend):
         res = await super().stop_process(pid)
         self.pids.discard(pid)
         return res
+
+
+async def wait_for_workers(cluster, atleast=None, exact=None, timeout=30):
+    timeout = time.time() + timeout
+    while time.time() < timeout:
+        workers = cluster.scheduler_info.get("workers")
+        nworkers = len(workers)
+        if atleast is not None and nworkers >= atleast:
+            break
+        elif exact is not None and nworkers == exact:
+            break
+        await asyncio.sleep(0.25)
+    else:
+        assert False, "scaling timed out"
+
+
+async def with_retries(f, n, wait=0.1):
+    for i in range(n):
+        try:
+            await f()
+            break
+        except Exception:
+            if i < n - 1:
+                await asyncio.sleep(wait)
+            else:
+                raise

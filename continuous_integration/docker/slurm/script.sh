@@ -1,8 +1,2 @@
 #!/usr/bin/env bash
-source ~/.bashrc
-
-set -xe
-
-cd /working
-
-py.test tests/test_slurm_cluster.py -v
+docker exec -u dask slurm /working/continuous_integration/docker/slurm/_script.sh

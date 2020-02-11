@@ -1,8 +1,2 @@
 #!/usr/bin/env bash
-source ~/.bashrc
-
-set -xe
-
-cd /working
-
-py.test tests/test_pbs_cluster.py -v
+docker exec -u dask pbs /working/continuous_integration/docker/pbs/_script.sh

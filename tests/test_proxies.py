@@ -12,19 +12,7 @@ from dask_gateway_server.proxy import Proxy
 from dask_gateway_server.tls import new_keypair
 from dask_gateway_server.utils import random_port
 
-from .utils_test import aiohttp_server
-
-
-async def with_retries(f, n):
-    for i in range(n):
-        try:
-            await f()
-            break
-        except Exception:
-            if i < n - 1:
-                await asyncio.sleep(0.1)
-            else:
-                raise
+from .utils_test import aiohttp_server, with_retries
 
 
 class temp_proxy(object):

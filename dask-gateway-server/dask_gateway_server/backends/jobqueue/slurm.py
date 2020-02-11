@@ -115,7 +115,7 @@ class SlurmBackend(JobQueueBackend):
         states = {}
         for l in stdout.splitlines():
             job_id, state = l.split()
-            states[job_id] = state not in ("R", "CG", "PD", "CF")
+            states[job_id] = state in ("R", "CG", "PD", "CF")
         return states
 
     def parse_job_id(self, stdout):
