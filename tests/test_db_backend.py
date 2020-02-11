@@ -39,7 +39,7 @@ def ensure_clusters_closed():
 
 
 class ClusterSlowToStart(DatabaseBackend):
-    pause_time = Float(0.2, config=True)
+    pause_time = Float(0.25, config=True)
 
     state_1 = {"state": 1}
     state_2 = {"state": 2}
@@ -272,12 +272,12 @@ def test_normalize_encrypt_key():
 
 
 def check_db_consistency(db):
-    clusters = db.db.execute(db_base.clusters.select()).fetchall()
-    workers = db.db.execute(db_base.workers.select()).fetchall()
-
-    for u, clusters in db.username_to_clusters:
+    for u, clusters in db.username_to_clusters.items():
         # Users without clusters are flushed
         assert clusters
+
+    clusters = db.db.execute(db_base.clusters.select()).fetchall()
+    workers = db.db.execute(db_base.workers.select()).fetchall()
 
     # Check cluster state
     for c in clusters:
@@ -370,7 +370,7 @@ async def test_cleanup_expired_clusters(monkeypatch):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("start_timeout,state", [(0.1, 1), (0.25, 2)])
+@pytest.mark.parametrize("start_timeout,state", [(0.1, 1), (0.4, 2)])
 async def test_slow_cluster_start(start_timeout, state):
     config = Config()
     config.DaskGateway.backend_class = ClusterSlowToStart
