@@ -136,6 +136,7 @@ class Cluster(object):
             self.last_heartbeat = timestamp()
         else:
             self.last_heartbeat = None
+        self.worker_start_failure_count = 0
         self.added_to_proxies = False
         self.workers = {}
 
@@ -697,6 +698,20 @@ class DatabaseBackend(Backend):
         )
         return min(20, min_timeout / 2)
 
+    worker_start_failure_limit = Integer(
+        3,
+        help="""
+        A limit on the number of failed attempts to start a worker before the
+        cluster is marked as failed.
+
+        Every worker that fails to start (timeouts exempt) increments a
+        counter. The counter is reset if a worker successfully starts. If the
+        counter ever exceeds this limit, the cluster is marked as failed and is
+        shutdown.
+        """,
+        config=True,
+    )
+
     parallelism = Integer(
         20,
         help="""
@@ -909,11 +924,14 @@ class DatabaseBackend(Backend):
         for w, u in target_updates:
             await self.enqueue(w)
 
-        self.db.update_workers(
-            [(w, {"status": JobStatus.RUNNING}) for w in newly_running]
-        )
-        for w in newly_running:
-            self.log.info("Worker %s is running", w.name)
+        if newly_running:
+            # At least one worker successfully started, reset failure count
+            cluster.worker_start_failure_count = 0
+            self.db.update_workers(
+                [(w, {"status": JobStatus.RUNNING}) for w in newly_running]
+            )
+            for w in newly_running:
+                self.log.info("Worker %s is running", w.name)
 
         self.db.update_workers([(w, {"close_expected": True}) for w in close_expected])
 
@@ -1018,6 +1036,7 @@ class DatabaseBackend(Backend):
                 self.db.update_workers(updates)
                 for w, _ in updates:
                     self.log.info("Worker %s failed during startup", w.name)
+                    w.cluster.worker_start_failure_count += 1
                     await self.enqueue(w)
             except asyncio.CancelledError:
                 raise
@@ -1207,6 +1226,16 @@ class DatabaseBackend(Backend):
             cluster.added_to_proxies = True
 
     async def _check_cluster_scale(self, cluster):
+        if cluster.worker_start_failure_count >= self.worker_start_failure_limit:
+            self.log.info(
+                "Cluster %s had %d consecutive workers fail to start, failing the cluster",
+                cluster.name,
+                cluster.worker_start_failure_count,
+            )
+            self.db.update_cluster(cluster, target=JobStatus.FAILED)
+            await self.enqueue(cluster)
+            return
+
         active = cluster.active_workers()
         if cluster.count > len(active):
             for _ in range(cluster.count - len(active)):
@@ -1237,6 +1266,7 @@ class DatabaseBackend(Backend):
             self.db.update_worker(
                 worker, status=JobStatus.SUBMITTED, target=JobStatus.FAILED
             )
+            worker.cluster.worker_start_failure_count += 1
             await self.enqueue(worker)
 
     async def _worker_to_stopped(self, worker):
