@@ -124,7 +124,7 @@ class Backend(LoggingConfigurable):
         Do any cleanup tasks in this method"""
         await self.session.close()
 
-    async def list_clusters(self, user=None, statuses=None):
+    async def list_clusters(self, username=None, statuses=None):
         """List known clusters.
 
         Parameters

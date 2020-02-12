@@ -131,11 +131,21 @@ class WorkerSlowToStart(TracksStopWorkerCalls):
 class WorkerFailsDuringStart(TracksStopWorkerCalls):
     fail_stage = Integer(1, config=True)
 
+    async def do_setup(self):
+        await super().do_setup()
+        loop = get_running_loop()
+        self.stop_cluster_called = loop.create_future()
+
     async def do_start_worker(self, worker):
         for i in range(3):
             if i == self.fail_stage:
                 raise ValueError("Oh No")
             yield {"i": i}
+
+    async def do_stop_cluster(self, cluster):
+        if not self.stop_cluster_called.done():
+            self.stop_cluster_called.set_result(True)
+        await super().do_stop_cluster(cluster)
 
 
 class WorkerFailsBetweenStartAndConnect(TracksStopWorkerCalls):
@@ -570,6 +580,20 @@ async def test_worker_fails_after_connect():
 
                 # Stop cluster called to cleanup after failure
                 await asyncio.wait_for(g.gateway.backend.stop_worker_called, 30)
+
+
+@pytest.mark.asyncio
+async def test_worker_start_failure_limit():
+    config = Config()
+    config.DaskGateway.backend_class = WorkerFailsDuringStart
+
+    async with temp_gateway(config=config) as g:
+        async with g.gateway_client() as gateway:
+            async with gateway.new_cluster() as cluster:
+                await cluster.scale(1)
+
+                # Wait for cluster failure
+                await asyncio.wait_for(g.gateway.backend.stop_cluster_called, 10)
 
 
 @pytest.mark.asyncio
