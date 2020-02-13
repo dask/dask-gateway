@@ -90,6 +90,7 @@ def test_client_init():
             "public-address": None,
             "proxy-address": 8786,
             "auth": {"type": "basic", "kwargs": {"username": "bruce"}},
+            "http-client": {"proxy": None},
         }
     }
 
@@ -119,6 +120,7 @@ def test_client_init():
             "public-address": None,
             "proxy-address": 8786,
             "auth": {"type": "basic", "kwargs": {}},
+            "http-client": {"proxy": None},
         }
     }
 
