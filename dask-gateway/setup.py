@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 import versioneer
 
-install_requires = ["tornado", "dask>=2.2.0", "distributed>=2.2.0"]
+install_requires = ["aiohttp", "dask>=2.2.0", "distributed>=2.2.0"]
 
 extras_require = {
     "kerberos": [

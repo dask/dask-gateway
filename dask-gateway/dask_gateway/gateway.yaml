@@ -22,6 +22,15 @@ gateway:
                         # authentication class above. Values may be template
                         # strings.
 
+  http-client:
+    proxy: true         # The http proxy configuration to use when contacting
+                        # the dask-gateway server. If `true` (default), this is
+                        # inferred from your environment (i.e. `HTTP(S)_PROXY`
+                        # environment variables).  Set to `false` to disable
+                        # this inference. You may also specify a proxy address
+                        # explicitly (e.g.  `http://user:password@host:port`).
+                        # May be a template string.
+
   cluster:
     options: {}         # Default options to use when calling ``new_cluster`` or
                         # ``cluster_options``. Values may be template strings.

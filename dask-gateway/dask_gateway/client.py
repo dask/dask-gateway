@@ -1,7 +1,6 @@
 import asyncio
 import atexit
 import enum
-import json
 import os
 import ssl
 import sys
@@ -12,15 +11,13 @@ import weakref
 from datetime import datetime
 from urllib.parse import urlparse
 
+import aiohttp
 import dask
+import yarl
 from distributed import Client
 from distributed.core import rpc
 from distributed.security import Security
 from distributed.utils import LoopRunner, format_bytes, log_errors
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
-from tornado.httputil import HTTPHeaders
-
-from .cookiejar import CookieJar
 
 # Register gateway protocol
 from . import comm
@@ -222,6 +219,23 @@ class ClusterReport(object):
         )
 
 
+def _get_default_request_kwargs(scheme):
+    proxy = proxy_auth = None
+
+    http_proxy = format_template(dask.config.get("gateway.http-client.proxy"))
+    if http_proxy is True:
+        proxies = aiohttp.helpers.proxies_from_env()
+        info = proxies.get(scheme)
+        if info is not None:
+            proxy = info.proxy
+            proxy_auth = info.proxy_auth
+    elif isinstance(http_proxy, str):
+        url = yarl.URL(http_proxy)
+        proxy, proxy_auth = aiohttp.helpers.strip_auth_from_url(url)
+
+    return {"proxy": proxy, "proxy_auth": proxy_auth}
+
+
 class Gateway(object):
     """A client for a Dask Gateway Server.
 
@@ -274,12 +288,15 @@ class Gateway(object):
             proxy_netloc = parsed.netloc if parsed.netloc else proxy_address
         proxy_address = "gateway://%s" % proxy_netloc
 
+        scheme = urlparse(address).scheme
+        self._request_kwargs = _get_default_request_kwargs(scheme)
+
         self.address = address
         self._public_address = public_address
         self.proxy_address = proxy_address
 
         self.auth = get_auth(auth)
-        self._cookie_jar = CookieJar()
+        self._session = None
 
         self._asynchronous = asynchronous
         self._loop_runner = LoopRunner(loop=loop, asynchronous=asynchronous)
@@ -308,14 +325,22 @@ class Gateway(object):
 
     def close(self):
         """Close the gateway client"""
-        if not self.asynchronous:
-            self._loop_runner.stop()
+        if self.asynchronous:
+            return self._cleanup()
+        elif self.loop.asyncio_loop.is_running():
+            self.sync(self._cleanup)
+        self._loop_runner.stop()
+
+    async def _cleanup(self):
+        if self._session is not None:
+            await self._session.close()
+            self._session = None
 
     async def __aenter__(self):
         return self
 
     async def __aexit__(self, typ, value, traceback):
-        pass
+        await self._cleanup()
 
     def __enter__(self):
         return self
@@ -324,47 +349,47 @@ class Gateway(object):
         self.close()
 
     def __del__(self):
-        # __del__ is called even if __init__ fails, need to detect this
-        if hasattr(self, "_loop_runner") and not sys.is_finalizing():
+        if (
+            not self.asynchronous
+            and hasattr(self, "_loop_runner")
+            and not sys.is_finalizing()
+        ):
             self.close()
 
     def __repr__(self):
         return "Gateway<%s>" % self.address
 
-    async def _fetch(self, req):
-        client = AsyncHTTPClient()
-        try:
-            self._cookie_jar.pre_request(req)
-            resp = await client.fetch(req, raise_error=False)
-            if resp.code == 401:
-                context = self.auth.pre_request(req, resp)
-                resp = await client.fetch(req, raise_error=False)
-                self.auth.post_response(req, resp, context)
-            self._cookie_jar.post_response(resp)
-            if resp.error:
-                if resp.code == 599:
-                    raise TimeoutError("Request timed out")
-                else:
-                    try:
-                        msg = json.loads(resp.body)["error"]
-                    except Exception:
-                        msg = resp.body.decode()
+    async def _request(self, method, url, json=None):
+        if self._session is None:
+            self._session = aiohttp.ClientSession()
+        session = self._session
 
-                    if resp.code in {404, 422}:
-                        raise ValueError(msg)
-                    elif resp.code == 409:
-                        raise GatewayClusterError(msg)
-                    elif resp.code == 500:
-                        raise GatewayServerError(msg)
-                    else:
-                        resp.rethrow()
-        except HTTPError as exc:
-            # Tornado 6 still raises these above with raise_error=False
-            if exc.code == 599:
-                raise TimeoutError("Request timed out")
-            # Should never get here!
-            raise
-        return resp
+        resp = await session.request(method, url, json=json, **self._request_kwargs)
+
+        if resp.status == 401:
+            headers, context = self.auth.pre_request(resp)
+            resp = await session.request(
+                method, url, json=json, headers=headers, **self._request_kwargs
+            )
+            self.auth.post_response(resp, context)
+
+        if resp.status >= 400:
+            try:
+                msg = await resp.json()
+                msg = msg["error"]
+            except Exception:
+                msg = await resp.text()
+
+            if resp.status in {404, 422}:
+                raise ValueError(msg)
+            elif resp.status == 409:
+                raise GatewayClusterError(msg)
+            elif resp.status == 500:
+                raise GatewayServerError(msg)
+            else:
+                resp.raise_for_status()
+        else:
+            return resp
 
     async def _clusters(self, status=None):
         if status is not None:
@@ -377,11 +402,11 @@ class Gateway(object):
             query = ""
 
         url = "%s/api/clusters/%s" % (self.address, query)
-        req = HTTPRequest(url=url)
-        resp = await self._fetch(req)
+        resp = await self._request("GET", url)
+        data = await resp.json()
         return [
             ClusterReport._from_json(self._public_address, self.proxy_address, r)
-            for r in json.loads(resp.body).values()
+            for r in data.values()
         ]
 
     def list_clusters(self, status=None, **kwargs):
@@ -420,9 +445,8 @@ class Gateway(object):
 
     async def _cluster_options(self, use_local_defaults=True):
         url = "%s/api/options" % self.address
-        req = HTTPRequest(url=url, method="GET")
-        resp = await self._fetch(req)
-        data = json.loads(resp.body)
+        resp = await self._request("GET", url)
+        data = await resp.json()
         options = Options._from_spec(data["cluster_options"])
         if use_local_defaults:
             options.update(self._config_cluster_options())
@@ -459,14 +483,8 @@ class Gateway(object):
         else:
             options = self._config_cluster_options()
             options.update(kwargs)
-        req = HTTPRequest(
-            url=url,
-            method="POST",
-            body=json.dumps({"cluster_options": options}),
-            headers=HTTPHeaders({"Content-type": "application/json"}),
-        )
-        resp = await self._fetch(req)
-        data = json.loads(resp.body)
+        resp = await self._request("POST", url, json={"cluster_options": options})
+        data = await resp.json()
         return data["name"]
 
     def submit(self, cluster_options=None, **kwargs):
@@ -495,11 +513,9 @@ class Gateway(object):
     async def _cluster_report(self, cluster_name, wait=False):
         params = "?wait" if wait else ""
         url = "%s/api/clusters/%s%s" % (self.address, cluster_name, params)
-        req = HTTPRequest(url=url)
-        resp = await self._fetch(req)
-        return ClusterReport._from_json(
-            self._public_address, self.proxy_address, json.loads(resp.body)
-        )
+        resp = await self._request("GET", url)
+        data = await resp.json()
+        return ClusterReport._from_json(self._public_address, self.proxy_address, data)
 
     async def _wait_for_start(self, cluster_name):
         while True:
@@ -584,8 +600,7 @@ class Gateway(object):
 
     async def _stop_cluster(self, cluster_name):
         url = "%s/api/clusters/%s" % (self.address, cluster_name)
-        req = HTTPRequest(url=url, method="DELETE")
-        await self._fetch(req)
+        await self._request("DELETE", url)
 
     def stop_cluster(self, cluster_name, **kwargs):
         """Stop a cluster.
@@ -599,13 +614,7 @@ class Gateway(object):
 
     async def _scale_cluster(self, cluster_name, n):
         url = "%s/api/clusters/%s/scale" % (self.address, cluster_name)
-        req = HTTPRequest(
-            url=url,
-            method="POST",
-            body=json.dumps({"count": n}),
-            headers=HTTPHeaders({"Content-type": "application/json"}),
-        )
-        await self._fetch(req)
+        await self._request("POST", url, json={"count": n})
 
     def scale_cluster(self, cluster_name, n, **kwargs):
         """Scale a cluster to n workers.
@@ -622,14 +631,11 @@ class Gateway(object):
     async def _adapt_cluster(
         self, cluster_name, minimum=None, maximum=None, active=True
     ):
-        url = "%s/api/clusters/%s/adapt" % (self.address, cluster_name)
-        req = HTTPRequest(
-            url=url,
-            method="POST",
-            body=json.dumps({"minimum": minimum, "maximum": maximum, "active": active}),
-            headers=HTTPHeaders({"Content-type": "application/json"}),
+        await self._request(
+            "POST",
+            "%s/api/clusters/%s/adapt" % (self.address, cluster_name),
+            json={"minimum": minimum, "maximum": maximum, "active": active},
         )
-        await self._fetch(req)
 
     def adapt_cluster(
         self, cluster_name, minimum=None, maximum=None, active=True, **kwargs
@@ -908,6 +914,8 @@ class GatewayCluster(object):
 
         if shutdown and self.name is not None:
             await self.gateway._stop_cluster(self.name)
+
+        await self.gateway._cleanup()
 
     async def _stop_async(self):
         if self._start_task is not None:
