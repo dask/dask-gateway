@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 import aiohttp
 import dask
+import yarl
 from distributed import Client
 from distributed.core import rpc
 from distributed.security import Security
@@ -218,6 +219,23 @@ class ClusterReport(object):
         )
 
 
+def _get_default_request_kwargs(scheme):
+    proxy = proxy_auth = None
+
+    http_proxy = format_template(dask.config.get("gateway.http-client.proxy"))
+    if http_proxy is True:
+        proxies = aiohttp.helpers.proxies_from_env()
+        info = proxies.get(scheme)
+        if info is not None:
+            proxy = info.proxy
+            proxy_auth = info.proxy_auth
+    elif isinstance(http_proxy, str):
+        url = yarl.URL(http_proxy)
+        proxy, proxy_auth = aiohttp.helpers.strip_auth_from_url(url)
+
+    return {"proxy": proxy, "proxy_auth": proxy_auth}
+
+
 class Gateway(object):
     """A client for a Dask Gateway Server.
 
@@ -269,6 +287,9 @@ class Gateway(object):
             parsed = urlparse(proxy_address)
             proxy_netloc = parsed.netloc if parsed.netloc else proxy_address
         proxy_address = "gateway://%s" % proxy_netloc
+
+        scheme = urlparse(address).scheme
+        self._request_kwargs = _get_default_request_kwargs(scheme)
 
         self.address = address
         self._public_address = public_address
@@ -343,11 +364,13 @@ class Gateway(object):
             self._session = aiohttp.ClientSession()
         session = self._session
 
-        resp = await session.request(method, url, json=json)
+        resp = await session.request(method, url, json=json, **self._request_kwargs)
 
         if resp.status == 401:
             headers, context = self.auth.pre_request(resp)
-            resp = await session.request(method, url, json=json, headers=headers)
+            resp = await session.request(
+                method, url, json=json, headers=headers, **self._request_kwargs
+            )
             self.auth.post_response(resp, context)
 
         if resp.status >= 400:
@@ -891,6 +914,8 @@ class GatewayCluster(object):
 
         if shutdown and self.name is not None:
             await self.gateway._stop_cluster(self.name)
+
+        await self.gateway._cleanup()
 
     async def _stop_async(self):
         if self._start_task is not None:

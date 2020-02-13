@@ -1,5 +1,7 @@
 import time
 
+import aiohttp
+import yarl
 import pytest
 import dask
 from dask_gateway.auth import get_auth, BasicAuth, KerberosAuth, JupyterHubAuth
@@ -151,6 +153,59 @@ def test_gateway_addresses_template_environment_vars(monkeypatch):
         g = Gateway("http://test.com")
     assert g.address == "http://test.com"
     assert g.proxy_address == "gateway://foobar:8787"
+
+
+def test_http_client_proxy_false(monkeypatch):
+    with dask.config.set(gateway__http_client__proxy=False):
+        monkeypatch.setenv("http_proxy", "http://alice:password@host:80/path")
+
+        # http_proxy environment variable ignored
+        g = Gateway("http://myhost:80")
+        assert g._request_kwargs == {"proxy": None, "proxy_auth": None}
+
+
+def test_http_client_proxy_true(monkeypatch):
+    http_proxy = "http://alice:password@host:80/path"
+    proxy_sol = yarl.URL("http://host:80/path")
+    proxy_auth_sol = aiohttp.BasicAuth("alice", "password")
+
+    with dask.config.set(gateway__http_client__proxy=True):
+        with monkeypatch.context() as m:
+            for k in ["http_proxy", "https_proxy"]:
+                m.delenv(k, raising=False)
+                m.delenv(k.upper(), raising=False)
+
+            with m.context() as m2:
+                m2.setenv("http_proxy", http_proxy)
+
+                # Properly inferred from environment
+                g = Gateway("http://myhost:80")
+                assert g._request_kwargs["proxy"] == proxy_sol
+                assert g._request_kwargs["proxy_auth"] == proxy_auth_sol
+
+                # No HTTPS proxy set
+                g = Gateway("https://myhost:80")
+                assert g._request_kwargs == {"proxy": None, "proxy_auth": None}
+
+            # No HTTP proxy set
+            g = Gateway("http://myhost:80")
+            assert g._request_kwargs == {"proxy": None, "proxy_auth": None}
+
+
+def test_http_client_proxy_explicit(monkeypatch):
+    http_proxy = "http://alice:password@host:80/path"
+    proxy_sol = yarl.URL("http://host:80/path")
+    proxy_auth_sol = aiohttp.BasicAuth("alice", "password")
+
+    with dask.config.set(gateway__http_client__proxy=http_proxy):
+        with monkeypatch.context() as m:
+            m.setenv("http_proxy", "http://bob:foobar@otherhost:90/path")
+
+            # Loaded from config, not environment variables
+            for scheme in ["http", "https"]:
+                g = Gateway(f"{scheme}://myhost:80")
+                assert g._request_kwargs["proxy"] == proxy_sol
+                assert g._request_kwargs["proxy_auth"] == proxy_auth_sol
 
 
 @pytest.mark.asyncio
