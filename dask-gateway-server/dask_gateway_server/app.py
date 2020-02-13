@@ -12,10 +12,9 @@ from traitlets.config import Application, catch_config_error
 from . import __version__ as VERSION
 from .auth import Authenticator
 from .backends import Backend
-from .compat import asyncio_run
 from .routes import default_routes
 from .traitlets import Type
-from .utils import classname, LogFormatter, normalize_address
+from .utils import classname, LogFormatter, normalize_address, run_main
 
 
 # Override default values for logging
@@ -247,7 +246,7 @@ class DaskGateway(Application):
             return self.subapp.start()
 
         try:
-            asyncio_run(self.main())
+            run_main(self.main())
         except (KeyboardInterrupt, web.GracefulExit):
             pass
 
