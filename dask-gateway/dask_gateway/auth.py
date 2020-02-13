@@ -2,7 +2,6 @@ import getpass
 import os
 import re
 from base64 import b64encode
-from urllib.parse import urlparse
 
 import dask
 
@@ -64,35 +63,33 @@ class GatewayAuth(object):
     def __init__(self, **kwargs):
         pass
 
-    def pre_request(self, req, resp):
+    def pre_request(self, resp):
         """Authentication hook before client request is sent.
 
         This is only called after a 401 response from the server.
 
         Parameters
         ----------
-        req : HTTPRequest
-            The request to authenticate
-        resp : HTTPResponse
-            The 401 HTTPResponse that triggered the authentication step.
+        resp : aiohttp.ClientResponse
+            The 401 response that triggered the authentication step.
 
         Returns
         -------
-        context : object
+        headers : dict
+            Any headers to add to the outgoing request.
+        context : object or None
             If necessary, may optionally return an opaque object storing
             additional context needed to complete the authentication process.
             This will be passed to ``post_response``.
         """
         pass
 
-    def post_response(self, req, resp, context=None):
+    def post_response(self, resp, context=None):
         """Authentication hook after server response is received.
 
         Parameters
         ----------
-        req : HTTPRequest
-            The submitted HTTPRequest
-        resp : HTTPResponse
+        resp : aiohttp.ClientResponse
             The server response
         context : object or None
             The return value of ``pre_request``, providing any additional
@@ -112,11 +109,12 @@ class BasicAuth(GatewayAuth):
         self.username = username
         self.password = password
 
-    def pre_request(self, req, resp):
+    def pre_request(self, resp):
         data = b":".join(
             (self.username.encode("latin1"), self.password.encode("latin1"))
         )
-        req.headers["Authorization"] = "Basic " + b64encode(data).decode()
+        headers = {"Authorization": "Basic " + b64encode(data).decode()}
+        return headers, None
 
 
 class KerberosAuth(GatewayAuth):
@@ -124,21 +122,20 @@ class KerberosAuth(GatewayAuth):
 
     auth_regex = re.compile(r"(?:.*,)*\s*Negotiate\s*([^,]*),?", re.I)  # noqa
 
-    def pre_request(self, req, resp):
+    def pre_request(self, resp):
         # TODO: convert errors to some common error class
         import kerberos
 
-        hostname = urlparse(resp.effective_url).hostname
         _, context = kerberos.authGSSClientInit(
-            "HTTP@%s" % hostname,
+            "HTTP@%s" % resp.url.host,
             gssflags=kerberos.GSS_C_MUTUAL_FLAG | kerberos.GSS_C_SEQUENCE_FLAG,
         )
         kerberos.authGSSClientStep(context, "")
         response = kerberos.authGSSClientResponse(context)
-        req.headers["Authorization"] = "Negotiate " + response
-        return context
+        headers = {"Authorization": "Negotiate " + response}
+        return headers, context
 
-    def post_response(self, req, resp, context):
+    def post_response(self, resp, context):
         import kerberos
 
         www_auth = resp.headers.get("www-authenticate", None)
@@ -165,5 +162,5 @@ class JupyterHubAuth(GatewayAuth):
                 )
         self.api_token = api_token
 
-    def pre_request(self, req, resp):
-        req.headers["Authorization"] = "jupyterhub " + self.api_token
+    def pre_request(self, resp):
+        return {"Authorization": "jupyterhub " + self.api_token}, None

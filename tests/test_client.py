@@ -1,4 +1,3 @@
-import asyncio
 import time
 
 import pytest
@@ -6,9 +5,6 @@ import dask
 from dask_gateway.auth import get_auth, BasicAuth, KerberosAuth, JupyterHubAuth
 from dask_gateway.client import Gateway, GatewayCluster, cleanup_lingering_clusters
 from dask_gateway_server.compat import get_running_loop
-from dask_gateway_server.utils import random_port
-from tornado import web
-from tornado.httpclient import HTTPRequest
 
 from .utils_test import temp_gateway
 
@@ -155,45 +151,6 @@ def test_gateway_addresses_template_environment_vars(monkeypatch):
         g = Gateway("http://test.com")
     assert g.address == "http://test.com"
     assert g.proxy_address == "gateway://foobar:8787"
-
-
-class SlowHandler(web.RequestHandler):
-    async def get(self):
-        self.waiter = asyncio.ensure_future(asyncio.sleep(30))
-        self.settings["task_set"].add(self.waiter)
-        try:
-            await self.waiter
-        except asyncio.CancelledError:
-            return
-        self.write("Hello world")
-
-    def on_connection_close(self):
-        if hasattr(self, "waiter"):
-            self.waiter.cancel()
-
-
-class slow_server(object):
-    def __init__(self):
-        self.port = random_port()
-        self.address = "http://127.0.0.1:%d" % self.port
-        self.tasks = set()
-        self.app = web.Application([(r"/", SlowHandler)], task_set=self.tasks)
-
-    async def __aenter__(self):
-        self.server = self.app.listen(self.port)
-        return self
-
-    async def __aexit__(self, *args):
-        self.server.stop()
-        await asyncio.gather(*self.tasks, return_exceptions=True)
-
-
-@pytest.mark.asyncio
-async def test_client_fetch_timeout():
-    async with slow_server() as server:
-        gateway = Gateway(server.address, auth=BasicAuth("alice"))
-        with pytest.raises(TimeoutError):
-            await gateway._fetch(HTTPRequest(url=server.address, request_timeout=1))
 
 
 @pytest.mark.asyncio
