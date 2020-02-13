@@ -8,7 +8,7 @@ from keyword import iskeyword
 
 from colorlog import ColoredFormatter
 
-from .compat import get_running_loop
+from .compat import get_running_loop, all_tasks
 
 
 class TaskPool(object):
@@ -241,3 +241,55 @@ class Flag(object):
 
     def is_set(self):
         return self._future.done()
+
+
+def run_main(main):
+    """Main entrypoint for asyncio tasks.
+
+    This differs from `asyncio.run` in one key way - the main task is cancelled
+    *first*, then any outstanding tasks are cancelled (and logged, remaining
+    tasks are indicative of bugs/failures).
+    """
+    if asyncio._get_running_loop() is not None:
+        raise RuntimeError("Cannot be called from inside a running event loop")
+
+    main_task = None
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        main_task = loop.create_task(main)
+        return loop.run_until_complete(main_task)
+    finally:
+        try:
+            if main_task is not None:
+                loop.run_until_complete(cancel_task(main_task))
+            _cancel_all_tasks(loop)
+            loop.run_until_complete(loop.shutdown_asyncgens())
+        finally:
+            asyncio.set_event_loop(None)
+            loop.close()
+
+
+def _cancel_all_tasks(loop):
+    to_cancel = all_tasks(loop)
+    if not to_cancel:
+        return
+
+    for task in to_cancel:
+        task.cancel()
+
+    loop.run_until_complete(
+        asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
+    )
+
+    for task in to_cancel:
+        if task.cancelled():
+            continue
+        if task.exception() is not None:
+            loop.call_exception_handler(
+                {
+                    "message": "unhandled exception during shutdown",
+                    "exception": task.exception(),
+                    "task": task,
+                }
+            )
