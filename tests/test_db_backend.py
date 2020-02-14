@@ -748,7 +748,6 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
     config.LocalTestingBackend.check_timeouts_period = 0.5
     config.DaskGateway.address = "127.0.0.1:%d" % random_port()
     config.Proxy.address = "127.0.0.1:%d" % random_port()
-    config.Proxy.scheduler_address = "127.0.0.1:%d" % random_port()
 
     async with temp_gateway(config=config) as g:
         async with g.gateway_client() as gateway:

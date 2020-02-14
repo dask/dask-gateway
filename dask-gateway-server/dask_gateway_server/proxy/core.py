@@ -53,10 +53,9 @@ class Proxy(LoggingConfigurable):
         config=True,
     )
 
-    scheduler_address = Unicode(
-        ":8786",
+    tcp_address = Unicode(
         help="""
-        The address the scheduler proxy should *listen* at.
+        The address the TCP (scheduler) proxy should *listen* at.
 
         Should be of the form ``{hostname}:{port}``
 
@@ -65,11 +64,17 @@ class Proxy(LoggingConfigurable):
         - ``hostname`` sets the hostname to *listen* at. Set to ``""`` or
           ``"0.0.0.0"`` to listen on all interfaces.
         - ``port`` sets the port to *listen* at.
+
+        If not specified, will default to `address`.
         """,
         config=True,
     )
 
-    @validate("address", "scheduler_address")
+    @default("tcp_address")
+    def _default_tcp_address(self):
+        return self.address
+
+    @validate("address", "tcp_address")
     def _validate_addresses(self, proposal):
         return normalize_address(proposal.value)
 
@@ -192,8 +197,8 @@ class Proxy(LoggingConfigurable):
             _PROXY_EXE,
             "-address",
             self.address,
-            "-tls-address",
-            self.scheduler_address,
+            "-tcp-address",
+            self.tcp_address,
             "-api-url",
             self.gateway_url + "/api/routes",
             "-log-level",
@@ -232,9 +237,7 @@ class Proxy(LoggingConfigurable):
             "https" if self.tls_cert else "http",
             self.address,
         )
-        self.log.info(
-            "- Scheduler routes listening at tls://%s", self.scheduler_address
-        )
+        self.log.info("- Scheduler routes listening at gateway://%s", self.tcp_address)
 
     async def monitor_proxy_process(self):
         backoff = default_backoff = 0.5
