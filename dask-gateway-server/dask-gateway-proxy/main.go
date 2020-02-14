@@ -475,12 +475,13 @@ func (p *Proxy) handleConnection(inConn *net.TCPConn, forwarder *Forwarder) {
 
 	sni, isTLS, pInConn, err := readSNI(inConn)
 	if err != nil {
-		p.logger.Infof("Error extracting SNI: %s", err)
+		p.logger.Debugf("Error extracting SNI: %s", err)
 		inConn.Close()
 		return
 	}
 
-	if !isTLS || sni == "" {
+	const sniPrefix = "daskgateway-"
+	if !isTLS || !strings.HasPrefix(sni, sniPrefix) {
 		if forwarder != nil {
 			forwarder.Forward(pInConn)
 			return
@@ -490,6 +491,8 @@ func (p *Proxy) handleConnection(inConn *net.TCPConn, forwarder *Forwarder) {
 			return
 		}
 	}
+
+	sni = sni[len(sniPrefix):]
 
 	defer inConn.Close()
 
