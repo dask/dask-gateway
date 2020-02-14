@@ -21,7 +21,6 @@ class temp_proxy(object):
         self.proxy = Proxy(
             address="127.0.0.1:0",
             prefix="/foobar",
-            scheduler_address="127.0.0.1:0",
             gateway_address=f"127.0.0.1:{self._port}",
             log_level="debug",
             proxy_status_period=0.5,
@@ -43,9 +42,10 @@ class temp_proxy(object):
         await self.proxy.cleanup()
 
 
-@pytest.fixture
-async def proxy():
-    async with temp_proxy() as proxy:
+@pytest.fixture(params=["separate", "shared"])
+async def proxy(request):
+    kwargs = {"tcp_address": "127.0.0.1:0"} if request.param == "separate" else {}
+    async with temp_proxy(**kwargs) as proxy:
         yield proxy
 
 
@@ -140,8 +140,8 @@ async def test_web_proxy_bad_target(proxy):
         await with_retries(test_502, 5)
 
 
-@pytest.fixture
-async def ca_and_tls_proxy(tmpdir_factory):
+@pytest.fixture(params=["separate", "shared"])
+async def ca_and_tls_proxy(request, tmpdir_factory):
     trustme = pytest.importorskip("trustme")
     ca = trustme.CA()
     cert = ca.issue_cert("127.0.0.1")
@@ -153,7 +153,8 @@ async def ca_and_tls_proxy(tmpdir_factory):
     cert.private_key_pem.write_to_path(tls_key)
     cert.cert_chain_pems[0].write_to_path(tls_cert)
 
-    async with temp_proxy(tls_key=tls_key, tls_cert=tls_cert) as proxy:
+    kwargs = {"tcp_address": "127.0.0.1:0"} if request.param == "separate" else {}
+    async with temp_proxy(tls_key=tls_key, tls_cert=tls_cert, **kwargs) as proxy:
         yield ca, proxy
 
 
@@ -196,7 +197,7 @@ async def test_web_proxy_public_tls(ca_and_tls_proxy):
 async def test_scheduler_proxy(proxy, cluster_and_security):
     cluster, security = cluster_and_security
 
-    proxied_addr = f"gateway://{proxy.scheduler_address}/temp"
+    proxied_addr = f"gateway://{proxy.tcp_address}/temp"
 
     # Add a route
     await proxy.add_route(kind="SNI", sni="temp", target=cluster.scheduler_address)

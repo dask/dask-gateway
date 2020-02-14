@@ -46,7 +46,7 @@ def test_proxy_cli(tmpdir, monkeypatch):
     text = (
         "c.DaskGateway.address = '127.0.0.1:8888'\n"
         "c.Proxy.address = '127.0.0.1:8866'\n"
-        "c.Proxy.scheduler_address = '127.0.0.1:8867'\n"
+        "c.Proxy.tcp_address = '127.0.0.1:8867'\n"
         "c.Proxy.log_level = 'debug'\n"
         "c.Proxy.api_token = 'abcde'"
     )
@@ -71,7 +71,7 @@ def test_proxy_cli(tmpdir, monkeypatch):
         "dask-gateway-proxy",
         "-address",
         "127.0.0.1:8866",
-        "-tls-address",
+        "-tcp-address",
         "127.0.0.1:8867",
         "-api-url",
         "http://127.0.0.1:8888/api/routes",

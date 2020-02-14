@@ -244,9 +244,10 @@ class Gateway(object):
     address : str, optional
         The address to the gateway server.
     proxy_address : str, int, optional
-        The address of the scheduler proxy server. If an int, it's used as the
-        port, with the host/ip taken from ``address``. Provide a full address
-        if a different host/ip should be used.
+        The address of the scheduler proxy server. Defaults to `address` if not
+        provided. If an int, it's used as the port, with the host/ip taken from
+        ``address``. Provide a full address if a different host/ip should be
+        used.
     auth : GatewayAuth, optional
         The authentication method to use.
     asynchronous : bool, optional
@@ -277,9 +278,7 @@ class Gateway(object):
         if proxy_address is None:
             proxy_address = format_template(dask.config.get("gateway.proxy-address"))
         if proxy_address is None:
-            raise ValueError(
-                "No dask-gateway proxy address provided or found in configuration"
-            )
+            proxy_address = address
         if isinstance(proxy_address, int):
             parsed = urlparse(address)
             proxy_netloc = "%s:%d" % (parsed.hostname, proxy_address)

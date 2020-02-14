@@ -9,9 +9,10 @@ gateway:
                         # If `None` (default), `gateway.address` will be used.
                         # May be a template string.
 
-  proxy-address: 8786   # The full address or port to the dask-gateway
+  proxy-address: null   # The full address or port to the dask-gateway
                         # scheduler proxy. If a port, the host/ip is taken from
-                        # ``address``. May also be a template string.
+                        # ``address``. If null, defaults to `address`.
+                        # May also be a template string.
 
   auth:
     type: basic         # The authentication type to use. Options are basic,

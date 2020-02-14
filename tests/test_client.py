@@ -133,9 +133,8 @@ def test_client_init():
     config["gateway"]["proxy-address"] = None
 
     with dask.config.set(config):
-        # No proxy-address provided
-        with pytest.raises(ValueError):
-            Gateway()
+        g = Gateway()
+        assert g.proxy_address == "gateway://127.0.0.1:8888"
 
 
 def test_gateway_addresses_template_environment_vars(monkeypatch):

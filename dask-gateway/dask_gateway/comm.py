@@ -33,7 +33,8 @@ class GatewayConnector(Connector):
     client = TCPClient(resolver=_resolver)
 
     async def connect(self, address, deserialize=True, **connection_args):
-        ip, port, sni = parse_gateway_address(address)
+        ip, port, path = parse_gateway_address(address)
+        sni = "daskgateway-" + path
         ctx = connection_args.get("ssl_context")
         if not isinstance(ctx, ssl.SSLContext):
             raise TypeError(

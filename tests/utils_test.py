@@ -46,7 +46,6 @@ class temp_gateway(object):
 
         c.DaskGateway.address = "127.0.0.1:0"
         c.Proxy.address = "127.0.0.1:0"
-        c.Proxy.scheduler_address = "127.0.0.1:0"
         c.DaskGateway.authenticator_class = (
             "dask_gateway_server.auth.SimpleAuthenticator"
         )
@@ -63,7 +62,7 @@ class temp_gateway(object):
         await self.gateway.setup()
         await self.gateway.backend.proxy._proxy_contacted
         self.address = f"http://{self.gateway.backend.proxy.address}"
-        self.proxy_address = f"tls://{self.gateway.backend.proxy.scheduler_address}"
+        self.proxy_address = f"gateway://{self.gateway.backend.proxy.tcp_address}"
         return self
 
     async def __aexit__(self, *args):
