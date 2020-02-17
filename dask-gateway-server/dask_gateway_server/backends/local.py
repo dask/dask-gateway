@@ -12,7 +12,7 @@ import tempfile
 from traitlets import List, Unicode, Integer
 
 from .base import ClusterConfig
-from .db_base import DatabaseBackend
+from .db_base import DBBackendBase
 from ..traitlets import Type
 
 
@@ -59,7 +59,7 @@ def getpwnam(username):
     return pwd.getpwnam(username)
 
 
-class LocalBackend(DatabaseBackend):
+class LocalBackend(DBBackendBase):
     """A cluster backend that launches local processes.
 
     Requires super-user permissions in order to run processes for the

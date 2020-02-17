@@ -7,7 +7,7 @@ import shutil
 from traitlets import Unicode, default
 
 from ..base import ClusterConfig
-from ..db_base import DatabaseBackend
+from ..db_base import DBBackendBase
 
 
 __all__ = ("JobQueueClusterConfig", "JobQueueBackend")
@@ -40,7 +40,7 @@ class JobQueueClusterConfig(ClusterConfig):
     )
 
 
-class JobQueueBackend(DatabaseBackend):
+class JobQueueBackend(DBBackendBase):
     """A base cluster manager for deploying Dask on a jobqueue cluster."""
 
     dask_gateway_jobqueue_launcher = Unicode(

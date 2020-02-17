@@ -16,7 +16,7 @@ from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.backends import db_base
 from dask_gateway_server.backends.base import ClusterConfig
 from dask_gateway_server.backends.db_base import (
-    DatabaseBackend,
+    DBBackendBase,
     timestamp,
     JobStatus,
     DataManager,
@@ -38,7 +38,7 @@ def ensure_clusters_closed():
     assert instances == 0
 
 
-class ClusterSlowToStart(DatabaseBackend):
+class ClusterSlowToStart(DBBackendBase):
     pause_time = Float(0.25, config=True)
 
     state_1 = {"state": 1}
@@ -63,7 +63,7 @@ class ClusterSlowToStart(DatabaseBackend):
         self.running = False
 
 
-class ClusterFailsDuringStart(DatabaseBackend):
+class ClusterFailsDuringStart(DBBackendBase):
     fail_stage = Integer(1, config=True)
 
     stop_cluster_state = None
@@ -173,7 +173,7 @@ def test_shutdown_on_startup_error(tmpdir, capsys):
 
 def test_db_encrypt_keys_required(tmpdir, capsys):
     c = Config()
-    c.DatabaseBackend.db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
+    c.DBBackendBase.db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
     with pytest.raises(SystemExit) as exc:
         gateway = DaskGateway(config=c)
         gateway.initialize([])
@@ -187,8 +187,8 @@ def test_db_encrypt_keys_required(tmpdir, capsys):
 
 def test_db_encrypt_keys_invalid(tmpdir):
     c = Config()
-    c.DatabaseBackend.db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
-    c.DatabaseBackend.db_encrypt_keys = ["abc"]
+    c.DBBackendBase.db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
+    c.DBBackendBase.db_encrypt_keys = ["abc"]
     with pytest.raises(ValueError) as exc:
         gateway = DaskGateway(config=c)
         gateway.initialize([])
@@ -207,8 +207,8 @@ def test_db_encrypt_keys_from_env(monkeypatch):
 
 def test_resume_clusters_forbid_in_memory_db():
     c = Config()
-    c.DatabaseBackend.db_url = "sqlite://"
-    c.DatabaseBackend.stop_clusters_on_shutdown = False
+    c.DBBackendBase.db_url = "sqlite://"
+    c.DBBackendBase.stop_clusters_on_shutdown = False
     with pytest.raises(ValueError) as exc:
         gateway = DaskGateway(config=c)
         gateway.initialize([])
