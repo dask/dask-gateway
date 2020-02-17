@@ -99,7 +99,7 @@ class JobStatus(models.IntEnum):
 class Cluster(object):
     """Information on a cluster.
 
-    Not a attributes on this object are publically accessible. If writing a
+    Not all attributes on this object are publically accessible. When writing a
     backend, you may access the following attributes:
 
     Attributes
@@ -233,7 +233,7 @@ class Cluster(object):
 class Worker(object):
     """Information on a worker.
 
-    Not a attributes on this object are publically accessible. If writing a
+    Not all attributes on this object are publically accessible. When writing a
     backend, you may access the following attributes:
 
     Attributes
