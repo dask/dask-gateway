@@ -47,7 +47,13 @@ class UserCache(object):
 
 
 class Authenticator(LoggingConfigurable):
-    """Base class for authenticators"""
+    """Base class for authenticators.
+
+    An authenticator manages authenticating user API requests.
+
+    Subclasses must define ``authenticate``, and may optionally also define
+    ``setup``, ``cleanup`` and ``pre_response``.
+    """
 
     cookie_name = Unicode(
         help="The cookie name to use for caching authentication information.",
@@ -92,8 +98,6 @@ class Authenticator(LoggingConfigurable):
         else:
             context = None
 
-        user = User(**user)
-
         request["user"] = user
         response = await handler(request)
 
@@ -104,13 +108,20 @@ class Authenticator(LoggingConfigurable):
         return response
 
     async def setup(self, app):
-        """Called when the application starts up.
+        """Called when the server is starting up.
 
-        Do any initialization here."""
+        Do any initialization here.
+
+        Parameters
+        ----------
+        app : aiohttp.web.Application
+            The aiohttp application. Can be used to add additional routes if
+            needed.
+        """
         pass
 
     async def cleanup(self):
-        """Called when the application shutsdown.
+        """Called when the server is shutting down.
 
         Do any cleanup here."""
         pass
@@ -125,9 +136,8 @@ class Authenticator(LoggingConfigurable):
 
         Returns
         -------
-        user : dict
-            A dict with "name", "groups", and "admin" fields corresponding to
-            the authenticating user.
+        user : User
+            The authenticated user.
         context : object, optional
             If necessary, may optionally return an opaque object storing
             additional context needed to complete the authentication process.
@@ -196,7 +206,7 @@ class SimpleAuthenticator(Authenticator):
         if self.password and password != self.password:
             raise unauthorized("Basic")
 
-        return {"name": user, "groups": [], "admin": False}
+        return User(user)
 
 
 class KerberosAuthenticator(Authenticator):
@@ -262,7 +272,7 @@ class KerberosAuthenticator(Authenticator):
             if gss_context is not None:
                 kerberos.authGSSServerClean(gss_context)
 
-        return {"name": user, "groups": [], "admin": False}, gss_key
+        return User(user), gss_key
 
     async def pre_response(self, request, response, context):
         response.headers["WWW-Authenticate"] = "Negotiate %s" % context
@@ -380,11 +390,7 @@ class JupyterHubAuthenticator(Authenticator):
 
         if resp.status < 400:
             data = await resp.json()
-            return {
-                "name": data["name"],
-                "groups": data["groups"],
-                "admin": data["admin"],
-            }
+            return User(data["name"], groups=data["groups"], admin=data["admin"])
         elif resp.status == 404:
             self.log.debug("Token for non-existant user requested")
             raise unauthorized("jupyterhub")
