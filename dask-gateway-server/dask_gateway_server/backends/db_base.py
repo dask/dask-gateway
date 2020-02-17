@@ -26,6 +26,9 @@ from ..utils import (
 )
 
 
+__all__ = ("DBBackendBase", "Cluster", "Worker")
+
+
 def timestamp():
     """An integer timestamp represented as milliseconds since the epoch UTC"""
     return int(time.time() * 1000)
@@ -94,6 +97,37 @@ class JobStatus(models.IntEnum):
 
 
 class Cluster(object):
+    """Information on a cluster.
+
+    Not all attributes on this object are publically accessible. When writing a
+    backend, you may access the following attributes:
+
+    Attributes
+    ----------
+    name : str
+        The cluster name.
+    username : str
+        The user associated with this cluster.
+    token : str
+        The API token associated with this cluster. Used to authenticate the
+        cluster with the gateway.
+    config : FrozenAttrDict
+        The serialized ``ClusterConfig`` associated with this cluster.
+    state : dict
+        Any cluster state, as yielded from ``do_start_cluster``.
+    scheduler_address : str
+        The scheduler address. The empty string if the cluster is not running.
+    dashboard_address : str
+        The dashboard address. The empty string if the cluster is not running,
+        or no dashboard is running on the cluster.
+    api_address : str
+        The cluster's api address. The empty string if the cluster is not running.
+    tls_cert : bytes
+        The TLS cert credentials associated with the cluster.
+    tls_key : bytes
+        The TLS key credentials associated with the cluster.
+    """
+
     def __init__(
         self,
         id=None,
@@ -197,6 +231,21 @@ class Cluster(object):
 
 
 class Worker(object):
+    """Information on a worker.
+
+    Not all attributes on this object are publically accessible. When writing a
+    backend, you may access the following attributes:
+
+    Attributes
+    ----------
+    name : str
+        The worker name.
+    cluster : Cluster
+        The cluster associated with this worker.
+    state : dict
+        Any worker state, as yielded from ``do_start_worker``.
+    """
+
     def __init__(
         self,
         id=None,
@@ -519,7 +568,21 @@ class DataManager(object):
                     setattr(w, k, v)
 
 
-class DatabaseBackend(Backend):
+class DBBackendBase(Backend):
+    """A base class for defining backends that rely on a database for managing state.
+
+    Subclasses should define the following methods:
+
+    - ``do_setup``
+    - ``do_cleanup``
+    - ``do_start_cluster``
+    - ``do_stop_cluster``
+    - ``do_check_clusters``
+    - ``do_start_worker``
+    - ``do_stop_worker``
+    - ``do_check_workers``
+    """
+
     db_url = Unicode(
         "sqlite:///:memory:",
         help="""
@@ -1319,25 +1382,113 @@ class DatabaseBackend(Backend):
     supports_bulk_shutdown = False
 
     async def do_setup(self):
+        """Called when the server is starting up.
+
+        Do any initialization here.
+        """
         pass
 
     async def do_cleanup(self):
+        """Called when the server is shutting down.
+
+        Do any cleanup here."""
         pass
 
     async def do_start_cluster(self, cluster):
+        """Start a cluster.
+
+        This should do any initialization for the whole dask cluster
+        application, and then start the scheduler.
+
+        Parameters
+        ----------
+        cluster : Cluster
+            Information on the cluster to be started.
+
+        Yields
+        ------
+        cluster_state : dict
+            Any state needed for further interactions with this cluster. This
+            should be serializable using ``json.dumps``. If startup occurs in
+            multiple stages, can iteratively yield state updates to be
+            checkpointed. If an error occurs at any time, the last yielded
+            state will be used when calling ``do_stop_cluster``.
+        """
         raise NotImplementedError
 
     async def do_stop_cluster(self, cluster):
+        """Stop a cluster.
+
+        Parameters
+        ----------
+        cluster : Cluster
+            Information on the cluster to be stopped.
+        """
         raise NotImplementedError
 
     async def do_check_clusters(self, clusters):
+        """Check the status of multiple clusters.
+
+        This is periodically called to check the status of pending clusters.
+        Once a cluster is running this will no longer be called.
+
+        Parameters
+        ----------
+        clusters : List[Cluster]
+            The clusters to be checked.
+
+        Returns
+        -------
+        statuses : List[bool]
+            The status for each cluster. Return False if the cluster has
+            stopped or failed, True if the cluster is pending start or running.
+        """
         raise NotImplementedError
 
     async def do_start_worker(self, worker):
+        """Start a worker.
+
+        Parameters
+        ----------
+        worker : Worker
+            Information on the worker to be started.
+
+        Yields
+        ------
+        worker_state : dict
+            Any state needed for further interactions with this worker. This
+            should be serializable using ``json.dumps``. If startup occurs in
+            multiple stages, can iteratively yield state updates to be
+            checkpointed. If an error occurs at any time, the last yielded
+            state will be used when calling ``do_stop_worker``.
+        """
         raise NotImplementedError
 
     async def do_stop_worker(self, worker):
+        """Stop a worker.
+
+        Parameters
+        ----------
+        worker : Worker
+            Information on the worker to be stopped.
+        """
         raise NotImplementedError
 
     async def do_check_workers(self, workers):
+        """Check the status of multiple workers.
+
+        This is periodically called to check the status of pending workers.
+        Once a worker is running this will no longer be called.
+
+        Parameters
+        ----------
+        workers : List[Worker]
+            The workers to be checked.
+
+        Returns
+        -------
+        statuses : List[bool]
+            The status for each worker. Return False if the worker has
+            stopped or failed, True if the worker is pending start or running.
+        """
         raise NotImplementedError

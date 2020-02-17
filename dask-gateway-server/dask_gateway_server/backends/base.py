@@ -10,16 +10,19 @@ from ..traitlets import MemoryLimit, Type, Callable
 from ..utils import awaitable
 
 
+__all__ = ("Backend", "ClusterConfig")
+
+
 class Backend(LoggingConfigurable):
     """Base class for defining dask-gateway backends.
 
     Subclasses should implement the following methods:
 
-    - setup
-    - cleanup
-    - start_cluster
-    - stop_cluster
-    - on_cluster_heartbeat
+    - ``setup``
+    - ``cleanup``
+    - ``start_cluster``
+    - ``stop_cluster``
+    - ``on_cluster_heartbeat``
     """
 
     cluster_options = Union(
@@ -115,7 +118,14 @@ class Backend(LoggingConfigurable):
     async def setup(self, app):
         """Called when the server is starting up.
 
-        Do any setup tasks in this method"""
+        Do any initialization here.
+
+        Parameters
+        ----------
+        app : aiohttp.web.Application
+            The aiohttp application. Can be used to add additional routes if
+            needed.
+        """
         self.session = aiohttp.ClientSession()
 
     async def cleanup(self):

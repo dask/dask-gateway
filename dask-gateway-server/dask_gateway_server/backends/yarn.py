@@ -16,7 +16,7 @@ except ImportError:
 from traitlets import Unicode, Dict, Integer
 
 from .base import ClusterConfig
-from .db_base import DatabaseBackend
+from .db_base import DBBackendBase
 from ..compat import get_running_loop
 from ..traitlets import Type
 from ..utils import LRUCache
@@ -72,7 +72,7 @@ class YarnClusterConfig(ClusterConfig):
     )
 
 
-class YarnBackend(DatabaseBackend):
+class YarnBackend(DBBackendBase):
     """A cluster backend for managing dask clusters on Hadoop/YARN."""
 
     cluster_config_class = Type(

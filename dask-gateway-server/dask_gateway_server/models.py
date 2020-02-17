@@ -1,5 +1,7 @@
 import enum
 
+__all__ = ("User", "Cluster", "ClusterStatus")
+
 
 class IntEnum(enum.IntEnum):
     @classmethod
@@ -13,6 +15,22 @@ class IntEnum(enum.IntEnum):
 
 
 class ClusterStatus(IntEnum):
+    """A cluster's status.
+
+    Attributes
+    ----------
+    PENDING : ClusterStatus
+        The cluster is pending start.
+    RUNNING : ClusterStatus
+        The cluster is running.
+    STOPPING : ClusterStatus
+        The cluster is stopping, but not fully stopped.
+    STOPPED : ClusterStatus
+        The cluster was shutdown by user or admin request.
+    FAILED : ClusterStatus
+        A failure occurred during any of the above states.
+    """
+
     PENDING = 1
     RUNNING = 2
     STOPPING = 3
@@ -21,16 +39,66 @@ class ClusterStatus(IntEnum):
 
 
 class User(object):
+    """A user record.
+
+    Parameters
+    ----------
+    name : str
+        The username
+    groups : sequence, optional
+        A set of groups the user belongs to. Default is no groups.
+    admin : bool, optional
+        Whether the user is an admin user. Default is False.
+    """
+
     def __init__(self, name, groups=(), admin=False):
         self.name = name
         self.groups = set(groups)
         self.admin = bool(admin)
 
     def has_permissions(self, cluster):
+        """Check if the user has permissions to view the cluster"""
         return self.name == cluster.username
 
 
 class Cluster(object):
+    """A cluster record.
+
+    Parameters
+    ----------
+    name : str
+        The cluster name. An unique string that can be used to identify the
+        cluster in the gateway.
+    username : str
+        The username that started this cluster.
+    token : str
+        The API token associated with this cluster. Used to authenticate the
+        cluster with the gateway.
+    options : dict
+        The normalized set of configuration options provided when starting this
+        cluster. These values are user-facing, and don't necessarily correspond
+        with the ``ClusterConfig`` options on the backend.
+    config : dict
+        The serialized ``ClusterConfig`` associated with this cluster. Not user-facing.
+    status : ClusterStatus
+        The status of the cluster.
+    scheduler_address : str
+        The scheduler address. The empty string if the cluster is not running.
+    dashboard_address : str
+        The dashboard address. The empty string if the cluster is not running,
+        or no dashboard is running on the cluster.
+    api_address : str
+        The cluster's api address. The empty string if the cluster is not running.
+    tls_cert : bytes
+        The TLS cert credentials associated with the cluster.
+    tls_key : bytes
+        The TLS key credentials associated with the cluster.
+    start_time : int or None
+        Start time in ms since the epoch, or None if not started.
+    stop_time : int or None
+        Stop time in ms since the epoch, or None if not stopped.
+    """
+
     def __init__(
         self,
         name,
