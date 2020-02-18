@@ -99,6 +99,7 @@ extras_require = {
     "jobqueue": ["sqlalchemy"],
     "local": ["sqlalchemy"],
     "yarn": ["sqlalchemy", "skein >= 0.7.3"],
+    "kubernetes": ["kubernetes_asyncio"],
 }
 
 # Due to quirks in setuptools/distutils dependency ordering, to get the go
