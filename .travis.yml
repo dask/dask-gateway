@@ -26,7 +26,7 @@ jobs:
           install:
             - source continuous_integration/install.sh
           script:
-            - py.test tests/ -v
+            - py.test tests/ -v -s
             - flake8
             - black . --check
             - |

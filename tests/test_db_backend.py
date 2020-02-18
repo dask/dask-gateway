@@ -615,7 +615,7 @@ async def test_successful_cluster():
             # Scale up, connect, and compute
             await cluster.scale(2)
 
-            with cluster.get_client(set_as_default=False) as client:
+            async with cluster.get_client(set_as_default=False) as client:
                 res = await client.submit(lambda x: x + 1, 1)
                 assert res == 2
 
@@ -623,7 +623,7 @@ async def test_successful_cluster():
             await cluster.scale(1)
 
             # Can still compute
-            with cluster.get_client(set_as_default=False) as client:
+            async with cluster.get_client(set_as_default=False) as client:
                 res = await client.submit(lambda x: x + 1, 1)
                 assert res == 2
 
@@ -801,7 +801,7 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
             async with gateway.connect(
                 cluster1_name, shutdown_on_close=True
             ) as cluster:
-                with cluster.get_client(set_as_default=False) as client:
+                async with cluster.get_client(set_as_default=False) as client:
                     res = await client.submit(lambda x: x + 1, 1)
                     assert res == 2
 
@@ -833,7 +833,7 @@ async def test_adaptive_scaling():
                 await cluster.adapt()
 
                 # Worker is automatically requested
-                with cluster.get_client(set_as_default=False) as client:
+                async with cluster.get_client(set_as_default=False) as client:
                     res = await client.submit(lambda x: x + 1, 1)
                     assert res == 2
 
