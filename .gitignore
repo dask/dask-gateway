@@ -1,7 +1,3 @@
-dask-gateway-server/dask-gateway-proxy/dask-gateway-proxy*
-dask-gateway-server/dask_gateway_server/proxy/dask-gateway-proxy
-build/
-dist/
 docs/build/
 .coverage
 htmlcov/
