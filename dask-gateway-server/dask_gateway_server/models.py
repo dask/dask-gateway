@@ -78,8 +78,6 @@ class Cluster(object):
         The normalized set of configuration options provided when starting this
         cluster. These values are user-facing, and don't necessarily correspond
         with the ``ClusterConfig`` options on the backend.
-    config : dict
-        The serialized ``ClusterConfig`` associated with this cluster. Not user-facing.
     status : ClusterStatus
         The status of the cluster.
     scheduler_address : str
