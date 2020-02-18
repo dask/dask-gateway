@@ -1,9 +1,15 @@
+import asyncio
 import json
 import os
+import sys
 import uuid
+from base64 import b64decode
+from collections import defaultdict
+from datetime import datetime, timezone
 
-from traitlets import Float, Dict, Unicode, default
-from kubernetes_asyncio import client, config
+from traitlets import Float, Dict, Unicode, Any, Int, Instance, default
+from traitlets.config import LoggingConfigurable
+from kubernetes_asyncio import client, config, watch
 from kubernetes_asyncio.client.models import (
     V1Container,
     V1EnvVar,
@@ -12,11 +18,39 @@ from kubernetes_asyncio.client.models import (
 )
 
 from .. import __version__ as VERSION
+from .. import models
 from ..traitlets import MemoryLimit, Type
+from ..utils import cancel_task, UniqueQueue
 from .base import Backend, ClusterConfig
 
 
 __all__ = ("KubeClusterConfig", "KubeBackend")
+
+# Monkeypatch kubernetes_asyncio to cleanup resources better
+client.rest.RESTClientObject.__del__ = lambda self: None
+
+
+class Watch(watch.Watch):
+    def __init__(self, api_client=None, return_type=None):
+        self._raw_return_type = return_type
+        self._stop = False
+        self._api_client = api_client or client.ApiClient()
+        self.resource_version = 0
+        self.resp = None
+
+
+if sys.version_info[:2] >= (3, 7):
+
+    def parse_k8s_timestamp(ts):
+        t = datetime.fromisoformat(ts[:-1])
+        return int(t.replace(tzinfo=timezone.utc).timestamp() * 1000)
+
+
+else:
+
+    def parse_k8s_timestamp(ts):
+        t = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ")
+        return int(t.replace(tzinfo=timezone.utc).timestamp() * 1000)
 
 
 def merge_json_objects(a, b):
@@ -326,29 +360,88 @@ class KubeBackend(Backend):
         self.core_client = client.CoreV1Api(api_client=self.api_client)
         self.custom_client = client.CustomObjectsApi(api_client=self.api_client)
 
+        self.clusters = {}
+        self.username_to_clusters = defaultdict(dict)
+        self.queue = UniqueQueue()
+        self.reflectors = {
+            "cluster": Reflector(
+                parent=self,
+                kind="cluster",
+                api_client=self.api_client,
+                queue=self.queue,
+                method=self.custom_client.list_namespaced_custom_object,
+                method_kwargs=dict(
+                    namespace=self.namespace,
+                    group="gateway.dask.org",
+                    version=self.crd_version,
+                    plural="daskclusters",
+                    label_selector=self.get_label_selector(),
+                ),
+            ),
+            "secret": Reflector(
+                parent=self,
+                kind="secret",
+                api_client=self.api_client,
+                queue=self.queue,
+                method=self.core_client.list_secret_for_all_namespaces,
+                method_kwargs=dict(label_selector=self.get_label_selector()),
+            ),
+        }
+        for reflector in self.reflectors.values():
+            await reflector.start()
+        self._watcher_task = asyncio.ensure_future(self.watcher_loop())
+
     async def cleanup(self):
-        pass
+        if hasattr(self, "reflectors"):
+            for reflector in self.reflectors.values():
+                await reflector.stop()
+        if hasattr(self, "_watcher_task"):
+            await cancel_task(self._watcher_task)
+        if hasattr(self, "api_client"):
+            await self.api_client.rest_client.pool_manager.close()
 
     async def start_cluster(self, user, cluster_options):
         options, config = await self.process_cluster_options(user, cluster_options)
 
         obj = self.make_cluster_object(user.name, options, config)
 
-        await self.custom_client.create_namespaced_custom_object(
+        res = await self.custom_client.create_namespaced_custom_object(
             "gateway.dask.org", self.crd_version, self.namespace, "daskclusters", obj
         )
+
+        cluster_name = res["metadata"]["name"]
+
+        self.reflectors["cluster"].put(cluster_name, res)
+        self.update_cluster_cache(cluster_name)
+
+        return cluster_name
 
     async def stop_cluster(self, cluster_name, failed=False):
         raise NotImplementedError
 
     async def get_cluster(self, cluster_name, wait=False):
-        raise NotImplementedError
+        cluster = self.clusters.get(cluster_name)
+        return cluster
 
     async def list_clusters(self, username=None, statuses=None):
-        raise NotImplementedError
+        if statuses is None:
+            select = lambda x: x.status <= models.ClusterStatus.RUNNING
+        else:
+            statuses = set(statuses)
+            select = lambda x: x.status in statuses
+        if username is None:
+            return [cluster for cluster in self.clusters.values() if select(cluster)]
+        else:
+            clusters = self.username_to_clusters.get(username)
+            if clusters is None:
+                return []
+            return [cluster for cluster in clusters.values() if select(cluster)]
 
     async def on_cluster_heartbeat(self, cluster_name, msg):
         raise NotImplementedError
+
+    def get_label_selector(self):
+        return f"gateway.dask.org/instance={self.instance}"
 
     def get_env(self, cluster_name, config):
         out = dict(config.environment)
@@ -386,8 +479,8 @@ class KubeBackend(Backend):
         labels.update(
             {
                 "gateway.dask.org/instance": self.instance,
-                "gateway.dask.org/cluster-name": cluster_name,
-                "gateway.dask.org/user-name": username,
+                "gateway.dask.org/cluster": cluster_name,
+                "gateway.dask.org/user": username,
             }
         )
         if component:
@@ -507,3 +600,127 @@ class KubeBackend(Backend):
             },
         }
         return obj
+
+    async def watcher_loop(self):
+        while True:
+            kind, name = await self.queue.get()
+            try:
+                self.update_cluster_cache(name)
+            except Exception as exc:
+                self.log.info(
+                    "Error updating cluster cache for %s:", name, exc_info=exc
+                )
+
+    def update_cluster_cache(self, name):
+        obj = self.reflectors["cluster"].get(name)
+
+        if obj is None:
+            self.log.debug("Deleting %s from cache", name)
+            # Delete the cluster from the cache
+            cluster = self.clusters.pop(name, None)
+            if cluster is not None:
+                user = self.username_to_clusters.get(cluster.username)
+                if user is not None:
+                    user.pop(cluster.name, None)
+                    if not user:
+                        self.username_to_clusters.pop(cluster.username, None)
+        else:
+            self.log.debug("Updating %s in cache", name)
+
+            # TODO: infer more of these fields from the backing kubernetes objects
+            # Not all of these are correct
+            cluster = models.Cluster(
+                name=name,
+                username=obj["metadata"]["labels"]["gateway.dask.org/user"],
+                token="",
+                options=json.loads(obj["spec"]["info"]["options"]),
+                status=models.ClusterStatus.PENDING,
+                start_time=parse_k8s_timestamp(obj["metadata"]["creationTimestamp"]),
+            )
+
+            secret = self.reflectors["secret"].get(name)
+            if secret is not None:
+                cluster.tls_key = b64decode(secret["data"]["dask.pem"])
+                cluster.tls_cert = b64decode(secret["data"]["dask.crt"])
+                cluster.token = b64decode(secret["data"]["api-token"])
+
+            self.clusters[cluster.name] = cluster
+            self.username_to_clusters[cluster.username][cluster.name] = cluster
+
+
+class Reflector(LoggingConfigurable):
+    kind = Unicode()
+    method = Any()
+    method_kwargs = Dict()
+    timeout_seconds = Int(10)
+    api_client = Instance(client.ApiClient)
+    cache = Dict()
+    queue = Instance(asyncio.Queue, allow_none=True)
+
+    def get(self, name, default=None):
+        return self.cache.get(name, default)
+
+    def pop(self, name, default=None):
+        self.cache.pop(name, default)
+
+    def put(self, name, value):
+        self.cache[name] = value
+
+    async def handle(self, obj, event_type="INITIAL"):
+        name = obj["metadata"]["name"]
+        self.log.debug("Received %s event for %s[%s]", event_type, self.kind, name)
+        if event_type in {"INITIAL", "ADDED", "MODIFIED"}:
+            self.cache[name] = obj
+        elif event_type == "DELETED":
+            self.cache.pop(name, None)
+        if self.queue is not None:
+            await self.queue.put((self.kind, name))
+
+    async def start(self):
+        if not hasattr(self, "_task"):
+            self._task = asyncio.ensure_future(self.run())
+
+    async def stop(self):
+        if hasattr(self, "_task"):
+            await cancel_task(self._task)
+            del self._task
+
+    async def run(self):
+        self.log.debug("Starting %s watch stream...", self.kind)
+
+        watch = Watch(self.api_client)
+
+        while True:
+            try:
+                initial = await self.method(**self.method_kwargs)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                self.log.error(
+                    "Error in %s watch stream, retrying...", self.kind, exc_info=exc
+                )
+
+            initial = self.api_client.sanitize_for_serialization(initial)
+            for obj in initial["items"]:
+                await self.handle(obj)
+            resource_version = initial["metadata"]["resourceVersion"]
+
+            try:
+                while True:
+                    kwargs = {
+                        "resource_version": resource_version,
+                        "timeout_seconds": self.timeout_seconds,
+                    }
+                    kwargs.update(self.method_kwargs)
+                    async with watch.stream(self.method, **kwargs) as stream:
+                        async for ev in stream:
+                            ev = self.api_client.sanitize_for_serialization(ev)
+                            await self.handle(ev["object"], event_type=ev["type"])
+                            resource_version = stream.resource_version
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                self.log.error(
+                    "Error in %s watch stream, retrying...", self.kind, exc_info=exc
+                )
+        self.log.debug("%s watch stream stopped", self.kind)
