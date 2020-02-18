@@ -100,7 +100,7 @@ async def list_clusters(request):
             statuses = [models.ClusterStatus.from_name(k) for k in status.split(",")]
         except Exception as exc:
             raise web.HTTPUnprocessableEntity(reason=str(exc))
-    clusters = await backend.list_clusters(user=user, statuses=statuses)
+    clusters = await backend.list_clusters(username=user.name, statuses=statuses)
     return web.json_response({c.name: c.to_dict() for c in clusters})
 
 

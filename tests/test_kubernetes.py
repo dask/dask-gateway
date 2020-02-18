@@ -41,7 +41,7 @@ async def test_make_cluster_object():
         instance="instance-1234",
         namespace="crd-namespace",
     )
-    await backend.setup(None)
+    backend.api_client = kubernetes_asyncio.client.ApiClient()
 
     sched_tol = {
         "key": "foo",

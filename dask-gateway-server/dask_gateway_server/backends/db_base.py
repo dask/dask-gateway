@@ -881,8 +881,8 @@ class DBBackendBase(Backend):
 
         await super().cleanup()
 
-    async def list_clusters(self, user=None, statuses=None):
-        clusters = self.db.list_clusters(username=user.name, statuses=statuses)
+    async def list_clusters(self, username=None, statuses=None):
+        clusters = self.db.list_clusters(username=username, statuses=statuses)
         return [c.to_model() for c in clusters]
 
     async def get_cluster(self, cluster_name, wait=False):
