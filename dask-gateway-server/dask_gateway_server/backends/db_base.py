@@ -898,7 +898,7 @@ class DBBackendBase(Backend):
 
     async def start_cluster(self, user, cluster_options):
         options, config = await self.process_cluster_options(user, cluster_options)
-        cluster = self.db.create_cluster(user.name, options, config)
+        cluster = self.db.create_cluster(user.name, options, config.to_dict())
         self.log.info("Created cluster %s for user %s", cluster.name, user.name)
         await self.enqueue(cluster)
         return cluster.name

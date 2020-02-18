@@ -7,6 +7,16 @@ import os
 import yaml
 
 
+def strip_descriptions(obj):
+    if isinstance(obj, dict):
+        obj.pop("description", None)
+        for v in obj.values():
+            strip_descriptions(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            strip_descriptions(v)
+
+
 def reformat_crds():
     placeholder = "PLACEHOLDER_STRING_123_456"
     this_dir = os.path.dirname(__file__)
@@ -18,11 +28,15 @@ def reformat_crds():
         with open(path) as f:
             data = yaml.safe_load(f)
 
-        # Compress the schema into one line
-        schema = data["spec"]["validation"].pop("openAPIV3Schema")
+        # Compress the schema into one line, and strip the descriptions field
+        # This makes the CRD definition smaller, which lets `kubectl apply`
+        # still work (kubectl apply passes the value as an annotation, which
+        # has a size limit)
+        schema = data["spec"]["validation"].get("openAPIV3Schema")
+        strip_descriptions(schema)
         data["spec"]["validation"]["openAPIV3Schema"] = placeholder
         out = yaml.dump(data)
-        out = out.replace(placeholder, json.dumps(schema, separators=(",", ":")), 1)
+        out = out.replace(placeholder, json.dumps(schema), 1)
 
         with open(path, "w") as f:
             f.write(out)
