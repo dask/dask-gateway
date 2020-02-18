@@ -1,0 +1,8 @@
+# Note: If you're using an internal artifact store, uncomment lines 3 and 4
+# and populate the channel_alias field with a link to the store. 
+# channel_alias: 
+# allow_other_channels: false
+
+channels:
+  - conda-forge
+  - defaults

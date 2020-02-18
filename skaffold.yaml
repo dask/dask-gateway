@@ -1,0 +1,30 @@
+apiVersion: skaffold/v2alpha3
+kind: Config
+
+build:
+  local:
+    push: false
+    useBuildkit: true
+  tagPolicy:
+    envTemplate:
+      template: "dask-gateway-server:latest"
+  artifacts:
+  - image: dask-gateway-server
+    docker:
+      dockerfile: skaffold/Dockerfile
+
+deploy:
+  helm:
+    releases:
+    - name: dask-gateway
+      chartPath: resources/helm/dask-gateway/
+      namespace: default
+      valuesFiles:
+        - resources/helm/dask-gateway/values.yaml
+      setValues:
+        gateway.image.name: dask-gateway-server
+        gateway.image.pullPolicy: IfNotPresent
+        gateway.cookieSecret: <key>
+        gateway.proxyToken: <key>
+        local: true
+      recreatePods: true
