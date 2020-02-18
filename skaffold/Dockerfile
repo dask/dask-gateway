@@ -1,6 +1,6 @@
 FROM daskgateway/dask-gateway-server:latest
 
-COPY --chown=dask:dask condarc /opt/conda/condarc
+COPY --chown=dask:dask skaffold/condarc /opt/conda/condarc
 
 RUN conda install -c conda-forge \
 go=1.12.5 \ 

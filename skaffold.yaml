@@ -10,6 +10,8 @@ build:
       template: "dask-gateway-server:latest"
   artifacts:
   - image: dask-gateway-server
+    docker:
+      dockerfile: skaffold/Dockerfile
 
 deploy:
   helm:

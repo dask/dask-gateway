@@ -2,7 +2,7 @@
 
 [Skaffold](https://skaffold.dev) is a CLI developed by Google that streamlines
 the local Kubernetes development cycle. We're going to use it to streamline
-development of Dask Gateway Server. 
+development of Dask Gateway Server.
 
 Note, this workflow is compatible with release version 0.6.1. The current
 gateway server build succeeds but the container fails because the Kubernetes
@@ -17,7 +17,7 @@ brew install skaffold
 ```
 
 [Activate](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#activating-an-environment)
-your conda environment. 
+your conda environment.
 
 Enable [Docker
 Buildkit](https://docs.docker.com/develop/develop-images/build_enhancements/).
@@ -57,7 +57,7 @@ and rejoice.
 
 The very first build will take about 90 seconds. After that, the Docker build
 process won't need to re-run `conda install`, so subsequent builds should take
-around 5.4s! 
+around 5.4s!
 
 If you're using an internal artifact store, open [condarc](condarc) and follow
-the instructions on the first two lines. 
+the instructions on the first two lines.
