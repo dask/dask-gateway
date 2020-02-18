@@ -1,6 +1,5 @@
 import json
 import os
-import string
 import uuid
 
 from traitlets import Float, Dict, Unicode, default
@@ -15,6 +14,9 @@ from kubernetes_asyncio.client.models import (
 from .. import __version__ as VERSION
 from ..traitlets import MemoryLimit, Type
 from .base import Backend, ClusterConfig
+
+
+__all__ = ("KubeClusterConfig", "KubeBackend")
 
 
 def merge_json_objects(a, b):
@@ -50,14 +52,6 @@ def merge_json_objects(a, b):
             else:
                 a[key] = b_val
     return a
-
-
-def kubequote(s, _safe=frozenset(string.ascii_lowercase + string.digits + "-.")):
-    """Quote a string to be a valid kubernetes name.
-
-    Unsafe characeters are hex encoded and prefixed with ``"x"``.
-    """
-    return "".join(c if c in _safe else "x%s" % c.encode("utf-8").hex() for c in s)
 
 
 class KubeClusterConfig(ClusterConfig):
@@ -338,27 +332,7 @@ class KubeBackend(Backend):
     async def start_cluster(self, user, cluster_options):
         options, config = await self.process_cluster_options(user, cluster_options)
 
-        cluster_name = uuid.uuid4().hex
-
-        scheduler, worker = self.make_pod_templates(cluster_name, user.name, config)
-
-        annotations = self.common_annotations
-        labels = self.get_labels(cluster_name, user.name)
-
-        obj = {
-            "apiVersion": f"gateway.dask.org/{self.crd_version}",
-            "kind": "DaskCluster",
-            "metadata": {
-                "name": cluster_name,
-                "labels": labels,
-                "annotations": annotations,
-            },
-            "spec": {
-                "scheduler": {"template": scheduler},
-                "worker": {"template": worker},
-                "info": {"options": json.dumps(options, separators=(",", ":"))},
-            },
-        }
+        obj = self.make_cluster_object(user.name, options, config)
 
         await self.custom_client.create_namespaced_custom_object(
             "gateway.dask.org", self.crd_version, self.namespace, "daskclusters", obj
@@ -466,7 +440,11 @@ class KubeBackend(Backend):
             pod = {
                 "kind": "Pod",
                 "apiVersion": "v1",
-                "metadata": {"labels": labels, "annotations": annotations},
+                "metadata": {
+                    "labels": labels,
+                    "annotations": annotations,
+                    "namespace": config.namespace,
+                },
                 "spec": {
                     "containers": [container],
                     "restart_policy": "OnFailure",
@@ -505,3 +483,27 @@ class KubeBackend(Backend):
             extra_container_config=config.worker_extra_container_config,
         )
         return scheduler, worker
+
+    def make_cluster_object(self, user_name, options, config):
+        cluster_name = uuid.uuid4().hex
+
+        scheduler, worker = self.make_pod_templates(cluster_name, user_name, config)
+
+        annotations = self.common_annotations
+        labels = self.get_labels(cluster_name, user_name)
+
+        obj = {
+            "apiVersion": f"gateway.dask.org/{self.crd_version}",
+            "kind": "DaskCluster",
+            "metadata": {
+                "name": cluster_name,
+                "labels": labels,
+                "annotations": annotations,
+            },
+            "spec": {
+                "scheduler": {"template": scheduler},
+                "worker": {"template": worker},
+                "info": {"options": json.dumps(options, separators=(",", ":"))},
+            },
+        }
+        return obj
