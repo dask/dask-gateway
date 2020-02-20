@@ -103,17 +103,6 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	/*
-		This is where our reqLoggeric begins.
-		First, we need to construct the desired objects.
-		Check if scheduler exists.
-		If not, create it.
-		See how many workers there are.
-		Update status.scale.
-		Check for discrepancy in spec.scale and status.scale.
-		If spec.scale is greater than status.scale, add workers.
-	*/
-
 	// Fetch scheduler
 	scheduler := newSchedulerFromTemplate(cr)
 	if err := controllerutil.SetControllerReference(cr, scheduler, r.scheme); err != nil {
@@ -178,14 +167,9 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 
 		worker := newWorkerFromTemplate(cr)
 
-		// TODO: Either set worker here or in the newWorkerFromTemplate. Evaluate pros and cons.
-		// if err := controllerutil.SetControllerReference(cr, worker, r.scheme); err != nil {
-		// 	return reconcile.Result{}, err
-		// }
-
 		reqLogger.Info("Creating worker")
 		// TODO: Address bug that's surfacing here.
-		// It's not breaking since it's subsequent reconciliations work fine.
+		// It's not breaking since subsequent reconciliations work fine.
 		// "error": "Pod \"dask-worker-fxsv4t\" is invalid: spec.containers[0].volumeMounts[0].name: Not found: \"default-token-qw8dl\""
 		if err := r.client.Create(context.TODO(), worker); err != nil {
 			return reconcile.Result{}, err
