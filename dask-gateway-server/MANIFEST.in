@@ -2,7 +2,6 @@ recursive-include dask_gateway_server *.py
 graft dask-gateway-proxy
 exclude dask-gateway-proxy/dask-gateway-proxy
 
-include versioneer.py
 include setup.py
 include README.rst
 include LICENSE

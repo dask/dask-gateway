@@ -1,3 +1,4 @@
+from ._version import __version__
 from .client import (
     Gateway,
     GatewayCluster,
@@ -12,8 +13,3 @@ from .options import Options
 from . import config
 
 del config
-
-from ._version import get_versions
-
-__version__ = get_versions()["version"]
-del get_versions

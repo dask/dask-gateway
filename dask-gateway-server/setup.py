@@ -9,12 +9,15 @@ from setuptools import setup, find_packages, Command
 from setuptools.command.develop import develop as _develop
 from setuptools.command.install import install as _install
 
-import versioneer
-
-ROOT_DIR = os.path.abspath(os.path.dirname(os.path.relpath(__file__)))
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 PROXY_SRC_DIR = os.path.join(ROOT_DIR, "dask-gateway-proxy")
 PROXY_TGT_DIR = os.path.join(ROOT_DIR, "dask_gateway_server", "proxy")
 PROXY_TGT_EXE = os.path.join(PROXY_TGT_DIR, "dask-gateway-proxy")
+
+ns = {}
+with open(os.path.join(ROOT_DIR, "dask_gateway_server", "_version.py")) as f:
+    exec(f.read(), {}, ns)
+    VERSION = ns["__version__"]
 
 
 class build_go(Command):
@@ -101,21 +104,18 @@ extras_require = {
 # Due to quirks in setuptools/distutils dependency ordering, to get the go
 # source to build automatically in most cases, we need to check in multiple
 # locations. This is unfortunate, but seems necessary.
-cmdclass = versioneer.get_cmdclass()
-cmdclass.update(
-    {
-        "build_go": build_go,  # directly build the go source
-        "build": build,  # bdist_wheel or pip install .
-        "install": install,  # python setup.py install
-        "develop": develop,  # python setup.py develop
-        "clean": clean,
-    }
-)  # extra cleanup
+cmdclass = {
+    "build_go": build_go,  # directly build the go source
+    "build": build,  # bdist_wheel or pip install .
+    "install": install,  # python setup.py install
+    "develop": develop,  # python setup.py develop
+    "clean": clean,
+}
 
 
 setup(
     name="dask-gateway-server",
-    version=versioneer.get_version(),
+    version=VERSION,
     cmdclass=cmdclass,
     maintainer="Jim Crist",
     maintainer_email="jiminy.crist@gmail.com",
