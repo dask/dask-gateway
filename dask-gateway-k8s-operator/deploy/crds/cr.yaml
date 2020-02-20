@@ -13,8 +13,6 @@ spec:
         containers:
         - name: nginx
           image: nginx:1.7.9
-          ports:
-          - containerPort: 80
   worker:
     template:
       metadata:
@@ -24,6 +22,4 @@ spec:
         containers:
         - name: nginx
           image: nginx:1.7.9
-          ports:
-          - containerPort: 80
-    replicas: 1
+    replicas: 5

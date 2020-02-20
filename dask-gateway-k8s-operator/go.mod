@@ -3,6 +3,7 @@ module github.com/dask/dask-gateway/dask-gateway-k8s-operator
 go 1.13
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/operator-framework/operator-sdk v0.15.2
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.0.0
