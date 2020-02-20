@@ -8,24 +8,28 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// Scheduler scheduler
 type Scheduler struct {
-	Template corev1.PodTemplate `json:"template"`
+	Template corev1.PodTemplateSpec `json:"template"`
 }
 
+// Worker worker
 type Worker struct {
-	Template corev1.PodTemplate `json:"template"`
-	Replicas int32              `json:"replicas,omitempty"`
+	Template corev1.PodTemplateSpec `json:"template"`
+	Replicas int32                  `json:"replicas,omitempty"`
 }
 
 // DaskClusterSpec defines the desired state of DaskCluster
 type DaskClusterSpec struct {
 	Scheduler Scheduler         `json:"scheduler"`
 	Worker    Worker            `json:"worker"`
-	Info      map[string]string `json:"info"`
+	Info      map[string]string `json:"info,omitempty"`
 }
 
 // DaskClusterStatus defines the observed state of DaskCluster
 type DaskClusterStatus struct {
+	Replicas int32    `json:"replicas"`
+	Pods     []string `json:"pods"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
