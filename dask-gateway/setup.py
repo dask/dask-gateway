@@ -1,7 +1,11 @@
 import os
 from setuptools import setup, find_packages
 
-import versioneer
+ns = {}
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here, "dask_gateway", "_version.py")) as f:
+    exec(f.read(), {}, ns)
+    VERSION = ns["__version__"]
 
 install_requires = ["aiohttp", "dask>=2.2.0", "distributed>=2.2.0"]
 
@@ -14,8 +18,7 @@ extras_require = {
 
 setup(
     name="dask-gateway",
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    version=VERSION,
     maintainer="Jim Crist",
     maintainer_email="jiminy.crist@gmail.com",
     license="BSD",

@@ -36,8 +36,11 @@ async def test_local_cluster_backend():
                 await cluster.scale(0)
                 await wait_for_workers(cluster, exact=0)
 
-                res = await g.gateway.backend.do_check_workers(db_workers)
-                assert sum(res) == 0
+                async def test():
+                    res = await g.gateway.backend.do_check_workers(db_workers)
+                    assert sum(res) == 0
+
+                await with_retries(test, 20)
 
                 # No-op for shutdown of already shutdown worker
                 db_worker = db_workers[0]
@@ -47,4 +50,4 @@ async def test_local_cluster_backend():
                 res = await g.gateway.backend.do_check_clusters([db_cluster])
                 assert res == [False]
 
-            await with_retries(test, 5)
+            await with_retries(test, 20)
