@@ -60,6 +60,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
+	// TODO: Setup watch for workers.
+
 	return nil
 }
 
