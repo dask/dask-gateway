@@ -88,7 +88,8 @@ type ReconcileDaskCluster struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	// reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+	reqLogger := log
 	reqLogger.Info("Reconciling DaskCluster")
 
 	// Fetch the DaskCluster instance
@@ -168,7 +169,7 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 
 	switch {
 	// Not enough replicas
-	// Note, this may cover is in the event of pod termination or failure.
+	// Note, this may cover us in the event of pod termination or failure.
 	case diff > 0:
 		for diff > 0 {
 			reqLogger.Info("Creating worker abstraction")
@@ -176,12 +177,17 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 			fmt.Println("pod volumes:", worker.Spec.Volumes)
 			fmt.Println("container volumes:", worker.Spec.Containers[0].VolumeMounts)
 
+			worker := newWorkerFromTemplate(cr)
+
+			// This is requierd to solve a bug in which the service account is being injected to the worker before
+			// any calls to client.Create are made. As a result of the injection, the create fails and the
+			// reconciliation needs to start from scratch. I will test this against our dev cluster without the
+			// subsequent line. If it still fails, I'll file an issue with Kubernetes.
+			worker.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{}
+			// []VolumeMount{}
+
 			reqLogger.Info("Creating worker")
-			// TODO: Address bug that's surfacing here.
-			// It's not breaking since subsequent reconciliations work fine.
-			// "error": "Pod \"dask-worker-fxsv4t\" is invalid: spec.containers[0].volumeMounts[0].name: Not found: \"default-token-qw8dl\""
-			// https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
-			if err := r.client.Create(context.TODO(), newWorkerFromTemplate(cr)); err != nil {
+			if err := r.client.Create(context.TODO(), worker); err != nil {
 				return reconcile.Result{}, err
 			}
 
