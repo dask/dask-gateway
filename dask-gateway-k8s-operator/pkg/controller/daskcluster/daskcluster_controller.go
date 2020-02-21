@@ -26,23 +26,18 @@ import (
 
 var log = logf.Log.WithName("controller_daskcluster")
 
-/**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
- */
-
 // Add creates a new DaskCluster Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
 }
 
-// newReconciler returns a new reconcile.Reconciler
+// newReconciler returns a new reconcile.Reconciler.
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 	return &ReconcileDaskCluster{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
-// add adds a new Controller to mgr with r as the reconcile.Reconciler
+// add adds a new Controller to mgr with r as the reconcile.Reconciler.
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
 	c, err := controller.New("daskcluster-controller", mgr, controller.Options{Reconciler: r})
@@ -50,13 +45,13 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to primary resource DaskCluster
+	// Watch for changes to primary resource DaskCluster.
 	err = c.Watch(&source.Kind{Type: &gatewayv1alpha1.DaskCluster{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to secondary resource Pods and requeue the owner DaskCluster
+	// Watch for changes to secondary resource Pods and requeue the owner DaskCluster.
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &gatewayv1alpha1.DaskCluster{},
@@ -74,22 +69,21 @@ var _ reconcile.Reconciler = &ReconcileDaskCluster{}
 // ReconcileDaskCluster reconciles a DaskCluster object
 type ReconcileDaskCluster struct {
 	// This client, initialized using mgr.Client() above, is a split client
-	// that reads objects from the cache and writes to the apiserver
+	// that reads objects from the cache and writes to the apiserver.
 	client client.Client
 	scheme *runtime.Scheme
 }
 
 // Reconcile reads that state of the cluster for a DaskCluster object and makes changes based on the state read
 // and what is in the DaskCluster.Spec
-// Note:
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
+// Note: the Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger := log
 	reqLogger.Info("Reconciling DaskCluster")
 
-	// Fetch the DaskCluster instance
+	// Fetch the DaskCluster instance.
 	cr := &gatewayv1alpha1.DaskCluster{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, cr)
 
@@ -101,7 +95,7 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	// Fetch scheduler
+	// Fetch scheduler.
 	scheduler := newSchedulerFromTemplate(cr)
 	if err := controllerutil.SetControllerReference(cr, scheduler, r.scheme); err != nil {
 		return reconcile.Result{}, err
@@ -144,7 +138,7 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 		)
 	}
 
-	// Get workers
+	// Fetch workers
 	// TODO: Evaluate encapsulating some of this logic.
 	worker := newWorkerFromTemplate(cr)
 	labelMap := worker.ObjectMeta.Labels
@@ -162,11 +156,11 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	// Now fork logic based on scaling requirements
+	// Now fork logic based on scaling requirements.
 	diff := int(cr.Spec.Worker.Replicas) - len(podList.Items)
 
 	switch {
-	// Not enough replicas
+	// Not enough replicas.
 	// Confirmed that this does in fact cover us in the event of external pod termination.
 	case diff > 0:
 		for diff > 0 {
@@ -181,13 +175,14 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 			// []VolumeMount{}
 
 			reqLogger.Info("Creating worker")
+
 			if err := r.client.Create(context.TODO(), worker); err != nil {
 				return reconcile.Result{}, err
 			}
 
 			diff--
 		}
-	// More workers than replicas
+	// More workers than replicas.
 	case diff < 0:
 		// Delete workers that are pending.
 		// TODO: Test this.
