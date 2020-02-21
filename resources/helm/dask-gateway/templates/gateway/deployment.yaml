@@ -4,12 +4,8 @@ metadata:
   name: {{ include "dask-gateway.fullname" . | printf "gateway-%s" | trunc 63 | trimSuffix "-" }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
-  {{- with .Values.gateway.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.gateway.replicas }}
   selector:
     matchLabels:
       {{- include "dask-gateway.matchLabels" . | nindent 6 }}
@@ -20,8 +16,11 @@ spec:
         {{- include "dask-gateway.labels" . | nindent 8 }}
         app.kubernetes.io/component: gateway
       annotations:
-        checksum/configmap: {{ include (print .Template.BasePath "/configmap.yaml") . | sha256sum }}
-        checksum/secret: {{ include (print .Template.BasePath "/secret.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print .Template.BasePath "/gateway/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print .Template.BasePath "/gateway/secret.yaml") . | sha256sum }}
+        {{- if .Values.gateway.annotations }}
+        {{- .Values.gateway.annotations | toYaml | trimSuffix "\n" | nindent 8 }}
+        {{- end }}
     spec:
       {{- if .Values.rbac.enabled }}
       serviceAccountName: {{ include "dask-gateway.fullname" . }}
@@ -44,18 +43,6 @@ spec:
             - mountPath: /etc/dask-gateway/
               name: configmap
           env:
-            - name: DASK_GATEWAY_PROXY_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "dask-gateway.fullname" . }}
-                  key: proxy-token
-            {{- if .Values.gateway.cookieSecret }}
-            - name: DASK_GATEWAY_COOKIE_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "dask-gateway.fullname" . }}
-                  key: cookie-secret
-            {{- end }}
             {{- if (eq .Values.gateway.auth.type "jupyterhub") }}
             - name: JUPYTERHUB_API_TOKEN
               valueFrom:
@@ -65,14 +52,6 @@ spec:
             {{- end }}
             - name: GATEWAY_API_SERVICE_NAME
               value: {{ include "dask-gateway.fullname" . | printf "gateway-api-%s" | trunc 63 | trimSuffix "-" }}
-            - name: SCHEDULER_PROXY_PUBLIC_SERVICE_NAME
-              value: {{ include "dask-gateway.fullname" . | printf "scheduler-public-%s" | trunc 63 | trimSuffix "-" }}
-            - name: SCHEDULER_PROXY_API_SERVICE_NAME
-              value: {{ include "dask-gateway.fullname" . | printf "scheduler-api-%s" | trunc 63 | trimSuffix "-" }}
-            - name: WEB_PROXY_PUBLIC_SERVICE_NAME
-              value: {{ include "dask-gateway.fullname" . | printf "web-public-%s" | trunc 63 | trimSuffix "-" }}
-            - name: WEB_PROXY_API_SERVICE_NAME
-              value: {{ include "dask-gateway.fullname" . | printf "web-api-%s" | trunc 63 | trimSuffix "-" }}
           ports:
-            - containerPort: 8001
+            - containerPort: 8000
               name: api

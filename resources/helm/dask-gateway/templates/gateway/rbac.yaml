@@ -1,0 +1,60 @@
+{{- if .Values.rbac.enabled -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "dask-gateway.fullname" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "dask-gateway.fullname" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["gateway.dask.org"]
+    resources: ["daskclusters"]
+    verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "dask-gateway.fullname" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "dask-gateway.fullname" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "dask-gateway.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "dask-gateway.fullname" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "watch", "list"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "dask-gateway.fullname" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "dask-gateway.fullname" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "dask-gateway.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

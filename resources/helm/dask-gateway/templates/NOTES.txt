@@ -4,10 +4,6 @@ version {{ .Chart.Version }}!
 Your release is named {{ .Release.Name | quote }} and installed into the
 namespace {{ .Release.Namespace | quote }}.
 
-You can find the public address of Dask-Gateway at:
+You can find the public address(es) at:
 
-  $ kubectl --namespace={{ .Release.Namespace }} get service {{ include "dask-gateway.fullname" . | printf "web-public-%s" | trunc 63 | trimSuffix "-" }}
-
-Likewise, the public address of for the scheduler proxy is at:
-
-  $ kubectl --namespace={{ .Release.Namespace }} get service {{ include "dask-gateway.fullname" . | printf "scheduler-public-%s" | trunc 63 | trimSuffix "-" }}
+  $ kubectl --namespace={{ .Release.Namespace }} get service {{ include "dask-gateway.traefikName" . }}

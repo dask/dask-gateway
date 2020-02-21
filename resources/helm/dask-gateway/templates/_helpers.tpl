@@ -50,5 +50,11 @@ Match labels
 {{- define "dask-gateway.matchLabels" -}}
 app.kubernetes.io/name: {{ include "dask-gateway.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+Traefik name
+*/}}
+{{- define "dask-gateway.traefikName" -}}
+{{ include "dask-gateway.fullname" . | printf "traefik-%s" | trunc 63 | trimSuffix "-" }}
 {{- end -}}

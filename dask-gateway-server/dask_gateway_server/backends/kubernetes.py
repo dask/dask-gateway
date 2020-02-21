@@ -355,7 +355,12 @@ class KubeBackend(Backend):
     )
 
     async def setup(self, app):
-        await config.load_kube_config()
+        try:
+            # Not a coroutine for some reason
+            config.load_incluster_config()
+        except config.ConfigException:
+            await config.load_kube_config()
+
         self.api_client = client.ApiClient()
         self.core_client = client.CoreV1Api(api_client=self.api_client)
         self.custom_client = client.CustomObjectsApi(api_client=self.api_client)

@@ -4,12 +4,16 @@ metadata:
   name: {{ include "dask-gateway.fullname" . | printf "gateway-api-%s" | trunc 63 | trimSuffix "-" }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
-    app.kubernetes.io/component: gateway-api
+  {{- with .Values.gateway.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
+  type: ClusterIP
   selector:
-    {{- include "dask-gateway.labels" . | nindent 4 }}
+    {{- include "dask-gateway.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: gateway
   ports:
     - protocol: TCP
-      port: 8001
-      targetPort: 8001
+      port: 8000
+      targetPort: 8000

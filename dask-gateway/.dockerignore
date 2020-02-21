@@ -1,0 +1,7 @@
+build/
+dist/
+*.pyc
+.eggs/
+*.egg-info
+.cache/
+.pytest_cache/

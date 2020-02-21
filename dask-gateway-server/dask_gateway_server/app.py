@@ -125,11 +125,16 @@ class DaskGateway(Application):
     )
 
     backend_class = Type(
-        "dask_gateway_server.backends.local.UnsafeLocalBackend",
         klass="dask_gateway_server.backends.Backend",
         help="The gateway backend class to use",
         config=True,
     )
+
+    @default("backend_class")
+    def _default_backend_class(self):
+        # Separate the default out to avoid traitlets auto-importing it,
+        # even if it's unused :(.
+        return "dask_gateway_server.backends.local.UnsafeLocalBackend"
 
     address = Unicode(
         help="""

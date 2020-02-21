@@ -1,7 +1,11 @@
 gateway:
-  proxyToken: "0fd8ff0259f6ced7fc27bb5ebcad307dacd4e3685e3ca24d46856c73cc113981"
+  image:
+    tag: dev
 
-  clusterManager:
+  backend:
+    image:
+      tag: dev
+
     scheduler:
       cores:
         request: 0.1
@@ -14,12 +18,11 @@ gateway:
       memory:
         request: 256M
 
-webProxy:
+traefik:
   service:
     type: NodePort
-    nodePort: 30200
-
-schedulerProxy:
-  service:
-    type: NodePort
-    nodePort: 30201
+    ports:
+      web:
+        nodePort: 30200
+      tcp:
+        nodePort: 30201

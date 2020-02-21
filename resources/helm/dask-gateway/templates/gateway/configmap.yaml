@@ -9,8 +9,8 @@ data:
     {{/* Extract extraConfig, as its handled separately */}}
     {{- $extraConfig := .Values.gateway.extraConfig }}
     {{/* Remove secrets and extraConfig before forwarding configuration */}}
-    {{- $values := pick .Values "gateway" "schedulerProxy" "webProxy" }}
-    {{- $_ := set $values "gateway" (omit $values.gateway "cookieSecret" "proxyToken" "extraConfig") }}
+    {{- $values := pick .Values "gateway" }}
+    {{- $_ := set $values "gateway" (omit $values.gateway "extraConfig") }}
     {{- if $values.gateway.auth.jupyterhub.apiToken }}
     {{- $auth := omit $values.gateway.auth }}
     {{- $_ := set $auth "jupyterhub" (omit $auth.jupyterhub "apiToken") }}
@@ -31,53 +31,29 @@ data:
         return value
 
     # Extract address information about the other services
-    def _make_addr(scheme, name):
+    def _make_addr(scheme, name, path=""):
         name = os.environ[name].replace("-", "_").upper()
         host = os.environ[name + "_SERVICE_HOST"]
         port = int(os.environ[name + "_SERVICE_PORT"])
-        return "%s://%s:%d" % (scheme, host, port)
+        return f"{scheme}://{host}:{port}{path}"
 
-    if "GATEWAY_API_SERVICE_NAME" in os.environ:
-        gateway_api = _make_addr("http", "GATEWAY_API_SERVICE_NAME")
-        web_proxy_public = _make_addr("http", "WEB_PROXY_PUBLIC_SERVICE_NAME")
-        web_proxy_api = _make_addr("http", "WEB_PROXY_API_SERVICE_NAME")
-        scheduler_proxy_public = _make_addr("tls", "SCHEDULER_PROXY_PUBLIC_SERVICE_NAME")
-        scheduler_proxy_api = _make_addr("http", "SCHEDULER_PROXY_API_SERVICE_NAME")
+    # Configure addresses
+    c.DaskGateway.address = ":8000"
+    c.KubeBackend.api_url = _make_addr("http", "GATEWAY_API_SERVICE_NAME", "/api")
 
-        c.DaskGateway.private_connect_url = gateway_api
-        c.DaskGateway.public_connect_url = web_proxy_public
-        c.DaskGateway.gateway_url = scheduler_proxy_public
-        c.WebProxy.api_connect_url = web_proxy_api
-        c.SchedulerProxy.api_connect_url = scheduler_proxy_api
-    else:
-        c.DaskGateway.gateway_url = "tls://0.0.0.0:8786"
+    # Configure the backend
+    c.DaskGateway.backend_class = "dask_gateway_server.backends.kubernetes.KubeBackend"
+    c.KubeBackend.instance = "{{ include "dask-gateway.fullname" . }}"
 
-    # Configure the various addresses
-    c.DaskGateway.public_url = "http://0.0.0.0:8000"
-    c.DaskGateway.private_url = "http://0.0.0.0:8001"
-    c.SchedulerProxy.api_url = "http://0.0.0.0:8001"
-    c.WebProxy.api_url = "http://0.0.0.0:8001"
-
-    # Proxies aren't managed by the gateway
-    c.SchedulerProxy.externally_managed = True
-    c.WebProxy.externally_managed = True
-
-    # Configure the cluster manager
-    c.DaskGateway.cluster_manager_class = (
-        "dask_gateway_server.managers.kubernetes.KubeClusterManager"
-    )
-    if "POD_NAMESPACE" in os.environ:
-        c.KubeClusterManager.namespace = os.environ["POD_NAMESPACE"]
-
-    # Configure the cluster manager image
-    image_name = get_property("gateway.clusterManager.image.name")
+    # Configure the dask cluster image
+    image_name = get_property("gateway.backend.image.name")
     if image_name:
-        image_tag = get_property("gateway.clusterManager.image.tag")
-        c.KubeClusterManager.image = (
+        image_tag = get_property("gateway.backend.image.tag")
+        c.KubeClusterConfig.image = (
             "%s:%s" % (image_name, image_tag) if image_tag else image_name
         )
 
-    # Forward cluster manager configuration
+    # Forward dask cluster configuration
     for field, prop_name in [
         # Scheduler config
         ("scheduler_cores", "scheduler.cores.request"),
@@ -96,20 +72,19 @@ data:
         # Additional fields
         ("image_pull_policy", "image.pullPolicy"),
         ("environment", "environment"),
-        ("cluster_start_timeout", "clusterStartTimeout"),
-        ("worker_start_timeout", "workerStartTimeout"),
+        ("namespace", "namespace"),
     ]:
-        value = get_property("gateway.clusterManager." + prop_name)
+        value = get_property("gateway.backend." + prop_name)
         if value is not None:
-            setattr(c.KubeClusterManager, field, value)
+            setattr(c.KubeClusterConfig, field, value)
 
     # Authentication
     auth_type = get_property("gateway.auth.type")
-    if auth_type == "dummy":
-        c.DaskGateway.authenticator_class = "dask_gateway_server.auth.DummyAuthenticator"
-        password = get_property("gateway.auth.dummy.password")
+    if auth_type == "simple":
+        c.DaskGateway.authenticator_class = "dask_gateway_server.auth.SimpleAuthenticator"
+        password = get_property("gateway.auth.simple.password")
         if password is not None:
-            c.DummyAuthenticator.password = password
+            c.SimpleAuthenticator.password = password
     elif auth_type == "kerberos":
         c.DaskGateway.authenticator_class = "dask_gateway_server.auth.KerberosAuthenticator"
         keytab = get_property("gateway.auth.kerberos.keytab")
