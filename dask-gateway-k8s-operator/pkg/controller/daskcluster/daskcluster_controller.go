@@ -115,7 +115,8 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 	)
 
 	// If not found, create scheduler
-	if err != nil && errors.IsNotFound(err) {
+	switch {
+	case err != nil && errors.IsNotFound(err):
 		reqLogger.Info(
 			"Creating a new Scheduler",
 			"Scheduler.Namespace",
@@ -130,9 +131,9 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 		}
 
 		return reconcile.Result{}, nil
-	} else if err != nil {
+	case err != nil:
 		return reconcile.Result{}, err
-	} else {
+	default:
 		// If found, don't create scheduler.
 		reqLogger.Info(
 			"Scheduler already exists",
@@ -144,7 +145,7 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	// Get workers
-	// TODO: Encapsulate
+	// TODO: Evaluate encapsulating some of this logic.
 	worker := newWorkerFromTemplate(cr)
 	labelMap := worker.ObjectMeta.Labels
 	labelSelector := labels.SelectorFromSet(labelMap)
@@ -166,7 +167,7 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 
 	switch {
 	// Not enough replicas
-	// Note, this may cover us in the event of pod termination or failure.
+	// Confirmed that this does in fact cover us in the event of external pod termination.
 	case diff > 0:
 		for diff > 0 {
 			reqLogger.Info("Creating worker abstraction")
