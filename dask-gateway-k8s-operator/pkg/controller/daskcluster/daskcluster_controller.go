@@ -101,11 +101,11 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	found := &corev1.Pod{}
+	foundScheduler := &corev1.Pod{}
 	err = r.client.Get(
 		context.TODO(),
 		types.NamespacedName{Name: scheduler.Name, Namespace: scheduler.Namespace},
-		found,
+		foundScheduler,
 	)
 
 	// If not found, create scheduler
@@ -124,6 +124,8 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 			return reconcile.Result{}, err
 		}
 
+		// Trigger reconcile to ensure that we have a foundScheduler so that we can pass it as an owner reference to
+		// the worker pods.
 		return reconcile.Result{}, nil
 	case err != nil:
 		return reconcile.Result{}, err
@@ -140,7 +142,7 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 
 	// Fetch workers
 	// TODO: Evaluate encapsulating some of this logic.
-	worker := newWorkerFromTemplate(cr)
+	worker := newWorkerFromTemplate(cr, foundScheduler)
 	labelMap := worker.ObjectMeta.Labels
 	labelSelector := labels.SelectorFromSet(labelMap)
 	listOps := &client.ListOptions{
@@ -166,13 +168,12 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 		for diff > 0 {
 			reqLogger.Info("Creating worker abstraction")
 
-			worker := newWorkerFromTemplate(cr)
-			// This is requierd to solve a bug in which the service account is being injected to the worker before
+			worker := newWorkerFromTemplate(cr, foundScheduler)
+			// This is required to solve a bug in which the service account is being injected to the worker before
 			// any calls to client.Create are made. As a result of the injection, the create fails and the
 			// reconciliation needs to start from scratch. I will test this against our dev cluster without the
 			// subsequent line. If it still fails, I'll file an issue with Kubernetes.
 			worker.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{}
-			// []VolumeMount{}
 
 			reqLogger.Info("Creating worker")
 
@@ -210,7 +211,7 @@ func newSchedulerFromTemplate(cr *gatewayv1alpha1.DaskCluster) *corev1.Pod {
 }
 
 // newWorkerFromTemplate constructs a worker pod using the scheduler pod template from the custom resource.
-func newWorkerFromTemplate(cr *gatewayv1alpha1.DaskCluster) *corev1.Pod {
+func newWorkerFromTemplate(cr *gatewayv1alpha1.DaskCluster, foundScheduler *corev1.Pod) *corev1.Pod {
 	labels := map[string]string{
 		"app": cr.Name + "worker",
 	}
@@ -220,9 +221,8 @@ func newWorkerFromTemplate(cr *gatewayv1alpha1.DaskCluster) *corev1.Pod {
 			Name:      cr.Name + "-worker-" + rand.String(6),
 			Namespace: cr.Namespace,
 			Labels:    labels,
-			// TODO: Set owner reference to scheduler so that we can preserve the CR.
 			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(cr, gatewayv1alpha1.SchemeGroupVersion.WithKind("DaskCluster")),
+				*metav1.NewControllerRef(foundScheduler, corev1.SchemeGroupVersion.WithKind("Pod")),
 			},
 		},
 		Spec: cr.Spec.Worker.Template.Spec,
