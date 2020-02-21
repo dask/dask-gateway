@@ -2,6 +2,7 @@ package daskcluster
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/rand"
 
@@ -87,8 +88,7 @@ type ReconcileDaskCluster struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	// reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger := log
+	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling DaskCluster")
 
 	// Fetch the DaskCluster instance
@@ -110,7 +110,11 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: scheduler.Name, Namespace: scheduler.Namespace}, found)
+	err = r.client.Get(
+		context.TODO(),
+		types.NamespacedName{Name: scheduler.Name, Namespace: scheduler.Namespace},
+		found,
+	)
 
 	// If not found, create scheduler
 	if err != nil && errors.IsNotFound(err) {
@@ -160,22 +164,40 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	// Now fork logic based on scaling requirements
-	workerDifference := int(cr.Spec.Worker.Replicas) - len(podList.Items)
+	diff := int(cr.Spec.Worker.Replicas) - len(podList.Items)
 
-	for workerDifference > 0 {
-		reqLogger.Info("Creating worker abstraction")
+	switch {
+	// Not enough replicas
+	// Note, this may cover is in the event of pod termination or failure.
+	case diff > 0:
+		for diff > 0 {
+			reqLogger.Info("Creating worker abstraction")
 
-		worker := newWorkerFromTemplate(cr)
+			fmt.Println("pod volumes:", worker.Spec.Volumes)
+			fmt.Println("container volumes:", worker.Spec.Containers[0].VolumeMounts)
 
-		reqLogger.Info("Creating worker")
-		// TODO: Address bug that's surfacing here.
-		// It's not breaking since subsequent reconciliations work fine.
-		// "error": "Pod \"dask-worker-fxsv4t\" is invalid: spec.containers[0].volumeMounts[0].name: Not found: \"default-token-qw8dl\""
-		if err := r.client.Create(context.TODO(), worker); err != nil {
-			return reconcile.Result{}, err
+			reqLogger.Info("Creating worker")
+			// TODO: Address bug that's surfacing here.
+			// It's not breaking since subsequent reconciliations work fine.
+			// "error": "Pod \"dask-worker-fxsv4t\" is invalid: spec.containers[0].volumeMounts[0].name: Not found: \"default-token-qw8dl\""
+			// https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#use-the-default-service-account-to-access-the-api-server
+			if err := r.client.Create(context.TODO(), newWorkerFromTemplate(cr)); err != nil {
+				return reconcile.Result{}, err
+			}
+
+			diff--
 		}
-
-		workerDifference--
+	// More workers than replicas
+	case diff < 0:
+		// Delete workers that are pending.
+		// TODO: Test this.
+		for _, pod := range podList.Items {
+			if pod.Status.Phase == "pending" {
+				if err := r.client.Delete(context.TODO(), &pod); err != nil {
+					return reconcile.Result{}, err
+				}
+			}
+		}
 	}
 
 	return reconcile.Result{}, nil
@@ -201,7 +223,7 @@ func newWorkerFromTemplate(cr *gatewayv1alpha1.DaskCluster) *corev1.Pod {
 			Name:      cr.Name + "-worker-" + rand.String(6),
 			Namespace: cr.Namespace,
 			Labels:    labels,
-			// TODO: Validate that setting OwnerReference here works.
+			// TODO: Set owner reference to scheduler so that we can preserve the CR.
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(cr, gatewayv1alpha1.SchemeGroupVersion.WithKind("DaskCluster")),
 			},
