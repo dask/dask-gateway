@@ -2,7 +2,6 @@ package daskcluster
 
 import (
 	"context"
-	"fmt"
 
 	"k8s.io/apimachinery/pkg/util/rand"
 
@@ -82,8 +81,6 @@ type ReconcileDaskCluster struct {
 
 // Reconcile reads that state of the cluster for a DaskCluster object and makes changes based on the state read
 // and what is in the DaskCluster.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
@@ -174,11 +171,7 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 		for diff > 0 {
 			reqLogger.Info("Creating worker abstraction")
 
-			fmt.Println("pod volumes:", worker.Spec.Volumes)
-			fmt.Println("container volumes:", worker.Spec.Containers[0].VolumeMounts)
-
 			worker := newWorkerFromTemplate(cr)
-
 			// This is requierd to solve a bug in which the service account is being injected to the worker before
 			// any calls to client.Create are made. As a result of the injection, the create fails and the
 			// reconciliation needs to start from scratch. I will test this against our dev cluster without the
@@ -209,6 +202,7 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 	return reconcile.Result{}, nil
 }
 
+// newSchedulerFromTemplate constructs a scheduler pod using the scheduler pod template from the custom resource.
 func newSchedulerFromTemplate(cr *gatewayv1alpha1.DaskCluster) *corev1.Pod {
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -219,6 +213,7 @@ func newSchedulerFromTemplate(cr *gatewayv1alpha1.DaskCluster) *corev1.Pod {
 	}
 }
 
+// newWorkerFromTemplate constructs a worker pod using the scheduler pod template from the custom resource.
 func newWorkerFromTemplate(cr *gatewayv1alpha1.DaskCluster) *corev1.Pod {
 	labels := map[string]string{
 		"app": cr.Name + "worker",
