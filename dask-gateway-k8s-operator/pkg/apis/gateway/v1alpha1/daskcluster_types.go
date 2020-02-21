@@ -24,6 +24,7 @@ type DaskClusterSpec struct {
 	Scheduler Scheduler         `json:"scheduler"`
 	Worker    Worker            `json:"worker"`
 	Info      map[string]string `json:"info,omitempty"`
+	Active    bool              `json:"active"`
 }
 
 // DaskClusterStatus defines the observed state of DaskCluster

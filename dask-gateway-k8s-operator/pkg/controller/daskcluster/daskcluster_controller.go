@@ -108,6 +108,30 @@ func (r *ReconcileDaskCluster) Reconcile(request reconcile.Request) (reconcile.R
 		foundScheduler,
 	)
 
+	// Break early and delete if active is set to false.
+	if !cr.Spec.Active {
+		switch {
+		case err != nil && errors.IsNotFound(err):
+			return reconcile.Result{}, nil
+		case err != nil:
+			return reconcile.Result{}, err
+		default:
+			reqLogger.Info("Deleting scheduler and workers")
+
+			// Delete scheduler, which deletes the workers as well since they're children of the scheduler.
+			err := r.client.Delete(context.TODO(), foundScheduler)
+
+			switch {
+			case err != nil && errors.IsNotFound(err):
+				return reconcile.Result{}, nil
+			case err != nil:
+				return reconcile.Result{}, err
+			default:
+				return reconcile.Result{}, nil
+			}
+		}
+	}
+
 	// If not found, create scheduler
 	switch {
 	case err != nil && errors.IsNotFound(err):

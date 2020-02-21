@@ -23,3 +23,4 @@ spec:
         - name: nginx
           image: nginx:1.7.9
     replicas: 5
+  active: false
