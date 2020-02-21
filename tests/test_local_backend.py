@@ -26,8 +26,11 @@ async def test_local_cluster_backend():
 
                 db_workers = list(db_cluster.workers.values())
 
-                res = await g.gateway.backend.do_check_workers(db_workers)
-                assert sum(res) == 1
+                async def test():
+                    res = await g.gateway.backend.do_check_workers(db_workers)
+                    assert sum(res) == 1
+
+                await with_retries(test, 20)
 
                 async with cluster.get_client(set_as_default=False) as client:
                     res = await client.submit(lambda x: x + 1, 1)
