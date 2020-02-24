@@ -91,15 +91,15 @@ async def test_make_cluster_object():
 
     # resources are forwarded
     wct = worker["spec"]["containers"][0]
-    assert wct["resources"]["requests"]["memory"] == 4 * 2 ** 30
-    assert wct["resources"]["limits"]["memory"] == 6 * 2 ** 30
-    assert wct["resources"]["requests"]["cpu"] == 2
-    assert wct["resources"]["limits"]["cpu"] == 3
+    assert wct["resources"]["requests"]["memory"] == str(4 * 2 ** 30)
+    assert wct["resources"]["limits"]["memory"] == str(6 * 2 ** 30)
+    assert wct["resources"]["requests"]["cpu"] == "2.0"
+    assert wct["resources"]["limits"]["cpu"] == "3.0"
     sct = sched["spec"]["containers"][0]
-    assert sct["resources"]["requests"]["memory"] == 2 * 2 ** 30
-    assert sct["resources"]["limits"]["memory"] == 3 * 2 ** 30
-    assert sct["resources"]["requests"]["cpu"] == 1
-    assert sct["resources"]["limits"]["cpu"] == 2
+    assert sct["resources"]["requests"]["memory"] == str(2 * 2 ** 30)
+    assert sct["resources"]["limits"]["memory"] == str(3 * 2 ** 30)
+    assert sct["resources"]["requests"]["cpu"] == "1.0"
+    assert sct["resources"]["limits"]["cpu"] == "2.0"
 
     # extra config picked up
     assert wct["workingDir"] == "/worker"

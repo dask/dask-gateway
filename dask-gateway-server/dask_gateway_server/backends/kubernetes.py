@@ -515,8 +515,8 @@ class KubeBackend(Backend):
                 env=[V1EnvVar(k, v) for k, v in env.items()],
                 image_pull_policy=config.image_pull_policy,
                 resources=V1ResourceRequirements(
-                    requests={"cpu": cpu_req, "memory": mem_req},
-                    limits={"cpu": cpu_lim, "memory": mem_lim},
+                    requests={"cpu": f"{cpu_req:.1f}", "memory": str(mem_req)},
+                    limits={"cpu": f"{cpu_lim:.1f}", "memory": str(mem_lim)},
                 ),
                 volume_mounts=[
                     V1VolumeMount(
@@ -536,8 +536,6 @@ class KubeBackend(Backend):
                 container = merge_json_objects(container, extra_container_config)
 
             pod = {
-                "kind": "Pod",
-                "apiVersion": "v1",
                 "metadata": {
                     "labels": labels,
                     "annotations": annotations,
