@@ -43,7 +43,7 @@ data:
 
     # Configure the backend
     c.DaskGateway.backend_class = "dask_gateway_server.backends.kubernetes.KubeBackend"
-    c.KubeBackend.instance = "{{ include "dask-gateway.fullname" . }}"
+    c.KubeBackend.gateway_instance = "{{ include "dask-gateway.fullname" . }}"
 
     # Configure the dask cluster image
     image_name = get_property("gateway.backend.image.name")

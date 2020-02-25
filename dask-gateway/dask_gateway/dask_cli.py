@@ -17,7 +17,6 @@ from distributed import Scheduler, Worker, Nanny
 from distributed.diagnostics.plugin import SchedulerPlugin
 from distributed.security import Security
 from distributed.scheduler import logger as scheduler_logger
-from distributed.utils import ignoring
 from distributed.cli.utils import install_signal_handlers
 from distributed.proctitle import (
     enable_proctitle_on_children,
@@ -398,6 +397,24 @@ scheduler_parser.add_argument(
     default=0,
     help="Idle timeout (in seconds) before shutting down the cluster",
 )
+scheduler_parser.add_argument(
+    "--scheduler-address",
+    type=str,
+    default="tls://:0",
+    help="The address the scheduler should listen at. Defaults to `:0`",
+)
+scheduler_parser.add_argument(
+    "--dashboard-address",
+    type=str,
+    default=":0",
+    help="The address the dashboard should listen at. Defaults to `:0`",
+)
+scheduler_parser.add_argument(
+    "--api-address",
+    type=str,
+    default=":0",
+    help="The address the api should listen at. Defaults to `:0`",
+)
 
 
 def getenv(key):
@@ -413,6 +430,7 @@ def make_security(tls_cert=None, tls_key=None):
     tls_key = tls_key or getenv("DASK_GATEWAY_TLS_KEY")
 
     return Security(
+        require_encryption=True,
         tls_ca_file=tls_cert,
         tls_scheduler_cert=tls_cert,
         tls_scheduler_key=tls_key,
@@ -454,6 +472,9 @@ def scheduler(argv=None):
             adaptive_period=args.adaptive_period,
             heartbeat_period=args.heartbeat_period,
             idle_timeout=args.idle_timeout,
+            scheduler_address=args.scheduler_address,
+            dashboard_address=args.dashboard_address,
+            api_address=args.api_address,
         )
         await scheduler.finished()
 
@@ -469,11 +490,14 @@ async def start_scheduler(
     adaptive_period=3,
     heartbeat_period=15,
     idle_timeout=0,
+    scheduler_address="tls://:0",
+    dashboard_address=":0",
+    api_address=":0",
     exit_on_failure=True,
 ):
     loop = IOLoop.current()
     services = {
-        ("gateway", 0): (
+        ("gateway", api_address or 0): (
             GatewaySchedulerService,
             {
                 "gateway": gateway,
@@ -483,12 +507,13 @@ async def start_scheduler(
             },
         )
     }
-    with ignoring(ImportError):
-        from distributed.dashboard.scheduler import BokehScheduler
-
-        services[("dashboard", 0)] = (BokehScheduler, {})
-
-    scheduler = Scheduler(loop=loop, services=services, security=security)
+    scheduler = Scheduler(
+        host=scheduler_address,
+        loop=loop,
+        services=services,
+        security=security,
+        dashboard_address=dashboard_address,
+    )
     return await scheduler
 
 

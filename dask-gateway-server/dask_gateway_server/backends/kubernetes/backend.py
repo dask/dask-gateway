@@ -1,42 +1,24 @@
 import asyncio
-import json
 import os
 import sys
 import uuid
-from base64 import b64decode
+from base64 import b64encode, b64decode
 from collections import defaultdict
 from datetime import datetime, timezone
 
-from traitlets import Float, Dict, Unicode, Any, Int, Instance, default
-from traitlets.config import LoggingConfigurable
-from kubernetes_asyncio import client, config, watch
-from kubernetes_asyncio.client.models import (
-    V1Container,
-    V1EnvVar,
-    V1ResourceRequirements,
-    V1VolumeMount,
-)
+from traitlets import Float, Dict, Unicode, default, validate
+from kubernetes_asyncio import client, config
 
-from .. import __version__ as VERSION
-from .. import models
-from ..traitlets import MemoryLimit, Type
-from ..utils import cancel_task, UniqueQueue
-from .base import Backend, ClusterConfig
+from ... import __version__ as VERSION
+from ... import models
+from ...tls import new_keypair
+from ...traitlets import MemoryLimit, Type
+from ...utils import cancel_task, UniqueQueue
+from ..base import Backend, ClusterConfig
+from .utils import Reflector, DELETED
 
 
 __all__ = ("KubeClusterConfig", "KubeBackend")
-
-# Monkeypatch kubernetes_asyncio to cleanup resources better
-client.rest.RESTClientObject.__del__ = lambda self: None
-
-
-class Watch(watch.Watch):
-    def __init__(self, api_client=None, return_type=None):
-        self._raw_return_type = return_type
-        self._stop = False
-        self._api_client = api_client or client.ApiClient()
-        self.resource_version = 0
-        self.resp = None
 
 
 if sys.version_info[:2] >= (3, 7):
@@ -295,13 +277,13 @@ class KubeBackend(Backend):
     """A dask-gateway backend for running on Kubernetes"""
 
     cluster_config_class = Type(
-        "dask_gateway_server.backends.kubernetes.KubeClusterConfig",
+        "dask_gateway_server.backends.kubernetes.backend.KubeClusterConfig",
         klass="dask_gateway_server.backends.base.ClusterConfig",
         help="The cluster config class to use",
         config=True,
     )
 
-    instance = Unicode(
+    gateway_instance = Unicode(
         help="""
         A unique ID for this instance of dask-gateway.
 
@@ -316,25 +298,6 @@ class KubeBackend(Backend):
         if not instance:
             raise ValueError("Must specify `c.KubeBackend.instance`")
         return instance
-
-    namespace = Unicode(
-        "default",
-        help="""
-        Kubernetes namespace to create CRD objects in.
-
-        If running inside a kubernetes cluster with service accounts enabled,
-        defaults to the current namespace. If not, defaults to `default`
-        """,
-        config=True,
-    )
-
-    @default("namespace")
-    def _default_namespace(self):
-        ns_path = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-        if os.path.exists(ns_path):
-            with open(ns_path) as f:
-                return f.read().strip()
-        return "default"
 
     crd_version = Unicode(
         "v1alpha1", help="The version for the DaskCluster CRD", config=True
@@ -354,6 +317,25 @@ class KubeBackend(Backend):
         config=True,
     )
 
+    proxy_prefix = Unicode(
+        "",
+        help="""
+        The path prefix the HTTP/HTTPS proxy should serve under.
+
+        This prefix will be prepended to all routes registered with the proxy.
+        """,
+        config=True,
+    )
+
+    @validate("proxy_prefix")
+    def _validate_proxy_prefix(self, proposal):
+        prefix = proposal.value.strip("/")
+        return f"/{prefix}" if prefix else prefix
+
+    proxy_web_entrypoint = Unicode("web")
+
+    proxy_tcp_entrypoint = Unicode("tcp")
+
     async def setup(self, app):
         try:
             # Not a coroutine for some reason
@@ -362,44 +344,30 @@ class KubeBackend(Backend):
             await config.load_kube_config()
 
         self.api_client = client.ApiClient()
-        self.core_client = client.CoreV1Api(api_client=self.api_client)
         self.custom_client = client.CustomObjectsApi(api_client=self.api_client)
 
         self.clusters = {}
         self.username_to_clusters = defaultdict(dict)
         self.queue = UniqueQueue()
-        self.reflectors = {
-            "cluster": Reflector(
-                parent=self,
-                kind="cluster",
-                api_client=self.api_client,
-                queue=self.queue,
-                method=self.custom_client.list_namespaced_custom_object,
-                method_kwargs=dict(
-                    namespace=self.namespace,
-                    group="gateway.dask.org",
-                    version=self.crd_version,
-                    plural="daskclusters",
-                    label_selector=self.get_label_selector(),
-                ),
+        self.reflector = Reflector(
+            parent=self,
+            kind="cluster",
+            api_client=self.api_client,
+            queue=self.queue,
+            method=self.custom_client.list_cluster_custom_object,
+            method_kwargs=dict(
+                group="gateway.dask.org",
+                version=self.crd_version,
+                plural="daskclusters",
+                label_selector=self.get_label_selector(),
             ),
-            "secret": Reflector(
-                parent=self,
-                kind="secret",
-                api_client=self.api_client,
-                queue=self.queue,
-                method=self.core_client.list_secret_for_all_namespaces,
-                method_kwargs=dict(label_selector=self.get_label_selector()),
-            ),
-        }
-        for reflector in self.reflectors.values():
-            await reflector.start()
+        )
+        await self.reflector.start()
         self._watcher_task = asyncio.ensure_future(self.watcher_loop())
 
     async def cleanup(self):
-        if hasattr(self, "reflectors"):
-            for reflector in self.reflectors.values():
-                await reflector.stop()
+        if hasattr(self, "reflector"):
+            await self.reflector.stop()
         if hasattr(self, "_watcher_task"):
             await cancel_task(self._watcher_task)
         if hasattr(self, "api_client"):
@@ -411,12 +379,12 @@ class KubeBackend(Backend):
         obj = self.make_cluster_object(user.name, options, config)
 
         res = await self.custom_client.create_namespaced_custom_object(
-            "gateway.dask.org", self.crd_version, self.namespace, "daskclusters", obj
+            "gateway.dask.org", self.crd_version, config.namespace, "daskclusters", obj
         )
 
         cluster_name = res["metadata"]["name"]
 
-        self.reflectors["cluster"].put(cluster_name, res)
+        self.reflector.put(cluster_name, res)
         self.update_cluster_cache(cluster_name)
 
         return cluster_name
@@ -446,7 +414,7 @@ class KubeBackend(Backend):
         raise NotImplementedError
 
     def get_label_selector(self):
-        return f"gateway.dask.org/instance={self.instance}"
+        return f"gateway.dask.org/instance={self.gateway_instance}"
 
     def get_env(self, cluster_name, config):
         out = dict(config.environment)
@@ -464,7 +432,15 @@ class KubeBackend(Backend):
     def get_scheduler_command(self, config):
         return [
             config.scheduler_cmd,
+            "--scheduler-address",
+            ":8786",
+            "--dashboard-address",
+            ":8787",
+            "--api-address",
+            ":8788",
             "--heartbeat-period",
+            "0",
+            "--adaptive-period",
             str(config.adaptive_period),
             "--idle-timeout",
             str(config.idle_timeout),
@@ -483,7 +459,7 @@ class KubeBackend(Backend):
         labels = self.common_labels.copy()
         labels.update(
             {
-                "gateway.dask.org/instance": self.instance,
+                "gateway.dask.org/instance": self.gateway_instance,
                 "gateway.dask.org/cluster": cluster_name,
                 "gateway.dask.org/user": username,
             }
@@ -492,101 +468,193 @@ class KubeBackend(Backend):
             labels["app.kubernetes.io/component"] = component
         return labels
 
-    def make_pod_templates(self, cluster_name, username, config):
-        annotations = self.common_annotations
-
+    def make_pod_template(self, cluster_name, username, config, is_worker=False):
         env = self.get_env(cluster_name, config)
 
-        def make_pod_template(
-            container_name,
-            labels,
-            mem_req,
-            mem_lim,
-            cpu_req,
-            cpu_lim,
-            cmd,
-            extra_pod_config,
-            extra_container_config,
-        ):
-            container = V1Container(
-                name=container_name,
-                image=config.image,
-                args=cmd,
-                env=[V1EnvVar(k, v) for k, v in env.items()],
-                image_pull_policy=config.image_pull_policy,
-                resources=V1ResourceRequirements(
-                    requests={"cpu": f"{cpu_req:.1f}", "memory": str(mem_req)},
-                    limits={"cpu": f"{cpu_lim:.1f}", "memory": str(mem_lim)},
-                ),
-                volume_mounts=[
-                    V1VolumeMount(
-                        name="dask-credentials",
-                        mount_path="/etc/dask-credentials/",
-                        read_only=True,
-                    )
-                ],
+        if is_worker:
+            container_name = "dask-worker"
+            mem_req = config.worker_memory
+            mem_lim = config.worker_memory_limit
+            cpu_req = config.worker_cores
+            cpu_lim = config.worker_cores_limit
+            cmd = self.get_worker_command(config)
+            extra_pod_config = config.worker_extra_pod_config
+            extra_container_config = config.worker_extra_container_config
+        else:
+            container_name = "dask-scheduler"
+            mem_req = config.scheduler_memory
+            mem_lim = config.scheduler_memory_limit
+            cpu_req = config.scheduler_cores
+            cpu_lim = config.scheduler_cores_limit
+            cmd = self.get_scheduler_command(config)
+            extra_pod_config = config.scheduler_extra_pod_config
+            extra_container_config = config.scheduler_extra_container_config
+
+        labels = self.get_labels(cluster_name, username, container_name)
+
+        volume = {
+            "name": "dask-credentials",
+            "secret": {"secretName": f"dask-gateway-{cluster_name}"},
+        }
+
+        container = {
+            "name": container_name,
+            "image": config.image,
+            "args": cmd,
+            "env": [{"name": k, "value": v} for k, v in env.items()],
+            "imagePullPolicy": config.image_pull_policy,
+            "resources": {
+                "requests": {"cpu": f"{cpu_req:.1f}", "memory": str(mem_req)},
+                "limits": {"cpu": f"{cpu_lim:.1f}", "memory": str(mem_lim)},
+            },
+            "volumeMounts": [
+                {
+                    "name": "dask-credentials",
+                    "mountPath": "/etc/dask-credentials/",
+                    "readOnly": True,
+                }
+            ],
+            "ports": [
+                {"name": "scheduler", "containerPort": 8786},
+                {"name": "dashboard", "containerPort": 8787},
+                {"name": "api", "containerPort": 8788},
+            ],
+        }
+
+        if extra_container_config:
+            extra_container_config = self.api_client.sanitize_for_serialization(
+                extra_container_config
             )
+            container = merge_json_objects(container, extra_container_config)
 
-            container = self.api_client.sanitize_for_serialization(container)
+        pod = {
+            "metadata": {"labels": labels, "annotations": self.common_annotations},
+            "spec": {
+                "containers": [container],
+                "volumes": [volume],
+                "restartPolicy": "OnFailure",
+                "automountServiceAccountToken": False,
+            },
+        }
 
-            if extra_container_config:
-                extra_container_config = self.api_client.sanitize_for_serialization(
-                    extra_container_config
-                )
-                container = merge_json_objects(container, extra_container_config)
+        if extra_pod_config:
+            extra_pod_config = self.api_client.sanitize_for_serialization(
+                extra_pod_config
+            )
+            pod["spec"] = merge_json_objects(pod["spec"], extra_pod_config)
 
-            pod = {
-                "metadata": {
-                    "labels": labels,
-                    "annotations": annotations,
-                    "namespace": config.namespace,
+        return pod
+
+    def make_secret_template(self, cluster_name, username):
+        api_token = uuid.uuid4().hex
+        tls_cert, tls_key = new_keypair(cluster_name)
+
+        labels = self.get_labels(cluster_name, username, "credentials")
+
+        return {
+            "metadata": {
+                "labels": labels,
+                "annotations": self.common_annotations,
+                "name": f"dask-gateway-{cluster_name}",
+            },
+            "data": {
+                "dask.crt": b64encode(tls_cert).decode(),
+                "dask.pem": b64encode(tls_key).decode(),
+                "api-token": b64encode(api_token.encode()).decode(),
+            },
+        }
+
+    def make_service_template(self, cluster_name, username, config):
+        return {
+            "metadata": {
+                "labels": self.get_labels(cluster_name, username, "dask-scheduler"),
+                "annotations": self.common_annotations,
+                "name": f"dask-gateway-{cluster_name}",
+            },
+            "spec": {
+                "selector": {
+                    "gateway.dask.org/cluster": cluster_name,
+                    "gateway.dask.org/instance": self.gateway_instance,
+                    "app.kubernetes.io/component": "dask-scheduler",
                 },
-                "spec": {
-                    "containers": [container],
-                    "restart_policy": "OnFailure",
-                    "automountServiceAccountToken": False,
-                },
-            }
+                "ports": [
+                    {"name": "scheduler", "port": 8786, "target_port": "scheduler"},
+                    {"name": "dashboard", "port": 8787, "target_port": "dashboard"},
+                    {"name": "api", "port": 8788, "target_port": "api"},
+                ],
+            },
+        }
 
-            if extra_pod_config:
-                extra_pod_config = self.api_client.sanitize_for_serialization(
-                    extra_pod_config
-                )
-                pod["spec"] = merge_json_objects(pod["spec"], extra_pod_config)
+    def make_ingressroute_template(self, cluster_name, username, config):
+        route = f"{self.proxy_prefix}/clusters/{cluster_name}/"
+        return {
+            "metadata": {
+                "labels": self.get_labels(cluster_name, username, "dask-scheduler"),
+                "annotations": self.common_annotations,
+                "name": f"dask-gateway-{cluster_name}",
+            },
+            "spec": {
+                "entryPoints": [self.proxy_web_entrypoint],
+                "routes": [
+                    {
+                        "kind": "Rule",
+                        "match": f"PathPrefix(`{route}`)",
+                        "services": [
+                            {
+                                "name": f"dask-gateway-{cluster_name}",
+                                "namespace": config.namespace,
+                                "port": 8787,
+                            }
+                        ],
+                        "middlewares": [
+                            {
+                                "name": "clusters-prefix-dask-gateway"
+                            }  # TODO: configurable
+                        ],
+                    }
+                ],
+            },
+        }
 
-            return pod
+    def make_ingressroutetcp_template(self, cluster_name, username, config):
+        return {
+            "metadata": {
+                "labels": self.get_labels(cluster_name, username, "dask-scheduler"),
+                "annotations": self.common_annotations,
+                "name": f"dask-gateway-{cluster_name}",
+            },
+            "spec": {
+                "entryPoints": [self.proxy_tcp_entrypoint],
+                "routes": [
+                    {
+                        "match": f"HostSNI(`daskgateway-{cluster_name}`)",
+                        "services": [
+                            {
+                                "name": f"dask-gateway-{cluster_name}",
+                                "namespace": config.namespace,
+                                "port": 8786,
+                            }
+                        ],
+                    }
+                ],
+                "tls": {"passthrough": True},
+            },
+        }
 
-        scheduler = make_pod_template(
-            container_name="dask-gateway-scheduler",
-            labels=self.get_labels(cluster_name, username, "dask-gateway-scheduler"),
-            mem_req=config.scheduler_memory,
-            mem_lim=config.scheduler_memory_limit,
-            cpu_req=config.scheduler_cores,
-            cpu_lim=config.scheduler_cores_limit,
-            cmd=self.get_scheduler_command(config),
-            extra_pod_config=config.scheduler_extra_pod_config,
-            extra_container_config=config.scheduler_extra_container_config,
-        )
-        worker = make_pod_template(
-            container_name="dask-gateway-worker",
-            labels=self.get_labels(cluster_name, username, "dask-gateway-worker"),
-            mem_req=config.worker_memory,
-            mem_lim=config.worker_memory_limit,
-            cpu_req=config.worker_cores,
-            cpu_lim=config.worker_cores_limit,
-            cmd=self.get_worker_command(config),
-            extra_pod_config=config.worker_extra_pod_config,
-            extra_container_config=config.worker_extra_container_config,
-        )
-        return scheduler, worker
-
-    def make_cluster_object(self, user_name, options, config):
+    def make_cluster_object(self, username, options, config):
         cluster_name = uuid.uuid4().hex
 
-        scheduler, worker = self.make_pod_templates(cluster_name, user_name, config)
-
         annotations = self.common_annotations
-        labels = self.get_labels(cluster_name, user_name)
+        labels = self.get_labels(cluster_name, username)
+
+        secret = self.make_secret_template(cluster_name, username)
+        scheduler = self.make_pod_template(cluster_name, username, config)
+        worker = self.make_pod_template(cluster_name, username, config, is_worker=True)
+        service = self.make_service_template(cluster_name, username, config)
+        ingressroute = self.make_ingressroute_template(cluster_name, username, config)
+        ingressroutetcp = self.make_ingressroutetcp_template(
+            cluster_name, username, config
+        )
 
         obj = {
             "apiVersion": f"gateway.dask.org/{self.crd_version}",
@@ -597,10 +665,16 @@ class KubeBackend(Backend):
                 "annotations": annotations,
             },
             "spec": {
-                "scheduler": {"template": scheduler},
-                "worker": {"template": worker},
-                "info": {"options": json.dumps(options, separators=(",", ":"))},
+                "schedulerTemplate": scheduler,
+                "workerTemplate": worker,
+                "replicas": 0,
+                "secret": secret,
+                "service": service,
+                "ingressroute": ingressroute,
+                "ingressroutetcp": ingressroutetcp,
+                "info": {"options": options},
             },
+            "status": {},
         }
         return obj
 
@@ -615,10 +689,11 @@ class KubeBackend(Backend):
                 )
 
     def update_cluster_cache(self, name):
-        obj = self.reflectors["cluster"].get(name)
+        obj = self.reflector.get(name)
 
-        if obj is None:
+        if obj is DELETED:
             self.log.debug("Deleting %s from cache", name)
+            self.reflector.pop(name, None)
             # Delete the cluster from the cache
             cluster = self.clusters.pop(name, None)
             if cluster is not None:
@@ -632,98 +707,21 @@ class KubeBackend(Backend):
 
             # TODO: infer more of these fields from the backing kubernetes objects
             # Not all of these are correct
+            secret = obj["spec"]["secret"]
+
+            tls_cert = b64decode(secret["data"]["dask.crt"])
+            tls_key = b64decode(secret["data"]["dask.pem"])
+            token = b64decode(secret["data"]["api-token"]).decode()
+
             cluster = models.Cluster(
                 name=name,
                 username=obj["metadata"]["labels"]["gateway.dask.org/user"],
-                token="",
-                options=json.loads(obj["spec"]["info"]["options"]),
-                status=models.ClusterStatus.PENDING,
+                options=obj["spec"]["info"]["options"],
+                token=token,
+                tls_cert=tls_cert,
+                tls_key=tls_key,
+                status=models.ClusterStatus.RUNNING,
                 start_time=parse_k8s_timestamp(obj["metadata"]["creationTimestamp"]),
             )
-
-            secret = self.reflectors["secret"].get(name)
-            if secret is not None:
-                cluster.tls_key = b64decode(secret["data"]["dask.pem"])
-                cluster.tls_cert = b64decode(secret["data"]["dask.crt"])
-                cluster.token = b64decode(secret["data"]["api-token"])
-
             self.clusters[cluster.name] = cluster
             self.username_to_clusters[cluster.username][cluster.name] = cluster
-
-
-class Reflector(LoggingConfigurable):
-    kind = Unicode()
-    method = Any()
-    method_kwargs = Dict()
-    timeout_seconds = Int(10)
-    api_client = Instance(client.ApiClient)
-    cache = Dict()
-    queue = Instance(asyncio.Queue, allow_none=True)
-
-    def get(self, name, default=None):
-        return self.cache.get(name, default)
-
-    def pop(self, name, default=None):
-        self.cache.pop(name, default)
-
-    def put(self, name, value):
-        self.cache[name] = value
-
-    async def handle(self, obj, event_type="INITIAL"):
-        name = obj["metadata"]["name"]
-        self.log.debug("Received %s event for %s[%s]", event_type, self.kind, name)
-        if event_type in {"INITIAL", "ADDED", "MODIFIED"}:
-            self.cache[name] = obj
-        elif event_type == "DELETED":
-            self.cache.pop(name, None)
-        if self.queue is not None:
-            await self.queue.put((self.kind, name))
-
-    async def start(self):
-        if not hasattr(self, "_task"):
-            self._task = asyncio.ensure_future(self.run())
-
-    async def stop(self):
-        if hasattr(self, "_task"):
-            await cancel_task(self._task)
-            del self._task
-
-    async def run(self):
-        self.log.debug("Starting %s watch stream...", self.kind)
-
-        watch = Watch(self.api_client)
-
-        while True:
-            try:
-                initial = await self.method(**self.method_kwargs)
-            except asyncio.CancelledError:
-                raise
-            except Exception as exc:
-                self.log.error(
-                    "Error in %s watch stream, retrying...", self.kind, exc_info=exc
-                )
-
-            initial = self.api_client.sanitize_for_serialization(initial)
-            for obj in initial["items"]:
-                await self.handle(obj)
-            resource_version = initial["metadata"]["resourceVersion"]
-
-            try:
-                while True:
-                    kwargs = {
-                        "resource_version": resource_version,
-                        "timeout_seconds": self.timeout_seconds,
-                    }
-                    kwargs.update(self.method_kwargs)
-                    async with watch.stream(self.method, **kwargs) as stream:
-                        async for ev in stream:
-                            ev = self.api_client.sanitize_for_serialization(ev)
-                            await self.handle(ev["object"], event_type=ev["type"])
-                            resource_version = stream.resource_version
-            except asyncio.CancelledError:
-                raise
-            except Exception as exc:
-                self.log.error(
-                    "Error in %s watch stream, retrying...", self.kind, exc_info=exc
-                )
-        self.log.debug("%s watch stream stopped", self.kind)

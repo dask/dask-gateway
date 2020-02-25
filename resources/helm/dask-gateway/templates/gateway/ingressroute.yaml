@@ -2,7 +2,6 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: {{ include "dask-gateway.fullname" . | printf "gateway-api-%s" | trunc 63 | trimSuffix "-" }}
-  namespace: default
 spec:
   entryPoints:
     - web

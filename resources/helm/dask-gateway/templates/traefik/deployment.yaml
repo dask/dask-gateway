@@ -40,6 +40,10 @@ spec:
             {{- if ne (toString .Values.traefik.service.ports.tcp.port) "web" }}
             - "--entryPoints.tcp.address=:8786"
             {{- end }}
+            {{- if .Values.traefik.dashboard }}
+            - "--api.dashboard=true"
+            - "--api.insecure=true"
+            {{- end }}
             {{- range .Values.traefik.additionalArguments }}
             - {{ . | quote }}
             {{- end }}

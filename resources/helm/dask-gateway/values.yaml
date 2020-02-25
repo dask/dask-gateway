@@ -132,6 +132,9 @@ traefik:
   # The proxy log level
   loglevel: WARN
 
+  # Whether to expose the dashboard on port 9000 (enable for debugging only!)
+  dashboard: false
+
   # Additional configuration for the traefik service
   service:
     type: LoadBalancer

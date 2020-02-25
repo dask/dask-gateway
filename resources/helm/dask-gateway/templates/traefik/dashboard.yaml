@@ -1,0 +1,17 @@
+{{- if .Values.traefik.dashboard }}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "dask-gateway.fullname" . | printf "traefik-dashboard-%s" | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - traefik
+  routes:
+  - match: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
+    kind: Rule
+    services:
+    - name: api@internal
+      kind: TraefikService
+{{- end -}}

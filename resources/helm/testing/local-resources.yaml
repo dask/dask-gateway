@@ -11,3 +11,7 @@ gateway:
         request: 0.1
       memory:
         request: 256M
+
+traefik:
+  loglevel: DEBUG
+  dashboard: true

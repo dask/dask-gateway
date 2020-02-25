@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from inspect import isawaitable
 from keyword import iskeyword
 
+import aiohttp.abc
 from colorlog import ColoredFormatter
 
 from .compat import get_running_loop, all_tasks
@@ -142,6 +143,17 @@ class LogFormatter(ColoredFormatter):
                 "ERROR": "red",
                 "CRITICAL": "red,bg_white",
             },
+        )
+
+
+class AccessLogger(aiohttp.abc.AbstractAccessLogger):
+    def log(self, request, response, time):
+        self.logger.info(
+            "%d %s %s %.3fms",
+            response.status,
+            request.method,
+            request.path_qs,
+            time * 1000,
         )
 
 

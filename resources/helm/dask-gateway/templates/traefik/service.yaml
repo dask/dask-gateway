@@ -31,3 +31,8 @@ spec:
       nodePort: {{ .Values.traefik.service.ports.tcp.nodePort }}
       {{- end }}
     {{- end }}
+    {{- if .Values.traefik.dashboard }}
+    - name: traefik
+      targetPort: 9000
+      port: 9000
+    {{- end }}

@@ -4,36 +4,16 @@ import os
 import signal
 import sys
 
-import aiohttp.abc
 from aiohttp import web
 from traitlets import Unicode, Bool, List, validate, default
-from traitlets.config import Application, catch_config_error
+from traitlets.config import catch_config_error
 
 from . import __version__ as VERSION
 from .auth import Authenticator
 from .backends import Backend
 from .routes import default_routes
-from .traitlets import Type
-from .utils import classname, LogFormatter, normalize_address, run_main
-
-
-# Override default values for logging
-Application.log_level.default_value = "INFO"
-Application.log_format.default_value = (
-    "%(log_color)s[%(levelname)1.1s %(asctime)s.%(msecs).03d "
-    "%(name)s]%(reset)s %(message)s"
-)
-
-
-class AccessLogger(aiohttp.abc.AbstractAccessLogger):
-    def log(self, request, response, time):
-        self.logger.info(
-            "%d %s %s %.3fms",
-            response.status,
-            request.method,
-            request.path_qs,
-            time * 1000,
-        )
+from .traitlets import Type, Application
+from .utils import classname, AccessLogger, LogFormatter, normalize_address, run_main
 
 
 class GenerateConfig(Application):
