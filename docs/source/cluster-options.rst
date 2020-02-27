@@ -100,8 +100,8 @@ returns the provided options unchanged.
 
 Available options are cluster manager specific. For example, if running on
 Kubernetes, an options handler can return overrides for any configuration
-fields on :ref:`KubeClusterManager <kube-cluster-manager-config>`. See
-:ref:`cluster-managers-reference` for information on what configuration fields
+fields on :ref:`KubeBackend <kube-backend-config>`. See
+:ref:`cluster-backends-reference` for information on what configuration fields
 are available on your backend.
 
 Dynamic Server Configuration
@@ -127,11 +127,11 @@ Worker Cores and Memory
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Here we expose options for users to configure
-:data:`c.ClusterManager.worker_cores` and
-:data:`c.ClusterManager.worker_memory`. We set bounds on each resource to
+:data:`c.Backend.worker_cores` and
+:data:`c.Backend.worker_memory`. We set bounds on each resource to
 prevent users from requesting too large of a worker. The handler is used to
 convert the user specified memory from GiB to bytes (as expected by
-:data:`c.ClusterManager.worker_memory`).
+:data:`c.Backend.worker_memory`).
 
 .. code-block:: python
 
@@ -189,8 +189,8 @@ Worker Cores and Memory by Group
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Similar to the last examples, here we expose options for users to configure
-:data:`c.ClusterManager.worker_cores` and
-:data:`c.ClusterManager.worker_memory`. However, we offer different options to
+:data:`c.Backend.worker_cores` and
+:data:`c.Backend.worker_memory`. However, we offer different options to
 users depending on whether or not the user is a member of the "Power Users"
 group. 
 
