@@ -105,3 +105,38 @@ class Reflector(LoggingConfigurable):
                     "Error in %s watch stream, retrying...", self.kind, exc_info=exc
                 )
         self.log.debug("%s watch stream stopped", self.kind)
+
+
+def merge_json_objects(a, b):
+    """Merge two JSON objects recursively.
+
+    - If a dict, keys are merged, preferring ``b``'s values
+    - If a list, values from ``b`` are appended to ``a``
+
+    Copying is minimized. No input collection will be mutated, but a deep copy
+    is not performed.
+
+    Parameters
+    ----------
+    a, b : dict
+        JSON objects to be merged.
+
+    Returns
+    -------
+    merged : dict
+    """
+    if b:
+        # Use a shallow copy here to avoid needlessly copying
+        a = a.copy()
+        for key, b_val in b.items():
+            if key in a:
+                a_val = a[key]
+                if isinstance(a_val, dict) and isinstance(b_val, dict):
+                    a[key] = merge_json_objects(a_val, b_val)
+                elif isinstance(a_val, list) and isinstance(b_val, list):
+                    a[key] = a_val + b_val
+                else:
+                    a[key] = b_val
+            else:
+                a[key] = b_val
+    return a
