@@ -5,6 +5,7 @@ from traitlets.config import LoggingConfigurable
 
 from kubernetes_asyncio import watch, client
 
+from ...traitlets import Callable
 from ...utils import cancel_task
 
 
@@ -21,20 +22,14 @@ class Watch(watch.Watch):
         self.resp = None
 
 
-DELETED = type(
-    "DELETED", (object,), dict.fromkeys(["__repr__", "__reduce__"], lambda s: "DELETED")
-)()
-
-
-class Reflector(LoggingConfigurable):
-    kind = Unicode()
-    method = Any()
+class Informer(LoggingConfigurable):
+    name = Unicode()
+    client = Any(None)
+    method = Unicode()
     method_kwargs = Dict()
     timeout_seconds = Int(10)
-    api_client = Instance(client.ApiClient)
-    cache = Dict()
-    queue = Any(None)
-    initialized = Instance(asyncio.Event, args=())
+    on_update = Callable()
+    on_delete = Callable()
 
     def get(self, name, default=None):
         return self.cache.get(name, default)
@@ -45,18 +40,34 @@ class Reflector(LoggingConfigurable):
     def put(self, name, value):
         self.cache[name] = value
 
-    async def handle(self, obj, event_type="INITIAL"):
-        name = obj["metadata"]["name"]
-        self.log.debug("Received %s event for %s[%s]", event_type, self.kind, name)
-        if event_type in {"INITIAL", "ADDED", "MODIFIED"}:
+    def update_cache(self, name, obj, deleted=False):
+        if deleted:
+            self.cache.pop(name, None)
+        else:
             self.cache[name] = obj
+
+    async def handle(self, obj, event_type="ADDED"):
+        name = obj["metadata"]["name"]
+        self.log.debug("Received %s event for %s[%s]", event_type, self.name, name)
+
+        old = self.cache.get(name)
+        if event_type in {"ADDED", "MODIFIED"}:
+            self.update_cache(name, obj)
+            try:
+                await self.on_update(obj, old=old)
+            except Exception:
+                self.log.warning("Error in %s informer", exc_info=True)
         elif event_type == "DELETED":
-            self.cache[name] = DELETED
-        if self.queue is not None:
-            await self.queue.put((self.kind, name))
+            self.update_cache(name, obj, deleted=True)
+            try:
+                await self.on_delete(obj)
+            except Exception:
+                self.log.warning("Error in %s informer", exc_info=True)
 
     async def start(self):
         if not hasattr(self, "_task"):
+            self.cache = {}
+            self.initialized = asyncio.Event()
             self._task = asyncio.ensure_future(self.run())
         await self.initialized.wait()
 
@@ -66,21 +77,22 @@ class Reflector(LoggingConfigurable):
             del self._task
 
     async def run(self):
-        self.log.debug("Starting %s watch stream...", self.kind)
+        self.log.debug("Starting %s watch stream...", self.name)
 
-        watch = Watch(self.api_client)
+        watch = Watch(self.client.api_client)
+        method = getattr(self.client, self.method)
 
         while True:
             try:
-                initial = await self.method(**self.method_kwargs)
+                initial = await method(**self.method_kwargs)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
                 self.log.error(
-                    "Error in %s watch stream, retrying...", self.kind, exc_info=exc
+                    "Error in %s watch stream, retrying...", self.name, exc_info=exc
                 )
 
-            initial = self.api_client.sanitize_for_serialization(initial)
+            initial = self.client.api_client.sanitize_for_serialization(initial)
             for obj in initial["items"]:
                 await self.handle(obj)
             self.initialized.set()
@@ -93,18 +105,31 @@ class Reflector(LoggingConfigurable):
                         "timeout_seconds": self.timeout_seconds,
                     }
                     kwargs.update(self.method_kwargs)
-                    async with watch.stream(self.method, **kwargs) as stream:
+                    async with watch.stream(method, **kwargs) as stream:
                         async for ev in stream:
-                            ev = self.api_client.sanitize_for_serialization(ev)
+                            ev = self.client.api_client.sanitize_for_serialization(ev)
                             await self.handle(ev["object"], event_type=ev["type"])
                             resource_version = stream.resource_version
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
                 self.log.error(
-                    "Error in %s watch stream, retrying...", self.kind, exc_info=exc
+                    "Error in %s watch stream, retrying...", self.name, exc_info=exc
                 )
-        self.log.debug("%s watch stream stopped", self.kind)
+        self.log.debug("%s watch stream stopped", self.name)
+
+
+class Reflector(Informer):
+    queue = Instance(asyncio.Queue)
+
+    def update_cache(self, name, obj, deleted=False):
+        self.cache[name] = (obj, deleted)
+
+    async def on_update(self, obj, old=None):
+        name = obj["metadata"]["name"]
+        await self.queue.put(name)
+
+    on_delete = on_update
 
 
 def merge_json_objects(a, b):

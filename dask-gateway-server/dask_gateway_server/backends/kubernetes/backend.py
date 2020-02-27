@@ -14,7 +14,7 @@ from ... import models
 from ...traitlets import MemoryLimit, Type
 from ...utils import cancel_task, UniqueQueue
 from ..base import Backend, ClusterConfig
-from .utils import Reflector, DELETED
+from .utils import Reflector
 
 
 __all__ = ("KubeClusterConfig", "KubeBackend")
@@ -297,16 +297,16 @@ class KubeBackend(Backend):
         self.queue = UniqueQueue()
         self.reflector = Reflector(
             parent=self,
-            kind="cluster",
-            api_client=self.api_client,
-            queue=self.queue,
-            method=self.custom_client.list_cluster_custom_object,
+            name="cluster",
+            client=self.custom_client,
+            method="list_cluster_custom_object",
             method_kwargs=dict(
                 group="gateway.dask.org",
                 version=self.crd_version,
                 plural="daskclusters",
                 label_selector=self.get_label_selector(),
             ),
+            queue=self.queue,
         )
         await self.reflector.start()
         self._watcher_task = asyncio.ensure_future(self.watcher_loop())
@@ -330,7 +330,7 @@ class KubeBackend(Backend):
 
         cluster_name = res["metadata"]["name"]
 
-        self.reflector.put(cluster_name, res)
+        self.reflector.put(cluster_name, (res, True))
         await self.update_cluster_cache(cluster_name)
 
         return cluster_name
@@ -391,7 +391,7 @@ class KubeBackend(Backend):
 
     async def watcher_loop(self):
         while True:
-            kind, name = await self.queue.get()
+            name = await self.queue.get()
             try:
                 await self.update_cluster_cache(name)
             except Exception as exc:
@@ -400,9 +400,9 @@ class KubeBackend(Backend):
                 )
 
     async def update_cluster_cache(self, name):
-        obj = self.reflector.get(name)
+        obj, deleted = self.reflector.get(name)
 
-        if obj is DELETED:
+        if deleted:
             self.log.debug("Deleting %s from cache", name)
             self.reflector.pop(name, None)
             # Delete the cluster from the cache

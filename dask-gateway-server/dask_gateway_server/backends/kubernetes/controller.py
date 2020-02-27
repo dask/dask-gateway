@@ -24,16 +24,7 @@ from ...utils import (
 from ...traitlets import Application
 from ...tls import new_keypair
 from ...utils import FrozenAttrDict
-from .utils import Reflector, DELETED, merge_json_objects
-
-
-class HashingQueue(object):
-    def __init__(self, queues):
-        self.queues = queues
-        self.n = len(queues)
-
-    async def put(self, item):
-        await self.queues[hash(item) % self.n].put(item)
+from .utils import Informer, merge_json_objects
 
 
 class KubeController(Application):
@@ -217,34 +208,35 @@ class KubeController(Application):
         self.core_client = client.CoreV1Api(api_client=self.api_client)
         self.custom_client = client.CustomObjectsApi(api_client=self.api_client)
 
-        # Initialize queue and reflectors
+        # Initialize queue and informers
         self.queues = [UniqueQueue() for _ in range(self.parallelism)]
-        self.queue = HashingQueue(self.queues)
-        self.reflectors = {
-            "cluster": Reflector(
+        self.informers = {
+            "cluster": Informer(
                 parent=self,
-                kind="cluster",
-                api_client=self.api_client,
-                queue=self.queue,
-                method=self.custom_client.list_cluster_custom_object,
+                name="cluster",
+                client=self.custom_client,
+                method="list_cluster_custom_object",
                 method_kwargs=dict(
                     group="gateway.dask.org",
                     version=self.crd_version,
                     plural="daskclusters",
                     label_selector=self.label_selector,
                 ),
+                on_update=self.on_cluster_update,
+                on_delete=self.on_cluster_delete,
             ),
-            "pod": Reflector(
+            "pod": Informer(
                 parent=self,
-                kind="pod",
-                api_client=self.api_client,
-                queue=self.queue,
-                method=self.core_client.list_pod_for_all_namespaces,
+                name="pod",
+                client=self.core_client,
+                method="list_pod_for_all_namespaces",
                 method_kwargs=dict(label_selector=self.label_selector),
+                on_update=self.on_pod_update,
+                on_delete=self.on_pod_delete,
             ),
         }
-        await asyncio.wait([r.start() for r in self.reflectors.values()])
-        self.log.debug("All reflectors started")
+        await asyncio.wait([i.start() for i in self.informers.values()])
+        self.log.debug("All informers started")
 
         # Initialize reconcilers
         self.cg = CancelGroup()
@@ -274,6 +266,9 @@ class KubeController(Application):
             await self.cg.cancel()
             await asyncio.gather(*self.reconcilers, return_exceptions=True)
 
+        if hasattr(self, "informers"):
+            await asyncio.wait([i.stop() for i in self.informers.values()])
+
         # Shutdown the client
         if hasattr(self, "api_client"):
             await self.api_client.rest_client.pool_manager.close()
@@ -284,35 +279,21 @@ class KubeController(Application):
 
         self.log.info("Stopped successfully")
 
+    async def enqueue(self, obj):
+        ind = hash(obj) % self.parallelism
+        await self.queues[ind].put(obj)
+
     async def read_namespaced_pod(self, pod_name, namespace):
-        reflector = self.reflectors["pod"]
-        pod = reflector.get(pod_name)
+        informer = self.informers["pod"]
+        pod = informer.get(pod_name)
         if pod is not None:
             return pod
 
         pod = await self.core_client.read_namespaced_pod(pod_name, namespace)
         pod = self.api_client.sanitize_for_serialization(pod)
-        if pod_name not in reflector.cache:
-            reflector.put(pod_name, pod)
+        if pod_name not in informer.cache:
+            informer.put(pod_name, pod)
         return pod
-
-    async def reconciler_loop(self, queue):
-        while True:
-            async with self.cg.cancellable():
-                kind, name = await queue.get()
-
-            if kind == "cluster":
-                method = self.reconcile_cluster
-            else:
-                method = self.reconcile_pod
-
-            self.log.debug("Reconciling %s %s", kind, name)
-            try:
-                await method(name)
-            except Exception:
-                self.log.warning(
-                    "Error while reconciling %s %s", kind, name, exc_info=True
-                )
 
     def get_pod_state(self, pod):
         component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
@@ -321,28 +302,46 @@ class KubeController(Application):
                 return next(iter(cs["state"]))
         return "unknown"
 
-    async def reconcile_pod(self, name):
-        pod = self.reflectors["pod"].get(name)
+    def get_cluster_name(self, obj):
+        return obj["metadata"]["labels"]["gateway.dask.org/cluster"]
 
-        if pod is DELETED:
-            self.log.debug("Pod %s is deleted", name)
-            # TODO: fix reconciler to not drop data on delete, keep object
-            # Enqueue related cluster
-            await self.queue.put(("cluster", name))
-            return
-
-        cluster_name = pod["metadata"]["labels"]["gateway.dask.org/cluster"]
+    async def on_pod_update(self, pod, old=None):
+        cluster_name = self.get_cluster_name(pod)
         component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
         state = self.get_pod_state(pod)
         if component == "dask-scheduler":
             if state in ("running", "terminated"):
-                await self.queue.put(("cluster", cluster_name))
+                await self.enqueue(cluster_name)
+
+    async def on_pod_delete(self, pod):
+        cluster_name = self.get_cluster_name(pod)
+        await self.enqueue(cluster_name)
+
+    async def on_cluster_update(self, cluster, old=None):
+        name = cluster["metadata"]["name"]
+        await self.enqueue(name)
+
+    async def on_cluster_delete(self, cluster):
+        cluster_name = self.get_cluster_name(cluster)
+        self.log.debug("Cluster %s deleted", cluster_name)
+
+    async def reconciler_loop(self, queue):
+        while True:
+            async with self.cg.cancellable():
+                name = await queue.get()
+
+            self.log.debug("Reconciling cluster %s", name)
+            try:
+                await self.reconcile_cluster(name)
+            except Exception:
+                self.log.warning(
+                    "Error while reconciling cluster %s", name, exc_info=True
+                )
 
     async def reconcile_cluster(self, name):
-        cluster = self.reflectors["cluster"].get(name)
-
-        if cluster is DELETED:
-            self.log.debug("Cluster %s deleted", name)
+        cluster = self.informers["cluster"].get(name)
+        if cluster is None:
+            # Cluster already deleted, nothing to do
             return
 
         namespace = cluster["metadata"]["namespace"]
@@ -435,7 +434,7 @@ class KubeController(Application):
         try:
             pod = await self.core_client.create_namespaced_pod(namespace, pod)
             pod = self.api_client.sanitize_for_serialization(pod)
-            self.reflectors["pod"].put(pod["metadata"]["name"], pod)
+            self.informers["pod"].put(pod["metadata"]["name"], pod)
         except ApiException as exc:
             if exc.status != 409:
                 raise
