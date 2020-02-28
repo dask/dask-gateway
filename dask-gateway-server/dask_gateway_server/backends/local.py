@@ -215,6 +215,20 @@ class LocalBackend(DBBackendBase):
         env["USER"] = cluster.username
         return env
 
+    def get_scheduler_command(self, cluster):
+        cmd = super().get_scheduler_command(cluster)
+        cmd.extend(
+            [
+                "--scheduler-address",
+                "tls://127.0.0.1:0",
+                "--dashboard-address",
+                "127.0.0.1:0",
+                "--api-address",
+                "127.0.0.1:0",
+            ]
+        )
+        return cmd
+
     async def start_process(self, cluster, cmd, env, name):
         workdir = cluster.state["workdir"]
         logsdir = self.get_logs_directory(workdir)

@@ -7,17 +7,18 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 from traitlets import Float, Dict, Unicode, default
+from traitlets.config import Configurable
 from kubernetes_asyncio import client, config
 
 from ... import __version__ as VERSION
 from ... import models
 from ...traitlets import MemoryLimit, Type
-from ...utils import cancel_task, UniqueQueue
+from ...utils import cancel_task, UniqueQueue, Flag
 from ..base import Backend, ClusterConfig
 from .utils import Reflector
 
 
-__all__ = ("KubeClusterConfig", "KubeBackend")
+__all__ = ("KubeClusterConfig", "KubeBackend", "KubeBackendAndControllerMixin")
 
 
 if sys.version_info[:2] >= (3, 7):
@@ -237,15 +238,8 @@ class KubeClusterConfig(ClusterConfig):
     )
 
 
-class KubeBackend(Backend):
-    """A dask-gateway backend for running on Kubernetes"""
-
-    cluster_config_class = Type(
-        "dask_gateway_server.backends.kubernetes.backend.KubeClusterConfig",
-        klass="dask_gateway_server.backends.base.ClusterConfig",
-        help="The cluster config class to use",
-        config=True,
-    )
+class KubeBackendAndControllerMixin(Configurable):
+    """Shared config between the backend and controller"""
 
     gateway_instance = Unicode(
         help="""
@@ -256,7 +250,7 @@ class KubeBackend(Backend):
         config=True,
     )
 
-    @default("instance")
+    @default("gateway_instance")
     def _default_instance(self):
         instance = os.environ.get("DASK_GATEWAY_INSTANCE")
         if not instance:
@@ -281,6 +275,28 @@ class KubeBackend(Backend):
         config=True,
     )
 
+    label_selector = Unicode(
+        help="""
+        The label selector to use when watching objects managed by the gateway.
+        """,
+        config=True,
+    )
+
+    @default("label_selector")
+    def _default_label_selector(self):
+        return f"gateway.dask.org/instance={self.gateway_instance}"
+
+
+class KubeBackend(KubeBackendAndControllerMixin, Backend):
+    """A dask-gateway backend for running on Kubernetes"""
+
+    cluster_config_class = Type(
+        "dask_gateway_server.backends.kubernetes.backend.KubeClusterConfig",
+        klass="dask_gateway_server.backends.base.ClusterConfig",
+        help="The cluster config class to use",
+        config=True,
+    )
+
     async def setup(self, app):
         try:
             # Not a coroutine for some reason
@@ -292,6 +308,7 @@ class KubeBackend(Backend):
         self.core_client = client.CoreV1Api(api_client=self.api_client)
         self.custom_client = client.CustomObjectsApi(api_client=self.api_client)
 
+        self.cluster_waiters = defaultdict(Flag)
         self.clusters = {}
         self.username_to_clusters = defaultdict(dict)
         self.queue = UniqueQueue()
@@ -304,7 +321,7 @@ class KubeBackend(Backend):
                 group="gateway.dask.org",
                 version=self.crd_version,
                 plural="daskclusters",
-                label_selector=self.get_label_selector(),
+                label_selector=self.label_selector,
             ),
             queue=self.queue,
         )
@@ -337,6 +354,10 @@ class KubeBackend(Backend):
         return cluster_name
 
     async def stop_cluster(self, cluster_name, failed=False):
+        cluster = self.clusters.get(cluster_name)
+        if cluster is not None and cluster.status >= models.ClusterStatus.STOPPED:
+            # We know for sure the cluster was already stopped, do nothing
+            return
         namespace, name = cluster_name.split(".")
         await self.custom_client.patch_namespaced_custom_object(
             "gateway.dask.org",
@@ -348,8 +369,13 @@ class KubeBackend(Backend):
         )
 
     async def get_cluster(self, cluster_name, wait=False):
-        cluster = self.clusters.get(cluster_name)
-        return cluster
+        if wait:
+            try:
+                waiter = self.cluster_waiters[cluster_name]
+                await asyncio.wait_for(waiter, 20)
+            except asyncio.TimeoutError:
+                pass
+        return self.clusters.get(cluster_name)
 
     async def list_clusters(self, username=None, statuses=None):
         if statuses is None:
@@ -367,9 +393,6 @@ class KubeBackend(Backend):
 
     async def on_cluster_heartbeat(self, cluster_name, msg):
         raise NotImplementedError
-
-    def get_label_selector(self):
-        return f"gateway.dask.org/instance={self.gateway_instance}"
 
     def get_labels(self, cluster_name, username, component=None):
         labels = self.common_labels.copy()
@@ -422,6 +445,9 @@ class KubeBackend(Backend):
                     user.pop(cluster.name, None)
                     if not user:
                         self.username_to_clusters.pop(cluster.username, None)
+            waiter = self.cluster_waiters.pop(cluster_name, None)
+            if waiter is not None:
+                waiter.set()
         else:
             self.log.debug("Updating %s in cache", cluster_name)
 
@@ -429,14 +455,26 @@ class KubeBackend(Backend):
 
             status = obj.get("status", {})
             phase = status.get("phase", "Pending")
-            status = models.ClusterStatus.from_name(phase)
+            cluster_status = models.ClusterStatus.from_name(phase)
+
+            service_name = status.get("service")
+            if cluster_status == models.ClusterStatus.RUNNING and service_name:
+                namespace = obj["metadata"]["namespace"]
+                scheduler_address = f"{service_name}.{namespace}:8786"
+                dashboard_address = f"{service_name}.{namespace}:8787"
+                api_address = f"{service_name}.{namespace}:8788"
+            else:
+                scheduler_address = dashboard_address = api_address = ""
 
             cluster = models.Cluster(
                 name=cluster_name,
                 username=obj["metadata"]["labels"]["gateway.dask.org/user"],
                 options=obj["spec"].get("options") or {},
                 token="",
-                status=status,
+                scheduler_address=scheduler_address,
+                dashboard_address=dashboard_address,
+                api_address=api_address,
+                status=cluster_status,
                 start_time=parse_k8s_timestamp(obj["metadata"]["creationTimestamp"]),
             )
 
@@ -444,8 +482,8 @@ class KubeBackend(Backend):
                 cluster.tls_cert = old.tls_cert
                 cluster.tls_key = old.tls_key
                 cluster.token = old.token
-            else:
-                secret_name = obj.get("status", {}).get("credentials")
+            elif cluster_status <= models.ClusterStatus.RUNNING:
+                secret_name = status.get("credentials")
                 if secret_name:
                     namespace = obj["metadata"]["namespace"]
                     secret = await self.core_client.read_namespaced_secret(
@@ -457,3 +495,5 @@ class KubeBackend(Backend):
 
             self.clusters[cluster.name] = cluster
             self.username_to_clusters[cluster.username][cluster.name] = cluster
+            if cluster_status >= models.ClusterStatus.RUNNING:
+                self.cluster_waiters[cluster.name].set()

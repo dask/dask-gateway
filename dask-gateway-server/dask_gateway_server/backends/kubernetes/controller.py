@@ -6,7 +6,7 @@ import uuid
 from base64 import b64encode
 
 from aiohttp import web
-from traitlets import Unicode, Integer, Dict, validate, default
+from traitlets import Unicode, Integer, validate
 from traitlets.config import catch_config_error
 
 from kubernetes_asyncio import client, config
@@ -25,9 +25,10 @@ from ...traitlets import Application
 from ...tls import new_keypair
 from ...utils import FrozenAttrDict
 from .utils import Informer, merge_json_objects
+from .backend import KubeBackendAndControllerMixin
 
 
-class KubeController(Application):
+class KubeController(KubeBackendAndControllerMixin, Application):
     """Kubernetes controller for dask-gateway"""
 
     name = "dask-gateway-kube-controller"
@@ -60,19 +61,6 @@ class KubeController(Application):
     def _validate_address(self, proposal):
         return normalize_address(proposal.value)
 
-    crd_version = Unicode(
-        "v1alpha1", help="The version for the DaskCluster CRD", config=True
-    )
-
-    gateway_instance = Unicode(
-        help="""
-        A unique ID for this instance of dask-gateway.
-
-        The gateway server must also be configured with the same ID.
-        """,
-        config=True,
-    )
-
     api_url = Unicode(
         help="""
         The address that internal components (e.g. dask clusters)
@@ -81,36 +69,11 @@ class KubeController(Application):
         config=True,
     )
 
-    label_selector = Unicode(
-        help="""
-        The label selector to use when watching objects managed by the gateway.
-        """,
-        config=True,
-    )
-
-    @default("label_selector")
-    def _default_label_selector(self):
-        return f"gateway.dask.org/instance={self.gateway_instance}"
-
     parallelism = Integer(
         20,
         help="""
         Number of handlers to use for reconciling k8s objects.
         """,
-        config=True,
-    )
-
-    common_labels = Dict(
-        {
-            "app.kubernetes.io/name": "dask-gateway",
-            "app.kubernetes.io/version": VERSION.replace("+", "_"),
-        },
-        help="Kubernetes labels to apply to all objects created by the gateway",
-        config=True,
-    )
-
-    common_annotations = Dict(
-        help="Kubernetes annotations to apply to all objects created by the gateway",
         config=True,
     )
 
@@ -285,13 +248,15 @@ class KubeController(Application):
 
     async def read_namespaced_pod(self, pod_name, namespace):
         informer = self.informers["pod"]
-        pod = informer.get(f"{namespace}.{pod_name}")
+        key = f"{namespace}.{pod_name}"
+        pod = informer.get(key)
         if pod is not None:
             return pod
 
         pod = await self.core_client.read_namespaced_pod(pod_name, namespace)
         pod = self.api_client.sanitize_for_serialization(pod)
-        informer.put(pod, replace=False)
+        if key not in informer.cache:
+            informer.put(pod)
         return pod
 
     def get_pod_state(self, pod):
@@ -340,13 +305,14 @@ class KubeController(Application):
                     "Error while reconciling cluster %s", name, exc_info=True
                 )
 
-    async def reconcile_cluster(self, name):
-        cluster = self.informers["cluster"].get(name)
+    async def reconcile_cluster(self, cluster_name):
+        cluster = self.informers["cluster"].get(cluster_name)
         if cluster is None:
             # Cluster already deleted, nothing to do
             return
 
         namespace = cluster["metadata"]["namespace"]
+        name = cluster["metadata"]["name"]
 
         spec = cluster.get("spec")
         status = cluster.get("status") or {}
@@ -390,25 +356,22 @@ class KubeController(Application):
                 status_update["phase"] = "Running"
         else:
             if phase not in {"Stopped", "Failed"}:
-                self.log.info("Shutting down %s", name)
+                self.log.info("Shutting down %s", cluster_name)
                 await self.cleanup_cluster_resources(status, namespace)
                 status_update["phase"] = "Stopped"
 
         if status_update != status:
-            update = {
-                "apiVersion": cluster["apiVersion"],
-                "kind": cluster["kind"],
-                "metadata": cluster["metadata"],
-                "status": status_update,
-            }
-            await self.custom_client.replace_namespaced_custom_object_status(
-                "gateway.dask.org",
-                self.crd_version,
-                cluster["metadata"]["namespace"],
-                "daskclusters",
-                cluster["metadata"]["name"],
-                update,
-            )
+            await self.patch_cluster_status(namespace, name, status_update)
+
+    async def patch_cluster_status(self, namespace, name, status):
+        await self.custom_client.patch_namespaced_custom_object_status(
+            "gateway.dask.org",
+            self.crd_version,
+            namespace,
+            "daskclusters",
+            name,
+            [{"op": "add", "path": "/status", "value": status}],
+        )
 
     async def cleanup_cluster_resources(self, status, namespace):
         sched_pod = status.get("schedulerPod")
