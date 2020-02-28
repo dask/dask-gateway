@@ -34,35 +34,39 @@ class Informer(LoggingConfigurable):
     def get(self, name, default=None):
         return self.cache.get(name, default)
 
-    def pop(self, name, default=None):
-        self.cache.pop(name, default)
+    def drop(self, name):
+        self.cache.pop(name, None)
 
-    def put(self, name, value):
-        self.cache[name] = value
+    def put(self, obj):
+        name = obj["metadata"]["name"]
+        namespace = obj["metadata"]["namespace"]
+        self.update_cache(f"{namespace}.{name}", obj)
 
     def update_cache(self, name, obj, deleted=False):
         if deleted:
-            self.cache.pop(name, None)
+            self.cache.pop(name)
         else:
             self.cache[name] = obj
 
     async def handle(self, obj, event_type="ADDED"):
+        namespace = obj["metadata"]["namespace"]
         name = obj["metadata"]["name"]
-        self.log.debug("Received %s event for %s[%s]", event_type, self.name, name)
+        key = f"{namespace}.{name}"
+        self.log.debug("Event - %s %s %s", event_type, self.name, key)
 
         old = self.cache.get(name)
         if event_type in {"ADDED", "MODIFIED"}:
-            self.update_cache(name, obj)
+            self.update_cache(key, obj)
             try:
                 await self.on_update(obj, old=old)
             except Exception:
-                self.log.warning("Error in %s informer", exc_info=True)
+                self.log.warning("Error in %s informer", self.name, exc_info=True)
         elif event_type == "DELETED":
-            self.update_cache(name, obj, deleted=True)
+            self.update_cache(key, obj, deleted=True)
             try:
                 await self.on_delete(obj)
             except Exception:
-                self.log.warning("Error in %s informer", exc_info=True)
+                self.log.warning("Error in %s informer", self.name, exc_info=True)
 
     async def start(self):
         if not hasattr(self, "_task"):
@@ -91,6 +95,7 @@ class Informer(LoggingConfigurable):
                 self.log.error(
                     "Error in %s watch stream, retrying...", self.name, exc_info=exc
                 )
+                continue
 
             initial = self.client.api_client.sanitize_for_serialization(initial)
             for obj in initial["items"]:
@@ -126,8 +131,9 @@ class Reflector(Informer):
         self.cache[name] = (obj, deleted)
 
     async def on_update(self, obj, old=None):
+        namespace = obj["metadata"]["namespace"]
         name = obj["metadata"]["name"]
-        await self.queue.put(name)
+        await self.queue.put(f"{namespace}.{name}")
 
     on_delete = on_update
 

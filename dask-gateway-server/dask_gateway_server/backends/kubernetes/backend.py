@@ -328,15 +328,24 @@ class KubeBackend(Backend):
             "gateway.dask.org", self.crd_version, config.namespace, "daskclusters", obj
         )
 
-        cluster_name = res["metadata"]["name"]
+        name = res["metadata"]["name"]
+        namespace = res["metadata"]["namespace"]
+        cluster_name = f"{namespace}.{name}"
 
-        self.reflector.put(cluster_name, (res, True))
+        self.reflector.put(res)
         await self.update_cluster_cache(cluster_name)
-
         return cluster_name
 
     async def stop_cluster(self, cluster_name, failed=False):
-        raise NotImplementedError
+        namespace, name = cluster_name.split(".")
+        await self.custom_client.patch_namespaced_custom_object(
+            "gateway.dask.org",
+            self.crd_version,
+            namespace,
+            "daskclusters",
+            name,
+            [{"op": "add", "path": "/spec/active", "value": False}],
+        )
 
     async def get_cluster(self, cluster_name, wait=False):
         cluster = self.clusters.get(cluster_name)
@@ -391,22 +400,22 @@ class KubeBackend(Backend):
 
     async def watcher_loop(self):
         while True:
-            name = await self.queue.get()
+            cluster_name = await self.queue.get()
             try:
-                await self.update_cluster_cache(name)
+                await self.update_cluster_cache(cluster_name)
             except Exception as exc:
                 self.log.info(
-                    "Error updating cluster cache for %s:", name, exc_info=exc
+                    "Error updating cluster cache for %s", cluster_name, exc_info=exc
                 )
 
-    async def update_cluster_cache(self, name):
-        obj, deleted = self.reflector.get(name)
+    async def update_cluster_cache(self, cluster_name):
+        obj, deleted = self.reflector.get(cluster_name)
 
         if deleted:
-            self.log.debug("Deleting %s from cache", name)
-            self.reflector.pop(name, None)
+            self.log.debug("Deleting %s from cache", cluster_name)
+            self.reflector.drop(cluster_name)
             # Delete the cluster from the cache
-            cluster = self.clusters.pop(name, None)
+            cluster = self.clusters.pop(cluster_name, None)
             if cluster is not None:
                 user = self.username_to_clusters.get(cluster.username)
                 if user is not None:
@@ -414,16 +423,20 @@ class KubeBackend(Backend):
                     if not user:
                         self.username_to_clusters.pop(cluster.username, None)
         else:
-            self.log.debug("Updating %s in cache", name)
+            self.log.debug("Updating %s in cache", cluster_name)
 
-            old = self.clusters.get(name)
+            old = self.clusters.get(cluster_name)
+
+            status = obj.get("status", {})
+            phase = status.get("phase", "Pending")
+            status = models.ClusterStatus.from_name(phase)
 
             cluster = models.Cluster(
-                name=name,
+                name=cluster_name,
                 username=obj["metadata"]["labels"]["gateway.dask.org/user"],
                 options=obj["spec"].get("options") or {},
                 token="",
-                status=models.ClusterStatus.RUNNING,
+                status=status,
                 start_time=parse_k8s_timestamp(obj["metadata"]["creationTimestamp"]),
             )
 

@@ -5,4 +5,4 @@ metadata:
 spec:
   stripPrefixRegex:
     regex:
-      - "{{ .Values.gateway.prefix }}clusters/[a-z0-9]+/"
+      - "{{ .Values.gateway.prefix }}clusters/[a-zA-Z0-9.-]+/"
