@@ -58,3 +58,10 @@ Traefik name
 {{- define "dask-gateway.traefikName" -}}
 {{ include "dask-gateway.fullname" . | printf "traefik-%s" | trunc 63 | trimSuffix "-" }}
 {{- end -}}
+
+{{/*
+Controller name
+*/}}
+{{- define "dask-gateway.controllerName" -}}
+{{ include "dask-gateway.fullname" . | printf "controller-%s" | trunc 63 | trimSuffix "-" }}
+{{- end -}}

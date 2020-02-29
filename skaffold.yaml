@@ -26,6 +26,7 @@ deploy:
       values:
         gateway.image: daskgateway/dask-gateway-server
         gateway.backend.image: daskgateway/dask-gateway
+        controller.image: daskgateway/dask-gateway-server
       valuesFiles:
         - resources/helm/testing/local-resources.yaml
     flags:

@@ -110,6 +110,19 @@ gateway:
   # `values.yaml` files, but is unnecessary in other cases.
   extraConfig: {}
 
+controller:
+  # Any annotations to add to the controller pod
+  annotations: {}
+
+  # Resource requests/limits for the controller pod
+  resources: {}
+  
+  # The image to use for the controller pod.
+  image:
+    name: daskgateway/dask-gateway-server
+    tag: 0.6.1
+    pullPolicy: IfNotPresent
+
 # Configuration for the traefik proxy
 traefik:
   # Number of instances of the proxy to run

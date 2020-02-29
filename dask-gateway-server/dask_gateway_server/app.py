@@ -82,6 +82,10 @@ class DaskGateway(Application):
             "Generate a default config file",
         ),
         "proxy": ("dask_gateway_server.proxy.core.ProxyApp", "Start the proxy"),
+        "kube-controller": (
+            "dask_gateway_server.backends.kubernetes.controller.KubeController",
+            "Start the k8s controller",
+        ),
     }
 
     aliases = {

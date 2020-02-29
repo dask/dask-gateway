@@ -6,7 +6,7 @@ import uuid
 from base64 import b64encode
 
 from aiohttp import web
-from traitlets import Unicode, Integer, validate
+from traitlets import Unicode, Integer, List, validate
 from traitlets.config import catch_config_error
 
 from kubernetes_asyncio import client, config
@@ -92,9 +92,14 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         prefix = proposal.value.strip("/")
         return f"/{prefix}" if prefix else prefix
 
-    proxy_web_entrypoint = Unicode("web")
+    proxy_web_entrypoint = Unicode("web", config=True)
 
-    proxy_tcp_entrypoint = Unicode("tcp")
+    proxy_tcp_entrypoint = Unicode("tcp", config=True)
+
+    proxy_web_middlewares = List(
+        help="A list of middlewares to apply to web routes added to the proxy.",
+        config=True,
+    )
 
     _log_formatter_cls = LogFormatter
 
@@ -708,11 +713,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                                 "port": 8787,
                             }
                         ],
-                        "middlewares": [
-                            {
-                                "name": "clusters-prefix-dask-gateway"
-                            }  # TODO: configurable
-                        ],
+                        "middlewares": self.proxy_web_middlewares,
                     }
                 ],
             },
