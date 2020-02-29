@@ -671,6 +671,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 "name": f"dask-gateway-{cluster_name}",
             },
             "spec": {
+                "clusterIP": "None",
                 "selector": {
                     "gateway.dask.org/cluster": cluster_name,
                     "gateway.dask.org/instance": self.gateway_instance,
