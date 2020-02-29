@@ -1,3 +1,4 @@
+{{- if .Values.controller.enabled -}}
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
@@ -6,3 +7,4 @@ spec:
   stripPrefixRegex:
     regex:
       - "{{ .Values.gateway.prefix }}clusters/[a-zA-Z0-9.-]+/"
+{{- end }}

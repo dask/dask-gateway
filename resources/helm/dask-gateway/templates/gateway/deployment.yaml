@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "dask-gateway.fullname" . | printf "gateway-%s" | trunc 63 | trimSuffix "-" }}
+  name: {{ include "dask-gateway.apiName" . }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 spec:
@@ -23,12 +23,12 @@ spec:
         {{- end }}
     spec:
       {{- if .Values.rbac.enabled }}
-      serviceAccountName: {{ include "dask-gateway.fullname" . }}
+      serviceAccountName: {{ include "dask-gateway.apiName" . }}
       {{- end }}
       volumes:
         - name: configmap
           configMap:
-            name: {{ include "dask-gateway.fullname" . }}
+            name: {{ include "dask-gateway.apiName" . }}
       containers:
         - name: gateway
           image: {{ .Values.gateway.image.name }}:{{ .Values.gateway.image.tag }}
@@ -47,11 +47,9 @@ spec:
             - name: JUPYTERHUB_API_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "dask-gateway.fullname" . }}
+                  name: {{ include "dask-gateway.apiName" . }}
                   key: jupyterhub-api-token
             {{- end }}
-            - name: GATEWAY_API_SERVICE_NAME
-              value: {{ include "dask-gateway.fullname" . | printf "gateway-api-%s" | trunc 63 | trimSuffix "-" }}
           ports:
             - containerPort: 8000
               name: api

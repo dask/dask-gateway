@@ -53,6 +53,13 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{/*
+API Server name
+*/}}
+{{- define "dask-gateway.apiName" -}}
+{{ include "dask-gateway.fullname" . | printf "api-%s" | trunc 63 | trimSuffix "-" }}
+{{- end -}}
+
+{{/*
 Traefik name
 */}}
 {{- define "dask-gateway.traefikName" -}}

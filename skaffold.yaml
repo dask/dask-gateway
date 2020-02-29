@@ -28,7 +28,15 @@ deploy:
         gateway.backend.image: daskgateway/dask-gateway
         controller.image: daskgateway/dask-gateway-server
       valuesFiles:
-        - resources/helm/testing/local-resources.yaml
+        - resources/helm/testing/skaffold.yaml
     flags:
       upgrade:
       - --install
+
+profiles:
+  - name: local-controller
+    patches:
+      - op: add
+        path: /deploy/helm/releases/0/setValues
+        value:
+          controller.enabled: false
