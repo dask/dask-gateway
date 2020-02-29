@@ -4,11 +4,13 @@ import pytest
 
 kubernetes_asyncio = pytest.importorskip("kubernetes_asyncio")
 
-from dask_gateway_server.backends.kubernetes import (
+from dask_gateway_server.utils import FrozenAttrDict
+from dask_gateway_server.backends.kubernetes.backend import (
     KubeClusterConfig,
     KubeBackend,
-    merge_json_objects,
 )
+from dask_gateway_server.backends.kubernetes.controller import KubeController
+from dask_gateway_server.backends.kubernetes.utils import merge_json_objects
 
 
 @pytest.mark.parametrize(
@@ -34,15 +36,26 @@ def test_merge_json_objects(a, b, sol):
     assert b == b_orig
 
 
-@pytest.mark.asyncio
-async def test_make_cluster_object():
-    backend = KubeBackend(
-        api_url="http://phony.com/api",
-        instance="instance-1234",
-        namespace="crd-namespace",
-    )
-    backend.api_client = kubernetes_asyncio.client.ApiClient()
+def test_make_cluster_object():
+    backend = KubeBackend(gateway_instance="instance-1234")
 
+    config = KubeClusterConfig()
+    options = {"somekey": "someval"}
+
+    obj = backend.make_cluster_object("alice", options, config)
+
+    name = obj["metadata"]["name"]
+    labels = obj["metadata"]["labels"]
+    assert labels["gateway.dask.org/instance"] == "instance-1234"
+    assert labels["gateway.dask.org/user"] == "alice"
+    assert labels["gateway.dask.org/cluster"] == name
+
+    spec = obj["spec"]
+    sol = {"options": options, "config": config.to_dict()}
+    assert spec == sol
+
+
+def example_config():
     sched_tol = {
         "key": "foo",
         "operator": "Equal",
@@ -56,7 +69,7 @@ async def test_make_cluster_object():
         "effect": "NoSchedule",
     }
     kwargs = {
-        "namespace": "pod-namespace",
+        "namespace": "mynamespace",
         "worker_extra_pod_config": {"tolerations": [worker_tol]},
         "worker_extra_container_config": {"workingDir": "/worker"},
         "worker_memory": "4G",
@@ -70,39 +83,141 @@ async def test_make_cluster_object():
         "scheduler_cores": 1,
         "scheduler_cores_limit": 2,
     }
+    return FrozenAttrDict(KubeClusterConfig(**kwargs).to_dict())
 
-    options = {"somekey": "someval"}
-    config = KubeClusterConfig(**kwargs)
 
-    obj = backend.make_cluster_object("alice", options, config)
+@pytest.mark.parametrize("is_worker", [False, True])
+def test_make_pod(is_worker):
+    controller = KubeController(
+        gateway_instance="instance-1234", api_url="http://example.com/api"
+    )
 
-    sched = obj["spec"]["scheduler"]["template"]
-    worker = obj["spec"]["worker"]["template"]
+    config = example_config()
+    namespace = config.namespace
+    cluster_name = "c1234"
+    username = "alice"
 
-    for o in [worker, sched]:
-        # namespace forwarded
-        assert o["metadata"]["namespace"] == "pod-namespace"
-        # access to k8s api forbidden
-        assert not o["spec"]["automountServiceAccountToken"]
+    pod = controller.make_pod(
+        namespace, cluster_name, username, config, is_worker=is_worker
+    )
 
-    # Labels forwarded
-    for o in [obj, sched, worker]:
-        assert o["metadata"]["labels"]["gateway.dask.org/instance"] == "instance-1234"
+    if is_worker:
+        component = "dask-worker"
+        tolerations = config.worker_extra_pod_config["tolerations"]
+        workdir = "/worker"
+        resources = {
+            "limits": {"cpu": "3.0", "memory": str(6 * 2 ** 30)},
+            "requests": {"cpu": "2.0", "memory": str(4 * 2 ** 30)},
+        }
+    else:
+        component = "dask-scheduler"
+        tolerations = config.scheduler_extra_pod_config["tolerations"]
+        workdir = "/scheduler"
+        resources = {
+            "limits": {"cpu": "2.0", "memory": str(3 * 2 ** 30)},
+            "requests": {"cpu": "1.0", "memory": str(2 * 2 ** 30)},
+        }
 
-    # resources are forwarded
-    wct = worker["spec"]["containers"][0]
-    assert wct["resources"]["requests"]["memory"] == str(4 * 2 ** 30)
-    assert wct["resources"]["limits"]["memory"] == str(6 * 2 ** 30)
-    assert wct["resources"]["requests"]["cpu"] == "2.0"
-    assert wct["resources"]["limits"]["cpu"] == "3.0"
-    sct = sched["spec"]["containers"][0]
-    assert sct["resources"]["requests"]["memory"] == str(2 * 2 ** 30)
-    assert sct["resources"]["limits"]["memory"] == str(3 * 2 ** 30)
-    assert sct["resources"]["requests"]["cpu"] == "1.0"
-    assert sct["resources"]["limits"]["cpu"] == "2.0"
+    labels = pod["metadata"]["labels"]
+    assert labels["gateway.dask.org/instance"] == "instance-1234"
+    assert labels["gateway.dask.org/cluster"] == cluster_name
+    assert labels["gateway.dask.org/user"] == username
+    assert labels["app.kubernetes.io/component"] == component
 
-    # extra config picked up
-    assert wct["workingDir"] == "/worker"
-    assert worker["spec"]["tolerations"] == [worker_tol]
-    assert sct["workingDir"] == "/scheduler"
-    assert sched["spec"]["tolerations"] == [sched_tol]
+    assert pod["spec"]["tolerations"] == tolerations
+    container = pod["spec"]["containers"][0]
+    assert container["workingDir"] == workdir
+
+    assert container["resources"] == resources
+
+
+def test_make_secret():
+    controller = KubeController(
+        gateway_instance="instance-1234", api_url="http://example.com/api"
+    )
+
+    cluster_name = "c1234"
+    username = "alice"
+
+    secret = controller.make_secret(cluster_name, username)
+
+    labels = secret["metadata"]["labels"]
+    assert labels["gateway.dask.org/instance"] == "instance-1234"
+    assert labels["gateway.dask.org/cluster"] == cluster_name
+    assert labels["gateway.dask.org/user"] == username
+    assert labels["app.kubernetes.io/component"] == "credentials"
+
+    assert set(secret["data"].keys()) == {"dask.crt", "dask.pem", "api-token"}
+
+
+def test_make_service():
+    controller = KubeController(
+        gateway_instance="instance-1234", api_url="http://example.com/api"
+    )
+
+    cluster_name = "c1234"
+    username = "alice"
+
+    service = controller.make_service(cluster_name, username)
+
+    labels = service["metadata"]["labels"]
+    assert labels["gateway.dask.org/instance"] == "instance-1234"
+    assert labels["gateway.dask.org/cluster"] == cluster_name
+    assert labels["gateway.dask.org/user"] == username
+    assert labels["app.kubernetes.io/component"] == "dask-scheduler"
+
+    selector = service["spec"]["selector"]
+    assert selector["gateway.dask.org/cluster"] == cluster_name
+    assert selector["gateway.dask.org/instance"] == "instance-1234"
+    assert selector["app.kubernetes.io/component"] == "dask-scheduler"
+
+
+def test_make_ingressroute():
+    middlewares = [{"name": "my-middleware"}]
+
+    controller = KubeController(
+        gateway_instance="instance-1234",
+        api_url="http://example.com/api",
+        proxy_prefix="/foo/bar",
+        proxy_web_middlewares=middlewares,
+    )
+
+    cluster_name = "c1234"
+    username = "alice"
+    namespace = "mynamespace"
+
+    ingress = controller.make_ingressroute(cluster_name, username, namespace)
+
+    labels = ingress["metadata"]["labels"]
+    assert labels["gateway.dask.org/instance"] == "instance-1234"
+    assert labels["gateway.dask.org/cluster"] == cluster_name
+    assert labels["gateway.dask.org/user"] == username
+    assert labels["app.kubernetes.io/component"] == "dask-scheduler"
+
+    route = ingress["spec"]["routes"][0]
+    assert route["middlewares"] == middlewares
+    assert (
+        route["match"] == f"PathPrefix(`/foo/bar/clusters/{namespace}.{cluster_name}/`)"
+    )
+
+
+def test_make_ingressroutetcp():
+    controller = KubeController(
+        gateway_instance="instance-1234", api_url="http://example.com/api"
+    )
+
+    cluster_name = "c1234"
+    username = "alice"
+    namespace = "mynamespace"
+
+    ingress = controller.make_ingressroutetcp(cluster_name, username, namespace)
+
+    labels = ingress["metadata"]["labels"]
+    assert labels["gateway.dask.org/instance"] == "instance-1234"
+    assert labels["gateway.dask.org/cluster"] == cluster_name
+    assert labels["gateway.dask.org/user"] == username
+    assert labels["app.kubernetes.io/component"] == "dask-scheduler"
+
+    route = ingress["spec"]["routes"][0]
+    assert route["match"] == f"HostSNI(`daskgateway-{namespace}.{cluster_name}`)"
+    assert ingress["spec"]["tls"]["passthrough"]
