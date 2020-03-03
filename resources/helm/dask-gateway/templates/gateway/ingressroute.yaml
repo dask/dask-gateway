@@ -2,6 +2,8 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: {{ include "dask-gateway.apiName" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
 spec:
   entryPoints:
     - web

@@ -178,6 +178,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
         # Initialize queue and informers
         self.queue = WorkQueue()
+        endpoints_selector = (
+            self.label_selector + ",app.kubernetes.io/component=dask-scheduler"
+        )
         self.informers = {
             "cluster": Informer(
                 parent=self,
@@ -201,6 +204,15 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 method_kwargs=dict(label_selector=self.label_selector),
                 on_update=self.on_pod_update,
                 on_delete=self.on_pod_delete,
+            ),
+            "endpoints": Informer(
+                parent=self,
+                name="endpoints",
+                client=self.core_client,
+                method="list_endpoints_for_all_namespaces",
+                method_kwargs=dict(label_selector=endpoints_selector),
+                on_update=self.on_endpoints_update,
+                on_delete=self.on_endpoints_delete,
             ),
         }
         await asyncio.wait([i.start() for i in self.informers.values()])
@@ -261,25 +273,31 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             if exc.status == 404:
                 return None
             raise
-        pod = self.api_client.sanitize_for_serialization(pod)
-        if key not in informer.cache:
-            informer.put(pod)
-        return pod
+        return self.api_client.sanitize_for_serialization(pod)
 
     def get_pod_state(self, pod):
-        component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
-        for cs in pod["status"].get("containerStatuses", ()):
-            if cs["name"] == component:
-                return next(iter(cs["state"]))
-        return "unknown"
+        phase = pod["status"].get("phase", "Unknown")
+        if phase == "Pending":
+            return "waiting"
+        else:
+            component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
+            for cs in pod["status"].get("containerStatuses", ()):
+                if cs["name"] == component:
+                    return next(iter(cs["state"]))
+            return "unknown"
 
     def get_cluster_key(self, obj):
-        namespace = obj["metadata"]["namespace"]
-        name = obj["metadata"]["labels"]["gateway.dask.org/cluster"]
-        return f"{namespace}.{name}"
+        try:
+            namespace = obj["metadata"]["namespace"]
+            name = obj["metadata"]["labels"]["gateway.dask.org/cluster"]
+            return f"{namespace}.{name}"
+        except KeyError:
+            return None
 
     async def on_pod_update(self, pod, old=None):
         cluster_key = self.get_cluster_key(pod)
+        if cluster_key is None:
+            return
         component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
         state = self.get_pod_state(pod)
         if component == "dask-scheduler":
@@ -288,7 +306,25 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     async def on_pod_delete(self, pod):
         cluster_key = self.get_cluster_key(pod)
+        if cluster_key is None:
+            return
         self.queue.put(cluster_key)
+
+    def endpoints_all_ready(self, endpoints):
+        subsets = endpoints.get("subsets", ())
+        return subsets and not any(s.get("notReadyAddresses") for s in subsets)
+
+    async def on_endpoints_update(self, endpoints, old=None):
+        cluster_key = self.get_cluster_key(endpoints)
+        if cluster_key is None:
+            return
+        self.log.info("%r", endpoints)
+        if self.endpoints_all_ready(endpoints):
+            self.log.info("Endpoint ready and available for cluster %s", cluster_key)
+            self.queue.put(cluster_key)
+
+    async def on_endpoints_delete(self, endpoints):
+        pass
 
     async def on_cluster_update(self, cluster, old=None):
         namespace = cluster["metadata"]["namespace"]
@@ -297,6 +333,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     async def on_cluster_delete(self, cluster):
         cluster_key = self.get_cluster_key(cluster)
+        if cluster_key is None:
+            return
         self.log.debug("Cluster %s deleted", cluster_key)
 
     async def reconciler_loop(self):
@@ -342,35 +380,45 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
             sched_pod_name = status.get("schedulerPod")
             if not sched_pod_name:
-                sched_pod_name = await self.create_scheduler_pod_if_not_exists(cluster)
+                sched_pod_name, sched_pod = await self.create_scheduler_pod_if_not_exists(
+                    cluster
+                )
                 status_update["schedulerPod"] = sched_pod_name
-
-            sched_pod = await self.read_namespaced_pod(sched_pod_name, namespace)
+            else:
+                sched_pod = await self.read_namespaced_pod(sched_pod_name, namespace)
 
             if sched_pod is not None:
                 sched_state = self.get_pod_state(sched_pod)
             else:
                 sched_state = "terminated"
             if sched_state == "running":
+                service_name = status.get("service")
                 if not status.get("service"):
                     service_name = await self.create_service_if_not_exists(
                         cluster, sched_pod
                     )
                     status_update["service"] = service_name
 
-                if not status.get("ingressroute"):
-                    route = await self.create_ingressroute_if_not_exists(
-                        cluster, sched_pod
-                    )
-                    status_update["ingressroute"] = route
+                endpoints = self.informers["endpoints"].get(
+                    f"{namespace}.{service_name}"
+                )
+                if endpoints is not None and self.endpoints_all_ready(endpoints):
+                    # Only add routes if endpoints exist, otherwise traefik gets grumpy
+                    # This also allows us to delay setting the phase to Running
+                    # until the route is likely to be added.
+                    if not status.get("ingressroute"):
+                        route = await self.create_ingressroute_if_not_exists(
+                            cluster, sched_pod
+                        )
+                        status_update["ingressroute"] = route
 
-                if not status.get("ingressroutetcp"):
-                    route = await self.create_ingressroutetcp_if_not_exists(
-                        cluster, sched_pod
-                    )
-                    status_update["ingressroutetcp"] = route
+                    if not status.get("ingressroutetcp"):
+                        route = await self.create_ingressroutetcp_if_not_exists(
+                            cluster, sched_pod
+                        )
+                        status_update["ingressroutetcp"] = route
 
-                status_update["phase"] = "Running"
+                    status_update["phase"] = "Running"
             elif sched_state == "terminated":
                 self.log.info(
                     "Scheduler for cluster %s terminated, shutting down", cluster_name
@@ -454,12 +502,13 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         try:
             pod = await self.core_client.create_namespaced_pod(namespace, pod)
             pod = self.api_client.sanitize_for_serialization(pod)
-            self.informers["pod"].put(pod)
         except ApiException as exc:
-            if exc.status != 409:
+            if exc.status == 409:
+                pod = self.read_namespaced_pod(pod["metadata"]["name"], namespace)
+            else:
                 raise
 
-        return pod["metadata"]["name"]
+        return pod["metadata"]["name"], pod
 
     async def create_service_if_not_exists(self, cluster, sched_pod):
         name = cluster["metadata"]["name"]
@@ -598,6 +647,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             cmd = self.get_worker_command(config)
             extra_pod_config = config.worker_extra_pod_config
             extra_container_config = config.worker_extra_container_config
+            probes = {}
         else:
             container_name = "dask-scheduler"
             mem_req = config.scheduler_memory
@@ -607,6 +657,15 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             cmd = self.get_scheduler_command(config)
             extra_pod_config = config.scheduler_extra_pod_config
             extra_container_config = config.scheduler_extra_container_config
+            # TODO: make this configurable. If supported, we should use a
+            # startupProbe here instead.
+            probes = {
+                "readinessProbe": {
+                    "tcpSocket": {"port": 8786},
+                    "periodSeconds": 5,
+                    "failureThreshold": 3,
+                }
+            }
 
         labels = self.get_labels(cluster_name, username, container_name)
 
@@ -638,6 +697,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 {"name": "api", "containerPort": 8788},
             ],
         }
+
+        container.update(probes)
 
         if extra_container_config:
             container = merge_json_objects(container, extra_container_config)

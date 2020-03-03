@@ -24,6 +24,9 @@ rules:
     resources: ["pods"]
     verbs: ["get", "list", "watch", "create", "delete"]
   - apiGroups: [""]
+    resources: ["entrypoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
     resources: ["secrets", "services"]
     verbs: ["get", "create", "delete"]
 ---
