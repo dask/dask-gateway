@@ -18,12 +18,12 @@ from ...utils import (
     LogFormatter,
     normalize_address,
     run_main,
-    UniqueQueue,
     CancelGroup,
 )
 from ...traitlets import Application
 from ...tls import new_keypair
 from ...utils import FrozenAttrDict
+from ...workqueue import WorkQueue
 from .utils import Informer, merge_json_objects
 from .backend import KubeBackendAndControllerMixin
 
@@ -177,7 +177,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         self.custom_client = client.CustomObjectsApi(api_client=self.api_client)
 
         # Initialize queue and informers
-        self.queues = [UniqueQueue() for _ in range(self.parallelism)]
+        self.queue = WorkQueue()
         self.informers = {
             "cluster": Informer(
                 parent=self,
@@ -209,7 +209,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         # Initialize reconcilers
         self.cg = CancelGroup()
         self.reconcilers = [
-            asyncio.ensure_future(self.reconciler_loop(q)) for q in self.queues
+            asyncio.ensure_future(self.reconciler_loop())
+            for _ in range(self.parallelism)
         ]
 
         # Start the aiohttp application
@@ -229,7 +230,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         self.log.info("API listening at http://%s", self.address)
 
     async def cleanup(self):
-        # Stop reconcilation queues
+        # Stop reconcilation workers
         if hasattr(self, "cg"):
             await self.cg.cancel()
             await asyncio.gather(*self.reconcilers, return_exceptions=True)
@@ -247,10 +248,6 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
         self.log.info("Stopped successfully")
 
-    async def enqueue(self, obj):
-        ind = hash(obj) % self.parallelism
-        await self.queues[ind].put(obj)
-
     async def read_namespaced_pod(self, pod_name, namespace):
         informer = self.informers["pod"]
         key = f"{namespace}.{pod_name}"
@@ -258,7 +255,12 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         if pod is not None:
             return pod
 
-        pod = await self.core_client.read_namespaced_pod(pod_name, namespace)
+        try:
+            pod = await self.core_client.read_namespaced_pod(pod_name, namespace)
+        except ApiException as exc:
+            if exc.status == 404:
+                return None
+            raise
         pod = self.api_client.sanitize_for_serialization(pod)
         if key not in informer.cache:
             informer.put(pod)
@@ -282,25 +284,25 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         state = self.get_pod_state(pod)
         if component == "dask-scheduler":
             if state in ("running", "terminated"):
-                await self.enqueue(cluster_key)
+                self.queue.put(cluster_key)
 
     async def on_pod_delete(self, pod):
         cluster_key = self.get_cluster_key(pod)
-        await self.enqueue(cluster_key)
+        self.queue.put(cluster_key)
 
     async def on_cluster_update(self, cluster, old=None):
         namespace = cluster["metadata"]["namespace"]
         name = cluster["metadata"]["name"]
-        await self.enqueue(f"{namespace}.{name}")
+        self.queue.put(f"{namespace}.{name}")
 
     async def on_cluster_delete(self, cluster):
         cluster_key = self.get_cluster_key(cluster)
         self.log.debug("Cluster %s deleted", cluster_key)
 
-    async def reconciler_loop(self, queue):
+    async def reconciler_loop(self):
         while True:
             async with self.cg.cancellable():
-                name = await queue.get()
+                name = await self.queue.get()
 
             self.log.debug("Reconciling cluster %s", name)
             try:
@@ -309,6 +311,11 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 self.log.warning(
                     "Error while reconciling cluster %s", name, exc_info=True
                 )
+                self.queue.put_backoff(name)
+            else:
+                self.queue.reset_backoff(name)
+            finally:
+                self.queue.task_done(name)
 
     async def reconcile_cluster(self, cluster_name):
         cluster = self.informers["cluster"].get(cluster_name)
@@ -326,7 +333,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         phase = status_update.setdefault("phase", "Pending")
         active = spec.get("active", True)
 
-        if active:
+        if phase in {"Stopped", "Failed"}:
+            return
+        elif active:
             if not status.get("credentials"):
                 secret_name = await self.create_secret_if_not_exists(cluster)
                 status_update["credentials"] = secret_name
@@ -338,14 +347,17 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
             sched_pod = await self.read_namespaced_pod(sched_pod_name, namespace)
 
-            if not status.get("service"):
-                service_name = await self.create_service_if_not_exists(
-                    cluster, sched_pod
-                )
-                status_update["service"] = service_name
-
-            sched_state = self.get_pod_state(sched_pod)
+            if sched_pod is not None:
+                sched_state = self.get_pod_state(sched_pod)
+            else:
+                sched_state = "terminated"
             if sched_state == "running":
+                if not status.get("service"):
+                    service_name = await self.create_service_if_not_exists(
+                        cluster, sched_pod
+                    )
+                    status_update["service"] = service_name
+
                 if not status.get("ingressroute"):
                     route = await self.create_ingressroute_if_not_exists(
                         cluster, sched_pod
@@ -359,6 +371,12 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                     status_update["ingressroutetcp"] = route
 
                 status_update["phase"] = "Running"
+            elif sched_state == "terminated":
+                self.log.info(
+                    "Scheduler for cluster %s terminated, shutting down", cluster_name
+                )
+                await self.cleanup_cluster_resources(status, namespace)
+                status_update["phase"] = "Failed"
         else:
             if phase not in {"Stopped", "Failed"}:
                 self.log.info("Shutting down %s", cluster_name)
