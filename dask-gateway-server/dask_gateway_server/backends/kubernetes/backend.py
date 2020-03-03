@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from traitlets import Float, Dict, Unicode, default
 from traitlets.config import Configurable
 from kubernetes_asyncio import client, config
+from kubernetes_asyncio.client.rest import ApiException
 
 from ... import __version__ as VERSION
 from ... import models
@@ -298,6 +299,7 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
     )
 
     async def setup(self, app):
+        await super().setup(app)
         try:
             # Not a coroutine for some reason
             config.load_incluster_config()
@@ -335,6 +337,7 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             await cancel_task(self._watcher_task)
         if hasattr(self, "api_client"):
             await self.api_client.rest_client.pool_manager.close()
+        await super().cleanup()
 
     async def start_cluster(self, user, cluster_options):
         options, config = await self.process_cluster_options(user, cluster_options)
@@ -392,7 +395,21 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             return [cluster for cluster in clusters.values() if select(cluster)]
 
     async def on_cluster_heartbeat(self, cluster_name, msg):
-        raise NotImplementedError
+        count = msg["count"]
+        namespace, name = cluster_name.split(".")
+
+        try:
+            await self.custom_client.patch_namespaced_custom_object(
+                "gateway.dask.org",
+                self.crd_version,
+                namespace,
+                "daskclusters",
+                name,
+                [{"op": "add", "path": "/spec/replicas", "value": count}],
+            )
+        except ApiException as exc:
+            if exc.status != 404:
+                raise
 
     def get_labels(self, cluster_name, username, component=None):
         labels = self.common_labels.copy()
@@ -460,9 +477,9 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             service_name = status.get("service")
             if cluster_status == models.ClusterStatus.RUNNING and service_name:
                 namespace = obj["metadata"]["namespace"]
-                scheduler_address = f"{service_name}.{namespace}:8786"
+                scheduler_address = f"http://{service_name}.{namespace}:8786"
                 dashboard_address = f"{service_name}.{namespace}:8787"
-                api_address = f"{service_name}.{namespace}:8788"
+                api_address = f"http://{service_name}.{namespace}:8788"
             else:
                 scheduler_address = dashboard_address = api_address = ""
 

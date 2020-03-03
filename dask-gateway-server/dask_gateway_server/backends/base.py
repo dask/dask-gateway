@@ -94,6 +94,7 @@ class Backend(LoggingConfigurable):
                     cluster.api_address + "/api/comm",
                     json=msg,
                     headers={"Authorization": "token %s" % cluster.token},
+                    raise_for_status=True,
                 )
                 return
             except Exception:

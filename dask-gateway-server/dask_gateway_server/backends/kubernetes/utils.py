@@ -49,8 +49,12 @@ class Informer(LoggingConfigurable):
             self.cache[name] = obj
 
     async def handle(self, obj, event_type="ADDED"):
-        namespace = obj["metadata"]["namespace"]
-        name = obj["metadata"]["name"]
+        try:
+            namespace = obj["metadata"]["namespace"]
+            name = obj["metadata"]["name"]
+        except KeyError:
+            self.log.debug("%r - %r", event_type, obj)
+            raise
         key = f"{namespace}.{name}"
         self.log.debug("Event - %s %s %s", event_type, self.name, key)
 

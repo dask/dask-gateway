@@ -318,7 +318,6 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         cluster_key = self.get_cluster_key(endpoints)
         if cluster_key is None:
             return
-        self.log.info("%r", endpoints)
         if self.endpoints_all_ready(endpoints):
             self.log.info("Endpoint ready and available for cluster %s", cluster_key)
             self.queue.put(cluster_key)
@@ -661,7 +660,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             # startupProbe here instead.
             probes = {
                 "readinessProbe": {
-                    "tcpSocket": {"port": 8786},
+                    "httpGet": {"port": 8788, "path": "/api/health"},
                     "periodSeconds": 5,
                     "failureThreshold": 3,
                 }

@@ -111,6 +111,11 @@ class CommHandler(BaseHandler):
         self.set_status(200)
 
 
+class HealthHandler(web.RequestHandler):
+    async def get(self):
+        self.set_status(200)
+
+
 class GatewayPlugin(SchedulerPlugin):
     def __init__(self, service):
         self.service = service
@@ -138,7 +143,12 @@ class GatewaySchedulerService(object):
         self.gateway = gateway
         self.loop = io_loop or scheduler.loop
         self.count = 0
-        self.heartbeat_period = heartbeat_period
+        if heartbeat_period <= 0:
+            self.heartbeat_period = 3600
+            self.heartbeat_initial = 3600
+        else:
+            self.heartbeat_period = heartbeat_period
+            self.heartbeat_initial = 0.25
         self.waiter = Waiter()
         self.idle_timeout = max(0, idle_timeout)
         self.check_idle_task = None
@@ -159,7 +169,7 @@ class GatewaySchedulerService(object):
         self.closed_workers = set()
         self.scheduler.add_plugin(GatewayPlugin(self))
 
-        routes = [("/api/comm", CommHandler)]
+        routes = [("/api/comm", CommHandler), ("/api/health", HealthHandler)]
         self.app = web.Application(
             routes, gateway_service=self, auth_token=self.gateway.token
         )
@@ -207,8 +217,7 @@ class GatewaySchedulerService(object):
 
         if self.idle_timeout > 0:
             self.check_idle_task = asyncio.ensure_future(self.check_idle())
-        if self.heartbeat_period > 0:
-            self.heartbeat_task = asyncio.ensure_future(self.heartbeat_loop())
+        self.heartbeat_task = asyncio.ensure_future(self.heartbeat_loop())
 
     def stop(self):
         if self.server is not None:
@@ -271,17 +280,24 @@ class GatewaySchedulerService(object):
             )
 
     async def heartbeat_loop(self):
-        period = 0.25
+        base_delay = 0.25
+        backoff = base_delay
+        period = self.heartbeat_initial
         while True:
             await self.waiter.wait(period)
             try:
                 await self.heartbeat()
-                period = self.heartbeat_period
             except asyncio.CancelledError:
                 break
             except Exception as exc:
+                # Failure. Backoff and try again
                 logger.warning("Failed to send heartbeat", exc_info=exc)
-                period = min(period * 2, self.heartbeat_period)
+                backoff = min(backoff * 2, self.heartbeat_period)
+                period = backoff
+            else:
+                # Success. Reset backoff, heartbeat lazily
+                backoff = base_delay
+                period = self.heartbeat_period
 
     async def scale(self, count):
         # When scale is called explicitly, disable adaptive scaling
@@ -389,7 +405,10 @@ scheduler_parser.add_argument(
     "--heartbeat-period",
     type=float,
     default=15,
-    help="Period (in seconds) between heartbeat calls",
+    help=(
+        "Period (in seconds) between heartbeat calls. Set to 0 to send "
+        "heartbeats only when scaling."
+    ),
 )
 scheduler_parser.add_argument(
     "--idle-timeout",
@@ -443,6 +462,9 @@ def make_gateway_client(cluster_name=None, api_url=None, api_token=None):
     cluster_name = cluster_name or getenv("DASK_GATEWAY_CLUSTER_NAME")
     api_url = api_url or getenv("DASK_GATEWAY_API_URL")
     api_token = api_token or getenv("DASK_GATEWAY_API_TOKEN")
+    if "/" in api_token:
+        with open(api_token) as f:
+            api_token = f.read()
     return GatewayClient(cluster_name, api_token, api_url)
 
 
