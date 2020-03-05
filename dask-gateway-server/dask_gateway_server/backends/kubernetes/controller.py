@@ -1,7 +1,9 @@
 import asyncio
+import collections
 import logging
 import signal
 import sys
+import time
 import uuid
 from base64 import b64encode
 
@@ -26,6 +28,64 @@ from ...utils import FrozenAttrDict
 from ...workqueue import WorkQueue
 from .utils import Informer, merge_json_objects
 from .backend import KubeBackendAndControllerMixin
+
+
+class ClusterInfo(object):
+    def __init__(self):
+        self.all_pods = set()
+        self.pending = set()
+        self.running = set()
+        self.succeeded = set()
+        self.failed = set()
+        self.set_expectations()
+
+    def set_expectations(self, creates=0, deletes=0):
+        self.creates = creates
+        self.deletes = deletes
+        self.timestamp = time.monotonic()
+
+    def expectations_fulfilled(self):
+        return self.creates <= 0 and self.deletes <= 0
+
+    def expectations_expired(self):
+        return time.monotonic() - self.timestamp > 600
+
+    def _update(self, kind, pod_name):
+        if pod_name not in self.all_pods:
+            self.creates -= 1
+            self.all_pods.add(pod_name)
+
+        for n in ("pending", "running", "succeeded", "failed"):
+            s = getattr(self, n)
+            if n == kind:
+                change = pod_name not in s
+                if change:
+                    s.add(pod_name)
+            else:
+                s.discard(pod_name)
+        return change
+
+    def on_worker_pending(self, pod_name):
+        return self._update("pending", pod_name)
+
+    def on_worker_running(self, pod_name):
+        return self._update("running", pod_name)
+
+    def on_worker_succeeded(self, pod_name):
+        return self._update("succeeded", pod_name)
+
+    def on_worker_failed(self, pod_name):
+        return self._update("failed", pod_name)
+
+    def on_worker_deleted(self, pod_name):
+        if pod_name in self.all_pods:
+            self.deletes -= 1
+            self.all_pods.discard(pod_name)
+            for n in ("pending", "running", "succeeded", "failed"):
+                getattr(self, n).discard(pod_name)
+
+    def should_trigger(self):
+        return self.expectations_fulfilled() or self.expectations_expired()
 
 
 class KubeController(KubeBackendAndControllerMixin, Application):
@@ -176,6 +236,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         self.core_client = client.CoreV1Api(api_client=self.api_client)
         self.custom_client = client.CustomObjectsApi(api_client=self.api_client)
 
+        # Local state
+        self.cluster_info = collections.defaultdict(ClusterInfo)
+
         # Initialize queue and informers
         self.queue = WorkQueue()
         endpoints_selector = (
@@ -275,16 +338,21 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             raise
         return self.api_client.sanitize_for_serialization(pod)
 
-    def get_pod_state(self, pod):
+    def get_cont_status(self, pod, component):
+        for cs in pod["status"].get("containerStatuses", ()):
+            if cs["name"] == component:
+                return cs
+        return None
+
+    def get_cont_state(self, pod):
         phase = pod["status"].get("phase", "Unknown")
         if phase == "Pending":
             return "waiting"
-        else:
-            component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
-            for cs in pod["status"].get("containerStatuses", ()):
-                if cs["name"] == component:
-                    return next(iter(cs["state"]))
-            return "unknown"
+        component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
+        cs = self.get_cont_status(pod, component)
+        if cs is not None:
+            return next(iter(cs["state"]))
+        return "unknown"
 
     def get_cluster_key(self, obj):
         try:
@@ -299,16 +367,48 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         if cluster_key is None:
             return
         component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
-        state = self.get_pod_state(pod)
         if component == "dask-scheduler":
-            if state in ("running", "terminated"):
+            if self.get_cont_state(pod) in ("running", "terminated"):
+                self.queue.put(cluster_key)
+        elif component == "dask-worker":
+            pod_name = pod["metadata"]["name"]
+            phase = pod["status"].get("phase", "Unknown")
+            if phase == "Unknown":
+                return
+            cs = self.get_cont_status(pod, component)
+            if cs is None:
+                return
+
+            info = self.cluster_info[cluster_key]
+            trigger = False
+            if phase == "Pending":
+                info.on_worker_pending(pod_name)
+            elif phase == "Succeeded":
+                info.on_worker_succeeded(pod_name)
+            elif phase == "Failed":
+                trigger = info.on_worker_failed(pod_name)
+            else:
+                kind = next(iter(cs["state"]))
+                if kind == "terminated" and cs["state"][kind]["exitCode"] == 0:
+                    info.on_worker_succeeded(pod_name)
+                elif kind == "running":
+                    info.on_worker_running(pod_name)
+
+            if info.should_trigger() or trigger:
                 self.queue.put(cluster_key)
 
     async def on_pod_delete(self, pod):
         cluster_key = self.get_cluster_key(pod)
         if cluster_key is None:
             return
-        self.queue.put(cluster_key)
+        component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
+        if component == "dask-scheduler":
+            self.queue.put(cluster_key)
+        elif component == "dask-worker":
+            info = self.cluster_info[cluster_key]
+            info.on_worker_deleted(pod["metadata"]["name"])
+            if info.should_trigger():
+                self.queue.put(cluster_key)
 
     def endpoints_all_ready(self, endpoints):
         subsets = endpoints.get("subsets", ())
@@ -354,84 +454,211 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             finally:
                 self.queue.task_done(name)
 
-    async def reconcile_cluster(self, cluster_name):
-        cluster = self.informers["cluster"].get(cluster_name)
+    async def reconcile_cluster(self, cluster_key):
+        cluster = self.informers["cluster"].get(cluster_key)
         if cluster is None:
             # Cluster already deleted, nothing to do
             return
 
+        status_update = await self.handle_cluster(cluster)
+
+        if status_update is not None and status_update != cluster.get("status"):
+            namespace = cluster["metadata"]["namespace"]
+            name = cluster["metadata"]["name"]
+            await self.patch_cluster_status(namespace, name, status_update)
+
+    async def handle_cluster(self, cluster):
         namespace = cluster["metadata"]["namespace"]
         name = cluster["metadata"]["name"]
 
+        status = cluster.get("status", {})
         spec = cluster.get("spec")
-        status = cluster.get("status") or {}
-        status_update = status.copy()
 
-        phase = status_update.setdefault("phase", "Pending")
-        active = spec.get("active", True)
+        phase = status.get("phase", "Pending")
 
         if phase in {"Stopped", "Failed"}:
-            return
-        elif active:
-            if not status.get("credentials"):
-                secret_name = await self.create_secret_if_not_exists(cluster)
-                status_update["credentials"] = secret_name
+            return None
 
-            sched_pod_name = status.get("schedulerPod")
-            if not sched_pod_name:
-                sched_pod_name, sched_pod = await self.create_scheduler_pod_if_not_exists(
-                    cluster
+        active = spec.get("active", True)
+
+        if not active:
+            self.log.info("Shutting down %s.%s", namespace, name)
+            await self.cleanup_cluster_resources(status, namespace)
+            status = status.copy()
+            status["phase"] = "Stopped"
+            return status
+
+        if phase == "Pending":
+            return await self.handle_pending_cluster(cluster)
+
+        if phase == "Running":
+            return await self.handle_running_cluster(cluster)
+
+    async def handle_pending_cluster(self, cluster):
+        namespace = cluster["metadata"]["namespace"]
+        name = cluster["metadata"]["name"]
+
+        status = cluster.get("status", {}).copy()
+        status.setdefault("phase", "Pending")
+
+        if not status.get("credentials"):
+            secret_name = await self.create_secret_if_not_exists(cluster)
+            status["credentials"] = secret_name
+
+        sched_pod_name = status.get("schedulerPod")
+        if not sched_pod_name:
+            sched_pod_name, sched_pod = await self.create_scheduler_pod_if_not_exists(
+                cluster
+            )
+            status["schedulerPod"] = sched_pod_name
+        else:
+            sched_pod = await self.read_namespaced_pod(sched_pod_name, namespace)
+
+        if sched_pod is None:
+            sched_state = "terminated"
+        else:
+            sched_state = self.get_cont_state(sched_pod)
+
+        if sched_state == "running":
+            service_name = status.get("service")
+            if not status.get("service"):
+                service_name = await self.create_service_if_not_exists(
+                    cluster, sched_pod
                 )
-                status_update["schedulerPod"] = sched_pod_name
-            else:
-                sched_pod = await self.read_namespaced_pod(sched_pod_name, namespace)
+                status["service"] = service_name
 
-            if sched_pod is not None:
-                sched_state = self.get_pod_state(sched_pod)
-            else:
-                sched_state = "terminated"
-            if sched_state == "running":
-                service_name = status.get("service")
-                if not status.get("service"):
-                    service_name = await self.create_service_if_not_exists(
+            endpoints = self.informers["endpoints"].get(f"{namespace}.{service_name}")
+            if endpoints is not None and self.endpoints_all_ready(endpoints):
+                # Only add routes if endpoints exist, otherwise traefik gets grumpy
+                # This also allows us to delay setting the phase to Running
+                # until the route is likely to be added.
+                if not status.get("ingressroute"):
+                    route = await self.create_ingressroute_if_not_exists(
                         cluster, sched_pod
                     )
-                    status_update["service"] = service_name
+                    status["ingressroute"] = route
 
-                endpoints = self.informers["endpoints"].get(
-                    f"{namespace}.{service_name}"
-                )
-                if endpoints is not None and self.endpoints_all_ready(endpoints):
-                    # Only add routes if endpoints exist, otherwise traefik gets grumpy
-                    # This also allows us to delay setting the phase to Running
-                    # until the route is likely to be added.
-                    if not status.get("ingressroute"):
-                        route = await self.create_ingressroute_if_not_exists(
-                            cluster, sched_pod
-                        )
-                        status_update["ingressroute"] = route
+                if not status.get("ingressroutetcp"):
+                    route = await self.create_ingressroutetcp_if_not_exists(
+                        cluster, sched_pod
+                    )
+                    status["ingressroutetcp"] = route
 
-                    if not status.get("ingressroutetcp"):
-                        route = await self.create_ingressroutetcp_if_not_exists(
-                            cluster, sched_pod
-                        )
-                        status_update["ingressroutetcp"] = route
+                status["phase"] = "Running"
+        elif sched_state == "terminated":
+            self.log.info(
+                "Scheduler for cluster %s.%s terminated, shutting down", namespace, name
+            )
+            await self.cleanup_cluster_resources(status, namespace)
+            status["phase"] = "Failed"
 
-                    status_update["phase"] = "Running"
-            elif sched_state == "terminated":
-                self.log.info(
-                    "Scheduler for cluster %s terminated, shutting down", cluster_name
-                )
-                await self.cleanup_cluster_resources(status, namespace)
-                status_update["phase"] = "Failed"
+        return status
+
+    async def handle_running_cluster(self, cluster):
+        namespace = cluster["metadata"]["namespace"]
+        name = cluster["metadata"]["name"]
+        cluster_key = f"{namespace}.{name}"
+
+        spec = cluster["spec"]
+        status = cluster.get("status", {}).copy()
+
+        sched_pod_name = status.get("schedulerPod")
+        sched_pod = None
+        sched_state = "terminated"
+        if sched_pod_name:
+            sched_pod = await self.read_namespaced_pod(sched_pod_name, namespace)
+            if sched_pod is not None:
+                sched_state = self.get_cont_state(sched_pod)
+
+        if sched_state == "terminated":
+            self.log.info(
+                "Scheduler for cluster %s.%s terminated, shutting down", namespace, name
+            )
+            await self.cleanup_cluster_resources(status, namespace)
+            status["phase"] = "Failed"
+            return status
+
+        elif sched_state == "running":
+            info = self.cluster_info[cluster_key]
+            if info.should_trigger():
+                n_workers = len(info.running.union(info.pending))
+                replicas = spec.get("replicas", 0)
+                delta = replicas - n_workers
+                if delta > 0:
+                    await self.handle_scale_up(
+                        cluster, sched_pod, info, replicas, delta
+                    )
+                elif delta <= 0:
+                    await self.handle_scale_down(
+                        cluster, sched_pod, info, replicas, delta
+                    )
+
+    async def safe_create_pod(self, info, namespace, pod):
+        try:
+            await self.core_client.create_namespaced_pod(namespace, pod)
+            self.log.info("Pod submitted")
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            self.log.warning("Failed to submit pod", exc_info=True)
+            # Failed to create, decrement expectation
+            info.creates -= 1
+
+    async def safe_delete_pod(self, info, namespace, pod_name):
+        try:
+            await self.core_client.delete_namespaced_pod(pod_name, namespace)
+            self.log.info("Pod deleted")
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            if isinstance(exc, ApiException) and exc.code == 404:
+                info.deletes -= 1
+                return
+            self.log.warning("Failed to delete pod %s", pod_name, exc_info=True)
+            info.deletes -= 1
+
+    async def handle_scale_up(self, cluster, sched_pod, info, replicas, delta):
+        name = cluster["metadata"]["name"]
+        namespace = cluster["metadata"]["namespace"]
+        username = cluster["metadata"]["labels"].get("gateway.dask.org/user")
+        config = FrozenAttrDict(cluster["spec"]["config"])
+
+        pod = self.make_pod(namespace, name, username, config, is_worker=True)
+        pod["metadata"]["ownerReferences"] = [
+            {
+                "apiVersion": "v1",
+                "kind": "Pod",
+                "name": sched_pod["metadata"]["name"],
+                "uid": sched_pod["metadata"]["uid"],
+            }
+        ]
+        to_delete = info.succeeded.union(info.failed)
+        info.set_expectations(creates=delta, deletes=len(to_delete))
+        self.log.info(
+            "Creating %d pods, deleting %d stopped pods", delta, len(to_delete)
+        )
+        tasks = [self.safe_create_pod(info, namespace, pod) for _ in range(delta)]
+        tasks.extend([self.safe_delete_pod(info, namespace, p) for p in to_delete])
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    async def handle_scale_down(self, cluster, sched_pod, info, replicas, delta):
+        namespace = cluster["metadata"]["namespace"]
+
+        if info.pending:
+            pending = list(info.pending)[:delta]
         else:
-            if phase not in {"Stopped", "Failed"}:
-                self.log.info("Shutting down %s", cluster_name)
-                await self.cleanup_cluster_resources(status, namespace)
-                status_update["phase"] = "Stopped"
+            pending = []
 
-        if status_update != status:
-            await self.patch_cluster_status(namespace, name, status_update)
+        stopped = info.succeeded.union(info.failed)
+        if pending or stopped:
+            self.log.info(
+                "Deleting %d pending and %d stopped pods", len(pending), len(stopped)
+            )
+            pods = pending
+            pods.extend(stopped)
+            info.set_expectations(deletes=len(pods))
+            tasks = [self.safe_delete_pod(info, namespace, p) for p in pods]
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     async def patch_cluster_status(self, namespace, name, status):
         await self.custom_client.patch_namespaced_custom_object_status(
@@ -582,7 +809,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
         return route["metadata"]["name"]
 
-    def get_scheduler_command(self, config):
+    def get_scheduler_command(self, namespace, cluster_name, config):
         return [
             config.scheduler_cmd,
             "--scheduler-address",
@@ -599,18 +826,21 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             str(config.idle_timeout),
         ]
 
-    def get_worker_command(self, config):
+    def get_worker_command(self, namespace, cluster_name, config):
+        service_name = self.make_service_name(cluster_name)
         return [
             config.worker_cmd,
             "--nthreads",
             str(int(config.worker_cores_limit)),
             "--memory-limit",
             str(config.worker_memory_limit),
+            "--scheduler-address",
+            f"tls://{service_name}.{namespace}:8786",
         ]
 
     def get_env(self, namespace, cluster_name, config):
-        out = dict(config.environment)
-        out.update(
+        env = dict(config.environment)
+        env.update(
             {
                 "DASK_GATEWAY_API_URL": self.api_url,
                 "DASK_GATEWAY_CLUSTER_NAME": f"{namespace}.{cluster_name}",
@@ -619,7 +849,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 "DASK_GATEWAY_TLS_KEY": "/etc/dask-credentials/dask.pem",
             }
         )
-        return out
+        return [{"name": k, "value": v} for k, v in env.items()]
 
     def get_labels(self, cluster_name, username, component=None):
         labels = self.common_labels.copy()
@@ -643,7 +873,13 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             mem_lim = config.worker_memory_limit
             cpu_req = config.worker_cores
             cpu_lim = config.worker_cores_limit
-            cmd = self.get_worker_command(config)
+            cmd = self.get_worker_command(namespace, cluster_name, config)
+            env.append(
+                {
+                    "name": "DASK_GATEWAY_WORKER_NAME",
+                    "valueFrom": {"fieldRef": {"fieldPath": "metadata.name"}},
+                }
+            )
             extra_pod_config = config.worker_extra_pod_config
             extra_container_config = config.worker_extra_container_config
             probes = {}
@@ -653,7 +889,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             mem_lim = config.scheduler_memory_limit
             cpu_req = config.scheduler_cores
             cpu_lim = config.scheduler_cores_limit
-            cmd = self.get_scheduler_command(config)
+            cmd = self.get_scheduler_command(namespace, cluster_name, config)
             extra_pod_config = config.scheduler_extra_pod_config
             extra_container_config = config.scheduler_extra_container_config
             # TODO: make this configurable. If supported, we should use a
@@ -677,7 +913,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             "name": container_name,
             "image": config.image,
             "args": cmd,
-            "env": [{"name": k, "value": v} for k, v in env.items()],
+            "env": env,
             "imagePullPolicy": config.image_pull_policy,
             "resources": {
                 "requests": {"cpu": f"{cpu_req:.1f}", "memory": str(mem_req)},
@@ -702,16 +938,10 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         if extra_container_config:
             container = merge_json_objects(container, extra_container_config)
 
-        name = f"dask-gateway-{cluster_name}"
-
         pod = {
             "apiVersion": "v1",
             "kind": "Pod",
-            "metadata": {
-                "labels": labels,
-                "annotations": self.common_annotations,
-                "name": name,
-            },
+            "metadata": {"labels": labels, "annotations": self.common_annotations},
             "spec": {
                 "containers": [container],
                 "volumes": [volume],
@@ -722,6 +952,11 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
         if extra_pod_config:
             pod["spec"] = merge_json_objects(pod["spec"], extra_pod_config)
+
+        if is_worker:
+            pod["metadata"]["generateName"] = "dask-gateway-"
+        else:
+            pod["metadata"]["name"] = f"dask-gateway-{cluster_name}"
 
         return pod
 
@@ -746,12 +981,15 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             },
         }
 
+    def make_service_name(self, cluster_name):
+        return f"dask-gateway-{cluster_name}"
+
     def make_service(self, cluster_name, username):
         return {
             "metadata": {
                 "labels": self.get_labels(cluster_name, username, "dask-scheduler"),
                 "annotations": self.common_annotations,
-                "name": f"dask-gateway-{cluster_name}",
+                "name": self.make_service_name(cluster_name),
             },
             "spec": {
                 "clusterIP": "None",

@@ -551,6 +551,9 @@ worker_parser.add_argument(
     "--memory-limit", default="auto", help="The maximum amount of memory to allow"
 )
 worker_parser.add_argument("--name", default=None, help="The worker name")
+worker_parser.add_argument(
+    "--scheduler-address", default=None, help="The scheduler address"
+)
 
 
 async def start_worker(
@@ -559,17 +562,19 @@ async def start_worker(
     worker_name,
     nthreads=1,
     memory_limit="auto",
+    scheduler_address=None,
     local_directory="",
     nanny=True,
 ):
     loop = IOLoop.current()
 
-    scheduler = await gateway.get_scheduler_address()
+    if not scheduler_address:
+        scheduler_address = await gateway.get_scheduler_address()
 
     typ = Nanny if nanny else Worker
 
     worker = typ(
-        scheduler,
+        scheduler_address,
         loop=loop,
         nthreads=nthreads,
         memory_limit=memory_limit,
@@ -595,6 +600,7 @@ def worker(argv=None):
     worker_name = args.name or getenv("DASK_GATEWAY_WORKER_NAME")
     nthreads = args.nthreads
     memory_limit = args.memory_limit
+    scheduler_address = args.scheduler_address
 
     gateway = make_gateway_client()
     security = make_security()
@@ -606,7 +612,7 @@ def worker(argv=None):
 
     async def run():
         worker = await start_worker(
-            gateway, security, worker_name, nthreads, memory_limit
+            gateway, security, worker_name, nthreads, memory_limit, scheduler_address
         )
         await worker.finished()
 

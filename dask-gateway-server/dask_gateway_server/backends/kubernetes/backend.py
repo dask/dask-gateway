@@ -477,8 +477,8 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             service_name = status.get("service")
             if cluster_status == models.ClusterStatus.RUNNING and service_name:
                 namespace = obj["metadata"]["namespace"]
-                scheduler_address = f"http://{service_name}.{namespace}:8786"
-                dashboard_address = f"{service_name}.{namespace}:8787"
+                scheduler_address = f"tls://{service_name}.{namespace}:8786"
+                dashboard_address = f"http://{service_name}.{namespace}:8787"
                 api_address = f"http://{service_name}.{namespace}:8788"
             else:
                 scheduler_address = dashboard_address = api_address = ""
