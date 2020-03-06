@@ -143,11 +143,13 @@ class GatewaySchedulerService(object):
         self.gateway = gateway
         self.loop = io_loop or scheduler.loop
         self.count = 0
-        if heartbeat_period <= 0:
-            self.heartbeat_period = 3600
+        self.heartbeat_period = max(0, heartbeat_period)
+        if self.heartbeat_period == 0:
+            # Liveness not tracked by heartbeats, message only on state changes
+            self.heartbeat_max = 3600
             self.heartbeat_initial = 3600
         else:
-            self.heartbeat_period = heartbeat_period
+            self.heartbeat_max = heartbeat_period
             self.heartbeat_initial = 0.25
         self.waiter = Waiter()
         self.idle_timeout = max(0, idle_timeout)
@@ -182,6 +184,9 @@ class GatewaySchedulerService(object):
         self.closing_workers.discard(ws.name)
         self.closed_workers.discard(ws.name)
 
+        if len(self.active_workers) > self.count:
+            self.waiter.interrupt_soon()
+
     def worker_removed(self, worker_address):
         ws = self.address_to_worker.pop(worker_address)
         self.active_workers.discard(ws.name)
@@ -189,8 +194,10 @@ class GatewaySchedulerService(object):
         if ws.name in self.closing_workers:
             self.closing_workers.discard(ws.name)
         else:
-            # Unexpected failure, let gateway know soon, rather than later.
-            self.waiter.interrupt_soon()
+            # Unexpected failure.
+            if self.heartbeat_period:
+                # Liveness tracked by heartbeats, notify gateway soon
+                self.waiter.interrupt_soon()
 
     @property
     def dashboard_address(self):
@@ -256,7 +263,6 @@ class GatewaySchedulerService(object):
             closing_workers = self.scheduler.workers_to_close(
                 target=self.count, attribute="name"
             )
-            self.closing_workers.update(closing_workers)
             active_workers = list(self.active_workers.difference(closing_workers))
         else:
             closing_workers = []
@@ -275,9 +281,14 @@ class GatewaySchedulerService(object):
         await self.gateway.heartbeat(msg)
 
         if closing_workers:
-            await self.scheduler.retire_workers(
-                names=closing_workers, remove=True, close_workers=True
-            )
+            self.closing_workers.update(closing_workers)
+            try:
+                await self.scheduler.retire_workers(
+                    names=closing_workers, remove=True, close_workers=True
+                )
+            except Exception:
+                self.closing_workers.difference_update(closing_workers)
+                raise
 
     async def heartbeat_loop(self):
         base_delay = 0.25
@@ -292,12 +303,12 @@ class GatewaySchedulerService(object):
             except Exception as exc:
                 # Failure. Backoff and try again
                 logger.warning("Failed to send heartbeat", exc_info=exc)
-                backoff = min(backoff * 2, self.heartbeat_period)
+                backoff = min(backoff * 2, self.heartbeat_max)
                 period = backoff
             else:
                 # Success. Reset backoff, heartbeat lazily
                 backoff = base_delay
-                period = self.heartbeat_period
+                period = self.heartbeat_max
 
     async def scale(self, count):
         # When scale is called explicitly, disable adaptive scaling
