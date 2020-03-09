@@ -17,5 +17,5 @@ controller:
   loglevel: DEBUG
 
 traefik:
-  loglevel: DEBUG
+  loglevel: INFO
   dashboard: true

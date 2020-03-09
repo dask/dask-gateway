@@ -7,6 +7,8 @@ metadata:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "dask-gateway.matchLabels" . | nindent 6 }}
