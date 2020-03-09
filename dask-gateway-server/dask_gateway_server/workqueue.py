@@ -101,12 +101,15 @@ class WorkQueue(object):
         when = self._loop.time() + delay
         existing = self._timers.get(item, None)
         # Schedule if new or if sooner than existing schedule
-        if existing is None or existing.when() > when:
+        if existing is None or existing[1] > when:
             if existing is not None:
-                existing.cancel()
+                existing[0].cancel()
 
             if delay > 0:
-                self._timers[item] = self._loop.call_at(when, self._put_delayed, item)
+                self._timers[item] = (
+                    self._loop.call_at(when, self._put_delayed, item),
+                    when,
+                )
             else:
                 self._timers.pop(item, None)
                 self.put(item)

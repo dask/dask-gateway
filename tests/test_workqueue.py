@@ -116,19 +116,19 @@ async def test_workqueue_put_after():
 async def test_workqueue_put_after_reschedules():
     q = WorkQueue()
     q.put_after("foo", 0.1)
-    when = q._timers["foo"].when()
+    _, when = q._timers["foo"]
 
     # Scheduling after is no-op
     q.put_after("foo", 0.5)
     assert len(q._queue) == 0
     assert len(q._timers) == 1
-    assert q._timers["foo"].when() == when
+    assert q._timers["foo"][1] == when
 
     # Scheduling before reschedules
     q.put_after("foo", 0.005)
     assert len(q._queue) == 0
     assert len(q._timers) == 1
-    assert q._timers["foo"].when() < when
+    assert q._timers["foo"][1] < when
 
     assert await q.get() == "foo"
 
