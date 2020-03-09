@@ -362,7 +362,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         except KeyError:
             return None
 
-    async def on_pod_update(self, pod, old=None):
+    def on_pod_update(self, pod, old=None):
         cluster_key = self.get_cluster_key(pod)
         if cluster_key is None:
             return
@@ -397,7 +397,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             if info.should_trigger() or trigger:
                 self.queue.put(cluster_key)
 
-    async def on_pod_delete(self, pod):
+    def on_pod_delete(self, pod):
         cluster_key = self.get_cluster_key(pod)
         if cluster_key is None:
             return
@@ -414,7 +414,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         subsets = endpoints.get("subsets", ())
         return subsets and not any(s.get("notReadyAddresses") for s in subsets)
 
-    async def on_endpoints_update(self, endpoints, old=None):
+    def on_endpoints_update(self, endpoints, old=None):
         cluster_key = self.get_cluster_key(endpoints)
         if cluster_key is None:
             return
@@ -422,15 +422,15 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             self.log.info("Endpoint ready and available for cluster %s", cluster_key)
             self.queue.put(cluster_key)
 
-    async def on_endpoints_delete(self, endpoints):
+    def on_endpoints_delete(self, endpoints):
         pass
 
-    async def on_cluster_update(self, cluster, old=None):
+    def on_cluster_update(self, cluster, old=None):
         namespace = cluster["metadata"]["namespace"]
         name = cluster["metadata"]["name"]
         self.queue.put(f"{namespace}.{name}")
 
-    async def on_cluster_delete(self, cluster):
+    def on_cluster_delete(self, cluster):
         cluster_key = self.get_cluster_key(cluster)
         if cluster_key is None:
             return

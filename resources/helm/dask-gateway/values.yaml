@@ -13,6 +13,9 @@ gateway:
   # in the traefik proxy.
   prefix: /
 
+  # The gateway server log level
+  loglevel: INFO
+
   # The image to use for the gateway-server pod.
   image:
     name: daskgateway/dask-gateway-server
@@ -115,13 +118,16 @@ controller:
   # Whether the controller should be deployed. Disabling the controller allows
   # running it locally for development/debugging purposes.
   enabled: true
-  
+
   # Any annotations to add to the controller pod
   annotations: {}
 
   # Resource requests/limits for the controller pod
   resources: {}
-  
+
+  # The controller log level
+  loglevel: INFO
+
   # The image to use for the controller pod.
   image:
     name: daskgateway/dask-gateway-server

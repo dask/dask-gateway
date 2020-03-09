@@ -1,9 +1,10 @@
 import asyncio
+import json
 
-from traitlets import Dict, Unicode, Any, Int, Instance
+from traitlets import Dict, Unicode, Any, Int
 from traitlets.config import LoggingConfigurable
 
-from kubernetes_asyncio import watch, client
+from kubernetes_asyncio import client
 
 from ...traitlets import Callable
 from ...utils import cancel_task
@@ -13,13 +14,19 @@ from ...utils import cancel_task
 client.rest.RESTClientObject.__del__ = lambda self: None
 
 
-class Watch(watch.Watch):
-    def __init__(self, api_client=None, return_type=None):
-        self._raw_return_type = return_type
-        self._stop = False
-        self._api_client = api_client or client.ApiClient()
-        self.resource_version = 0
-        self.resp = None
+async def watch(method, *args, **kwargs):
+    """Handle a single watch call ona resource"""
+    kwargs["watch"] = True
+    kwargs["_preload_content"] = False
+
+    resp = await method(*args, **kwargs)
+    async with resp:
+        while True:
+            line = await resp.content.readline()
+            line = line.decode("utf8")
+            if not line:
+                break
+            yield json.loads(line)
 
 
 class Informer(LoggingConfigurable):
@@ -34,41 +41,52 @@ class Informer(LoggingConfigurable):
     def get(self, name, default=None):
         return self.cache.get(name, default)
 
-    def drop(self, name):
-        self.cache.pop(name, None)
-
-    def put(self, obj):
-        name = obj["metadata"]["name"]
+    def get_key(self, obj):
         namespace = obj["metadata"]["namespace"]
-        self.update_cache(f"{namespace}.{name}", obj)
+        name = obj["metadata"]["name"]
+        return f"{namespace}.{name}"
 
-    def update_cache(self, name, obj, deleted=False):
-        if deleted:
-            self.cache.pop(name)
+    def handle_initial(self, objs):
+        obj_map = {self.get_key(i): i for i in objs}
+        if self.cache:
+            deleted = set(self.cache).difference(obj_map)
         else:
-            self.cache[name] = obj
+            deleted = ()
+        self.log.debug(
+            "Relisted %s informer - %d deletes, %d updates",
+            self.name,
+            len(deleted),
+            len(objs),
+        )
+        for key in deleted:
+            obj = self.cache.pop(key)
+            try:
+                self.on_delete(obj)
+            except Exception:
+                self.log.warning("Error in %s informer", self.name, exc_info=True)
+        for key, obj in obj_map.items():
+            old = self.cache.get(key)
+            self.cache[key] = obj
+            try:
+                self.on_update(obj, old=old)
+            except Exception:
+                self.log.warning("Error in %s informer", self.name, exc_info=True)
 
-    async def handle(self, obj, event_type="ADDED"):
-        try:
-            namespace = obj["metadata"]["namespace"]
-            name = obj["metadata"]["name"]
-        except KeyError:
-            self.log.debug("%r - %r", event_type, obj)
-            raise
-        key = f"{namespace}.{name}"
+    def handle(self, obj, event_type="ADDED"):
+        key = self.get_key(obj)
         self.log.debug("Event - %s %s %s", event_type, self.name, key)
 
-        old = self.cache.get(name)
+        old = self.cache.get(key)
         if event_type in {"ADDED", "MODIFIED"}:
-            self.update_cache(key, obj)
+            self.cache[key] = obj
             try:
-                await self.on_update(obj, old=old)
+                self.on_update(obj, old=old)
             except Exception:
                 self.log.warning("Error in %s informer", self.name, exc_info=True)
         elif event_type == "DELETED":
-            self.update_cache(key, obj, deleted=True)
+            self.cache.pop(key, None)
             try:
-                await self.on_delete(obj)
+                self.on_delete(obj)
             except Exception:
                 self.log.warning("Error in %s informer", self.name, exc_info=True)
 
@@ -85,9 +103,8 @@ class Informer(LoggingConfigurable):
             del self._task
 
     async def run(self):
-        self.log.debug("Starting %s watch stream...", self.name)
+        self.log.debug("Starting %s informer...", self.name)
 
-        watch = Watch(self.client.api_client)
         method = getattr(self.client, self.method)
 
         while True:
@@ -97,49 +114,58 @@ class Informer(LoggingConfigurable):
                 raise
             except Exception as exc:
                 self.log.error(
-                    "Error in %s watch stream, retrying...", self.name, exc_info=exc
+                    "Error in %s informer, retrying...", self.name, exc_info=exc
                 )
                 continue
 
             initial = self.client.api_client.sanitize_for_serialization(initial)
-            for obj in initial["items"]:
-                await self.handle(obj)
+            self.handle_initial(initial["items"])
             self.initialized.set()
-            resource_version = initial["metadata"]["resourceVersion"]
+            res_ver = initial["metadata"]["resourceVersion"]
 
             try:
                 while True:
+                    relist = False
                     kwargs = {
-                        "resource_version": resource_version,
+                        "resource_version": res_ver,
                         "timeout_seconds": self.timeout_seconds,
                     }
                     kwargs.update(self.method_kwargs)
-                    async with watch.stream(method, **kwargs) as stream:
-                        async for ev in stream:
-                            ev = self.client.api_client.sanitize_for_serialization(ev)
-                            await self.handle(ev["object"], event_type=ev["type"])
-                            resource_version = stream.resource_version
+                    async for ev in watch(method, **kwargs):
+                        typ = ev["type"]
+                        obj = ev["object"]
+                        if typ.lower() == "error":
+                            code = obj.get("code", 0)
+                            if code == 410:
+                                self.log.debug(
+                                    "Too old resourceVersion in %s informer, relisting",
+                                    self.name,
+                                )
+                            else:
+                                self.log.warning(
+                                    (
+                                        "Unexpected error in %s informer, relisting: "
+                                        "message=%r, code=%d"
+                                    ),
+                                    obj.get("message"),
+                                    code,
+                                )
+                            relist = True
+                            break
+                        try:
+                            res_ver = ev["object"]["metadata"]["resourceVersion"]
+                        except KeyError:
+                            pass
+                        self.handle(obj, typ)
+                    if relist:
+                        break
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
                 self.log.error(
-                    "Error in %s watch stream, retrying...", self.name, exc_info=exc
+                    "Error in %s informer, retrying...", self.name, exc_info=exc
                 )
-        self.log.debug("%s watch stream stopped", self.name)
-
-
-class Reflector(Informer):
-    queue = Instance(asyncio.Queue)
-
-    def update_cache(self, name, obj, deleted=False):
-        self.cache[name] = (obj, deleted)
-
-    async def on_update(self, obj, old=None):
-        namespace = obj["metadata"]["namespace"]
-        name = obj["metadata"]["name"]
-        await self.queue.put(f"{namespace}.{name}")
-
-    on_delete = on_update
+        self.log.debug("%s informer stopped", self.name)
 
 
 def merge_json_objects(a, b):

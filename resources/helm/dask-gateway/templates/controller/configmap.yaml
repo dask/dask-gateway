@@ -15,4 +15,5 @@ data:
     c.KubeController.proxy_web_middlewares = [
       {"name": '{{ include "dask-gateway.fullname" . | printf "clusters-prefix-%s" | trunc 63 | trimSuffix "-" }}'}
     ]
+    c.KubeController.log_level = "{{ .Values.controller.loglevel }}"
 {{- end }}

@@ -1,4 +1,5 @@
 gateway:
+  loglevel: DEBUG
   backend:
     scheduler:
       cores:
@@ -11,6 +12,9 @@ gateway:
         request: 0.1
       memory:
         request: 256M
+
+controller:
+  loglevel: DEBUG
 
 traefik:
   loglevel: DEBUG

@@ -14,9 +14,10 @@ from kubernetes_asyncio.client.rest import ApiException
 from ... import __version__ as VERSION
 from ... import models
 from ...traitlets import MemoryLimit, Type
-from ...utils import cancel_task, UniqueQueue, Flag
+from ...utils import cancel_task, Flag
+from ...workqueue import WorkQueue
 from ..base import Backend, ClusterConfig
-from .utils import Reflector
+from .utils import Informer
 
 
 __all__ = ("KubeClusterConfig", "KubeBackend", "KubeBackendAndControllerMixin")
@@ -313,8 +314,8 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
         self.cluster_waiters = defaultdict(Flag)
         self.clusters = {}
         self.username_to_clusters = defaultdict(dict)
-        self.queue = UniqueQueue()
-        self.reflector = Reflector(
+        self.queue = WorkQueue()
+        self.informer = Informer(
             parent=self,
             name="cluster",
             client=self.custom_client,
@@ -325,16 +326,17 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
                 plural="daskclusters",
                 label_selector=self.label_selector,
             ),
-            queue=self.queue,
+            on_update=self.on_cluster_event,
+            on_delete=self.on_cluster_event,
         )
-        await self.reflector.start()
-        self._watcher_task = asyncio.ensure_future(self.watcher_loop())
+        await self.informer.start()
+        self._sync_clusters_task = asyncio.ensure_future(self.sync_clusters_loop())
 
     async def cleanup(self):
-        if hasattr(self, "reflector"):
-            await self.reflector.stop()
-        if hasattr(self, "_watcher_task"):
-            await cancel_task(self._watcher_task)
+        if hasattr(self, "informer"):
+            await self.informer.stop()
+        if hasattr(self, "_sync_clusters_task"):
+            await cancel_task(self._sync_clusters_task)
         if hasattr(self, "api_client"):
             await self.api_client.rest_client.pool_manager.close()
         await super().cleanup()
@@ -347,14 +349,7 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
         res = await self.custom_client.create_namespaced_custom_object(
             "gateway.dask.org", self.crd_version, config.namespace, "daskclusters", obj
         )
-
-        name = res["metadata"]["name"]
-        namespace = res["metadata"]["namespace"]
-        cluster_name = f"{namespace}.{name}"
-
-        self.reflector.put(res)
-        await self.update_cluster_cache(cluster_name)
-        return cluster_name
+        return self.get_cluster_name(res)
 
     async def stop_cluster(self, cluster_name, failed=False):
         cluster = self.clusters.get(cluster_name)
@@ -438,23 +433,33 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             "spec": {"options": options, "config": config.to_dict()},
         }
 
-    async def watcher_loop(self):
+    def get_cluster_name(self, obj):
+        namespace = obj["metadata"]["namespace"]
+        name = obj["metadata"]["name"]
+        return f"{namespace}.{name}"
+
+    def on_cluster_event(self, cluster, old=None):
+        key = self.get_cluster_name(cluster)
+        self.queue.put(key)
+
+    async def sync_clusters_loop(self):
         while True:
-            cluster_name = await self.queue.get()
+            name = await self.queue.get()
             try:
-                await self.update_cluster_cache(cluster_name)
-            except Exception as exc:
-                self.log.info(
-                    "Error updating cluster cache for %s", cluster_name, exc_info=exc
-                )
+                await self.sync_cluster(name)
+            except Exception:
+                self.log.warning("Error while syncing cluster %s", name, exc_info=True)
+                self.queue.put_backoff(name)
+            else:
+                self.queue.reset_backoff(name)
+            finally:
+                self.queue.task_done(name)
 
-    async def update_cluster_cache(self, cluster_name):
-        obj, deleted = self.reflector.get(cluster_name)
+    async def sync_cluster(self, cluster_name):
+        obj = self.informer.get(cluster_name)
 
-        if deleted:
+        if obj is None:
             self.log.debug("Deleting %s from cache", cluster_name)
-            self.reflector.drop(cluster_name)
-            # Delete the cluster from the cache
             cluster = self.clusters.pop(cluster_name, None)
             if cluster is not None:
                 user = self.username_to_clusters.get(cluster.username)
