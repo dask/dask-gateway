@@ -323,21 +323,6 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
         self.log.info("Stopped successfully")
 
-    async def read_namespaced_pod(self, pod_name, namespace):
-        informer = self.informers["pod"]
-        key = f"{namespace}.{pod_name}"
-        pod = informer.get(key)
-        if pod is not None:
-            return pod
-
-        try:
-            pod = await self.core_client.read_namespaced_pod(pod_name, namespace)
-        except ApiException as exc:
-            if exc.status == 404:
-                return None
-            raise
-        return self.api_client.sanitize_for_serialization(pod)
-
     def get_cont_status(self, pod, component):
         for cs in pod["status"].get("containerStatuses", ()):
             if cs["name"] == component:
@@ -512,12 +497,14 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             )
             status["schedulerPod"] = sched_pod_name
         else:
-            sched_pod = await self.read_namespaced_pod(sched_pod_name, namespace)
+            sched_pod = self.informers["pod"].get(f"{namespace}.{sched_pod_name}")
 
         if sched_pod is None:
-            sched_state = "terminated"
-        else:
-            sched_state = self.get_cont_state(sched_pod)
+            # Scheduler pod was created in an earlier run, but hasn't been seen
+            # by the informers. Wait until it shows up to progress further.
+            return status
+
+        sched_state = self.get_cont_state(sched_pod)
 
         if sched_state == "running":
             service_name = status.get("service")
@@ -566,7 +553,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         sched_pod = None
         sched_state = "terminated"
         if sched_pod_name:
-            sched_pod = await self.read_namespaced_pod(sched_pod_name, namespace)
+            sched_pod = self.informers["pod"].get(f"{namespace}.{sched_pod_name}")
             if sched_pod is not None:
                 sched_state = self.get_cont_state(sched_pod)
 
@@ -730,7 +717,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             pod = self.api_client.sanitize_for_serialization(pod)
         except ApiException as exc:
             if exc.status == 409:
-                pod = self.read_namespaced_pod(pod["metadata"]["name"], namespace)
+                pod = None
             else:
                 raise
 
