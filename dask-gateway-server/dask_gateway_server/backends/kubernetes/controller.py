@@ -1,5 +1,6 @@
 import asyncio
 import collections
+import json
 import logging
 import signal
 import sys
@@ -21,11 +22,12 @@ from ...utils import (
     normalize_address,
     run_main,
     CancelGroup,
+    FrozenAttrDict,
+    RateLimiter,
 )
 from ...traitlets import Application
 from ...tls import new_keypair
-from ...utils import FrozenAttrDict
-from ...workqueue import WorkQueue
+from ...workqueue import WorkQueue, Backoff
 from .utils import Informer, merge_json_objects
 from .backend import KubeBackendAndControllerMixin
 
@@ -239,8 +241,12 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         # Local state
         self.cluster_info = collections.defaultdict(ClusterInfo)
 
+        # Rate limiter for k8s api calls
+        # TODO: make configurable, apply everywhere
+        self.rl = RateLimiter(rate=50, burst=100)
+
         # Initialize queue and informers
-        self.queue = WorkQueue()
+        self.queue = WorkQueue(backoff=Backoff(base_delay=0.1, max_delay=300))
         endpoints_selector = (
             self.label_selector + ",app.kubernetes.io/component=dask-scheduler"
         )
@@ -428,14 +434,17 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
             self.log.debug("Reconciling cluster %s", name)
             try:
-                await self.reconcile_cluster(name)
+                requeue = await self.reconcile_cluster(name)
             except Exception:
                 self.log.warning(
                     "Error while reconciling cluster %s", name, exc_info=True
                 )
                 self.queue.put_backoff(name)
             else:
-                self.queue.reset_backoff(name)
+                if requeue:
+                    self.queue.put_backoff(name)
+                else:
+                    self.queue.reset_backoff(name)
             finally:
                 self.queue.task_done(name)
 
@@ -445,12 +454,13 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             # Cluster already deleted, nothing to do
             return
 
-        status_update = await self.handle_cluster(cluster)
+        status_update, requeue = await self.handle_cluster(cluster)
 
         if status_update is not None and status_update != cluster.get("status"):
             namespace = cluster["metadata"]["namespace"]
             name = cluster["metadata"]["name"]
             await self.patch_cluster_status(namespace, name, status_update)
+        return requeue
 
     async def handle_cluster(self, cluster):
         namespace = cluster["metadata"]["namespace"]
@@ -462,7 +472,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         phase = status.get("phase", "Pending")
 
         if phase in {"Stopped", "Failed"}:
-            return None
+            return None, False
 
         active = spec.get("active", True)
 
@@ -471,7 +481,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             await self.cleanup_cluster_resources(status, namespace)
             status = status.copy()
             status["phase"] = "Stopped"
-            return status
+            return status, False
 
         if phase == "Pending":
             return await self.handle_pending_cluster(cluster)
@@ -502,7 +512,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         if sched_pod is None:
             # Scheduler pod was created in an earlier run, but hasn't been seen
             # by the informers. Wait until it shows up to progress further.
-            return status
+            return status, False
 
         sched_state = self.get_cont_state(sched_pod)
 
@@ -539,12 +549,13 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             await self.cleanup_cluster_resources(status, namespace)
             status["phase"] = "Failed"
 
-        return status
+        return status, False
 
     async def handle_running_cluster(self, cluster):
         namespace = cluster["metadata"]["namespace"]
         name = cluster["metadata"]["name"]
         cluster_key = f"{namespace}.{name}"
+        requeue = False
 
         spec = cluster["spec"]
         status = cluster.get("status", {}).copy()
@@ -563,7 +574,6 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             )
             await self.cleanup_cluster_resources(status, namespace)
             status["phase"] = "Failed"
-            return status
 
         elif sched_state == "running":
             info = self.cluster_info[cluster_key]
@@ -572,37 +582,86 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 replicas = spec.get("replicas", 0)
                 delta = replicas - n_workers
                 if delta > 0:
-                    await self.handle_scale_up(
+                    requeue = await self.handle_scale_up(
                         cluster, sched_pod, info, replicas, delta
                     )
-                elif delta <= 0:
-                    await self.handle_scale_down(
+                else:
+                    requeue = await self.handle_scale_down(
                         cluster, sched_pod, info, replicas, delta
                     )
+        return status, requeue
 
-    async def safe_create_pod(self, info, namespace, pod):
+    async def create_pod(self, namespace, pod, info=None):
         try:
-            await self.core_client.create_namespaced_pod(namespace, pod)
-            self.log.info("Pod submitted")
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            self.log.warning("Failed to submit pod", exc_info=True)
-            # Failed to create, decrement expectation
-            info.creates -= 1
-
-    async def safe_delete_pod(self, info, namespace, pod_name):
-        try:
-            await self.core_client.delete_namespaced_pod(pod_name, namespace)
-            self.log.info("Pod deleted")
+            res = await self.rl.apply(
+                self.core_client.create_namespaced_pod, namespace, pod
+            )
+            try:
+                self.log.debug("Created pod %s/%s", namespace, res.metadata.name)
+            except Exception:
+                pass
+            return res
         except asyncio.CancelledError:
             raise
         except Exception as exc:
-            if isinstance(exc, ApiException) and exc.code == 404:
+            if info is not None:
+                info.creates -= 1
+            if isinstance(exc, ApiException):
+                # Try to log a nicer message if an api exception
+                try:
+                    message = json.loads(exc.body)["message"]
+                    self.log.warning(
+                        "Failed to create pod in namespace %s - %s", namespace, message
+                    )
+                except Exception:
+                    pass
+                else:
+                    raise
+            self.log.warning(
+                "Failed to create pod in namespace %s", namespace, exc_info=True
+            )
+            raise
+
+    async def delete_pod(self, namespace, pod_name, info=None):
+        try:
+            await self.rl.apply(
+                self.core_client.delete_namespaced_pod, pod_name, namespace
+            )
+            self.log.debug("Deleted pod %s/%s", namespace, pod_name)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            if info is not None:
                 info.deletes -= 1
+            if isinstance(exc, ApiException) and exc.code == 404:
                 return
-            self.log.warning("Failed to delete pod %s", pod_name, exc_info=True)
-            info.deletes -= 1
+            self.log.warning(
+                "Failed to delete pod %s/%s", namespace, pod_name, exc_info=True
+            )
+            raise
+
+    async def batch_create_pods(self, info, namespace, pod, count):
+        """Create pods in exponentially increasing batches.
+
+        This helps prevent excessive failed api requests (which are sometimes
+        expected, due to e.g. resource-quotas). It also reduces load on the k8s
+        api server.
+        """
+        remaining = count
+        batch_size = 1
+        while remaining > 0:
+            batch = [
+                self.create_pod(namespace, pod, info)
+                for _ in range(min(batch_size, remaining))
+            ]
+            res = await asyncio.gather(*batch, return_exceptions=True)
+            remaining -= len(batch)
+            if any(isinstance(r, Exception) for r in res):
+                # Remaining creates will never be submitted
+                info.creates -= remaining
+                return True
+            batch_size *= 2
+        return False
 
     async def handle_scale_up(self, cluster, sched_pod, info, replicas, delta):
         name = cluster["metadata"]["name"]
@@ -624,9 +683,12 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         self.log.info(
             "Creating %d pods, deleting %d stopped pods", delta, len(to_delete)
         )
-        tasks = [self.safe_create_pod(info, namespace, pod) for _ in range(delta)]
-        tasks.extend([self.safe_delete_pod(info, namespace, p) for p in to_delete])
-        await asyncio.gather(*tasks, return_exceptions=True)
+        failed = await self.batch_create_pods(info, namespace, pod, delta)
+        res = await asyncio.gather(
+            *(self.delete_pod(namespace, p, info) for p in to_delete),
+            return_exceptions=True,
+        )
+        return failed or any(isinstance(r, Exception) for r in res)
 
     async def handle_scale_down(self, cluster, sched_pod, info, replicas, delta):
         namespace = cluster["metadata"]["namespace"]
@@ -644,8 +706,12 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             pods = pending
             pods.extend(stopped)
             info.set_expectations(deletes=len(pods))
-            tasks = [self.safe_delete_pod(info, namespace, p) for p in pods]
-            await asyncio.gather(*tasks, return_exceptions=True)
+            res = await asyncio.gather(
+                *(self.delete_pod(namespace, p, info) for p in pods),
+                return_exceptions=True,
+            )
+            return any(isinstance(r, Exception) for r in res)
+        return False
 
     async def patch_cluster_status(self, namespace, name, status):
         await self.custom_client.patch_namespaced_custom_object_status(

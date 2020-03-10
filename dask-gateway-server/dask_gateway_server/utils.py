@@ -1,5 +1,6 @@
 import asyncio
 import socket
+import time
 import weakref
 from collections import OrderedDict
 from collections.abc import Mapping
@@ -76,6 +77,44 @@ class _cancel_context(object):
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         self.context._unregister(self)
         self._task = None
+
+
+class RateLimiter(object):
+    def __init__(self, rate=10, burst=100):
+        self.rate = float(rate)
+        self.burst = float(burst)
+        self._tokens = float(burst)
+        self._max_elapsed = burst / rate
+
+        now = time.monotonic()
+        self._last = now
+        self._last_event = now
+
+    def _delay(self):
+        now = time.monotonic()
+        last = min(now, self._last)
+        elapsed = min(now - last, self._max_elapsed)
+        tokens = min(self._tokens + elapsed * self.rate, self.burst)
+
+        tokens -= 1
+        if tokens < 0:
+            delay = -tokens * self.rate
+        else:
+            delay = 0
+
+        self._tokens = tokens
+        self._last = now
+        self._last_event = now + delay
+        return delay
+
+    async def acquire(self):
+        delay = self._delay()
+        if delay:
+            await self.sleep(delay)
+
+    async def apply(self, func, *args, **kwargs):
+        await self.acquire()
+        return await func(*args, **kwargs)
 
 
 def random_port():
