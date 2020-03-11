@@ -845,6 +845,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 "uid": cluster["metadata"]["uid"],
             }
         ]
+        pod_name = pod["metadata"]["name"]
 
         self.log.debug("Creating scheduler pod for %s/%s", namespace, name)
         try:
@@ -856,7 +857,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             else:
                 raise
 
-        return pod["metadata"]["name"], pod
+        return pod_name, pod
 
     async def create_service_if_not_exists(self, cluster, sched_pod):
         name = cluster["metadata"]["name"]
