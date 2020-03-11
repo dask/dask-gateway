@@ -546,7 +546,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             except WorkQueueClosed:
                 return
 
-            self.log.debug("Reconciling cluster %s", name)
+            self.log.info("Reconciling cluster %s", name)
             try:
                 requeue = await self.reconcile_cluster(name)
             except Exception:
@@ -555,6 +555,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 )
                 self.queue.put_backoff(name)
             else:
+                self.log.info("Finished reconciling cluster %s", name)
                 if requeue:
                     self.queue.put_backoff(name)
                 else:
@@ -716,10 +717,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     async def create_pod(self, namespace, pod, info=None):
         try:
             res = await self.core_client.create_namespaced_pod(namespace, pod)
-            try:
-                self.log.debug("Created pod %s/%s", namespace, res.metadata.name)
-            except Exception:
-                pass
+            self.log.debug("Created pod %s/%s", namespace, res.metadata.name)
             return res
         except asyncio.CancelledError:
             raise
@@ -799,7 +797,12 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         to_delete = info.succeeded.union(info.failed)
         info.set_expectations(creates=delta, deletes=len(to_delete))
         self.log.info(
-            "Creating %d pods, deleting %d stopped pods", delta, len(to_delete)
+            "Cluster %s.%s scaled to %d - creating %d workers, deleting %d stopped workers",
+            namespace,
+            name,
+            replicas,
+            delta,
+            len(to_delete),
         )
         failed = await self.batch_create_pods(info, namespace, pod, delta)
         res = await asyncio.gather(
@@ -810,6 +813,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     async def handle_scale_down(self, cluster, sched_pod, info, replicas, delta):
         namespace = cluster["metadata"]["namespace"]
+        name = cluster["metadata"]["name"]
 
         if info.pending:
             pending = list(info.pending)[:delta]
@@ -819,7 +823,12 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         stopped = info.succeeded.union(info.failed)
         if pending or stopped:
             self.log.info(
-                "Deleting %d pending and %d stopped pods", len(pending), len(stopped)
+                "Cluster %s.%s scaled to %d - deleting %d pending and %d stopped workers",
+                namespace,
+                name,
+                replicas,
+                len(pending),
+                len(stopped),
             )
             pods = pending
             pods.extend(stopped)
@@ -871,7 +880,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             }
         ]
 
-        self.log.debug("Creating new credentials for %s/%s", namespace, name)
+        self.log.info("Creating new credentials for cluster %s.%s", namespace, name)
         try:
             await self.core_client.create_namespaced_secret(namespace, secret)
         except ApiException as exc:
@@ -896,7 +905,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         ]
         pod_name = pod["metadata"]["name"]
 
-        self.log.debug("Creating scheduler pod for %s/%s", namespace, name)
+        self.log.info("Creating scheduler pod for cluster %s.%s", namespace, name)
         try:
             pod = await self.core_client.create_namespaced_pod(namespace, pod)
             pod = self.api_client.sanitize_for_serialization(pod)
@@ -922,7 +931,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             }
         ]
 
-        self.log.debug("Creating scheduler service for %s/%s", namespace, name)
+        self.log.info("Creating scheduler service for cluster %s.%s", namespace, name)
         try:
             await self.core_client.create_namespaced_service(namespace, service)
         except ApiException as exc:
@@ -945,7 +954,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             }
         ]
 
-        self.log.debug("Creating scheduler HTTP route for %s/%s", namespace, name)
+        self.log.info(
+            "Creating scheduler HTTP route for cluster %s.%s", namespace, name
+        )
         try:
             await self.custom_client.create_namespaced_custom_object(
                 "traefik.containo.us", "v1alpha1", namespace, "ingressroutes", route
@@ -970,7 +981,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             }
         ]
 
-        self.log.debug("Creating scheduler TCP route for %s/%s", namespace, name)
+        self.log.info("Creating scheduler TCP route for cluster %s.%s", namespace, name)
         try:
             await self.custom_client.create_namespaced_custom_object(
                 "traefik.containo.us", "v1alpha1", namespace, "ingressroutetcps", route

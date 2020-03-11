@@ -334,16 +334,24 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
 
         obj = self.make_cluster_object(user.name, options, config)
 
-        res = await self.custom_client.create_namespaced_custom_object(
+        name = obj["metadata"]["name"]
+        cluster_name = f"{config.namespace}.{name}"
+
+        self.log.info("Creating cluster %s for user %s", cluster_name, user.name)
+
+        await self.custom_client.create_namespaced_custom_object(
             "gateway.dask.org", self.crd_version, config.namespace, "daskclusters", obj
         )
-        return self.get_cluster_name(res)
+        return cluster_name
 
     async def stop_cluster(self, cluster_name, failed=False):
         cluster = self.clusters.get(cluster_name)
         if cluster is not None and cluster.status >= models.ClusterStatus.STOPPED:
             # We know for sure the cluster was already stopped, do nothing
             return
+
+        self.log.info("Stopping cluster %s", cluster_name)
+
         namespace, name = cluster_name.split(".")
         await self.custom_client.patch_namespaced_custom_object(
             "gateway.dask.org",
@@ -380,6 +388,15 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
     async def on_cluster_heartbeat(self, cluster_name, msg):
         count = msg["count"]
         namespace, name = cluster_name.split(".")
+
+        self.log.info(
+            "Cluster %s heartbeat [count: %d, n_active: %d, n_closing: %d, n_closed: %d]",
+            cluster_name,
+            count,
+            len(msg["active_workers"]),
+            len(msg["closing_workers"]),
+            len(msg["closed_workers"]),
+        )
 
         try:
             await self.custom_client.patch_namespaced_custom_object(
