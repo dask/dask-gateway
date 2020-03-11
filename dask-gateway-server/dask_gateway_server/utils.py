@@ -13,6 +13,11 @@ from colorlog import ColoredFormatter
 from .compat import get_running_loop, all_tasks
 
 
+def timestamp():
+    """An integer timestamp represented as milliseconds since the epoch UTC"""
+    return int(time.time() * 1000)
+
+
 class TaskPool(object):
     def __init__(self):
         self.tasks = weakref.WeakSet()

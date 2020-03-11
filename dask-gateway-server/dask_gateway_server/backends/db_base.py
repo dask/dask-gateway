@@ -2,7 +2,6 @@ import asyncio
 import base64
 import json
 import os
-import time
 import uuid
 from collections import defaultdict
 from itertools import chain, islice
@@ -23,15 +22,11 @@ from ..utils import (
     normalize_address,
     UniqueQueue,
     CancelGroup,
+    timestamp,
 )
 
 
 __all__ = ("DBBackendBase", "Cluster", "Worker")
-
-
-def timestamp():
-    """An integer timestamp represented as milliseconds since the epoch UTC"""
-    return int(time.time() * 1000)
 
 
 def _normalize_encrypt_key(key):

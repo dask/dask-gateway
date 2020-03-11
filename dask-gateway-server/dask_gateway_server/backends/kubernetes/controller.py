@@ -9,7 +9,7 @@ import uuid
 from base64 import b64encode
 
 from aiohttp import web
-from traitlets import Unicode, Integer, List, validate
+from traitlets import Unicode, Integer, Float, List, validate
 from traitlets.config import catch_config_error
 
 from kubernetes_asyncio import client, config
@@ -24,11 +24,13 @@ from ...utils import (
     CancelGroup,
     FrozenAttrDict,
     RateLimiter,
+    TaskPool,
+    timestamp,
 )
 from ...traitlets import Application
 from ...tls import new_keypair
 from ...workqueue import WorkQueue, Backoff
-from .utils import Informer, merge_json_objects, k8s_timestamp
+from .utils import Informer, merge_json_objects, k8s_timestamp, parse_k8s_timestamp
 from .backend import KubeBackendAndControllerMixin
 
 
@@ -139,6 +141,30 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         config=True,
     )
 
+    completed_cluster_cleanup_period = Float(
+        600,
+        help="""
+        Time (in seconds) between cleanup tasks.
+
+        This sets how frequently old cluster records are deleted from
+        kubernetes.  This shouldn't be too small (to keep the overhead low),
+        but should be smaller than ``completed_cluster_max_age`` (probably by an
+        order of magnitude).
+        """,
+        config=True,
+    )
+
+    completed_cluster_max_age = Float(
+        3600 * 24,
+        help="""
+        Max time (in seconds) to keep around records of completed clusters.
+
+        Every ``completed_cluster_cleanup_period``, completed clusters older than
+        ``completed_cluster_max_age`` are deleted from kubernetes.
+        """,
+        config=True,
+    )
+
     proxy_prefix = Unicode(
         "",
         help="""
@@ -240,6 +266,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
         # Local state
         self.cluster_info = collections.defaultdict(ClusterInfo)
+        self.stopped_clusters = {}
 
         # Rate limiter for k8s api calls
         # TODO: make configurable, apply everywhere
@@ -294,6 +321,10 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             for _ in range(self.parallelism)
         ]
 
+        # Start background tasks
+        self.task_pool = TaskPool()
+        self.task_pool.spawn(self.cleanup_expired_cluster_records_loop())
+
         # Start the aiohttp application
         self.runner = web.AppRunner(
             self.app,
@@ -319,6 +350,10 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         if hasattr(self, "informers"):
             await asyncio.wait([i.stop() for i in self.informers.values()])
 
+        # Stop background tasks
+        if hasattr(self, "task_pool"):
+            await self.task_pool.close()
+
         # Shutdown the client
         if hasattr(self, "api_client"):
             await self.api_client.rest_client.pool_manager.close()
@@ -328,6 +363,32 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             await self.runner.cleanup()
 
         self.log.info("Stopped successfully")
+
+    async def delete_cluster(self, namespace, name):
+        await self.custom_client.delete_namespaced_custom_object(
+            "gateway.dask.org", self.crd_version, namespace, "daskclusters", name, {}
+        )
+
+    async def cleanup_expired_cluster_records_loop(self):
+        while True:
+            try:
+                cutoff = timestamp() - self.completed_cluster_max_age * 1000
+                to_delete = [
+                    k
+                    for k, stop_time in self.stopped_clusters.items()
+                    if stop_time <= cutoff
+                ]
+                if to_delete:
+                    self.log.info("Removing %d expired cluster records", len(to_delete))
+                    tasks = (self.delete_cluster(ns, name) for ns, name in to_delete)
+                    await asyncio.gather(*tasks, return_exceptions=True)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                self.log.error(
+                    "Error while deleting expired cluster records", exc_info=exc
+                )
+            await asyncio.sleep(self.completed_cluster_cleanup_period)
 
     def get_cont_status(self, pod, component):
         for cs in pod["status"].get("containerStatuses", ()):
@@ -422,10 +483,10 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         self.queue.put(f"{namespace}.{name}")
 
     def on_cluster_delete(self, cluster):
-        cluster_key = self.get_cluster_key(cluster)
-        if cluster_key is None:
-            return
-        self.log.debug("Cluster %s deleted", cluster_key)
+        namespace = cluster["metadata"]["namespace"]
+        name = cluster["metadata"]["name"]
+        self.log.debug("Cluster %s.%s deleted", namespace, name)
+        self.stopped_clusters.pop((namespace, name), None)
 
     async def reconciler_loop(self):
         while True:
@@ -472,6 +533,11 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         phase = status.get("phase", "Pending")
 
         if phase in {"Stopped", "Failed"}:
+            if "completionTime" in status:
+                stop_time = parse_k8s_timestamp(status["completionTime"])
+            else:
+                stop_time = timestamp()
+            self.stopped_clusters[(namespace, name)] = stop_time
             return None, False
 
         active = spec.get("active", True)

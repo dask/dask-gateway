@@ -16,4 +16,6 @@ data:
       {"name": '{{ include "dask-gateway.fullname" . | printf "clusters-prefix-%s" | trunc 63 | trimSuffix "-" }}'}
     ]
     c.KubeController.log_level = "{{ .Values.controller.loglevel }}"
+    c.KubeController.completed_cluster_max_age = {{ .Values.controller.completedClusterMaxAge }}
+    c.KubeController.completed_cluster_cleanup_period = {{ .Values.controller.completedClusterCleanupPeriod }}
 {{- end }}

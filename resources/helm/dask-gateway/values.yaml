@@ -128,6 +128,14 @@ controller:
   # The controller log level
   loglevel: INFO
 
+  # Max time (in seconds) to keep around records of completed clusters.
+  # Default is 24 hours.
+  completedClusterMaxAge: 86400
+
+  # Time (in seconds) between cleanup tasks removing records of completed
+  # clusters. Default is 5 minutes.
+  completedClusterCleanupPeriod: 600
+
   # The image to use for the controller pod.
   image:
     name: daskgateway/dask-gateway-server
