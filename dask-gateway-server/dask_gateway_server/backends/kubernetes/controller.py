@@ -425,7 +425,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             try:
                 cutoff = timestamp() - self.completed_cluster_max_age * 1000
                 to_delete = [
-                    k
+                    k.split(".")
                     for k, stop_time in self.stopped_clusters.items()
                     if stop_time <= cutoff
                 ]
@@ -469,9 +469,14 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         cluster_key = self.get_cluster_key(pod)
         if cluster_key is None:
             return
+        cluster_stopping = cluster_key in self.stopped_clusters
+
         component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
         if component == "dask-scheduler":
-            if self.get_cont_state(pod) in ("running", "terminated"):
+            if (
+                self.get_cont_state(pod) in ("running", "terminated")
+                and not cluster_stopping
+            ):
                 self.queue.put(cluster_key)
         elif component == "dask-worker":
             pod_name = pod["metadata"]["name"]
@@ -497,20 +502,22 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 elif kind == "running":
                     info.on_worker_running(pod_name)
 
-            if info.should_trigger() or trigger:
+            if (trigger or info.should_trigger()) and not cluster_stopping:
                 self.queue.put(cluster_key)
 
     def on_pod_delete(self, pod):
         cluster_key = self.get_cluster_key(pod)
         if cluster_key is None:
             return
+        cluster_stopping = cluster_key in self.stopped_clusters
+
         component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
-        if component == "dask-scheduler":
+        if component == "dask-scheduler" and not cluster_stopping:
             self.queue.put(cluster_key)
         elif component == "dask-worker":
             info = self.cluster_info[cluster_key]
             info.on_worker_deleted(pod["metadata"]["name"])
-            if info.should_trigger():
+            if info.should_trigger() and not cluster_stopping:
                 self.queue.put(cluster_key)
 
     def endpoints_all_ready(self, endpoints):
@@ -519,10 +526,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     def on_endpoints_update(self, endpoints, old=None):
         cluster_key = self.get_cluster_key(endpoints)
-        if cluster_key is None:
+        if cluster_key is None or cluster_key in self.stopped_clusters:
             return
         if self.endpoints_all_ready(endpoints):
-            self.log.info("Endpoint ready and available for cluster %s", cluster_key)
             self.queue.put(cluster_key)
 
     def on_endpoints_delete(self, endpoints):
@@ -537,7 +543,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         namespace = cluster["metadata"]["namespace"]
         name = cluster["metadata"]["name"]
         self.log.debug("Cluster %s.%s deleted", namespace, name)
-        self.stopped_clusters.pop((namespace, name), None)
+        self.stopped_clusters.pop(f"{namespace}.{name}", None)
 
     async def reconciler_loop(self):
         while True:
@@ -591,7 +597,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 stop_time = parse_k8s_timestamp(status["completionTime"])
             else:
                 stop_time = timestamp()
-            self.stopped_clusters[(namespace, name)] = stop_time
+            self.stopped_clusters[f"{namespace}.{name}"] = stop_time
             return None, False
 
         active = spec.get("active", True)
