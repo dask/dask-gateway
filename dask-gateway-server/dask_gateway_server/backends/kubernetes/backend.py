@@ -1,10 +1,8 @@
 import asyncio
 import os
-import sys
 import uuid
 from base64 import b64decode
 from collections import defaultdict
-from datetime import datetime, timezone
 
 from traitlets import Float, Dict, Unicode, default
 from traitlets.config import Configurable
@@ -17,24 +15,10 @@ from ...traitlets import MemoryLimit, Type
 from ...utils import cancel_task, Flag
 from ...workqueue import WorkQueue
 from ..base import Backend, ClusterConfig
-from .utils import Informer
+from .utils import Informer, parse_k8s_timestamp
 
 
 __all__ = ("KubeClusterConfig", "KubeBackend", "KubeBackendAndControllerMixin")
-
-
-if sys.version_info[:2] >= (3, 7):
-
-    def parse_k8s_timestamp(ts):
-        t = datetime.fromisoformat(ts[:-1])
-        return int(t.replace(tzinfo=timezone.utc).timestamp() * 1000)
-
-
-else:
-
-    def parse_k8s_timestamp(ts):
-        t = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ")
-        return int(t.replace(tzinfo=timezone.utc).timestamp() * 1000)
 
 
 class KubeClusterConfig(ClusterConfig):
@@ -488,6 +472,12 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             else:
                 scheduler_address = dashboard_address = api_address = ""
 
+            start_time = parse_k8s_timestamp(obj["metadata"]["creationTimestamp"])
+            if "completionTime" in status:
+                stop_time = parse_k8s_timestamp(status["completionTime"])
+            else:
+                stop_time = None
+
             cluster = models.Cluster(
                 name=cluster_name,
                 username=obj["metadata"]["labels"]["gateway.dask.org/user"],
@@ -497,7 +487,8 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
                 dashboard_address=dashboard_address,
                 api_address=api_address,
                 status=cluster_status,
-                start_time=parse_k8s_timestamp(obj["metadata"]["creationTimestamp"]),
+                start_time=start_time,
+                stop_time=stop_time,
             )
 
             if old is not None and old.tls_cert:

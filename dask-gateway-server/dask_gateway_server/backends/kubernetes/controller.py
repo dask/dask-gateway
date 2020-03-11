@@ -28,7 +28,7 @@ from ...utils import (
 from ...traitlets import Application
 from ...tls import new_keypair
 from ...workqueue import WorkQueue, Backoff
-from .utils import Informer, merge_json_objects
+from .utils import Informer, merge_json_objects, k8s_timestamp
 from .backend import KubeBackendAndControllerMixin
 
 
@@ -481,6 +481,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             await self.cleanup_cluster_resources(status, namespace)
             status = status.copy()
             status["phase"] = "Stopped"
+            status["completionTime"] = k8s_timestamp()
             return status, False
 
         if phase == "Pending":
@@ -548,6 +549,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             )
             await self.cleanup_cluster_resources(status, namespace)
             status["phase"] = "Failed"
+            status["completionTime"] = k8s_timestamp()
 
         return status, False
 
@@ -574,6 +576,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             )
             await self.cleanup_cluster_resources(status, namespace)
             status["phase"] = "Failed"
+            status["completionTime"] = k8s_timestamp()
 
         elif sched_state == "running":
             info = self.cluster_info[cluster_key]
