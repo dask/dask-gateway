@@ -12,8 +12,8 @@ from kubernetes_asyncio.client.rest import ApiException
 from ... import __version__ as VERSION
 from ... import models
 from ...traitlets import MemoryLimit, Type
-from ...utils import cancel_task, Flag
-from ...workqueue import WorkQueue
+from ...utils import Flag
+from ...workqueue import WorkQueue, WorkQueueClosed
 from ..base import Backend, ClusterConfig
 from .utils import Informer, parse_k8s_timestamp
 
@@ -314,13 +314,17 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             on_delete=self.on_cluster_event,
         )
         await self.informer.start()
-        self._sync_clusters_task = asyncio.ensure_future(self.sync_clusters_loop())
+        self.sync_task = asyncio.ensure_future(self.sync_clusters_loop())
 
     async def cleanup(self):
         if hasattr(self, "informer"):
             await self.informer.stop()
-        if hasattr(self, "_sync_clusters_task"):
-            await cancel_task(self._sync_clusters_task)
+        if hasattr(self, "sync_task"):
+            self.queue.close()
+            try:
+                await self.sync_task
+            except Exception:
+                pass
         if hasattr(self, "api_client"):
             await self.api_client.rest_client.pool_manager.close()
         await super().cleanup()
@@ -428,7 +432,10 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
 
     async def sync_clusters_loop(self):
         while True:
-            name = await self.queue.get()
+            try:
+                name = await self.queue.get()
+            except WorkQueueClosed:
+                return
             try:
                 await self.sync_cluster(name)
             except Exception:

@@ -21,7 +21,6 @@ from ...utils import (
     LogFormatter,
     normalize_address,
     run_main,
-    CancelGroup,
     FrozenAttrDict,
     RateLimiter,
     TaskPool,
@@ -29,7 +28,7 @@ from ...utils import (
 )
 from ...traitlets import Application
 from ...tls import new_keypair
-from ...workqueue import WorkQueue, Backoff
+from ...workqueue import WorkQueue, Backoff, WorkQueueClosed
 from .utils import Informer, merge_json_objects, k8s_timestamp, parse_k8s_timestamp
 from .backend import KubeBackendAndControllerMixin
 
@@ -315,7 +314,6 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         self.log.debug("All informers started")
 
         # Initialize reconcilers
-        self.cg = CancelGroup()
         self.reconcilers = [
             asyncio.ensure_future(self.reconciler_loop())
             for _ in range(self.parallelism)
@@ -343,8 +341,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     async def cleanup(self):
         # Stop reconcilation workers
-        if hasattr(self, "cg"):
-            await self.cg.cancel()
+        if hasattr(self, "reconcilers"):
+            self.queue.close()
             await asyncio.gather(*self.reconcilers, return_exceptions=True)
 
         if hasattr(self, "informers"):
@@ -490,8 +488,10 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     async def reconciler_loop(self):
         while True:
-            async with self.cg.cancellable():
+            try:
                 name = await self.queue.get()
+            except WorkQueueClosed:
+                return
 
             self.log.debug("Reconciling cluster %s", name)
             try:

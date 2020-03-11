@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from dask_gateway_server.workqueue import WorkQueue, Backoff
+from dask_gateway_server.workqueue import WorkQueue, Backoff, WorkQueueClosed
 from dask_gateway_server.utils import cancel_task
 
 
@@ -155,3 +155,26 @@ async def test_workqueue_put_backoff():
 
     q.reset_backoff("foo")
     assert q.failures("foo") == 0
+
+
+@pytest.mark.asyncio
+async def test_workqueue_close():
+    q = WorkQueue()
+    q.put("foo")
+    q.close()
+    with pytest.raises(WorkQueueClosed):
+        await q.get()
+
+    assert q.closed
+
+    q = WorkQueue()
+
+    fs = [asyncio.ensure_future(q.get()) for _ in range(3)]
+    done, pending = await asyncio.wait(fs, timeout=0.001)
+    assert not done
+
+    q.close()
+
+    for f in fs:
+        with pytest.raises(WorkQueueClosed):
+            await f

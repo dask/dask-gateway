@@ -2,7 +2,7 @@ import asyncio
 import collections
 
 
-__all__ = ("Backoff", "WorkQueue")
+__all__ = ("Backoff", "WorkQueue", "WorkQueueClosed")
 
 
 class Backoff(object):
@@ -36,6 +36,12 @@ class Backoff(object):
         self._failures.pop(item, None)
 
 
+class WorkQueueClosed(Exception):
+    """Indicates that the WorkQueue is closed."""
+
+    pass
+
+
 class WorkQueue(object):
     """An asynchronous work queue.
 
@@ -59,6 +65,7 @@ class WorkQueue(object):
         self._processing = set()
         self._dirty = set()
         self._timers = {}
+        self.closed = False
 
     def is_empty(self):
         """True if there are no items queued"""
@@ -71,6 +78,8 @@ class WorkQueue(object):
                 self._queue.append(item)
 
     def _get(self):
+        if self.closed:
+            raise WorkQueueClosed
         item = self._queue.popleft()
         self._processing.add(item)
         self._dirty.discard(item)
@@ -82,6 +91,12 @@ class WorkQueue(object):
             if not waiter.done():
                 waiter.set_result(None)
                 break
+
+    def _wakeup_all(self):
+        while self._waiting:
+            waiter = self._waiting.popleft()
+            if not waiter.done():
+                waiter.set_result(None)
 
     def _put_delayed(self, item):
         self._timers.pop(item, None)
@@ -133,6 +148,8 @@ class WorkQueue(object):
     async def get(self):
         """Get an item from the queue."""
         while not self._queue:
+            if self.closed:
+                raise WorkQueueClosed
             waiter = self._loop.create_future()
             self._waiting.append(waiter)
             try:
@@ -154,3 +171,11 @@ class WorkQueue(object):
         if item in self._dirty:
             self._queue.append(item)
             self._wakeup_next()
+
+    def close(self):
+        """Close the queue.
+
+        Future calls to ``WorkQueue.get`` will raise ``WorkQueueClosed``
+        """
+        self.closed = True
+        self._wakeup_all()
