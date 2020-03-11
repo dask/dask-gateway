@@ -1,4 +1,5 @@
 import asyncio
+import functools
 import json
 import sys
 from datetime import datetime, timezone
@@ -33,6 +34,33 @@ else:
 def k8s_timestamp():
     t = datetime.now(timezone.utc)
     return t.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+class RateLimitedClient(object):
+    """A rate limited wrapper around a kubernetes client"""
+
+    def __init__(self, client, rate_limiter):
+        self.rate_limiter = rate_limiter
+        self.client = client
+        self._cache = {}
+
+    @property
+    def api_client(self):
+        return self.client.api_client
+
+    def __getattr__(self, name):
+        if not name.startswith("_") and hasattr(self.client, name):
+            if name not in self._cache:
+                method = getattr(self.client, name)
+
+                @functools.wraps(method)
+                async def func(*args, **kwargs):
+                    await self.rate_limiter.acquire()
+                    return await method(*args, **kwargs)
+
+                self._cache[name] = func
+            return self._cache[name]
+        raise AttributeError(name)
 
 
 async def watch(method, *args, **kwargs):

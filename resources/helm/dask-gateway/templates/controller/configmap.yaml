@@ -18,4 +18,8 @@ data:
     c.KubeController.log_level = "{{ .Values.controller.loglevel }}"
     c.KubeController.completed_cluster_max_age = {{ .Values.controller.completedClusterMaxAge }}
     c.KubeController.completed_cluster_cleanup_period = {{ .Values.controller.completedClusterCleanupPeriod }}
+    c.KubeController.backoff_base_delay = {{ .Values.controller.backoffBaseDelay }}
+    c.KubeController.backoff_max_delay = {{ .Values.controller.backoffMaxDelay }}
+    c.KubeController.k8s_api_rate_limit = {{ .Values.controller.k8sApiRateLimit }}
+    c.KubeController.k8s_api_rate_limit_burst = {{ .Values.controller.k8sApiRateLimitBurst }}
 {{- end }}

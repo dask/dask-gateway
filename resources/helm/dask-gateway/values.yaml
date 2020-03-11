@@ -136,6 +136,18 @@ controller:
   # clusters. Default is 5 minutes.
   completedClusterCleanupPeriod: 600
 
+  # Base delay (in seconds) for backoff when retrying after failures.
+  backoffBaseDelay: 0.1
+
+  # Max delay (in seconds) for backoff when retrying after failures.
+  backoffMaxDelay: 300
+
+  # Limit on the average number of k8s api calls per second.
+  k8sApiRateLimit: 50
+
+  # Limit on the maximum number of k8s api calls per second.
+  k8sApiRateLimitBurst: 100
+
   # The image to use for the controller pod.
   image:
     name: daskgateway/dask-gateway-server

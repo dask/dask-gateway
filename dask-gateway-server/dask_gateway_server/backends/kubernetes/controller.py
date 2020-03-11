@@ -29,7 +29,13 @@ from ...utils import (
 from ...traitlets import Application
 from ...tls import new_keypair
 from ...workqueue import WorkQueue, Backoff, WorkQueueClosed
-from .utils import Informer, merge_json_objects, k8s_timestamp, parse_k8s_timestamp
+from .utils import (
+    Informer,
+    merge_json_objects,
+    k8s_timestamp,
+    parse_k8s_timestamp,
+    RateLimitedClient,
+)
 from .backend import KubeBackendAndControllerMixin
 
 
@@ -164,6 +170,44 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         config=True,
     )
 
+    backoff_base_delay = Float(
+        0.1,
+        help="""
+        Base delay (in seconds) for backoff when retrying after failures.
+
+        If an operation fails, it is retried after a backoff computed as:
+
+        ```
+        min(backoff_max_delay, backoff_base_delay * 2 ** num_failures)
+        ```
+        """,
+        config=True,
+    )
+
+    backoff_max_delay = Float(
+        300,
+        help="""
+        Max delay (in seconds) for backoff policy when retrying after failures.
+        """,
+        config=True,
+    )
+
+    k8s_api_rate_limit = Integer(
+        50,
+        help="""
+        Limit on the average number of k8s api calls per second.
+        """,
+        config=True,
+    )
+
+    k8s_api_rate_limit_burst = Integer(
+        100,
+        help="""
+        Limit on the maximum number of k8s api calls per second.
+        """,
+        config=True,
+    )
+
     proxy_prefix = Unicode(
         "",
         help="""
@@ -254,25 +298,34 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         for s in (signal.SIGTERM, signal.SIGINT):
             loop.add_signal_handler(s, self.handle_shutdown_signal, s)
 
+        # Rate limiter for k8s api calls
+        self.rate_limiter = RateLimiter(
+            rate=self.k8s_api_rate_limit, burst=self.k8s_api_rate_limit_burst
+        )
+
         # Initialize the kubernetes clients
         try:
             config.load_incluster_config()
         except config.ConfigException:
             await config.load_kube_config()
         self.api_client = client.ApiClient()
-        self.core_client = client.CoreV1Api(api_client=self.api_client)
-        self.custom_client = client.CustomObjectsApi(api_client=self.api_client)
+        self.core_client = RateLimitedClient(
+            client.CoreV1Api(api_client=self.api_client), self.rate_limiter
+        )
+        self.custom_client = RateLimitedClient(
+            client.CustomObjectsApi(api_client=self.api_client), self.rate_limiter
+        )
 
         # Local state
         self.cluster_info = collections.defaultdict(ClusterInfo)
         self.stopped_clusters = {}
 
-        # Rate limiter for k8s api calls
-        # TODO: make configurable, apply everywhere
-        self.rl = RateLimiter(rate=50, burst=100)
-
         # Initialize queue and informers
-        self.queue = WorkQueue(backoff=Backoff(base_delay=0.1, max_delay=300))
+        self.queue = WorkQueue(
+            backoff=Backoff(
+                base_delay=self.backoff_base_delay, max_delay=self.backoff_max_delay
+            )
+        )
         endpoints_selector = (
             self.label_selector + ",app.kubernetes.io/component=dask-scheduler"
         )
@@ -662,9 +715,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     async def create_pod(self, namespace, pod, info=None):
         try:
-            res = await self.rl.apply(
-                self.core_client.create_namespaced_pod, namespace, pod
-            )
+            res = await self.core_client.create_namespaced_pod(namespace, pod)
             try:
                 self.log.debug("Created pod %s/%s", namespace, res.metadata.name)
             except Exception:
@@ -693,9 +744,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     async def delete_pod(self, namespace, pod_name, info=None):
         try:
-            await self.rl.apply(
-                self.core_client.delete_namespaced_pod, pod_name, namespace
-            )
+            await self.core_client.delete_namespaced_pod(pod_name, namespace)
             self.log.debug("Deleted pod %s/%s", namespace, pod_name)
         except asyncio.CancelledError:
             raise
