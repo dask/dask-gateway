@@ -22,4 +22,7 @@ data:
     c.KubeController.backoff_max_delay = {{ .Values.controller.backoffMaxDelay }}
     c.KubeController.k8s_api_rate_limit = {{ .Values.controller.k8sApiRateLimit }}
     c.KubeController.k8s_api_rate_limit_burst = {{ .Values.controller.k8sApiRateLimitBurst }}
+    {{- if eq (toString .Values.traefik.service.ports.tcp.port) "web" }}
+    c.KubeController.proxy_tcp_entrypoint = "web"
+    {{- end }}
 {{- end }}

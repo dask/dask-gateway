@@ -15,7 +15,7 @@ metadata:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 rules:
   - apiGroups: ["gateway.dask.org"]
-    resources: ["daskclusters"]
+    resources: ["daskclusters", "daskclusters/status"]
     verbs: ["*"]
   - apiGroups: ["traefik.containo.us"]
     resources: ["ingressroutes", "ingressroutetcps"]

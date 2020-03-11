@@ -223,9 +223,17 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         prefix = proposal.value.strip("/")
         return f"/{prefix}" if prefix else prefix
 
-    proxy_web_entrypoint = Unicode("web", config=True)
+    proxy_web_entrypoint = Unicode(
+        "web",
+        help="The traefik entrypoint name to use when creating ingressroutes",
+        config=True,
+    )
 
-    proxy_tcp_entrypoint = Unicode("tcp", config=True)
+    proxy_tcp_entrypoint = Unicode(
+        "tcp",
+        help="The traefik entrypoint name to use when creating ingressroutetcps",
+        config=True,
+    )
 
     proxy_web_middlewares = List(
         help="A list of middlewares to apply to web routes added to the proxy.",

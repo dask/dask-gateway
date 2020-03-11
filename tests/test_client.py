@@ -137,6 +137,15 @@ def test_client_init():
         assert g.proxy_address == "gateway://127.0.0.1:8888"
 
 
+def test_gateway_proxy_address_infer_port():
+    with dask.config.set(gateway__proxy_address=None):
+        g = Gateway("http://localhost")
+        assert g.proxy_address == "gateway://localhost:80"
+
+        g = Gateway("https://localhost")
+        assert g.proxy_address == "gateway://localhost:443"
+
+
 def test_gateway_addresses_template_environment_vars(monkeypatch):
     monkeypatch.setenv("TEST", "foobar")
 

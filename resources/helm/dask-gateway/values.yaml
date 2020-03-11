@@ -190,8 +190,8 @@ traefik:
         port: 80
       tcp:
         # The port TCP requests will be served on. Set to `web` to share the
-        # HTTPS port (only valid in HTTPS mode)
-        port: 8786
+        # web service port
+        port: web
 
   # Settings for nodeSelector, affinity, and tolerations for the traefik pods
   nodeSelector: {}
