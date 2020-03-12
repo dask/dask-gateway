@@ -1,5 +1,6 @@
 import asyncio
 import socket
+import time
 
 import pytest
 
@@ -15,6 +16,7 @@ from dask_gateway_server.utils import (
     Flag,
     FrozenAttrDict,
     CancelGroup,
+    RateLimiter,
 )
 
 
@@ -231,3 +233,22 @@ async def test_cancel_group():
             assert False
     except asyncio.CancelledError:
         pass
+
+
+@pytest.mark.asyncio
+async def test_rate_limiter():
+    rl = RateLimiter(rate=1, burst=2)
+    assert rl._delay() == 0
+    assert rl._delay() == 0
+    delay = rl._delay()
+    assert 0.9 < delay < 1.1
+
+    rl = RateLimiter(rate=500, burst=500)
+    rl._tokens = 0.0
+    start = time.monotonic()
+    await rl.acquire()
+    end = time.monotonic()
+    # Call to acquire blocked ~0.002 s
+    delay = end - start
+    assert delay > 0.001
+    assert delay < 0.003

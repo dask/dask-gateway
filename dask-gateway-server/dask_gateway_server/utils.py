@@ -85,6 +85,13 @@ class _cancel_context(object):
 
 
 class RateLimiter(object):
+    """A token-bucket based rate limiter.
+
+    The bucket starts out with ``burst`` tokens, and is replenished at ``rate``
+    tokens per-second. Calls to ``acquire`` take a token, possibly blocking
+    until one is available.
+    """
+
     def __init__(self, rate=10, burst=100):
         self.rate = float(rate)
         self.burst = float(burst)
@@ -97,13 +104,12 @@ class RateLimiter(object):
 
     def _delay(self):
         now = time.monotonic()
-        last = min(now, self._last)
-        elapsed = min(now - last, self._max_elapsed)
+        elapsed = min(now - self._last, self._max_elapsed)
         tokens = min(self._tokens + elapsed * self.rate, self.burst)
 
         tokens -= 1
         if tokens < 0:
-            delay = -tokens * self.rate
+            delay = -tokens / self.rate
         else:
             delay = 0
 
@@ -113,13 +119,10 @@ class RateLimiter(object):
         return delay
 
     async def acquire(self):
+        """Acquire a rate-limited token."""
         delay = self._delay()
         if delay:
-            await self.sleep(delay)
-
-    async def apply(self, func, *args, **kwargs):
-        await self.acquire()
-        return await func(*args, **kwargs)
+            await asyncio.sleep(delay)
 
 
 def random_port():
