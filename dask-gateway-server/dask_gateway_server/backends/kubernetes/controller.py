@@ -39,7 +39,45 @@ from .utils import (
 from .backend import KubeBackendAndControllerMixin
 
 
+def get_container_status(pod, name):
+    """Get the status of container ``name`` from a pod"""
+    for cs in pod["status"].get("containerStatuses", ()):
+        if cs["name"] == name:
+            return cs
+    return None
+
+
+def get_container_state(pod, name):
+    """Get the state of container ``name`` from a pod.
+
+    Returns one of ``waiting, running, terminated, unknown``.
+    """
+    phase = pod["status"].get("phase", "Unknown")
+    if phase == "Pending":
+        return "waiting"
+    cs = get_container_status(pod, name)
+    if cs is not None:
+        return next(iter(cs["state"]))
+    return "unknown"
+
+
+def get_cluster_key(obj):
+    """Get the cluster key for a given k8s object"""
+    try:
+        namespace = obj["metadata"]["namespace"]
+        name = obj["metadata"]["labels"]["gateway.dask.org/cluster"]
+        return f"{namespace}.{name}"
+    except KeyError:
+        return None
+
+
 class ClusterInfo(object):
+    """Stores in-memory state about a given cluster.
+
+    State can be reconstructed from k8s, this just provides fast access in the
+    reconciler loop.
+    """
+
     def __init__(self):
         self.all_pods = set()
         self.pending = set()
@@ -49,15 +87,25 @@ class ClusterInfo(object):
         self.set_expectations()
 
     def set_expectations(self, creates=0, deletes=0):
+        """Indicate that this cluster expects to see ``creates``/``deletes`` pod
+        operations before being woken up again.
+        """
         self.creates = creates
         self.deletes = deletes
         self.timestamp = time.monotonic()
 
     def expectations_fulfilled(self):
+        """Return true if all expectated pod operations have been seen"""
         return self.creates <= 0 and self.deletes <= 0
 
     def expectations_expired(self):
+        """Return true if expected pod operations have timed out"""
         return time.monotonic() - self.timestamp > 600
+
+    def should_trigger(self):
+        """Return true if our expectations indicate the cluster should be
+        reconciled again"""
+        return self.expectations_fulfilled() or self.expectations_expired()
 
     def _update(self, kind, pod_name):
         if pod_name not in self.all_pods:
@@ -92,9 +140,6 @@ class ClusterInfo(object):
             self.all_pods.discard(pod_name)
             for n in ("pending", "running", "succeeded", "failed"):
                 getattr(self, n).discard(pod_name)
-
-    def should_trigger(self):
-        return self.expectations_fulfilled() or self.expectations_expired()
 
 
 class KubeController(KubeBackendAndControllerMixin, Application):
@@ -449,32 +494,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 )
             await asyncio.sleep(self.completed_cluster_cleanup_period)
 
-    def get_cont_status(self, pod, component):
-        for cs in pod["status"].get("containerStatuses", ()):
-            if cs["name"] == component:
-                return cs
-        return None
-
-    def get_cont_state(self, pod):
-        phase = pod["status"].get("phase", "Unknown")
-        if phase == "Pending":
-            return "waiting"
-        component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
-        cs = self.get_cont_status(pod, component)
-        if cs is not None:
-            return next(iter(cs["state"]))
-        return "unknown"
-
-    def get_cluster_key(self, obj):
-        try:
-            namespace = obj["metadata"]["namespace"]
-            name = obj["metadata"]["labels"]["gateway.dask.org/cluster"]
-            return f"{namespace}.{name}"
-        except KeyError:
-            return None
-
     def on_pod_update(self, pod, old=None):
-        cluster_key = self.get_cluster_key(pod)
+        cluster_key = get_cluster_key(pod)
         if cluster_key is None:
             return
         cluster_stopping = cluster_key in self.stopped_clusters
@@ -482,7 +503,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         component = pod["metadata"]["labels"]["app.kubernetes.io/component"]
         if component == "dask-scheduler":
             if (
-                self.get_cont_state(pod) in ("running", "terminated")
+                get_container_state(pod, "dask-scheduler") in ("running", "terminated")
                 and not cluster_stopping
             ):
                 self.queue.put(cluster_key)
@@ -491,7 +512,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             phase = pod["status"].get("phase", "Unknown")
             if phase == "Unknown":
                 return
-            cs = self.get_cont_status(pod, component)
+            cs = get_container_status(pod, component)
             if cs is None:
                 return
 
@@ -514,7 +535,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 self.queue.put(cluster_key)
 
     def on_pod_delete(self, pod):
-        cluster_key = self.get_cluster_key(pod)
+        cluster_key = get_cluster_key(pod)
         if cluster_key is None:
             return
         cluster_stopping = cluster_key in self.stopped_clusters
@@ -533,7 +554,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         return subsets and not any(s.get("notReadyAddresses") for s in subsets)
 
     def on_endpoints_update(self, endpoints, old=None):
-        cluster_key = self.get_cluster_key(endpoints)
+        cluster_key = get_cluster_key(endpoints)
         if cluster_key is None or cluster_key in self.stopped_clusters:
             return
         if self.endpoints_all_ready(endpoints):
@@ -649,7 +670,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             # by the informers. Wait until it shows up to progress further.
             return status, False
 
-        sched_state = self.get_cont_state(sched_pod)
+        sched_state = get_container_state(sched_pod, "dask-scheduler")
 
         if sched_state == "running":
             service_name = status.get("service")
@@ -702,7 +723,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         if sched_pod_name:
             sched_pod = self.informers["pod"].get(f"{namespace}.{sched_pod_name}")
             if sched_pod is not None:
-                sched_state = self.get_cont_state(sched_pod)
+                sched_state = get_container_state(sched_pod, "dask-scheduler")
 
         if sched_state == "terminated":
             self.log.info(
