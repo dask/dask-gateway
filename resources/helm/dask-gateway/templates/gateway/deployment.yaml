@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dask-gateway.apiName" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.gateway.replicas }}
+  selector:
+    matchLabels:
+      {{- include "dask-gateway.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gateway
+  template:
+    metadata:
+      labels:
+        {{- include "dask-gateway.labels" . | nindent 8 }}
+        app.kubernetes.io/component: gateway
+      annotations:
+        checksum/configmap: {{ include (print .Template.BasePath "/gateway/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print .Template.BasePath "/gateway/secret.yaml") . | sha256sum }}
+        {{- if .Values.gateway.annotations }}
+        {{- .Values.gateway.annotations | toYaml | trimSuffix "\n" | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.rbac.enabled }}
+      serviceAccountName: {{ include "dask-gateway.apiName" . }}
+      {{- end }}
+      volumes:
+        - name: configmap
+          configMap:
+            name: {{ include "dask-gateway.apiName" . }}
+      containers:
+        - name: gateway
+          image: {{ .Values.gateway.image.name }}:{{ .Values.gateway.image.tag }}
+          imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
+          command:
+            - dask-gateway-server
+            - --config
+            - /etc/dask-gateway/dask_gateway_config.py
+          resources:
+            {{- .Values.gateway.resources | toYaml | trimSuffix "\n" | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/dask-gateway/
+              name: configmap
+          env:
+            {{- if (eq .Values.gateway.auth.type "jupyterhub") }}
+            - name: JUPYTERHUB_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "dask-gateway.apiName" . }}
+                  key: jupyterhub-api-token
+            {{- end }}
+          ports:
+            - containerPort: 8000
+              name: api

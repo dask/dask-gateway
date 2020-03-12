@@ -278,8 +278,16 @@ class Gateway(object):
         if proxy_address is None:
             proxy_address = format_template(dask.config.get("gateway.proxy-address"))
         if proxy_address is None:
-            proxy_address = address
-        if isinstance(proxy_address, int):
+            parsed = urlparse(address)
+            if parsed.netloc:
+                if parsed.port is None:
+                    proxy_port = {"http": 80, "https": 443}.get(parsed.scheme, 8786)
+                else:
+                    proxy_port = parsed.port
+                proxy_netloc = "%s:%d" % (parsed.hostname, proxy_port)
+            else:
+                proxy_netloc = proxy_address
+        elif isinstance(proxy_address, int):
             parsed = urlparse(address)
             proxy_netloc = "%s:%d" % (parsed.hostname, proxy_address)
         elif isinstance(proxy_address, str):

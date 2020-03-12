@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dask-gateway.traefikName" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+  {{- with .Values.traefik.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.traefik.service.type }}
+  selector:
+    {{- include "dask-gateway.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/component: traefik
+  {{- with .Values.traefik.service.spec }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+  ports:
+    - name: web
+      targetPort: 8000
+      port: {{ .Values.traefik.service.ports.web.port }}
+      {{- if .Values.traefik.service.ports.web.nodePort }}
+      nodePort: {{ .Values.traefik.service.ports.web.nodePort }}
+      {{- end }}
+    {{- if ne (toString .Values.traefik.service.ports.tcp.port) "web" }}
+    - name: tcp
+      targetPort: 8786
+      port: {{ .Values.traefik.service.ports.tcp.port }}
+      {{- if .Values.traefik.service.ports.tcp.nodePort }}
+      nodePort: {{ .Values.traefik.service.ports.tcp.nodePort }}
+      {{- end }}
+    {{- end }}
+    {{- if .Values.traefik.dashboard }}
+    - name: traefik
+      targetPort: 9000
+      port: 9000
+    {{- end }}

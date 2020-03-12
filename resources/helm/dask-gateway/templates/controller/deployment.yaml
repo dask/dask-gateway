@@ -1,0 +1,51 @@
+{{- if .Values.controller.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dask-gateway.controllerName" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "dask-gateway.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: controller
+  template:
+    metadata:
+      labels:
+        {{- include "dask-gateway.labels" . | nindent 8 }}
+        app.kubernetes.io/component: controller
+      annotations:
+        checksum/configmap: {{ include (print .Template.BasePath "/controller/configmap.yaml") . | sha256sum }}
+        {{- if .Values.controller.annotations }}
+        {{- .Values.controller.annotations | toYaml | trimSuffix "\n" | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.rbac.enabled }}
+      serviceAccountName: {{ include "dask-gateway.controllerName" . }}
+      {{- end }}
+      volumes:
+        - name: configmap
+          configMap:
+            name: {{ include "dask-gateway.controllerName" . }}
+      containers:
+        - name: controller
+          image: {{ .Values.controller.image.name }}:{{ .Values.controller.image.tag }}
+          imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
+          command:
+            - dask-gateway-server
+            - kube-controller
+            - --config
+            - /etc/dask-gateway/dask_gateway_config.py
+          resources:
+            {{- .Values.controller.resources | toYaml | trimSuffix "\n" | nindent 12 }}
+          volumeMounts:
+            - mountPath: /etc/dask-gateway/
+              name: configmap
+          ports:
+            - containerPort: 8000
+              name: api
+{{- end }}

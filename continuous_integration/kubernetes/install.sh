@@ -23,7 +23,10 @@ kubectl exec dask-gateway-tests -n dask-gateway -- \
     /working/continuous_integration/kubernetes/install-internal.sh "$pip_args"
 
 echo "Building dask-gateway source"
-pushd $git_root
-docker build -t daskgateway/dask-gateway -f continuous_integration/kubernetes/docker/dask-gateway/Dockerfile .
+pushd $git_root/dask-gateway
+docker build -t daskgateway/dask-gateway .
 popd
-k3d import-images daskgateway/dask-gateway
+pushd $git_root/dask-gateway-server
+docker build -t daskgateway/dask-gateway-server .
+popd
+k3d import-images daskgateway/dask-gateway daskgateway/dask-gateway-server

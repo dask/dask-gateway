@@ -1,4 +1,13 @@
 from traitlets import TraitError, TraitType, Integer, Type as _Type
+from traitlets.config import Application
+
+
+# Override default values for logging
+Application.log_level.default_value = "INFO"
+Application.log_format.default_value = (
+    "%(log_color)s[%(levelname)1.1s %(asctime)s.%(msecs).03d "
+    "%(name)s]%(reset)s %(message)s"
+)
 
 
 # Adapted from JupyterHub

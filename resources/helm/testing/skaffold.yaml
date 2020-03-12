@@ -1,0 +1,23 @@
+gateway:
+  loglevel: DEBUG
+  backend:
+    scheduler:
+      cores:
+        request: 0.1
+      memory:
+        request: 256M
+
+    worker:
+      cores:
+        request: 0.1
+      memory:
+        request: 256M
+
+controller:
+  loglevel: DEBUG
+  completedClusterMaxAge: 60
+  completedClusterCleanupPeriod: 30
+
+traefik:
+  loglevel: INFO
+  dashboard: true

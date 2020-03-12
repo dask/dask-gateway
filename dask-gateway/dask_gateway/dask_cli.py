@@ -17,7 +17,6 @@ from distributed import Scheduler, Worker, Nanny
 from distributed.diagnostics.plugin import SchedulerPlugin
 from distributed.security import Security
 from distributed.scheduler import logger as scheduler_logger
-from distributed.utils import ignoring
 from distributed.cli.utils import install_signal_handlers
 from distributed.proctitle import (
     enable_proctitle_on_children,
@@ -112,6 +111,11 @@ class CommHandler(BaseHandler):
         self.set_status(200)
 
 
+class HealthHandler(web.RequestHandler):
+    async def get(self):
+        self.set_status(200)
+
+
 class GatewayPlugin(SchedulerPlugin):
     def __init__(self, service):
         self.service = service
@@ -139,7 +143,14 @@ class GatewaySchedulerService(object):
         self.gateway = gateway
         self.loop = io_loop or scheduler.loop
         self.count = 0
-        self.heartbeat_period = heartbeat_period
+        self.heartbeat_period = max(0, heartbeat_period)
+        if self.heartbeat_period == 0:
+            # Liveness not tracked by heartbeats, message only on state changes
+            self.heartbeat_max = 3600
+            self.heartbeat_initial = 3600
+        else:
+            self.heartbeat_max = heartbeat_period
+            self.heartbeat_initial = 0.25
         self.waiter = Waiter()
         self.idle_timeout = max(0, idle_timeout)
         self.check_idle_task = None
@@ -160,7 +171,7 @@ class GatewaySchedulerService(object):
         self.closed_workers = set()
         self.scheduler.add_plugin(GatewayPlugin(self))
 
-        routes = [("/api/comm", CommHandler)]
+        routes = [("/api/comm", CommHandler), ("/api/health", HealthHandler)]
         self.app = web.Application(
             routes, gateway_service=self, auth_token=self.gateway.token
         )
@@ -173,6 +184,9 @@ class GatewaySchedulerService(object):
         self.closing_workers.discard(ws.name)
         self.closed_workers.discard(ws.name)
 
+        if len(self.active_workers) > self.count:
+            self.waiter.interrupt_soon()
+
     def worker_removed(self, worker_address):
         ws = self.address_to_worker.pop(worker_address)
         self.active_workers.discard(ws.name)
@@ -180,8 +194,10 @@ class GatewaySchedulerService(object):
         if ws.name in self.closing_workers:
             self.closing_workers.discard(ws.name)
         else:
-            # Unexpected failure, let gateway know soon, rather than later.
-            self.waiter.interrupt_soon()
+            # Unexpected failure.
+            if self.heartbeat_period:
+                # Liveness tracked by heartbeats, notify gateway soon
+                self.waiter.interrupt_soon()
 
     @property
     def dashboard_address(self):
@@ -208,8 +224,7 @@ class GatewaySchedulerService(object):
 
         if self.idle_timeout > 0:
             self.check_idle_task = asyncio.ensure_future(self.check_idle())
-        if self.heartbeat_period > 0:
-            self.heartbeat_task = asyncio.ensure_future(self.heartbeat_loop())
+        self.heartbeat_task = asyncio.ensure_future(self.heartbeat_loop())
 
     def stop(self):
         if self.server is not None:
@@ -248,7 +263,6 @@ class GatewaySchedulerService(object):
             closing_workers = self.scheduler.workers_to_close(
                 target=self.count, attribute="name"
             )
-            self.closing_workers.update(closing_workers)
             active_workers = list(self.active_workers.difference(closing_workers))
         else:
             closing_workers = []
@@ -267,22 +281,34 @@ class GatewaySchedulerService(object):
         await self.gateway.heartbeat(msg)
 
         if closing_workers:
-            await self.scheduler.retire_workers(
-                names=closing_workers, remove=True, close_workers=True
-            )
+            self.closing_workers.update(closing_workers)
+            try:
+                await self.scheduler.retire_workers(
+                    names=closing_workers, remove=True, close_workers=True
+                )
+            except Exception:
+                self.closing_workers.difference_update(closing_workers)
+                raise
 
     async def heartbeat_loop(self):
-        period = 0.25
+        base_delay = 0.25
+        backoff = base_delay
+        period = self.heartbeat_initial
         while True:
             await self.waiter.wait(period)
             try:
                 await self.heartbeat()
-                period = self.heartbeat_period
             except asyncio.CancelledError:
                 break
             except Exception as exc:
+                # Failure. Backoff and try again
                 logger.warning("Failed to send heartbeat", exc_info=exc)
-                period = min(period * 2, self.heartbeat_period)
+                backoff = min(backoff * 2, self.heartbeat_max)
+                period = backoff
+            else:
+                # Success. Reset backoff, heartbeat lazily
+                backoff = base_delay
+                period = self.heartbeat_max
 
     async def scale(self, count):
         # When scale is called explicitly, disable adaptive scaling
@@ -390,13 +416,34 @@ scheduler_parser.add_argument(
     "--heartbeat-period",
     type=float,
     default=15,
-    help="Period (in seconds) between heartbeat calls",
+    help=(
+        "Period (in seconds) between heartbeat calls. Set to 0 to send "
+        "heartbeats only when scaling."
+    ),
 )
 scheduler_parser.add_argument(
     "--idle-timeout",
     type=float,
     default=0,
     help="Idle timeout (in seconds) before shutting down the cluster",
+)
+scheduler_parser.add_argument(
+    "--scheduler-address",
+    type=str,
+    default="tls://:0",
+    help="The address the scheduler should listen at. Defaults to `:0`",
+)
+scheduler_parser.add_argument(
+    "--dashboard-address",
+    type=str,
+    default=":0",
+    help="The address the dashboard should listen at. Defaults to `:0`",
+)
+scheduler_parser.add_argument(
+    "--api-address",
+    type=str,
+    default=":0",
+    help="The address the api should listen at. Defaults to `:0`",
 )
 
 
@@ -413,6 +460,7 @@ def make_security(tls_cert=None, tls_key=None):
     tls_key = tls_key or getenv("DASK_GATEWAY_TLS_KEY")
 
     return Security(
+        require_encryption=True,
         tls_ca_file=tls_cert,
         tls_scheduler_cert=tls_cert,
         tls_scheduler_key=tls_key,
@@ -425,6 +473,9 @@ def make_gateway_client(cluster_name=None, api_url=None, api_token=None):
     cluster_name = cluster_name or getenv("DASK_GATEWAY_CLUSTER_NAME")
     api_url = api_url or getenv("DASK_GATEWAY_API_URL")
     api_token = api_token or getenv("DASK_GATEWAY_API_TOKEN")
+    if "/" in api_token:
+        with open(api_token) as f:
+            api_token = f.read()
     return GatewayClient(cluster_name, api_token, api_url)
 
 
@@ -454,6 +505,9 @@ def scheduler(argv=None):
             adaptive_period=args.adaptive_period,
             heartbeat_period=args.heartbeat_period,
             idle_timeout=args.idle_timeout,
+            scheduler_address=args.scheduler_address,
+            dashboard_address=args.dashboard_address,
+            api_address=args.api_address,
         )
         await scheduler.finished()
 
@@ -469,11 +523,14 @@ async def start_scheduler(
     adaptive_period=3,
     heartbeat_period=15,
     idle_timeout=0,
+    scheduler_address="tls://:0",
+    dashboard_address=":0",
+    api_address=":0",
     exit_on_failure=True,
 ):
     loop = IOLoop.current()
     services = {
-        ("gateway", 0): (
+        ("gateway", api_address or 0): (
             GatewaySchedulerService,
             {
                 "gateway": gateway,
@@ -483,12 +540,13 @@ async def start_scheduler(
             },
         )
     }
-    with ignoring(ImportError):
-        from distributed.dashboard.scheduler import BokehScheduler
-
-        services[("dashboard", 0)] = (BokehScheduler, {})
-
-    scheduler = Scheduler(loop=loop, services=services, security=security)
+    scheduler = Scheduler(
+        host=scheduler_address,
+        loop=loop,
+        services=services,
+        security=security,
+        dashboard_address=dashboard_address,
+    )
     return await scheduler
 
 
@@ -504,6 +562,9 @@ worker_parser.add_argument(
     "--memory-limit", default="auto", help="The maximum amount of memory to allow"
 )
 worker_parser.add_argument("--name", default=None, help="The worker name")
+worker_parser.add_argument(
+    "--scheduler-address", default=None, help="The scheduler address"
+)
 
 
 async def start_worker(
@@ -512,17 +573,19 @@ async def start_worker(
     worker_name,
     nthreads=1,
     memory_limit="auto",
+    scheduler_address=None,
     local_directory="",
     nanny=True,
 ):
     loop = IOLoop.current()
 
-    scheduler = await gateway.get_scheduler_address()
+    if not scheduler_address:
+        scheduler_address = await gateway.get_scheduler_address()
 
     typ = Nanny if nanny else Worker
 
     worker = typ(
-        scheduler,
+        scheduler_address,
         loop=loop,
         nthreads=nthreads,
         memory_limit=memory_limit,
@@ -548,6 +611,7 @@ def worker(argv=None):
     worker_name = args.name or getenv("DASK_GATEWAY_WORKER_NAME")
     nthreads = args.nthreads
     memory_limit = args.memory_limit
+    scheduler_address = args.scheduler_address
 
     gateway = make_gateway_client()
     security = make_security()
@@ -559,7 +623,7 @@ def worker(argv=None):
 
     async def run():
         worker = await start_worker(
-            gateway, security, worker_name, nthreads, memory_limit
+            gateway, security, worker_name, nthreads, memory_limit, scheduler_address
         )
         await worker.finished()
 

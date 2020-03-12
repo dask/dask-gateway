@@ -80,7 +80,7 @@ class Backend(LoggingConfigurable):
         cluster_options = await self.get_cluster_options(user)
         requested_options = cluster_options.parse_options(request)
         overrides = cluster_options.get_configuration(requested_options)
-        config = self.cluster_config_class(parent=self, **overrides).to_dict()
+        config = self.cluster_config_class(parent=self, **overrides)
         return requested_options, config
 
     async def forward_message_to_scheduler(self, cluster, msg):
@@ -94,6 +94,7 @@ class Backend(LoggingConfigurable):
                     cluster.api_address + "/api/comm",
                     json=msg,
                     headers={"Authorization": "token %s" % cluster.token},
+                    raise_for_status=True,
                 )
                 return
             except Exception:

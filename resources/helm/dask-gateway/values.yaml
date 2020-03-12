@@ -1,17 +1,20 @@
 gateway:
-  # Annotations to apply to the gateway-server pod.
+  # Number of instances of the gateway-server to run
+  replicas: 1
+
+  # Annotations to apply to the gateway-server pods.
   annotations: {}
-
-  # A 32 byte hex-encoded secret token for encrypting cookies.
-  # Sets `c.DaskGateway.cookie_secret`.
-  cookieSecret: null
-
-  # A 32 byte hex-encoded secret token for authenticating with the proxies.
-  # Sets `c.WebProxy.auth_token` and `c.SchedulerProxy.auth_token`.
-  proxyToken: null
 
   # Resource requests/limits for the gateway-server pod.
   resources: {}
+
+  # Path prefix to serve dask-gateway api requests under
+  # This prefix will be added to all routes the gateway manages
+  # in the traefik proxy.
+  prefix: /
+
+  # The gateway server log level
+  loglevel: INFO
 
   # The image to use for the gateway-server pod.
   image:
@@ -19,11 +22,15 @@ gateway:
     tag: 0.6.1
     pullPolicy: IfNotPresent
 
-  auth:
-    # The auth type to use. One of {dummy, kerberos, jupyterhub, custom}.
-    type: dummy
+  # Configuration for the gateway-server service
+  service:
+    annotations: {}
 
-    dummy:
+  auth:
+    # The auth type to use. One of {simple, kerberos, jupyterhub, custom}.
+    type: simple
+
+    simple:
       # A shared password to use for all users.
       password: null
 
@@ -47,31 +54,27 @@ gateway:
       # Configuration fields to set on the authenticator class.
       options: {}
 
-  clusterManager:
-    # Timeout (in seconds) for starting a cluster.
-    # Sets `c.KubeClusterManager.cluster_start_timeout`.
-    clusterStartTimeout: null
-
-    # Timeout (in seconds) for starting a worker.
-    # Sets `c.KubeClusterManager.worker_start_timeout`.
-    workerStartTimeout: null
-
+  backend:
     # The image to use for both schedulers and workers.
     image:
       name: daskgateway/dask-gateway
       tag: 0.6.1
       pullPolicy: IfNotPresent
 
+    # The namespace to launch dask clusters in. If not specified, defaults to
+    # the same namespace the gateway is running in.
+    namespace: null
+
     # A mapping of environment variables to set for both schedulers and workers.
     environment: null
 
     scheduler:
       # Any extra configuration for the scheduler pod. Sets
-      # `c.KubeClusterManager.scheduler_extra_pod_config`.
+      # `c.KubeClusterConfig.scheduler_extra_pod_config`.
       extraPodConfig: {}
 
       # Any extra configuration for the scheduler container.
-      # Sets `c.KubeClusterManager.scheduler_extra_container_config`.
+      # Sets `c.KubeClusterConfig.scheduler_extra_container_config`.
       extraContainerConfig: {}
 
       # Cores request/limit for the scheduler.
@@ -86,11 +89,11 @@ gateway:
 
     worker:
       # Any extra configuration for the worker pod. Sets
-      # `c.KubeClusterManager.worker_extra_pod_config`.
+      # `c.KubeClusterConfig.worker_extra_pod_config`.
       extraPodConfig: {}
 
       # Any extra configuration for the worker container. Sets
-      # `c.KubeClusterManager.worker_extra_container_config`.
+      # `c.KubeClusterConfig.worker_extra_container_config`.
       extraContainerConfig: {}
 
       # Cores request/limit for each worker.
@@ -110,70 +113,91 @@ gateway:
   # `values.yaml` files, but is unnecessary in other cases.
   extraConfig: {}
 
-schedulerProxy:
-  # Annotations to apply to the scheduler-proxy pod.
+# Configuration for the gateway controller
+controller:
+  # Whether the controller should be deployed. Disabling the controller allows
+  # running it locally for development/debugging purposes.
+  enabled: true
+
+  # Any annotations to add to the controller pod
   annotations: {}
 
-  # Resource requests/limits for the scheduler-proxy pod.
+  # Resource requests/limits for the controller pod
   resources: {}
 
-  # The image to use for the scheduler-proxy.
+  # The controller log level
+  loglevel: INFO
+
+  # Max time (in seconds) to keep around records of completed clusters.
+  # Default is 24 hours.
+  completedClusterMaxAge: 86400
+
+  # Time (in seconds) between cleanup tasks removing records of completed
+  # clusters. Default is 5 minutes.
+  completedClusterCleanupPeriod: 600
+
+  # Base delay (in seconds) for backoff when retrying after failures.
+  backoffBaseDelay: 0.1
+
+  # Max delay (in seconds) for backoff when retrying after failures.
+  backoffMaxDelay: 300
+
+  # Limit on the average number of k8s api calls per second.
+  k8sApiRateLimit: 50
+
+  # Limit on the maximum number of k8s api calls per second.
+  k8sApiRateLimitBurst: 100
+
+  # The image to use for the controller pod.
   image:
     name: daskgateway/dask-gateway-server
     tag: 0.6.1
     pullPolicy: IfNotPresent
 
-  # Service configuration for the scheduler-proxy service. See
-  # https://kubernetes.io/docs/concepts/services-networking/service/ for more
-  # information.
-  service:
-    annotations: {}
-    type: LoadBalancer
-    nodePort: null
-    loadBalancerIP: null
+# Configuration for the traefik proxy
+traefik:
+  # Number of instances of the proxy to run
+  replicas: 1
 
-webProxy:
-  # Annotations to apply to the web-proxy pod.
+  # Any annotations to add to the proxy pods
   annotations: {}
 
-  # Resource requests/limits for the web-proxy pod.
+  # Resource requests/limits for the proxy pods
   resources: {}
 
-  # The image to use for the web-proxy.
+  # The image to use for the proxy pod
   image:
-    name: daskgateway/dask-gateway-server
-    tag: 0.6.1
-    pullPolicy: IfNotPresent
+    name: traefik
+    tag: 2.1.3
 
-  # Service configuration for the web-proxy service. See
-  # https://kubernetes.io/docs/concepts/services-networking/service/ for more
-  # information.
+  # Any additional arguments to forward to traefik
+  additionalArguments: []
+
+  # The proxy log level
+  loglevel: WARN
+
+  # Whether to expose the dashboard on port 9000 (enable for debugging only!)
+  dashboard: false
+
+  # Additional configuration for the traefik service
   service:
-    annotations: {}
     type: LoadBalancer
-    nodePort: null
-    loadBalancerIP: null
+    annotations: {}
+    spec: {}
+    ports:
+      web:
+        # The port HTTP(s) requests will be served on
+        port: 80
+      tcp:
+        # The port TCP requests will be served on. Set to `web` to share the
+        # web service port
+        port: web
+
+  # Settings for nodeSelector, affinity, and tolerations for the traefik pods
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
 
 rbac:
   # Whether to enable RBAC.
   enabled: true
-
-ingress:
-  # Whether an Ingress object should be used.
-  enabled: false
-
-  # Annotations to apply to the Ingress.
-  annotations: {}
-
-  # A list of hosts to route requests to the proxy.
-  hosts: []
-
-  # TLS configuration for ingress. See
-  # https://kubernetes.io/docs/concepts/services-networking/ingress/#tls for more
-  # information.
-  tls: []
-
-  # The path to use when adding the gateway to the Ingress rules. See
-  # https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules
-  # for more information.
-  path: /

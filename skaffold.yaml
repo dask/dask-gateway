@@ -5,13 +5,15 @@ build:
   local:
     push: false
     useBuildkit: true
-  tagPolicy:
-    envTemplate:
-      template: "dask-gateway-server:latest"
   artifacts:
-  - image: dask-gateway-server
+  - image: daskgateway/dask-gateway-server
+    context: ./dask-gateway-server
     docker:
-      dockerfile: skaffold/Dockerfile
+      dockerfile: Dockerfile
+  - image: daskgateway/dask-gateway
+    context: ./dask-gateway
+    docker:
+      dockerfile: Dockerfile
 
 deploy:
   helm:
@@ -19,12 +21,22 @@ deploy:
     - name: dask-gateway
       chartPath: resources/helm/dask-gateway/
       namespace: default
+      imageStrategy:
+        helm: {}
+      values:
+        gateway.image: daskgateway/dask-gateway-server
+        gateway.backend.image: daskgateway/dask-gateway
+        controller.image: daskgateway/dask-gateway-server
       valuesFiles:
-        - resources/helm/dask-gateway/values.yaml
-      setValues:
-        gateway.image.name: dask-gateway-server
-        gateway.image.pullPolicy: IfNotPresent
-        gateway.cookieSecret: <key>
-        gateway.proxyToken: <key>
-        local: true
-      recreatePods: true
+        - resources/helm/testing/skaffold.yaml
+    flags:
+      upgrade:
+      - --install
+
+profiles:
+  - name: local-controller
+    patches:
+      - op: add
+        path: /deploy/helm/releases/0/setValues
+        value:
+          controller.enabled: false

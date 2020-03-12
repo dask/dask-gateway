@@ -1,14 +1,21 @@
 import asyncio
 import socket
+import time
 import weakref
 from collections import OrderedDict
 from collections.abc import Mapping
 from inspect import isawaitable
 from keyword import iskeyword
 
+import aiohttp.abc
 from colorlog import ColoredFormatter
 
 from .compat import get_running_loop, all_tasks
+
+
+def timestamp():
+    """An integer timestamp represented as milliseconds since the epoch UTC"""
+    return int(time.time() * 1000)
 
 
 class TaskPool(object):
@@ -77,6 +84,47 @@ class _cancel_context(object):
         self._task = None
 
 
+class RateLimiter(object):
+    """A token-bucket based rate limiter.
+
+    The bucket starts out with ``burst`` tokens, and is replenished at ``rate``
+    tokens per-second. Calls to ``acquire`` take a token, possibly blocking
+    until one is available.
+    """
+
+    def __init__(self, rate=10, burst=100):
+        self.rate = float(rate)
+        self.burst = float(burst)
+        self._tokens = float(burst)
+        self._max_elapsed = burst / rate
+
+        now = time.monotonic()
+        self._last = now
+        self._last_event = now
+
+    def _delay(self):
+        now = time.monotonic()
+        elapsed = min(now - self._last, self._max_elapsed)
+        tokens = min(self._tokens + elapsed * self.rate, self.burst)
+
+        tokens -= 1
+        if tokens < 0:
+            delay = -tokens / self.rate
+        else:
+            delay = 0
+
+        self._tokens = tokens
+        self._last = now
+        self._last_event = now + delay
+        return delay
+
+    async def acquire(self):
+        """Acquire a rate-limited token."""
+        delay = self._delay()
+        if delay:
+            await asyncio.sleep(delay)
+
+
 def random_port():
     """Get a single random port."""
     with socket.socket() as sock:
@@ -142,6 +190,17 @@ class LogFormatter(ColoredFormatter):
                 "ERROR": "red",
                 "CRITICAL": "red,bg_white",
             },
+        )
+
+
+class AccessLogger(aiohttp.abc.AbstractAccessLogger):
+    def log(self, request, response, time):
+        self.logger.info(
+            "%d %s %s %.3fms",
+            response.status,
+            request.method,
+            request.path_qs,
+            time * 1000,
         )
 
 

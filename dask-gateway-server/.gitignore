@@ -1,0 +1,4 @@
+build/
+dist/
+dask-gateway-proxy/dask-gateway-proxy*
+dask_gateway_server/proxy/dask-gateway-proxy

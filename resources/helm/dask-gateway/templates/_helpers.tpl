@@ -42,6 +42,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+gateway.dask.org/instance: {{ include "dask-gateway.fullname" . }}
 {{- end -}}
 
 {{/*
@@ -50,5 +51,25 @@ Match labels
 {{- define "dask-gateway.matchLabels" -}}
 app.kubernetes.io/name: {{ include "dask-gateway.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
+{{/*
+API Server name
+*/}}
+{{- define "dask-gateway.apiName" -}}
+{{ include "dask-gateway.fullname" . | printf "api-%s" | trunc 63 | trimSuffix "-" }}
+{{- end -}}
+
+{{/*
+Traefik name
+*/}}
+{{- define "dask-gateway.traefikName" -}}
+{{ include "dask-gateway.fullname" . | printf "traefik-%s" | trunc 63 | trimSuffix "-" }}
+{{- end -}}
+
+{{/*
+Controller name
+*/}}
+{{- define "dask-gateway.controllerName" -}}
+{{ include "dask-gateway.fullname" . | printf "controller-%s" | trunc 63 | trimSuffix "-" }}
 {{- end -}}

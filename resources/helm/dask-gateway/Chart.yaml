@@ -1,6 +1,6 @@
 apiVersion: v1
 name: dask-gateway
-version: 0.6.1
+version: 0.7.0
 appVersion: 0.6.1
 description: A multi-tenant server for deploying and managing Dask clusters
 home: https://gateway.dask.org/

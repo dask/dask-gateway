@@ -2,7 +2,6 @@ import asyncio
 import base64
 import json
 import os
-import time
 import uuid
 from collections import defaultdict
 from itertools import chain, islice
@@ -23,15 +22,11 @@ from ..utils import (
     normalize_address,
     UniqueQueue,
     CancelGroup,
+    timestamp,
 )
 
 
 __all__ = ("DBBackendBase", "Cluster", "Worker")
-
-
-def timestamp():
-    """An integer timestamp represented as milliseconds since the epoch UTC"""
-    return int(time.time() * 1000)
 
 
 def _normalize_encrypt_key(key):
@@ -881,8 +876,8 @@ class DBBackendBase(Backend):
 
         await super().cleanup()
 
-    async def list_clusters(self, user=None, statuses=None):
-        clusters = self.db.list_clusters(username=user.name, statuses=statuses)
+    async def list_clusters(self, username=None, statuses=None):
+        clusters = self.db.list_clusters(username=username, statuses=statuses)
         return [c.to_model() for c in clusters]
 
     async def get_cluster(self, cluster_name, wait=False):
@@ -898,7 +893,7 @@ class DBBackendBase(Backend):
 
     async def start_cluster(self, user, cluster_options):
         options, config = await self.process_cluster_options(user, cluster_options)
-        cluster = self.db.create_cluster(user.name, options, config)
+        cluster = self.db.create_cluster(user.name, options, config.to_dict())
         self.log.info("Created cluster %s for user %s", cluster.name, user.name)
         await self.enqueue(cluster)
         return cluster.name

@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dask-gateway.traefikName" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+spec:
+  replicas: {{ default 1 .Values.traefik.replicas }}
+  selector:
+    matchLabels:
+      {{- include "dask-gateway.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: traefik
+  template:
+    metadata:
+      labels:
+        {{- include "dask-gateway.labels" . | nindent 8 }}
+        app.kubernetes.io/component: traefik
+      {{- with .Values.traefik.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if .Values.rbac.enabled }}
+      serviceAccountName: {{ include "dask-gateway.traefikName" . }}
+      {{- end }}
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: traefik
+          image: {{ .Values.traefik.image.name }}:{{ .Values.traefik.image.tag }}
+          resources:
+            {{- .Values.traefik.resources | toYaml | trimSuffix "\n" | nindent 12 }}
+          args:
+            - "--global.checknewversion=False"
+            - "--global.sendanonymoususage=False"
+            - "--ping=true"
+            - "--providers.kubernetescrd"
+            - '--providers.kubernetescrd.labelselector=gateway.dask.org/instance={{ include "dask-gateway.fullname" . }}'
+            - "--providers.kubernetescrd.throttleduration=2"
+            - "--log.level={{ .Values.traefik.loglevel }}"
+            - "--entryPoints.traefik.address=:9000"
+            - "--entryPoints.web.address=:8000"
+            {{- if ne (toString .Values.traefik.service.ports.tcp.port) "web" }}
+            - "--entryPoints.tcp.address=:8786"
+            {{- end }}
+            {{- if .Values.traefik.dashboard }}
+            - "--api.dashboard=true"
+            - "--api.insecure=true"
+            {{- end }}
+            {{- range .Values.traefik.additionalArguments }}
+            - {{ . | quote }}
+            {{- end }}
+          ports:
+            - name: traefik
+              containerPort: 9000
+            - name: web
+              containerPort: 8000
+            {{- if ne (toString .Values.traefik.service.ports.tcp.port) "web" }}
+            - name: tcp
+              containerPort: 8786
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 9000
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 9000
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+        {{- with .Values.traefik.affinity }}
+        affinity:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.traefik.tolerations }}
+        tolerations:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.traefik.nodeSelector }}
+        nodeSelector:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}

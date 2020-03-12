@@ -19,8 +19,14 @@ with open(os.path.join(ROOT_DIR, "dask_gateway_server", "_version.py")) as f:
     exec(f.read(), {}, ns)
     VERSION = ns["__version__"]
 
+NO_PROXY = "--no-build-proxy" in sys.argv
+if NO_PROXY:
+    package_data = {}
+else:
+    package_data = {"dask_gateway_server": ["proxy/dask-gateway-proxy"]}
 
-class build_go(Command):
+
+class build_proxy(Command):
     description = "build go artifacts"
 
     user_options = []
@@ -52,35 +58,34 @@ class build_go(Command):
             sys.exit(code)
 
 
-def _ensure_go(command):
-    if not getattr(command, "no_go", False) and not os.path.exists(PROXY_TGT_EXE):
-        command.run_command("build_go")
-
-
-class build(_build):
-    def run(self):
-        _ensure_go(self)
-        _build.run(self)
-
-
-class install(_install):
-    def run(self):
-        _ensure_go(self)
-        _install.run(self)
-
-
-class develop(_develop):
-    user_options = list(_develop.user_options)
-    user_options.append(("no-go", None, "Don't build the go source"))
-
+class mixin(object):
     def initialize_options(self):
-        self.no_go = False
-        _develop.initialize_options(self)
+        self.no_build_proxy = False
+        super().initialize_options()
 
     def run(self):
-        if not self.uninstall:
-            _ensure_go(self)
-        _develop.run(self)
+        global NO_PROXY
+        if self.no_build_proxy:
+            NO_PROXY = True
+        if not getattr(self, "uninstall", False):
+            if not NO_PROXY and not os.path.exists(PROXY_TGT_EXE):
+                self.run_command("build_proxy")
+        super().run()
+
+
+class build(mixin, _build):
+    user_options = list(_build.user_options)
+    user_options.append(("no-build-proxy", None, "Don't build the proxy source"))
+
+
+class install(mixin, _install):
+    user_options = list(_install.user_options)
+    user_options.append(("no-build-proxy", None, "Don't build the proxy source"))
+
+
+class develop(mixin, _develop):
+    user_options = list(_develop.user_options)
+    user_options.append(("no-build-proxy", None, "Don't build the proxy source"))
 
 
 class clean(_clean):
@@ -99,13 +104,14 @@ extras_require = {
     "jobqueue": ["sqlalchemy"],
     "local": ["sqlalchemy"],
     "yarn": ["sqlalchemy", "skein >= 0.7.3"],
+    "kubernetes": ["kubernetes_asyncio"],
 }
 
 # Due to quirks in setuptools/distutils dependency ordering, to get the go
 # source to build automatically in most cases, we need to check in multiple
 # locations. This is unfortunate, but seems necessary.
 cmdclass = {
-    "build_go": build_go,  # directly build the go source
+    "build_proxy": build_proxy,  # directly build the proxy source
     "build": build,  # bdist_wheel or pip install .
     "install": install,  # python setup.py install
     "develop": develop,  # python setup.py develop
@@ -148,7 +154,7 @@ setup(
         "Issue Tracker": "https://github.com/dask/dask-gateway/issues",
     },
     packages=find_packages(),
-    package_data={"dask_gateway_server": ["proxy/dask-gateway-proxy"]},
+    package_data=package_data,
     install_requires=install_requires,
     extras_require=extras_require,
     python_requires=">=3.6",

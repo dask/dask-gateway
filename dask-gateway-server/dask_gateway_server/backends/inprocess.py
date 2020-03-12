@@ -49,6 +49,9 @@ class InProcessBackend(UnsafeLocalBackend):
             exit_on_failure=False,
             adaptive_period=cluster.config.adaptive_period,
             idle_timeout=cluster.config.idle_timeout,
+            scheduler_address="tls://127.0.0.1:0",
+            dashboard_address="127.0.0.1:0",
+            api_address="127.0.0.1:0",
         )
 
         self.schedulers[cluster.name] = scheduler
