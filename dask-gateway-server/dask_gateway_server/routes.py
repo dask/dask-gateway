@@ -3,6 +3,7 @@ from functools import wraps, partial
 from aiohttp import web
 
 from . import models
+from .backends.base import PublicException
 
 
 def _wrap_error_handler(handler):
@@ -114,13 +115,12 @@ async def create_cluster(request):
 
     try:
         cluster_name = await backend.start_cluster(user, cluster_options)
-    except Exception as exc:
+    except PublicException as exc:
         reason = str(exc)
-        request.app["log"].warning(
+        request.app["log"].info(
             "Error creating new cluster for user %s: %s", user.name, reason
         )
         raise web.HTTPUnprocessableEntity(reason=reason)
-
     return web.json_response({"name": cluster_name}, status=201)
 
 
@@ -195,7 +195,7 @@ async def scale_cluster(request):
         await backend.forward_message_to_scheduler(
             cluster, {"op": "scale", "count": count}
         )
-    except Exception as exc:
+    except PublicException as exc:
         raise web.HTTPConflict(reason=str(exc))
     return web.Response()
 
@@ -224,7 +224,7 @@ async def adapt_cluster(request):
             cluster,
             {"op": "adapt", "minimum": minimum, "maximum": maximum, "active": active},
         )
-    except Exception as exc:
+    except PublicException as exc:
         raise web.HTTPConflict(reason=str(exc))
     return web.Response()
 
