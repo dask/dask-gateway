@@ -26,40 +26,40 @@ JupyterHubAuthenticator
 .. autoconfigurable:: dask_gateway_server.auth.JupyterHubAuthenticator
 
 
-.. _dummy-auth-config:
+.. _simple-auth-config:
 
-DummyAuthenticator
-^^^^^^^^^^^^^^^^^^
+SimpleAuthenticator
+^^^^^^^^^^^^^^^^^^^
 
-.. autoconfigurable:: dask_gateway_server.auth.DummyAuthenticator
+.. autoconfigurable:: dask_gateway_server.auth.SimpleAuthenticator
 
 
-.. _cluster-managers-reference:
+.. _cluster-backends-reference:
 
-Cluster Managers
+Cluster Backends
 ----------------
 
 Base Class
 ^^^^^^^^^^
 
-ClusterManager
-~~~~~~~~~~~~~~
+Backend
+~~~~~~~
 
-.. autoconfigurable:: dask_gateway_server.managers.base.ClusterManager
+.. autoconfigurable:: dask_gateway_server.backends.Backend
 
 
 Local Processes
 ^^^^^^^^^^^^^^^
 
-LocalClusterManager
-~~~~~~~~~~~~~~~~~~~
+LocalBackend
+~~~~~~~~~~~~
 
-.. autoconfigurable:: dask_gateway_server.managers.local.LocalClusterManager
+.. autoconfigurable:: dask_gateway_server.backends.local.LocalBackend
 
-UnsafeLocalClusterManager
-~~~~~~~~~~~~~~~~~~~~~~~~~
+UnsafeLocalBackend
+~~~~~~~~~~~~~~~~~~
 
-.. autoconfigurable:: dask_gateway_server.managers.local.UnsafeLocalClusterManager
+.. autoconfigurable:: dask_gateway_server.backends.local.UnsafeLocalBackend
 
 
 YARN
@@ -67,21 +67,21 @@ YARN
 
 .. _yarn-config:
 
-YarnClusterManager
-~~~~~~~~~~~~~~~~~~
+YarnBackend
+~~~~~~~~~~~
 
-.. autoconfigurable:: dask_gateway_server.managers.yarn.YarnClusterManager
+.. autoconfigurable:: dask_gateway_server.backends.yarn.YarnBackend
 
 
 Kubernetes
 ^^^^^^^^^^
 
-.. _kube-cluster-manager-config:
+.. _kube-backend-config:
 
-KubeClusterManager
-~~~~~~~~~~~~~~~~~~
+KubeBackend
+~~~~~~~~~~~
 
-.. autoconfigurable:: dask_gateway_server.managers.kubernetes.KubeClusterManager
+.. autoconfigurable:: dask_gateway_server.backends.kubernetes.KubeBackend
 
 
 .. _jobqueue-config:
@@ -89,35 +89,24 @@ KubeClusterManager
 Job Queues
 ^^^^^^^^^^
 
-PBSClusterManager
-~~~~~~~~~~~~~~~~~
+PBSBackend
+~~~~~~~~~~
 
-.. autoconfigurable:: dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager
+.. autoconfigurable:: dask_gateway_server.backends.jobqueue.pbs.PBSBackend
 
-SlurmClusterManager
-~~~~~~~~~~~~~~~~~~~
+SlurmBackend
+~~~~~~~~~~~~
 
-.. autoconfigurable:: dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager
-
-
-Proxies
--------
-
-Web Proxy
-^^^^^^^^^
-
-.. autoconfigurable:: dask_gateway_server.proxy.WebProxy
-
-Scheduler Proxy
-^^^^^^^^^^^^^^^
-
-.. autoconfigurable:: dask_gateway_server.proxy.SchedulerProxy
+.. autoconfigurable:: dask_gateway_server.backends.jobqueue.slurm.SlurmBackend
 
 
-User Limits
------------
+Proxy
+-----
 
-.. autoconfigurable:: dask_gateway_server.limits.UserLimits
+Proxy
+^^^^^
+
+.. autoconfigurable:: dask_gateway_server.proxy.Proxy
 
 
 Cluster Manager Options

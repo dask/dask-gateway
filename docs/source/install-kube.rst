@@ -48,23 +48,7 @@ The Helm chart provides access to configure most aspects of the
 ``dask-gateway-server``. These are provided via a configuration YAML_ file (the
 name of this file doesn't matter, we'll use ``config.yaml``).
 
-At a minimum, you'll need to set a value for ``gateway.proxyToken``. This is a
-random hex string representing 32 bytes, used as a security token between the
-gateway and its proxies. You can generate this using ``openssl``:
-
-.. code-block:: shell
-
-    $ openssl rand -hex 32
-
-Write the following into a new file ``config.yaml``, replacing ``<RANDOM
-TOKEN>`` with the output of the previous command above.
-
-.. code-block:: yaml
-
-    gateway:
-      proxyToken: "<RANDOM TOKEN>"
-
-The Helm chart exposes many more configuration values, see the `default
+The Helm chart exposes many configuration values, see the `default
 values.yaml file`_ for more information.
 
 
@@ -77,7 +61,7 @@ To install the Dask-Gateway Helm chart, run the following command:
 
     RELEASE=dask-gateway
     NAMESPACE=dask-gateway
-    VERSION=0.6.1
+    VERSION=0.7.0
 
     helm upgrade --install \
         --namespace $NAMESPACE \
@@ -100,18 +84,28 @@ where:
 
 Running this command may take some time, as resources are created and images
 are downloaded. When everything is ready, running the following command will
-show the ``EXTERNAL-IP`` addresses for all ``LoadBalancer`` services (highlighted
+show the ``EXTERNAL-IP`` addresses for the ``LoadBalancer`` service (highlighted
 below).
 
 .. code-block:: shell
-    :emphasize-lines: 4,6
+    :emphasize-lines: 4
 
     $ kubectl get service --namespace dask-gateway
-    NAME                            TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE
-    scheduler-api-dask-gateway      ClusterIP      10.51.245.233   <none>           8001/TCP         6m54s
-    scheduler-public-dask-gateway   LoadBalancer   10.51.253.105   35.202.68.87     8786:31172/TCP   6m54s
-    web-api-dask-gateway            ClusterIP      10.51.250.11    <none>           8001/TCP         6m54s
-    web-public-dask-gateway         LoadBalancer   10.51.247.160   146.148.58.187   80:30304/TCP     6m54s
+    NAME                              TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE
+    api-<RELEASE>-dask-gateway        ClusterIP      10.51.245.233   <none>           8000/TCP         6m54s
+    traefik-<RELEASE>-dask-gateway    LoadBalancer   10.51.247.160   146.148.58.187   80:30304/TCP     6m54s
+
+You can also check to make sure the `daskcluster` CRD has been installed successfully:
+
+.. code-block:: shell
+
+   $ kubectl get daskcluster -o yaml
+   apiVersion: v1
+   items: []
+   kind: List
+   metadata:
+     resourceVersion: ""
+     selfLink: ""
 
 At this point, you have a fully running ``dask-gateway-server``.
 
@@ -119,22 +113,21 @@ At this point, you have a fully running ``dask-gateway-server``.
 Connecting to the gateway
 -------------------------
 
-To connect to the running ``dask-gateway-server``, you'll need the external
-IPs from both the ``web-public-*`` and ``scheduler-public-*`` services above.
-The ``web-public-*`` service provides access to API requests, and also proxies
-out the `Dask Dashboards`_. The ``scheduler-public-*`` service proxies TCP
-traffic between Dask clients and schedulers.
+To connect to the running ``dask-gateway-server``, you'll need the external IPs
+from the ``traefik-*`` services above. The Traefik service provides access to
+API requests, proxies out the `Dask Dashboards`_, and proxies TCP traffic
+between Dask clients and schedulers. (You can also choose to have Traefik handle
+scheduler traffic over a separate port, see the :ref:`helm-chart-reference`).
 
 To connect, create a :class:`dask_gateway.Gateway` object, specifying the both
-addresses (the ``scheduler-proxy-*`` IP/port goes under ``proxy_address``).
-Using the same values as above:
+addresses (the second ``traefik-*`` port goes under ``proxy_address`` if using
+separate ports). Using the same values as above:
 
 .. code-block:: python
 
     >>> from dask_gateway import Gateway
     >>> gateway = Gateway(
     ...     "http://146.148.58.187",
-    ...     proxy_address="tls://35.202.68.87:8786"
     ... )
 
 You should now be able to use the gateway client to make API calls. To verify
@@ -173,10 +166,10 @@ to set on scheduler/worker pods are directly exposed by the Helm chart. To
 address this, we provide a few fields for forwarding configuration directly to
 the underlying kubernetes objects:
 
-- ``gateway.clusterManager.scheduler.extraPodConfig``
-- ``gateway.clusterManager.scheduler.extraContainerConfig``
-- ``gateway.clusterManager.worker.extraPodConfig``
-- ``gateway.clusterManager.worker.extraContainerConfig``
+- ``gateway.backend.scheduler.extraPodConfig``
+- ``gateway.backend.scheduler.extraContainerConfig``
+- ``gateway.backend.worker.extraPodConfig``
+- ``gateway.backend.worker.extraContainerConfig``
 
 These allow configuring any unexposed fields on the pod/container for
 schedulers and workers respectively. Each takes a mapping of key-value pairs,
@@ -192,7 +185,7 @@ anti-affinity for scheduler pods to avoid `preemptible nodes`_:
 .. code-block:: yaml
 
   gateway:
-    clusterManager:
+    backend:
       scheduler:
         extraPodConfig:
           affinity:
@@ -224,7 +217,7 @@ either:
   natively merge maps.
 
 For example, here we use ``gateway.extraConfig`` to set
-:data:`c.DaskGateway.cluster_manager_options`, exposing options for worker
+:data:`c.Backend.cluster_options`, exposing options for worker
 resources and image (see :doc:`cluster-options` for more information).
 
 .. code-block:: yaml
@@ -240,7 +233,7 @@ resources and image (see :doc:`cluster-options` for more information).
                 "image": options.image,
             }
 
-        c.DaskGateway.cluster_manager_options = Options(
+        c.Backend.cluster_options = Options(
             Integer("worker_cores", 2, min=1, max=4, label="Worker Cores"),
             Float("worker_memory", 4, min=1, max=8, label="Worker Memory (GiB)"),
             String("image", default="daskgateway/dask-gateway:latest", label="Image"),
@@ -248,7 +241,7 @@ resources and image (see :doc:`cluster-options` for more information).
         )
 
 For information on all available configuration options, see the
-:doc:`api-server` (in particular, the :ref:`kube-cluster-manager-config`
+:doc:`api-server` (in particular, the :ref:`kube-backend-config`
 section).
 
 
@@ -318,7 +311,6 @@ object.
     >>> from dask_gateway import Gateway
     >>> gateway = Gateway(
     ...     "http://146.148.58.187",
-    ...     proxy_address="tls://35.202.68.87:8786",
     ...     auth="jupyterhub",
     ... )
 

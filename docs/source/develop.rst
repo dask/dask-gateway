@@ -149,10 +149,10 @@ the documentation build requirements.
 .. code-block:: shell
 
     # Install docs dependencies with conda
-    $ conda install -c conda-forge skein sphinx
+    $ conda install -c conda-forge skein sphinx dask-sphinx-theme
 
     # Or install with pip
-    $ pip install sphinx skein
+    $ pip install sphinx skein dask-sphinx-theme
 
 Then build the documentation with ``make``
 

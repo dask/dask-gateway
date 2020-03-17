@@ -10,24 +10,24 @@ document a few common implementations.
 Simple authentication for testing
 ---------------------------------
 
-For testing purposes, a simple "dummy" authentication method can be used. This
-method implements Basic_ authentication, with no validation of the password
+For testing purposes, a "simple" authentication method can be used. This
+method implements authentication with no validation of the password
 field. As such, *it is not suitable for production, only for testing*. If
 desired, an optional password can be configured to be shared across all users.
 Note that this only marginally makes things more secure, as users can still
 easily impersonate each other.
 
 This protocol is the default, and is implemented by
-:class:`dask_gateway_server.auth.DummyAuthenticator`. No further configuration
+:class:`dask_gateway_server.auth.SimpleAuthenticator`. No further configuration
 is needed to enable it. If you would like to add a shared password, you can do
 so by adding the following line to your ``dask_gateway_config.py`` file:
 
 .. code-block:: python
 
     # Set a shared password.
-    c.DummyAuthenticator.password = "mypassword"
+    c.SimpleAuthenticator.password = "mypassword"
 
-For more information see the :ref:`dummy-auth-config` docs.
+For more information see the :ref:`simple-auth-config` docs.
 
 
 Kerberos authentication
