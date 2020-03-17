@@ -13,6 +13,12 @@ from ..utils import awaitable
 __all__ = ("Backend", "ClusterConfig")
 
 
+class PublicException(Exception):
+    """An exception that can be reported to the user"""
+
+    pass
+
+
 class Backend(LoggingConfigurable):
     """Base class for defining dask-gateway backends.
 
@@ -77,15 +83,20 @@ class Backend(LoggingConfigurable):
         return self.cluster_options
 
     async def process_cluster_options(self, user, request):
-        cluster_options = await self.get_cluster_options(user)
-        requested_options = cluster_options.parse_options(request)
-        overrides = cluster_options.get_configuration(requested_options)
-        config = self.cluster_config_class(parent=self, **overrides)
+        try:
+            cluster_options = await self.get_cluster_options(user)
+            requested_options = cluster_options.parse_options(request)
+            overrides = cluster_options.get_configuration(requested_options)
+            config = self.cluster_config_class(parent=self, **overrides)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            raise PublicException(str(exc))
         return requested_options, config
 
     async def forward_message_to_scheduler(self, cluster, msg):
         if cluster.status != models.ClusterStatus.RUNNING:
-            raise ValueError(f"cluster {cluster.name} is not running")
+            raise PublicException(f"cluster {cluster.name} is not running")
         attempt = 1
         t = 0.1
         while True:
@@ -114,7 +125,7 @@ class Backend(LoggingConfigurable):
             f"{attempt}, marking cluster as failed"
         )
         await self.stop_cluster(cluster.name, failed=True)
-        raise ValueError(f"cluster {cluster.name} is not running")
+        raise PublicException(f"cluster {cluster.name} is not running")
 
     async def setup(self, app):
         """Called when the server is starting up.
