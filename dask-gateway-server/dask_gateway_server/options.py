@@ -25,11 +25,11 @@ class Options(object):
     -------
 
     Here we expose options for users to configure
-    :data:`c.ClusterManager.worker_cores` and
-    :data:`c.ClusterManager.worker_memory`. We set bounds on each resource to
+    :data:`c.Backend.worker_cores` and
+    :data:`c.Backend.worker_memory`. We set bounds on each resource to
     prevent users from requesting too large of a worker. The handler is used to
     convert the user specified memory from GiB to bytes (as expected by
-    :data:`c.ClusterManager.worker_memory`).
+    :data:`c.Backend.worker_memory`).
 
     .. code-block:: python
 
@@ -41,7 +41,7 @@ class Options(object):
               "worker_memory": int(options.worker_memory * 2 ** 30)
           }
 
-      c.DaskGateway.cluster_manager_options = Options(
+      c.Backend.DaskGateway.cluster_options = Options(
           Integer("worker_cores", default=1, min=1, max=4, label="Worker Cores"),
           Float("worker_memory", default=1, min=1, max=8, label="Worker Memory (GiB)"),
           handler=options_handler,
