@@ -142,13 +142,13 @@ Here we'll walk through a few common configuration options you may want to set.
 Enable YARN integration
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-First you'll want to enable YARN as the cluster manager backend.
+First you'll want to enable YARN as the cluster backend.
 
 .. code-block:: python
 
-    # Configure the gateway to use YARN as the cluster manager
-    c.DaskGateway.cluster_manager_class = (
-        "dask_gateway_server.managers.yarn.YarnClusterManager"
+    # Configure the gateway to use YARN as the backend
+    c.DaskGateway.backend_class = (
+        "dask_gateway_server.backends.yarn.YarnBackend"
     )
 
 
@@ -189,8 +189,8 @@ add the following line to your ``dask_gateway_config.py``:
 .. code-block:: python
 
     # Specify the location of the keytab file, and the principal name
-    c.YarnClusterManager.keytab = "/etc/dask-gateway/dask.keytab"
-    c.YarnClusterManager.principal = "dask"
+    c.YarnBackend.keytab = "/etc/dask-gateway/dask.keytab"
+    c.YarnBackend.principal = "dask"
 
     # Enable Kerberos for user-facing authentication
     c.DaskGateway.authenticator_class = "dask_gateway_server.auth.KerberosAuthenticator"
@@ -200,20 +200,26 @@ add the following line to your ``dask_gateway_config.py``:
 Configure the server addresses (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, ``dask-gateway-server`` will listen at the following addresses:
+By default, ``dask-gateway-server`` will serve all traffic through
+``0.0.0.0:8000``. This includes both HTTP(S) requests (REST api, dashboards,
+etc...) and dask scheduler traffic.
 
-- ``http://:8000``: the public facing URL of the whole application. Set by
-  ``c.DaskGateway.public_url``.
+If you'd like to serve at a different address, or serve web and scheduler
+traffic on different ports, you can configure the following fields:
 
-- ``tls://:8786``: the scheduler proxy address, set by
-  ``c.DaskGateway.gateway_url``.
+- :data:`c.Proxy.address` - Serves HTTP(S) traffic, defaults to ``:8000``.
 
-If you'd rather serve at different ports, you can configure these yourself:
+- :data:`c.Proxy.tcp_address` - Serves dask client-to-scheduler tcp traffic,
+  defaults to :data:`c.Proxy.address`.
+
+
+Here we configure web traffic to serve on port 8000 and scheduler traffic to
+serve on port 8001:
 
 .. code-block:: python
 
-    c.DaskGateway.public_url = 'http://:<PORT-1>'
-    c.DaskGateway.gateway_url = 'http://:<PORT-2>'
+    c.Proxy.address = ':8000'
+    c.Proxy.tcp_address = ':8001'
 
 
 Specify user python environments
@@ -240,18 +246,18 @@ done a few different ways:
 .. code-block:: python
 
     # Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs
-    c.YarnClusterManager.scheduler_cmd = "/path/to/dask-gateway-scheduler"
-    c.YarnClusterManager.worker_cmd = "/path/to/dask-gateway-worker"
+    c.YarnClusterConfig.scheduler_cmd = "/path/to/dask-gateway-scheduler"
+    c.YarnClusterConfig.worker_cmd = "/path/to/dask-gateway-worker"
 
     # OR
     # Activate a local conda environment before startup
-    c.YarnClusterManager.scheduler_setup = 'source /path/to/miniconda/bin/activate /path/to/environment'
-    c.YarnClusterManager.worker_setup = 'source /path/to/miniconda/bin/activate /path/to/environment'
+    c.YarnClusterConfig.scheduler_setup = 'source /path/to/miniconda/bin/activate /path/to/environment'
+    c.YarnClusterConfig.worker_setup = 'source /path/to/miniconda/bin/activate /path/to/environment'
 
     # OR
     # Activate a virtual environment before startup
-    c.YarnClusterManager.scheduler_setup = 'source /path/to/your/environment/bin/activate'
-    c.YarnClusterManager.worker_setup = 'source /path/to/your/environment/bin/activate'
+    c.YarnClusterConfig.scheduler_setup = 'source /path/to/your/environment/bin/activate'
+    c.YarnClusterConfig.worker_setup = 'source /path/to/your/environment/bin/activate'
 
 
 Using an archived environment
@@ -322,20 +328,20 @@ Uploading our already packaged environment to hdfs:
     $ hdfs dfs -put /opt/dask-gateway/envs/example.tar.gz /dask-gateway/example.tar.gz
 
 To use the packaged environment with ``dask-gateway-server``, you need to
-include the archive in ``YarnClusterManager.localize_files``, and activate the
+include the archive in ``YarnClusterConfig.localize_files``, and activate the
 environment in
-``YarnClusterManager.scheduler_setup``/``YarnClusterManager.worker_setup``.
+``YarnClusterConfig.scheduler_setup``/``YarnClusterConfig.worker_setup``.
 
 .. code-block:: python
 
-    c.YarnClusterManager.localize_files = {
+    c.YarnClusterConfig.localize_files = {
         'environment': {
             'source': 'hdfs:///dask-gateway/example.tar.gz',
             'visibility': 'public'
         }
     }
-    c.YarnClusterManager.scheduler_setup = 'source environment/bin/activate'
-    c.YarnClusterManager.worker_setup = 'source environment/bin/activate'
+    c.YarnClusterConfig.scheduler_setup = 'source environment/bin/activate'
+    c.YarnClusterConfig.worker_setup = 'source environment/bin/activate'
 
 Note that we set ``visibility`` to ``public`` for the environment, so that
 multiple users can all share the same localized environment (reducing the cost
@@ -356,11 +362,11 @@ YARN queue to use.
 .. code-block:: python
 
     # The resource limits for a worker
-    c.YarnClusterManager.worker_memory = '4 G'
-    c.YarnClusterManager.worker_cores = 2
+    c.YarnClusterConfig.worker_memory = '4 G'
+    c.YarnClusterConfig.worker_cores = 2
 
     # The YARN queue to use
-    c.YarnClusterManager.queue = '...'
+    c.YarnClusterConfig.queue = '...'
 
 If your cluster is under high load (and jobs may be slow to start), you may
 also want to increase the cluster/worker timeout values:
@@ -368,8 +374,8 @@ also want to increase the cluster/worker timeout values:
 .. code-block:: python
 
     # Increase startup timeouts to 5 min (600 seconds) each
-    c.YarnClusterManager.cluster_start_timeout = 600
-    c.YarnClusterManager.worker_start_timeout = 600
+    c.YarnClusterConfig.cluster_start_timeout = 600
+    c.YarnClusterConfig.worker_start_timeout = 600
 
 
 Example
@@ -380,43 +386,43 @@ like:
 
 .. code-block:: python
 
-    # Configure the gateway to use YARN as the cluster manager
-    c.DaskGateway.cluster_manager_class = (
-        "dask_gateway_server.managers.yarn.YarnClusterManager"
+    # Configure the gateway to use YARN as the backend
+    c.DaskGateway.backend_class = (
+        "dask_gateway_server.backends.yarn.YarnBackend"
     )
 
     # Specify the location of the keytab file, and the principal name
-    c.YarnClusterManager.keytab = "/etc/dask-gateway/dask.keytab"
-    c.YarnClusterManager.principal = "dask"
+    c.YarnBackend.keytab = "/etc/dask-gateway/dask.keytab"
+    c.YarnBackend.principal = "dask"
 
     # Enable Kerberos for user-facing authentication
     c.DaskGateway.authenticator_class = "dask_gateway_server.auth.KerberosAuthenticator"
     c.KerberosAuthenticator.keytab = "/etc/dask-gateway/dask.keytab"
 
     # Specify location of the archived Python environment
-    c.YarnClusterManager.localize_files = {
+    c.YarnClusterConfig.localize_files = {
         'environment': {
             'source': 'hdfs:///dask-gateway/example.tar.gz',
             'visibility': 'public'
         }
     }
-    c.YarnClusterManager.scheduler_setup = 'source environment/bin/activate'
-    c.YarnClusterManager.worker_setup = 'source environment/bin/activate'
+    c.YarnClusterConfig.scheduler_setup = 'source environment/bin/activate'
+    c.YarnClusterConfig.worker_setup = 'source environment/bin/activate'
 
     # Limit resources for a single worker
-    c.YarnClusterManager.worker_memory = '4 G'
-    c.YarnClusterManager.worker_cores = 2
+    c.YarnClusterConfig.worker_memory = '4 G'
+    c.YarnClusterConfig.worker_cores = 2
 
     # Specify the YARN queue to use
-    c.YarnClusterManager.queue = 'dask'
+    c.YarnClusterConfig.queue = 'dask'
 
 
-Open relevant ports
--------------------
+Open relevant port(s)
+---------------------
 
-For users to access the gateway server, they'll need access to the ports set in
-`Configure the server addresses (optional)`_ above (by default these are
-``8000`` and ``8786``). How to open up these ports is system specific - cluster
+For users to access the gateway server, they'll need access to the public
+port(s) set in `Configure the server addresses (optional)`_ above (by default
+this is port ``8000``). How to expose ports is system specific - cluster
 administrators should determine how best to perform this task.
 
 
@@ -471,8 +477,8 @@ your cluster is secured with kerberos, you'll also need to install
     $ conda create -n dask-gateway -c conda-forge dask-gateway-kerberos
 
 You can connect to the gateway by creating a :class:`dask_gateway.Gateway`
-object, specifying the public address (if you changed the port for proxy server
-via ``gateway_url``, you'll also need to specify the ``proxy_address``).
+object, specifying the public address (note that if you configured
+:data:`c.Proxy.tcp_address` you'll also need to specify the ``proxy_address``).
 
 .. code-block:: python
 
