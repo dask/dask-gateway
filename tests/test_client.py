@@ -304,7 +304,7 @@ async def test_create_cluster_with_GatewayCluster_constructor():
 
             await cluster.scale(1)
 
-            with cluster.get_client(set_as_default=False) as client:
+            async with cluster.get_client(set_as_default=False) as client:
                 res = await client.submit(lambda x: x + 1, 1)
                 assert res == 2
 

@@ -267,24 +267,6 @@ class LRUCache(object):
             pass
 
 
-class UniqueQueue(asyncio.Queue):
-    """A queue that may only contain each item once."""
-
-    def __init__(self, maxsize=0, *, loop=None):
-        super().__init__(maxsize=maxsize, loop=loop)
-        self._items = set()
-
-    def _put(self, item):
-        if item not in self._items:
-            self._items.add(item)
-            super()._put(item)
-
-    def _get(self):
-        item = super()._get()
-        self._items.discard(item)
-        return item
-
-
 class Flag(object):
     """A simpler version of asyncio.Event"""
 

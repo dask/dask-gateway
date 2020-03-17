@@ -15,15 +15,8 @@ from .base import Backend
 from .. import models
 from ..proxy import Proxy
 from ..tls import new_keypair
-from ..utils import (
-    FrozenAttrDict,
-    TaskPool,
-    Flag,
-    normalize_address,
-    UniqueQueue,
-    CancelGroup,
-    timestamp,
-)
+from ..workqueue import WorkQueue, Backoff, WorkQueueClosed
+from ..utils import FrozenAttrDict, TaskPool, Flag, normalize_address, timestamp
 
 
 __all__ = ("DBBackendBase", "Cluster", "Worker")
@@ -778,6 +771,28 @@ class DBBackendBase(Backend):
         config=True,
     )
 
+    backoff_base_delay = Float(
+        0.1,
+        help="""
+        Base delay (in seconds) for backoff when retrying after failures.
+
+        If an operation fails, it is retried after a backoff computed as:
+
+        ```
+        min(backoff_max_delay, backoff_base_delay * 2 ** num_failures)
+        ```
+        """,
+        config=True,
+    )
+
+    backoff_max_delay = Float(
+        300,
+        help="""
+        Max delay (in seconds) for backoff policy when retrying after failures.
+        """,
+        config=True,
+    )
+
     api_url = Unicode(
         help="""
         The address that internal components (e.g. dask clusters)
@@ -800,11 +815,14 @@ class DBBackendBase(Backend):
         await super().setup(app)
 
         # Setup reconcilation queues
-        self.cg = CancelGroup()
-
-        self.queues = [UniqueQueue() for _ in range(self.parallelism)]
+        self.queue = WorkQueue(
+            backoff=Backoff(
+                base_delay=self.backoff_base_delay, max_delay=self.backoff_max_delay
+            )
+        )
         self.reconcilers = [
-            asyncio.ensure_future(self.reconciler_loop(q)) for q in self.queues
+            asyncio.ensure_future(self.reconciler_loop())
+            for _ in range(self.parallelism)
         ]
 
         # Start the proxy
@@ -826,10 +844,10 @@ class DBBackendBase(Backend):
         # Load all active clusters/workers into reconcilation queues
         for cluster in self.db.name_to_cluster.values():
             if cluster.status < JobStatus.STOPPED:
-                await self.enqueue(cluster)
+                self.queue.put(cluster)
                 for worker in cluster.workers.values():
                     if worker.status < JobStatus.STOPPED:
-                        await self.enqueue(worker)
+                        self.queue.put(worker)
 
         # Further backend-specific setup
         await self.do_setup()
@@ -853,7 +871,7 @@ class DBBackendBase(Backend):
                         [(c, {"target": JobStatus.FAILED}) for c in active]
                     )
                     for c in active:
-                        await self.enqueue(c)
+                        self.queue.put(c)
 
                 # Wait until all clusters are shutdown
                 pending_shutdown = [
@@ -864,9 +882,9 @@ class DBBackendBase(Backend):
                 if pending_shutdown:
                     await asyncio.wait([c.shutdown for c in pending_shutdown])
 
-        if hasattr(self, "cg"):
-            # Stop reconcilation queues
-            await self.cg.cancel()
+        # Stop reconcilation queues
+        if hasattr(self, "reconcilers"):
+            self.queue.close()
             await asyncio.gather(*self.reconcilers, return_exceptions=True)
 
         await self.do_cleanup()
@@ -895,7 +913,7 @@ class DBBackendBase(Backend):
         options, config = await self.process_cluster_options(user, cluster_options)
         cluster = self.db.create_cluster(user.name, options, config.to_dict())
         self.log.info("Created cluster %s for user %s", cluster.name, user.name)
-        await self.enqueue(cluster)
+        self.queue.put(cluster)
         return cluster.name
 
     async def stop_cluster(self, cluster_name, failed=False):
@@ -906,7 +924,7 @@ class DBBackendBase(Backend):
             self.log.info("Stopping cluster %s", cluster.name)
             target = JobStatus.FAILED if failed else JobStatus.STOPPED
             self.db.update_cluster(cluster, target=target)
-            await self.enqueue(cluster)
+            self.queue.put(cluster)
 
     async def on_cluster_heartbeat(self, cluster_name, msg):
         cluster = self.db.get_cluster(cluster_name)
@@ -976,11 +994,11 @@ class DBBackendBase(Backend):
 
         if cluster_update:
             self.db.update_cluster(cluster, **cluster_update)
-            await self.enqueue(cluster)
+            self.queue.put(cluster)
 
         self.db.update_workers(target_updates)
         for w, u in target_updates:
-            await self.enqueue(w)
+            self.queue.put(w)
 
         if newly_running:
             # At least one worker successfully started, reset failure count
@@ -1037,10 +1055,10 @@ class DBBackendBase(Backend):
                             worker_updates.append((w, {"target": JobStatus.FAILED}))
         self.db.update_clusters(cluster_updates)
         for c, _ in cluster_updates:
-            await self.enqueue(c)
+            self.queue.put(c)
         self.db.update_workers(worker_updates)
         for w, _ in worker_updates:
-            await self.enqueue(w)
+            self.queue.put(w)
 
     async def check_clusters_loop(self):
         while True:
@@ -1061,7 +1079,7 @@ class DBBackendBase(Backend):
                 self.db.update_clusters(updates)
                 for c, _ in updates:
                     self.log.info("Cluster %s failed during startup", c.name)
-                    await self.enqueue(c)
+                    self.queue.put(c)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
@@ -1095,7 +1113,7 @@ class DBBackendBase(Backend):
                 for w, _ in updates:
                     self.log.info("Worker %s failed during startup", w.name)
                     w.cluster.worker_start_failure_count += 1
-                    await self.enqueue(w)
+                    self.queue.put(w)
             except asyncio.CancelledError:
                 raise
             except Exception as exc:
@@ -1115,14 +1133,13 @@ class DBBackendBase(Backend):
                 self.log.debug("Removed %d expired clusters from the database", n)
             await asyncio.sleep(self.db_cleanup_period)
 
-    async def enqueue(self, obj):
-        ind = hash(obj) % self.parallelism
-        await self.queues[ind].put(obj)
-
-    async def reconciler_loop(self, queue):
+    async def reconciler_loop(self):
         while True:
-            async with self.cg.cancellable():
-                obj = await queue.get()
+            try:
+                obj = await self.queue.get()
+            except WorkQueueClosed:
+                return
+
             if isinstance(obj, Cluster):
                 method = self.reconcile_cluster
                 kind = "cluster"
@@ -1144,6 +1161,11 @@ class DBBackendBase(Backend):
                 self.log.warning(
                     "Error while reconciling %s %s", kind, obj.name, exc_info=True
                 )
+                self.queue.put_backoff(obj)
+            else:
+                self.queue.reset_backoff(obj)
+            finally:
+                self.queue.task_done(obj)
 
     async def reconcile_cluster(self, cluster):
         if cluster.status >= JobStatus.STOPPED:
@@ -1177,17 +1199,17 @@ class DBBackendBase(Backend):
             if worker.status != JobStatus.CLOSING:
                 self.db.update_worker(worker, status=JobStatus.CLOSING)
             if self.is_cluster_ready_to_close(worker.cluster):
-                await self.enqueue(worker.cluster)
+                self.queue.put(worker.cluster)
             return
 
         if worker.target in (JobStatus.STOPPED, JobStatus.FAILED):
             await self._worker_to_stopped(worker)
             if self.is_cluster_ready_to_close(worker.cluster):
-                await self.enqueue(worker.cluster)
+                self.queue.put(worker.cluster)
             elif (
                 worker.cluster.target == JobStatus.RUNNING and not worker.close_expected
             ):
-                await self.enqueue(worker.cluster)
+                self.queue.put(worker.cluster)
             return
 
         if worker.status == JobStatus.CREATED and worker.target == JobStatus.RUNNING:
@@ -1225,7 +1247,7 @@ class DBBackendBase(Backend):
             self.db.update_cluster(
                 cluster, status=JobStatus.SUBMITTED, target=JobStatus.FAILED
             )
-            await self.enqueue(cluster)
+            self.queue.put(cluster)
 
     async def _cluster_to_closing(self, cluster):
         self.log.debug("Preparing to stop cluster %s", cluster.name)
@@ -1233,12 +1255,12 @@ class DBBackendBase(Backend):
         workers = [w for w in cluster.workers.values() if w.target < target]
         self.db.update_workers([(w, {"target": target}) for w in workers])
         for w in workers:
-            await self.enqueue(w)
+            self.queue.put(w)
         self.db.update_cluster(cluster, status=JobStatus.CLOSING)
         if not workers:
             # If there are workers, the cluster will be enqueued after the last one closed
-            # If there are no workers, re-enqueue now
-            await self.enqueue(cluster)
+            # If there are no workers, requeue now
+            self.queue.put(cluster)
         cluster.ready.set()
 
     async def _cluster_to_stopped(self, cluster):
@@ -1291,7 +1313,7 @@ class DBBackendBase(Backend):
                 cluster.worker_start_failure_count,
             )
             self.db.update_cluster(cluster, target=JobStatus.FAILED)
-            await self.enqueue(cluster)
+            self.queue.put(cluster)
             return
 
         active = cluster.active_workers()
@@ -1301,7 +1323,7 @@ class DBBackendBase(Backend):
                 self.log.info(
                     "Created worker %s for cluster %s", worker.name, cluster.name
                 )
-                await self.enqueue(worker)
+                self.queue.put(worker)
 
     async def _worker_to_submitted(self, worker):
         self.log.info("Submitting worker %s...", worker.name)
@@ -1325,7 +1347,7 @@ class DBBackendBase(Backend):
                 worker, status=JobStatus.SUBMITTED, target=JobStatus.FAILED
             )
             worker.cluster.worker_start_failure_count += 1
-            await self.enqueue(worker)
+            self.queue.put(worker)
 
     async def _worker_to_stopped(self, worker):
         self.log.info("Stopping worker %s...", worker.name)
