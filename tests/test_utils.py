@@ -12,7 +12,6 @@ from dask_gateway_server.utils import (
     cancel_task,
     TaskPool,
     LRUCache,
-    UniqueQueue,
     Flag,
     FrozenAttrDict,
     CancelGroup,
@@ -118,20 +117,6 @@ def test_lru_cache():
     cache.put(7, 8)
     assert cache.get(3) == 4
     assert cache.get(7) == 8
-
-
-@pytest.mark.asyncio
-async def test_unique_queue():
-    queue = UniqueQueue()
-
-    for data in [1, 3, 1, 2, 1, 2, 1, 3]:
-        await queue.put(data)
-
-    out = []
-    while not queue.empty():
-        out.append(await queue.get())
-
-    assert out == [1, 3, 2]
 
 
 @pytest.mark.asyncio
