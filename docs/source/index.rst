@@ -34,9 +34,8 @@ Architecture Overview
 Dask Gateway is divided into four separate components:
 
 - Multiple active **Dask Clusters** (potentially more than one per user)
-- A **Web proxy** for proxying the Dask Web UI for each cluster
-- A **Scheduler proxy** for proxying the connection between the user's client
-  and their respective scheduler
+- A **Proxy** for proxying both the connection between the user's client
+  and their respective scheduler, and the Dask Web UI for each cluster
 - A central **Gateway** that manages authentication and cluster startup/shutdown
 
 
@@ -61,7 +60,7 @@ both the cluster backend and the authentication protocol are pluggable.
 
 - `Kerberos <https://en.wikipedia.org/wiki/Kerberos_(protocol)>`__
 - `JupyterHub service plugin <https://jupyterhub.readthedocs.io/en/stable/>`__
-- Basic (for testing only)
+- HTTP Basic
 
 
 .. toctree::
@@ -91,7 +90,6 @@ both the cluster backend and the authentication protocol are pluggable.
    authentication
    security
    cluster-options
-   resource-limits
 
 .. toctree::
    :maxdepth: 1

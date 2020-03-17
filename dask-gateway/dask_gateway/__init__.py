@@ -6,7 +6,7 @@ from .client import (
     GatewayServerError,
     GatewayWarning,
 )
-from .auth import KerberosAuth, BasicAuth
+from .auth import KerberosAuth, BasicAuth, JupyterHubAuth
 from .options import Options
 
 # Load configuration

@@ -46,18 +46,17 @@ See :ref:`user-cluster-options` for more information on the user experience.
 Server Configuration
 --------------------
 
-Options are exposed to the user by setting
-:data:`c.Backend.cluster_options`. This configuration field takes
-either:
+Options are exposed to the user by setting :data:`c.Backend.cluster_options`.
+This configuration field takes either:
 
 - a :class:`dask_gateway_server.options.Options` object, which describes what
   options are exposed to end users, and how the gateway server should interpret
-  those options. This covers static configuration options that do not need to
-  change depending on information about a particular user
+  those options.
 
-- a function which returns a :class:`dask_gateway_server.options.Options` object
-  when called. This covers more dynamic configuration options that depend on a
-  user's permissions or groups they are a member of.
+- a function which receives a :class:`dask_gateway_server.models.User` and
+  returns a :class:`dask_gateway_server.options.Options` object when called.
+  This supports dynamic configuration options that depend on the requesting
+  user.
 
 .. autosummary:: ~dask_gateway_server.options.Options
 
@@ -67,7 +66,8 @@ A :class:`dask_gateway_server.options.Options` object takes two arguments:
   which provide a typed declarative specification of each user facing option.
 
 - ``handler``: An optional handler function for translating the values set by
-  those options into configuration values to set on the cluster manager.
+  those options into configuration values to set on the corresponding
+  :ref:`ClusterConfig <cluster-config>`.
 
 ``Field`` objects provide typed specifications for a user facing option. There
 are several different ``Field`` classes available, each representing a
@@ -95,43 +95,26 @@ After validation (type, bounds, etc...), a dictionary of all options for a
 requested cluster is passed to a ``handler`` function. Here any additional
 validation can be done (errors raised in the handler are forwarded to the
 user), as well as any conversion needed between the exposed option fields and
-configuration fields on the backing cluster manager. The default ``handler``
-returns the provided options unchanged.
+configuration fields on the backing :ref:`ClusterConfig <cluster-config>`.  The
+default ``handler`` returns the provided options unchanged.
 
-Available options are cluster manager specific. For example, if running on
-Kubernetes, an options handler can return overrides for any configuration
-fields on :ref:`KubeBackend <kube-backend-config>`. See
-:ref:`cluster-backends-reference` for information on what configuration fields
-are available on your backend.
+Available options are backend specific. For example, if running on Kubernetes,
+an options handler can return overrides for any configuration fields on
+:ref:`KubeClusterConfig <kube-cluster-config>`. See
+:ref:`cluster-backends-reference` for information on what cluster configuration
+fields are available for your backend.
 
-Dynamic Server Configuration
-----------------------------
-
-Dynamic configuration is available by passing a callable function to
-:data:`c.Backend.cluster_options`. This function should return a
-:class:`dask_gateway_server.options.Options` object. A callable
-``cluster_options`` function can be optionally ``async`` and receives a
-:class:`dask_gateway_server.models.User` object, which can be used to
-dynamically generate :data:`Options` based on username, group membership, or
-whether or not the logged-in user is an administrator.
-
-.. autosummary::
-    ~dask_gateway_server.models.User
-
-
-
-Static Configuration Examples
------------------------------
+Examples
+--------
 
 Worker Cores and Memory
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Here we expose options for users to configure
-:data:`c.Backend.worker_cores` and
-:data:`c.Backend.worker_memory`. We set bounds on each resource to
-prevent users from requesting too large of a worker. The handler is used to
-convert the user specified memory from GiB to bytes (as expected by
-:data:`c.Backend.worker_memory`).
+:data:`c.ClusterConfig.worker_cores` and :data:`c.ClusterConfig.worker_memory`.
+We set bounds on each resource to prevent users from requesting too large of a
+worker. The handler is used to convert the user specified memory from GiB to
+bytes (as expected by :data:`c.ClusterConfig.worker_memory`).
 
 .. code-block:: python
 
@@ -182,17 +165,19 @@ from.
         handler=lambda options: profiles[options.profile],
     )
 
-Dynamic Configuration Examples
-------------------------------
-
-Worker Cores and Memory by Group
+Different Options per User Group
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Cluster options may be configured to differ based on the user by providing a
+function for :data:`c.Backend.cluster_options`. This function recieves a
+:class:`dask_gateway_server.models.User` object and should return a
+:class:`dask_gateway_server.options.Options` object. It may optionally be an
+``async`` function.
+
 Similar to the last examples, here we expose options for users to configure
-:data:`c.Backend.worker_cores` and
-:data:`c.Backend.worker_memory`. However, we offer different options to
-users depending on whether or not the user is a member of the "Power Users"
-group. 
+:data:`c.ClusterConfig.worker_cores` and :data:`c.ClusterConfig.worker_memory`.
+However, we offer different ranges depending on whether or not the user is a
+member of the "power-users" group.
 
 .. code-block:: python
 
@@ -205,7 +190,7 @@ group.
         }
 
     def generate_options(user):
-        if "Power Users" in user.groups:
+        if "power-users" in user.groups:
             options = Options(
                 Integer("worker_cores", default=1, min=1, max=4, label="Worker Cores"),
                 Float("worker_memory", default=1, min=1, max=8, label="Worker Memory (GiB)"),

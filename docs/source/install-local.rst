@@ -43,8 +43,8 @@ To start the Gateway server, run:
 
 This starts ``dask-gateway`` locally with the default configuration. This uses:
 
-- ``UnsafeLocalClusterManager`` to manage local clusters without any process isolation
-- ``DummyAuthenticator`` to authenticate users using a simple and insecure authentication scheme
+- ``UnsafeLocalBackend`` to manage local clusters without any process isolation
+- ``SimpleAuthenticator`` to authenticate users using a simple and insecure authentication scheme
 
 *Both of these options are insecure and not-advised for any real-world
 deployments.* They are perfectly fine for testing and experimentation though.

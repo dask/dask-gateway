@@ -30,6 +30,8 @@ _PROXY_EXE = os.path.join(
 
 
 class Proxy(LoggingConfigurable):
+    """The dask-gateway-server proxy"""
+
     log_level = CaselessStrEnum(
         ["error", "warn", "info", "debug"],
         default_value="warn",

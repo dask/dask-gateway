@@ -127,42 +127,48 @@ object.
 Here we'll walk through a few common configuration options you may want to set.
 
 
-Specify cluster manager backend
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Specify backend
+~~~~~~~~~~~~~~~
 
-First you'll need to specify which cluster manager backend to use by setting
-:data:`c.DaskGateway.cluster_manager_class`. You have a few options:
+First you'll need to specify which backend to use by setting
+:data:`c.DaskGateway.backend_class`. You have a few options:
 
-- PBS: ``dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager``
-- Slurm: ``dask_gateway_server.managers.jobqueue.slurm.SlurmClusterManager``
+- PBS: ``dask_gateway_server.backends.jobqueue.pbs.PBSBackend``
+- Slurm: ``dask_gateway_server.backends.jobqueue.slurm.SlurmBackend``
 
-For example, here we configure the gateway to use the PBS cluster manager:
+For example, here we configure the gateway to use the PBS backend:
 
 .. code-block:: python
 
     # Configure the gateway to use PBS
-    c.DaskGateway.cluster_manager_class = (
-        "dask_gateway_server.managers.jobqueue.pbs.PBSClusterManager"
+    c.DaskGateway.backend_class = (
+        "dask_gateway_server.backends.jobqueue.pbs.PBSBackend"
     )
 
 
 Configure the server addresses (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, ``dask-gateway-server`` will listen at the following addresses:
+By default, ``dask-gateway-server`` will serve all traffic through
+``0.0.0.0:8000``. This includes both HTTP(S) requests (REST api, dashboards,
+etc...) and dask scheduler traffic.
 
-- ``http://:8000``: the public facing URL of the whole application. Set by
-  ``c.DaskGateway.public_url``.
+If you'd like to serve at a different address, or serve web and scheduler
+traffic on different ports, you can configure the following fields:
 
-- ``tls://:8786``: the scheduler proxy address, set by
-  ``c.DaskGateway.gateway_url``.
+- :data:`c.Proxy.address` - Serves HTTP(S) traffic, defaults to ``:8000``.
 
-If you'd rather serve at different ports, you can configure these yourself:
+- :data:`c.Proxy.tcp_address` - Serves dask client-to-scheduler tcp traffic,
+  defaults to :data:`c.Proxy.address`.
+
+
+Here we configure web traffic to serve on port 8000 and scheduler traffic to
+serve on port 8001:
 
 .. code-block:: python
 
-    c.DaskGateway.public_url = 'http://:<PORT-1>'
-    c.DaskGateway.gateway_url = 'http://:<PORT-2>'
+    c.Proxy.address = ':8000'
+    c.Proxy.tcp_address = ':8001'
 
 
 Specify user python environments
@@ -189,18 +195,18 @@ the provided Python. This could be done a few different ways:
 .. code-block:: python
 
     # Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs
-    c.JobQueueClusterManager.scheduler_cmd = "/path/to/dask-gateway-scheduler"
-    c.JobQueueClusterManager.worker_cmd = "/path/to/dask-gateway-worker"
+    c.JobQueueClusterConfig.scheduler_cmd = "/path/to/dask-gateway-scheduler"
+    c.JobQueueClusterConfig.worker_cmd = "/path/to/dask-gateway-worker"
 
     # OR
     # Activate a local conda environment before startup
-    c.JobQueueClusterManager.scheduler_setup = 'source /path/to/miniconda/bin/activate /path/to/environment'
-    c.JobQueueClusterManager.worker_setup = 'source /path/to/miniconda/bin/activate /path/to/environment'
+    c.JobQueueClusterConfig.scheduler_setup = 'source /path/to/miniconda/bin/activate /path/to/environment'
+    c.JobQueueClusterConfig.worker_setup = 'source /path/to/miniconda/bin/activate /path/to/environment'
 
     # OR
     # Activate a virtual environment before startup
-    c.JobQueueClusterManager.scheduler_setup = 'source /path/to/your/environment/bin/activate'
-    c.JobQueueClusterManager.worker_setup = 'source /path/to/your/environment/bin/activate'
+    c.JobQueueClusterConfig.scheduler_setup = 'source /path/to/your/environment/bin/activate'
+    c.JobQueueClusterConfig.worker_setup = 'source /path/to/your/environment/bin/activate'
 
 
 User-configurable python environments
@@ -211,7 +217,7 @@ environments. This can be useful, as it allows users to manage package versions
 themselves without needing to contact an admin for support.
 
 This can be done by exposing an option for Python environment in
-:data:`c.DaskGateway.cluster_manager_options`. Exposing cluster options is
+:data:`c.Backend.cluster_options`. Exposing cluster options is
 discussed in detail in :doc:`cluster-options` - here we'll only provide a short
 example of one way of accomplishing this. Please see :doc:`cluster-options` for
 more information.
@@ -230,7 +236,7 @@ more information.
     # Provide an option for users to specify the name or location of a
     # conda environment to use for both the scheduler and workers.
     # If not specified, the default environment of ``base`` is used.
-    c.DaskGateway.cluster_manager_options = Options(
+    c.Backend.cluster_options = Options(
         String("environment", default="base", label="Conda Environment"),
         handler=options_handler,
     )
@@ -247,8 +253,8 @@ you'll probably want to configure the worker resource limits.
 .. code-block:: python
 
     # The resource limits for a worker
-    c.JobQueueClusterManager.worker_memory = '4 G'
-    c.JobQueueClusterManager.worker_cores = 2
+    c.JobQueueClusterConfig.worker_memory = '4 G'
+    c.JobQueueClusterConfig.worker_cores = 2
 
 If your cluster is under high load (and jobs may be slow to start), you may
 also want to increase the cluster/worker timeout values:
@@ -256,8 +262,8 @@ also want to increase the cluster/worker timeout values:
 .. code-block:: python
 
     # Increase startup timeouts to 5 min (600 seconds) each
-    c.JobQueueClusterManager.cluster_start_timeout = 600
-    c.JobQueueClusterManager.worker_start_timeout = 600
+    c.JobQueueClusterBackend.cluster_start_timeout = 600
+    c.JobQueueClusterBackend.worker_start_timeout = 600
 
 
 Example
@@ -268,29 +274,31 @@ look like:
 
 .. code-block:: python
 
-    # Configure the gateway to use PBS as the cluster manager
-    c.DaskGateway.cluster_manager_class = (
-        "dask_gateway_server.managers.pbs.PBSClusterManager"
-    )
+    # Configure the gateway to use PBS as the backend
+    c.DaskGateway.backend_class = "dask_gateway_server.backends.pbs.PBSBackend"
 
     # Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs
-    c.PBSClusterManager.scheduler_cmd = "~/miniconda/bin/dask-gateway-scheduler"
-    c.PBSClusterManager.worker_cmd = "~/miniconda/bin/dask-gateway-worker"
+    c.PBSClusterConfig.scheduler_cmd = "~/miniconda/bin/dask-gateway-scheduler"
+    c.PBSClusterConfig.worker_cmd = "~/miniconda/bin/dask-gateway-worker"
 
     # Limit resources for a single worker
-    c.PBSClusterManager.worker_memory = '4 G'
-    c.PBSClusterManager.worker_cores = 2
+    c.PBSClusterConfig.worker_memory = '4 G'
+    c.PBSClusterConfig.worker_cores = 2
 
     # Specify the PBS queue to use
-    c.PBSClusterManager.queue = 'dask'
+    c.PBSClusterConfig.queue = 'dask'
+
+    # Increase startup timeouts to 5 min (600 seconds) each
+    c.PBSClusterBackend.cluster_start_timeout = 600
+    c.PBSClusterBackend.worker_start_timeout = 600
 
 
 Open relevant ports
 -------------------
 
-For users to access the gateway server, they'll need access to the ports set in
-`Configure the server addresses (optional)`_ above (by default these are
-``8000`` and ``8786``). How to open up these ports is system specific - cluster
+For users to access the gateway server, they'll need access to the public
+port(s) set in `Configure the server addresses (optional)`_ above (by default
+this is port ``8000``). How to expose ports is system specific - cluster
 administrators should determine how best to perform this task.
 
 
@@ -340,8 +348,8 @@ A user's environment requires the ``dask-gateway`` library be installed.
     $ conda create -n dask-gateway -c conda-forge dask-gateway
 
 You can connect to the gateway by creating a :class:`dask_gateway.Gateway`
-object, specifying the public address (if you changed the port for proxy server
-via ``gateway_url``, you'll also need to specify the ``proxy_address``).
+object, specifying the public address (note that if you configured
+:data:`c.Proxy.tcp_address` you'll also need to specify the ``proxy_address``).
 
 .. code-block:: python
 

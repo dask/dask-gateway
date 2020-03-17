@@ -1,8 +1,8 @@
 Configuration Reference
 =======================
 
-Gateway
--------
+Gateway Server
+--------------
 
 .. autoconfigurable:: dask_gateway_server.app.DaskGateway
 
@@ -42,14 +42,26 @@ Cluster Backends
 Base Class
 ^^^^^^^^^^
 
+.. _cluster-config:
+
+ClusterConfig
+~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.backends.base.ClusterConfig
+
 Backend
 ~~~~~~~
 
-.. autoconfigurable:: dask_gateway_server.backends.Backend
+.. autoconfigurable:: dask_gateway_server.backends.base.Backend
 
 
 Local Processes
 ^^^^^^^^^^^^^^^
+
+LocalClusterConfig
+~~~~~~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.backends.local.LocalClusterConfig
 
 LocalBackend
 ~~~~~~~~~~~~
@@ -67,6 +79,11 @@ YARN
 
 .. _yarn-config:
 
+YarnClusterConfig
+~~~~~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.backends.yarn.YarnClusterConfig
+
 YarnBackend
 ~~~~~~~~~~~
 
@@ -76,12 +93,22 @@ YarnBackend
 Kubernetes
 ^^^^^^^^^^
 
-.. _kube-backend-config:
+.. _kube-cluster-config:
+
+KubeClusterConfig
+~~~~~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.backends.kubernetes.KubeClusterConfig
 
 KubeBackend
 ~~~~~~~~~~~
 
 .. autoconfigurable:: dask_gateway_server.backends.kubernetes.KubeBackend
+
+KubeController
+~~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.backends.kubernetes.controller.KubeController
 
 
 .. _jobqueue-config:
@@ -89,10 +116,20 @@ KubeBackend
 Job Queues
 ^^^^^^^^^^
 
+PBSClusterConfig
+~~~~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig
+
 PBSBackend
 ~~~~~~~~~~
 
 .. autoconfigurable:: dask_gateway_server.backends.jobqueue.pbs.PBSBackend
+
+SlurmClusterConfig
+~~~~~~~~~~~~~~~~~~
+
+.. autoconfigurable:: dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig
 
 SlurmBackend
 ~~~~~~~~~~~~
@@ -123,3 +160,17 @@ Cluster Manager Options
 .. autoclass:: dask_gateway_server.options.Bool
 
 .. autoclass:: dask_gateway_server.options.Select
+
+
+Models
+------
+
+User
+^^^^
+
+.. autoclass:: dask_gateway_server.models.User
+
+Cluster
+^^^^^^^
+
+.. autoclass:: dask_gateway_server.models.Cluster
