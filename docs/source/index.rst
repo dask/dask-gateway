@@ -91,7 +91,6 @@ both the cluster backend and the authentication protocol are pluggable.
    authentication
    security
    cluster-options
-   resource-limits
 
 .. toctree::
    :maxdepth: 1
