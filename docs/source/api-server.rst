@@ -158,3 +158,17 @@ Cluster Manager Options
 .. autoclass:: dask_gateway_server.options.Bool
 
 .. autoclass:: dask_gateway_server.options.Select
+
+
+Models
+------
+
+User
+^^^^
+
+.. autoclass:: dask_gateway_server.models.User
+
+Cluster
+^^^^^^^
+
+.. autoclass:: dask_gateway_server.models.Cluster
