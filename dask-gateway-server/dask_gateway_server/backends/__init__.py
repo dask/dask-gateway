@@ -1,1 +1,1 @@
-from .base import Backend
+from .base import Backend, ClusterConfig
