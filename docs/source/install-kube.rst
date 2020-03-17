@@ -88,7 +88,7 @@ show the ``EXTERNAL-IP`` addresses for the ``LoadBalancer`` service (highlighted
 below).
 
 .. code-block:: shell
-    :emphasize-lines: 3
+    :emphasize-lines: 4
 
     $ kubectl get service --namespace dask-gateway
     NAME                              TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE
@@ -241,7 +241,7 @@ resources and image (see :doc:`cluster-options` for more information).
         )
 
 For information on all available configuration options, see the
-:doc:`api-server` (in particular, the :ref:`kube-cluster-manager-config`
+:doc:`api-server` (in particular, the :ref:`kube-backend-config`
 section).
 
 

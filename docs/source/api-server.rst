@@ -109,12 +109,6 @@ Proxy
 .. autoconfigurable:: dask_gateway_server.proxy.Proxy
 
 
-User Limits
------------
-
-.. autoconfigurable:: dask_gateway_server.limits.UserLimits
-
-
 Cluster Manager Options
 -----------------------
 
