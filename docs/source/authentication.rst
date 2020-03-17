@@ -2,9 +2,9 @@ Authentication
 ==============
 
 Being a multi-tenant application, ``dask-gateway-server`` needs a method to
-authenticate users. Like cluster manager backends, authentication is also
-configurable by setting :data:`c.DaskGateway.authenticator_class`. Here we
-document a few common implementations.
+authenticate users. Like backends, authentication is also configurable by
+setting :data:`c.DaskGateway.authenticator_class`. Here we document a few
+common implementations.
 
 
 Simple authentication for testing

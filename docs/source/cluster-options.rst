@@ -66,7 +66,8 @@ A :class:`dask_gateway_server.options.Options` object takes two arguments:
   which provide a typed declarative specification of each user facing option.
 
 - ``handler``: An optional handler function for translating the values set by
-  those options into configuration values to set on the cluster manager.
+  those options into configuration values to set on the corresponding
+  :ref:`ClusterConfig <cluster-config>`.
 
 ``Field`` objects provide typed specifications for a user facing option. There
 are several different ``Field`` classes available, each representing a
@@ -94,14 +95,14 @@ After validation (type, bounds, etc...), a dictionary of all options for a
 requested cluster is passed to a ``handler`` function. Here any additional
 validation can be done (errors raised in the handler are forwarded to the
 user), as well as any conversion needed between the exposed option fields and
-configuration fields on the backing cluster manager. The default ``handler``
-returns the provided options unchanged.
+configuration fields on the backing :ref:`ClusterConfig <cluster-config>`.  The
+default ``handler`` returns the provided options unchanged.
 
-Available options are cluster manager specific. For example, if running on
-Kubernetes, an options handler can return overrides for any configuration
-fields on :ref:`KubeBackend <kube-backend-config>`. See
-:ref:`cluster-backends-reference` for information on what configuration fields
-are available on your backend.
+Available options are backend specific. For example, if running on Kubernetes,
+an options handler can return overrides for any configuration fields on
+:ref:`KubeClusterConfig <kube-cluster-config>`. See
+:ref:`cluster-backends-reference` for information on what cluster configuration
+fields are available for your backend.
 
 Examples
 --------
@@ -109,11 +110,11 @@ Examples
 Worker Cores and Memory
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Here we expose options for users to configure :data:`c.Backend.worker_cores`
-and :data:`c.Backend.worker_memory`. We set bounds on each resource to prevent
-users from requesting too large of a worker. The handler is used to convert the
-user specified memory from GiB to bytes (as expected by
-:data:`c.Backend.worker_memory`).
+Here we expose options for users to configure
+:data:`c.ClusterConfig.worker_cores` and :data:`c.ClusterConfig.worker_memory`.
+We set bounds on each resource to prevent users from requesting too large of a
+worker. The handler is used to convert the user specified memory from GiB to
+bytes (as expected by :data:`c.ClusterConfig.worker_memory`).
 
 .. code-block:: python
 
@@ -174,9 +175,9 @@ function for :data:`c.Backend.cluster_options`. This function recieves a
 ``async`` function.
 
 Similar to the last examples, here we expose options for users to configure
-:data:`c.Backend.worker_cores` and :data:`c.Backend.worker_memory`. However, we
-offer different ranges depending on whether or not the user is a member of the
-"power-users" group.
+:data:`c.ClusterConfig.worker_cores` and :data:`c.ClusterConfig.worker_memory`.
+However, we offer different ranges depending on whether or not the user is a
+member of the "power-users" group.
 
 .. code-block:: python
 

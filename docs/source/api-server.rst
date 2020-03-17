@@ -42,6 +42,8 @@ Cluster Backends
 Base Class
 ^^^^^^^^^^
 
+.. _cluster-config:
+
 ClusterConfig
 ~~~~~~~~~~~~~
 
@@ -91,7 +93,7 @@ YarnBackend
 Kubernetes
 ^^^^^^^^^^
 
-.. _kube-backend-config:
+.. _kube-cluster-config:
 
 KubeClusterConfig
 ~~~~~~~~~~~~~~~~~

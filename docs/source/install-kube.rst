@@ -241,7 +241,7 @@ resources and image (see :doc:`cluster-options` for more information).
         )
 
 For information on all available configuration options, see the
-:doc:`api-server` (in particular, the :ref:`kube-backend-config`
+:doc:`api-server` (in particular, the :ref:`kube-cluster-config`
 section).
 
 

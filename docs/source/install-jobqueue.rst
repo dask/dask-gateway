@@ -217,7 +217,7 @@ environments. This can be useful, as it allows users to manage package versions
 themselves without needing to contact an admin for support.
 
 This can be done by exposing an option for Python environment in
-:data:`c.DaskGateway.cluster_manager_options`. Exposing cluster options is
+:data:`c.Backend.cluster_options`. Exposing cluster options is
 discussed in detail in :doc:`cluster-options` - here we'll only provide a short
 example of one way of accomplishing this. Please see :doc:`cluster-options` for
 more information.
@@ -236,7 +236,7 @@ more information.
     # Provide an option for users to specify the name or location of a
     # conda environment to use for both the scheduler and workers.
     # If not specified, the default environment of ``base`` is used.
-    c.DaskGateway.cluster_manager_options = Options(
+    c.Backend.cluster_options = Options(
         String("environment", default="base", label="Conda Environment"),
         handler=options_handler,
     )
@@ -274,10 +274,8 @@ look like:
 
 .. code-block:: python
 
-    # Configure the gateway to use PBS as the cluster manager
-    c.DaskGateway.cluster_manager_class = (
-        "dask_gateway_server.managers.pbs.PBSBackend"
-    )
+    # Configure the gateway to use PBS as the backend
+    c.DaskGateway.backend_class = "dask_gateway_server.backends.pbs.PBSBackend"
 
     # Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs
     c.PBSClusterConfig.scheduler_cmd = "~/miniconda/bin/dask-gateway-scheduler"
