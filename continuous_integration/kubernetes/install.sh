@@ -19,7 +19,7 @@ python setup.py develop
 popd
 
 pushd dask-gateway-server
-python setup.py develop
+python setup.py develop --no-build-proxy
 popd
 
 pip list
