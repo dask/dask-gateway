@@ -46,18 +46,20 @@ jobs:
           script:
             - ./continuous_integration/docker/hadoop/script.sh
 
-        #- if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-kube))
-          #env:
-            #- KUBERNETES-TESTS=true
-          #services:
-            #- docker
-          #before_install:
-            #- source continuous_integration/before_install.sh
-            #- ./continuous_integration/kubernetes/start.sh
-          #install:
-            #- ./continuous_integration/kubernetes/install.sh
-          #script:
-            #- ./continuous_integration/kubernetes/script.sh
+        - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-kube))
+          env:
+            - KUBERNETES-TESTS=true
+          services:
+            - docker
+          before_install:
+            - ./continuous_integration/kubernetes/install-tools.sh
+            - ./continuous_integration/kubernetes/k3d-create.sh
+            - export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
+          install:
+            - ./continuous_integration/kubernetes/helm-install.sh
+            - ./continuous_integration/kubernetes/install.sh
+          script:
+            - ./continuous_integration/kubernetes/script.sh
 
         - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-jobqueue) OR (commit_message ~= test-pbs))
           env:
