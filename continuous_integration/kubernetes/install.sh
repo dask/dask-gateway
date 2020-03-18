@@ -12,6 +12,7 @@ pip install \
     pytest \
     pytest-asyncio \
     kubernetes-asyncio \
+    sqlalchemy \
     traitlets
 
 pushd dask-gateway
