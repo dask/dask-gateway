@@ -3,6 +3,11 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+{{- if .Values.rbac.controller.serviceAccountName }}
+  name: {{ .Values.rbac.controller.serviceAccountName }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+{{ else }}
   name: {{ include "dask-gateway.controllerName" . }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
@@ -44,5 +49,6 @@ roleRef:
   kind: ClusterRole
   name: {{ include "dask-gateway.controllerName" . }}
   apiGroup: rbac.authorization.k8s.io
+{{- end }}
 {{- end }}
 {{- end }}
