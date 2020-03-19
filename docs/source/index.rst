@@ -31,7 +31,7 @@ Highlights
 Architecture Overview
 ---------------------
 
-Dask Gateway is divided into four separate components:
+Dask Gateway is divided into three separate components:
 
 - Multiple active **Dask Clusters** (potentially more than one per user)
 - A **Proxy** for proxying both the connection between the user's client
