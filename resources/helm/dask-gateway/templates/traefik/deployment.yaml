@@ -27,6 +27,9 @@ spec:
       containers:
         - name: traefik
           image: {{ .Values.traefik.image.name }}:{{ .Values.traefik.image.tag }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
           resources:
             {{- .Values.traefik.resources | toYaml | trimSuffix "\n" | nindent 12 }}
           args:
