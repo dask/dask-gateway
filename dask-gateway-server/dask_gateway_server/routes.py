@@ -78,7 +78,7 @@ async def health(request):
     return web.json_response(health, status=status)
 
 
-@default_routes.get("/api/options")
+@default_routes.get("/api/v1/options")
 @api_handler(user_authenticated=True)
 async def cluster_options(request):
     user = request["user"]
@@ -88,7 +88,7 @@ async def cluster_options(request):
     return web.json_response({"cluster_options": spec})
 
 
-@default_routes.get("/api/clusters/")
+@default_routes.get("/api/v1/clusters/")
 @api_handler(user_authenticated=True)
 async def list_clusters(request):
     user = request["user"]
@@ -105,7 +105,7 @@ async def list_clusters(request):
     return web.json_response({c.name: c.to_dict() for c in clusters})
 
 
-@default_routes.post("/api/clusters/")
+@default_routes.post("/api/v1/clusters/")
 @api_handler(user_authenticated=True)
 async def create_cluster(request):
     user = request["user"]
@@ -136,7 +136,7 @@ def _parse_query_flag(val):
             return False
 
 
-@default_routes.get("/api/clusters/{cluster_name}")
+@default_routes.get("/api/v1/clusters/{cluster_name}")
 @api_handler(user_authenticated=True)
 async def get_cluster(request):
     user = request["user"]
@@ -154,7 +154,7 @@ async def get_cluster(request):
     return web.json_response(cluster.to_dict())
 
 
-@default_routes.delete("/api/clusters/{cluster_name}")
+@default_routes.delete("/api/v1/clusters/{cluster_name}")
 @api_handler(user_authenticated=True, token_authenticated=True)
 async def delete_cluster(request):
     user = request["user"]
@@ -170,7 +170,7 @@ async def delete_cluster(request):
     return web.Response(status=204)
 
 
-@default_routes.post("/api/clusters/{cluster_name}/scale")
+@default_routes.post("/api/v1/clusters/{cluster_name}/scale")
 @api_handler(user_authenticated=True)
 async def scale_cluster(request):
     user = request["user"]
@@ -200,7 +200,7 @@ async def scale_cluster(request):
     return web.Response()
 
 
-@default_routes.post("/api/clusters/{cluster_name}/adapt")
+@default_routes.post("/api/v1/clusters/{cluster_name}/adapt")
 @api_handler(user_authenticated=True)
 async def adapt_cluster(request):
     user = request["user"]
@@ -229,7 +229,7 @@ async def adapt_cluster(request):
     return web.Response()
 
 
-@default_routes.post("/api/clusters/{cluster_name}/heartbeat")
+@default_routes.post("/api/v1/clusters/{cluster_name}/heartbeat")
 @api_handler(token_authenticated=True)
 async def handle_heartbeat(request):
     backend = request.app["backend"]
@@ -239,7 +239,7 @@ async def handle_heartbeat(request):
     return web.Response()
 
 
-@default_routes.get("/api/clusters/{cluster_name}/addresses")
+@default_routes.get("/api/v1/clusters/{cluster_name}/addresses")
 @api_handler(token_authenticated=True)
 async def handle_addresses(request):
     cluster_name = request.match_info["cluster_name"]

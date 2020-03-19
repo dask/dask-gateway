@@ -408,7 +408,7 @@ class Gateway(object):
         else:
             query = ""
 
-        url = "%s/api/clusters/%s" % (self.address, query)
+        url = "%s/api/v1/clusters/%s" % (self.address, query)
         resp = await self._request("GET", url)
         data = await resp.json()
         return [
@@ -451,7 +451,7 @@ class Gateway(object):
         return {k: format_template(v) for k, v in opts.items()}
 
     async def _cluster_options(self, use_local_defaults=True):
-        url = "%s/api/options" % self.address
+        url = "%s/api/v1/options" % self.address
         resp = await self._request("GET", url)
         data = await resp.json()
         options = Options._from_spec(data["cluster_options"])
@@ -478,7 +478,7 @@ class Gateway(object):
         )
 
     async def _submit(self, cluster_options=None, **kwargs):
-        url = "%s/api/clusters/" % self.address
+        url = "%s/api/v1/clusters/" % self.address
         if cluster_options is not None:
             if not isinstance(cluster_options, Options):
                 raise TypeError(
@@ -519,7 +519,7 @@ class Gateway(object):
 
     async def _cluster_report(self, cluster_name, wait=False):
         params = "?wait" if wait else ""
-        url = "%s/api/clusters/%s%s" % (self.address, cluster_name, params)
+        url = "%s/api/v1/clusters/%s%s" % (self.address, cluster_name, params)
         resp = await self._request("GET", url)
         data = await resp.json()
         return ClusterReport._from_json(self._public_address, self.proxy_address, data)
@@ -606,7 +606,7 @@ class Gateway(object):
         )
 
     async def _stop_cluster(self, cluster_name):
-        url = "%s/api/clusters/%s" % (self.address, cluster_name)
+        url = "%s/api/v1/clusters/%s" % (self.address, cluster_name)
         await self._request("DELETE", url)
 
     def stop_cluster(self, cluster_name, **kwargs):
@@ -620,7 +620,7 @@ class Gateway(object):
         return self.sync(self._stop_cluster, cluster_name, **kwargs)
 
     async def _scale_cluster(self, cluster_name, n):
-        url = "%s/api/clusters/%s/scale" % (self.address, cluster_name)
+        url = "%s/api/v1/clusters/%s/scale" % (self.address, cluster_name)
         await self._request("POST", url, json={"count": n})
 
     def scale_cluster(self, cluster_name, n, **kwargs):
@@ -640,7 +640,7 @@ class Gateway(object):
     ):
         await self._request(
             "POST",
-            "%s/api/clusters/%s/adapt" % (self.address, cluster_name),
+            "%s/api/v1/clusters/%s/adapt" % (self.address, cluster_name),
             json={"minimum": minimum, "maximum": maximum, "active": active},
         )
 

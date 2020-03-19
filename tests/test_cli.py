@@ -74,7 +74,7 @@ def test_proxy_cli(tmpdir, monkeypatch):
         "-tcp-address",
         "127.0.0.1:8867",
         "-api-url",
-        "http://127.0.0.1:8888/api/routes",
+        "http://127.0.0.1:8888/api/v1/routes",
         "-log-level",
         "warn",
     ]
