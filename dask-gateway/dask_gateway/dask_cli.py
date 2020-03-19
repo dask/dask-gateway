@@ -374,7 +374,7 @@ class GatewayClient(object):
         client = AsyncHTTPClient()
         req = HTTPRequest(
             method="POST",
-            url=f"{self.api_url}/clusters/{self.cluster_name}/heartbeat",
+            url=f"{self.api_url}/v1/clusters/{self.cluster_name}/heartbeat",
             headers={
                 "Authorization": "token %s" % self.token,
                 "Content-type": "application/json",
@@ -385,7 +385,7 @@ class GatewayClient(object):
 
     async def shutdown(self):
         client = AsyncHTTPClient()
-        url = "%s/clusters/%s" % (self.api_url, self.cluster_name)
+        url = f"{self.api_url}/v1/clusters/{self.cluster_name}"
         req = HTTPRequest(
             url, method="DELETE", headers={"Authorization": "token %s" % self.token}
         )
@@ -393,7 +393,7 @@ class GatewayClient(object):
 
     async def get_scheduler_address(self):
         client = AsyncHTTPClient()
-        url = "%s/clusters/%s/addresses" % (self.api_url, self.cluster_name)
+        url = f"{self.api_url}/v1/clusters/{self.cluster_name}/addresses"
         req = HTTPRequest(
             url, method="GET", headers={"Authorization": "token %s" % self.token}
         )

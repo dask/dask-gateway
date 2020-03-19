@@ -202,7 +202,7 @@ class Proxy(LoggingConfigurable):
             "-tcp-address",
             self.tcp_address,
             "-api-url",
-            self.gateway_url + "/api/routes",
+            self.gateway_url + "/api/v1/routes",
             "-log-level",
             self.log_level,
         ]
@@ -284,7 +284,7 @@ class Proxy(LoggingConfigurable):
 
         app.on_shutdown.append(self._on_shutdown)
 
-        app.add_routes([web.get("/api/routes", self.routes_handler)])
+        app.add_routes([web.get("/api/v1/routes", self.routes_handler)])
 
         # Proxy through the gateway application
         await self.add_route(kind="PATH", path="/", target=self.gateway_url)
