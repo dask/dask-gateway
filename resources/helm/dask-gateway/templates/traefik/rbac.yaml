@@ -1,10 +1,8 @@
 {{- if .Values.rbac.enabled -}}
+{{- if not .Values.rbac.traefik.serviceAccountName }}
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-{{- if .Values.rbac.traefik.serviceAccountName }}
-  name: {{ .Values.rbac.traefik.serviceAccountName }}
-{{ else }}
   name: {{ include "dask-gateway.traefikName" . }}
 ---
 kind: ClusterRole

@@ -1,13 +1,9 @@
 {{- if .Values.controller.enabled -}}
 {{- if .Values.rbac.enabled -}}
+{{- if not .Values.rbac.controller.serviceAccountName }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-{{- if .Values.rbac.controller.serviceAccountName }}
-  name: {{ .Values.rbac.controller.serviceAccountName }}
-  labels:
-    {{- include "dask-gateway.labels" . | nindent 4 }}
-{{ else }}
   name: {{ include "dask-gateway.controllerName" . }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
