@@ -4,6 +4,25 @@ Install on a Kubernetes Cluster
 Here we provide instructions for installing and configuring
 ``dask-gateway-server`` on a `Kubernetes Cluster`_.
 
+Architecture
+------------
+
+When running on Kubernetes, Dask Gateway is composed of the following components:
+
+- Multiple active **Dask Clusters** (potentially more than one per user)
+- A **Traefik Proxy** for proxying both the connection between the user's client
+  and their respective scheduler, and the Dask Web UI for each cluster
+- A **Gateway API Server** that handles user API requests
+- A **Gateway Controller** for managing the kubernetes objects used by each
+  cluster (e.g. pods, secrets, etc...).
+
+.. image:: /_images/architecture-k8s.svg
+    :width: 90 %
+    :align: center
+    :alt: Dask-Gateway high-level kubernetes architecture
+
+Both the Traefik Proxy deployment and the Gateway API Server deployment can be
+scaled to multiple replicas, for increased availability and scalability.
 
 Create a Kubernetes Cluster (optional)
 --------------------------------------
