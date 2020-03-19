@@ -23,7 +23,11 @@ spec:
         {{- end }}
     spec:
       {{- if .Values.rbac.enabled }}
+      {{- if .Values.rbac.gateway.serviceAccountName }}
+      serviceAccountName: {{ .Values.rbac.gateway.serviceAccountName }}
+      {{- else }}
       serviceAccountName: {{ include "dask-gateway.apiName" . }}
+      {{- end }}
       {{- end }}
       volumes:
         - name: configmap

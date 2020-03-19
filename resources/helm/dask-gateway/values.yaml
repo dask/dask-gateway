@@ -201,3 +201,15 @@ traefik:
 rbac:
   # Whether to enable RBAC.
   enabled: true
+
+  # Existing names to use if ClusterRoles, ClusterRoleBindings, and
+  # ServiceAccounts have already been created by other means (leave set to
+  # `null` to create all required roles at install time)
+  controller:
+    serviceAccountName: null
+
+  gateway:
+    serviceAccountName: null
+
+  traefik:
+    serviceAccountName: null

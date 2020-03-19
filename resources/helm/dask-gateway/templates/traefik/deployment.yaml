@@ -21,7 +21,11 @@ spec:
       {{- end }}
     spec:
       {{- if .Values.rbac.enabled }}
+      {{- if .Values.rbac.traefik.serviceAccountName }}
+      serviceAccountName: {{ .Values.rbac.traefik.serviceAccountName }}
+      {{- else }}
       serviceAccountName: {{ include "dask-gateway.traefikName" . }}
+      {{- end }}
       {{- end }}
       terminationGracePeriodSeconds: 60
       containers:

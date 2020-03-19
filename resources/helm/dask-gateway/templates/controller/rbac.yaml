@@ -1,5 +1,6 @@
 {{- if .Values.controller.enabled -}}
 {{- if .Values.rbac.enabled -}}
+{{- if not .Values.rbac.controller.serviceAccountName }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -44,5 +45,6 @@ roleRef:
   kind: ClusterRole
   name: {{ include "dask-gateway.controllerName" . }}
   apiGroup: rbac.authorization.k8s.io
+{{- end }}
 {{- end }}
 {{- end }}
