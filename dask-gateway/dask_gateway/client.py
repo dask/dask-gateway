@@ -1020,13 +1020,14 @@ class GatewayCluster(object):
         -------
         client : dask.distributed.Client
         """
-        client = Client(
+        client = GatewayClient(
             self.scheduler_address,
             security=self.security,
             set_as_default=set_as_default,
             asynchronous=self.asynchronous,
             loop=self.loop,
         )
+        client._dashboard_link=self.dashboard_link
         if not self.asynchronous:
             self._clients.add(client)
         return client
@@ -1188,3 +1189,15 @@ class GatewayCluster(object):
             "  </ul>\n"
             "</div>\n"
         ).format(name=self.name, dashboard=dashboard)
+
+
+class GatewayClient(Client):
+    """A subclass of distributed.Client used for Dask Gateway customizations
+
+    This subclass is used by Dask Gateway in order to override the parent's (distributed.Client) "dashboard_link" property until a
+    version of distributed.Client allows us to override the value natively.
+
+    """
+    @property
+    def dashboard_link(self):
+        return self._dashboard_link
