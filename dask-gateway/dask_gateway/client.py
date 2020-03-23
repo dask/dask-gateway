@@ -1020,7 +1020,7 @@ class GatewayCluster(object):
         -------
         client : dask.distributed.Client
         """
-        client = GatewayClient(
+        client = GatewayClusterClient(
             self.scheduler_address,
             security=self.security,
             set_as_default=set_as_default,
@@ -1191,7 +1191,7 @@ class GatewayCluster(object):
         ).format(name=self.name, dashboard=dashboard)
 
 
-class GatewayClient(Client):
+class GatewayClusterClient(Client):
     """A subclass of distributed.Client used for Dask Gateway customizations
 
     This subclass is used by Dask Gateway in order to override the parent's (distributed.Client) "dashboard_link" property until a
