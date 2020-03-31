@@ -187,7 +187,7 @@ class KubeClusterConfig(ClusterConfig):
         This dict will be deep merged with the worker pod spec (a ``V1PodSpec``
         object) before submission. Keys should match those in the `kubernetes
         spec
-        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__,
+        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core>`__,
         and should be camelCase.
 
         For example, here we add a toleration to worker pods.
@@ -215,7 +215,7 @@ class KubeClusterConfig(ClusterConfig):
         This dict will be deep merged with the scheduler pod spec (a
         ``V1PodSpec`` object) before submission. Keys should match those in the
         `kubernetes spec
-        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__,
+        <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core>`__,
         and should be camelCase.
 
         See ``worker_extra_pod_config`` for more information.
