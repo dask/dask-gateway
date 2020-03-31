@@ -13,7 +13,8 @@ data:
     c.KubeController.gateway_instance = '{{ include "dask-gateway.fullname" . }}'
     c.KubeController.proxy_prefix = "{{ .Values.gateway.prefix }}"
     c.KubeController.proxy_web_middlewares = [
-      {"name": '{{ include "dask-gateway.fullname" . | printf "clusters-prefix-%s" | trunc 63 | trimSuffix "-" }}'}
+      {"name": '{{ include "dask-gateway.fullname" . | printf "clusters-prefix-%s" | trunc 63 | trimSuffix "-" }}',
+      "namespace": '{{ .Release.Namespace }}'}
     ]
     c.KubeController.log_level = "{{ .Values.controller.loglevel }}"
     c.KubeController.completed_cluster_max_age = {{ .Values.controller.completedClusterMaxAge }}
