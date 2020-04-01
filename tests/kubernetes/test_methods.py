@@ -146,6 +146,8 @@ def example_config():
         "scheduler_memory_limit": "3G",
         "scheduler_cores": 1,
         "scheduler_cores_limit": 2,
+        "extra_labels": {"user-specific-label": "orkbork"},
+        "extra_annotations": {"user-specific-annotation": "Role1"}
     }
     return FrozenAttrDict(KubeClusterConfig(**kwargs).to_dict())
 
@@ -183,6 +185,10 @@ def test_make_pod(is_worker):
     assert labels["gateway.dask.org/instance"] == "instance-1234"
     assert labels["gateway.dask.org/cluster"] == cluster_name
     assert labels["app.kubernetes.io/component"] == component
+    assert labels["user-specific-label"] == "orkbork"
+
+    annotations = pod["metadata"]["annotations"]
+    assert annotations["user-specific-annotation"] == "Role1"
 
     assert pod["spec"]["tolerations"] == tolerations
     container = pod["spec"]["containers"][0]

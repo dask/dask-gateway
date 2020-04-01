@@ -1114,6 +1114,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             }
 
         labels = self.get_labels(cluster_name, container_name)
+        extra_annotations = config.extra_annotations
+        extra_labels = config.extra_labels
 
         volume = {
             "name": "dask-credentials",
@@ -1149,10 +1151,17 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         if extra_container_config:
             container = merge_json_objects(container, extra_container_config)
 
+        annotations = self.common_annotations
+        if extra_annotations:
+            annotations = merge_json_objects(annotations, extra_annotations)
+
+        if extra_labels:
+            labels.update(extra_labels)
+
         pod = {
             "apiVersion": "v1",
             "kind": "Pod",
-            "metadata": {"labels": labels, "annotations": self.common_annotations},
+            "metadata": {"labels": labels, "annotations": annotations},
             "spec": {
                 "containers": [container],
                 "volumes": [volume],
