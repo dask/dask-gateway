@@ -29,7 +29,7 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["secrets", "services"]
-    verbs: ["get", "create", "delete"]
+    verbs: ["create", "delete"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
