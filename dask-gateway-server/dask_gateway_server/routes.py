@@ -78,6 +78,13 @@ async def health(request):
     return web.json_response(health, status=status)
 
 
+@default_routes.get("/api/version")
+@api_handler
+async def version(request):
+    version = request.app["gateway"].version_info()
+    return web.json_response(version, status=200)
+
+
 @default_routes.get("/api/v1/options")
 @api_handler(user_authenticated=True)
 async def cluster_options(request):

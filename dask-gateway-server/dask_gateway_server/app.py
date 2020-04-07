@@ -261,5 +261,11 @@ class DaskGateway(Application):
         # TODO: add runtime checks here
         return {"status": "pass"}
 
+    def version_info(self):
+        """Handles the /api/version route"""
+        return {
+            "version": VERSION,
+        }
+
 
 main = DaskGateway.launch_instance

@@ -219,6 +219,18 @@ def test_http_client_proxy_explicit(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_get_versions():
+    from dask_gateway_server import __version__ as server_version
+    from dask_gateway import __version__ as client_version
+
+    async with temp_gateway() as g:
+        async with g.gateway_client() as gateway:
+            versions = await gateway.get_versions()
+            assert versions["client"]["version"] == client_version
+            assert versions["server"]["version"] == server_version
+
+
+@pytest.mark.asyncio
 async def test_client_reprs():
     async with temp_gateway() as g:
         async with g.gateway_client() as gateway:

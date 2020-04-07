@@ -15,7 +15,7 @@ pip install \
     cryptography \
     traitlets \
     sqlalchemy \
-    pytest \
+    "pytest<5.4.0" \
     pytest-asyncio
 
 pushd dask-gateway
