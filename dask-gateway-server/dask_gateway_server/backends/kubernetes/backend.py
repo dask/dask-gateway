@@ -254,6 +254,7 @@ class KubeClusterConfig(ClusterConfig):
         config=True,
     )
 
+
 class KubeBackendAndControllerMixin(LoggingConfigurable):
     """Shared config between the backend and controller"""
 

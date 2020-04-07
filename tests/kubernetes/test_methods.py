@@ -147,7 +147,7 @@ def example_config():
         "scheduler_cores": 1,
         "scheduler_cores_limit": 2,
         "extra_labels": {"user-specific-label": "orkbork"},
-        "extra_annotations": {"user-specific-annotation": "Role1"}
+        "extra_annotations": {"user-specific-annotation": "Role1"},
     }
     return FrozenAttrDict(KubeClusterConfig(**kwargs).to_dict())
 
