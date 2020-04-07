@@ -446,6 +446,26 @@ class Gateway(object):
         """
         return self.sync(self._cluster_report, cluster_name, **kwargs)
 
+    async def _get_versions(self):
+        url = "%s/api/version" % self.address
+        resp = await self._request("GET", url)
+        server_info = await resp.json()
+        from . import __version__
+
+        return {
+            "server": server_info,
+            "client": {"version": __version__},
+        }
+
+    def get_versions(self):
+        """Return version info for the server and client
+
+        Returns
+        -------
+        version_info : dict
+        """
+        return self.sync(self._get_versions)
+
     def _config_cluster_options(self):
         opts = dask.config.get("gateway.cluster.options")
         return {k: format_template(v) for k, v in opts.items()}
