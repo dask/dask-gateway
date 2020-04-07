@@ -9,7 +9,7 @@ pip install \
     dask \
     distributed \
     flake8 \
-    pytest \
+    "pytest<5.4.0" \
     pytest-asyncio \
     kubernetes-asyncio \
     sqlalchemy \
