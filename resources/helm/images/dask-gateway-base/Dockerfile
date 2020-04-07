@@ -1,13 +1,13 @@
-FROM debian:10.1-slim
-LABEL MAINTAINER="Jim Crist"
+FROM debian:10.3-slim
+LABEL MAINTAINER="Jim Crist-Harif"
 
-ENV CONDA_VERSION 4.7.12.1
-ENV CONDA_MD5 81c773ff87af5cfac79ab862942ab6b3
+ENV CONDA_VERSION py37_4.8.2
+ENV CONDA_SHA256 957d2f0f0701c3d1335e3b39f235d197837ad69a944fa6f5d8ad2c686b69df3b
 
 # We do the following all in one block:
 # - Create user dask
 # - Install miniconda install dependencies
-# - Download miniconda and check the md5sum
+# - Download miniconda and check the sha256 checksum
 # - Install miniconda
 # - Configure conda to minimize automatic package updates
 # - Install tini
@@ -17,12 +17,12 @@ ENV CONDA_MD5 81c773ff87af5cfac79ab862942ab6b3
 RUN useradd -m -U -u 1000 dask \
     && apt-get update \
     && apt-get install -y wget bzip2 \
-    && wget --quiet https://repo.continuum.io/miniconda/Miniconda3-$CONDA_VERSION-Linux-x86_64.sh \
-    && echo "${CONDA_MD5}  Miniconda3-$CONDA_VERSION-Linux-x86_64.sh" > miniconda.md5 \
-    && if [ $(md5sum -c miniconda.md5 | awk '{print $2}') != "OK" ] ; then exit 1; fi \
+    && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-$CONDA_VERSION-Linux-x86_64.sh \
+    && echo "${CONDA_SHA256}  Miniconda3-$CONDA_VERSION-Linux-x86_64.sh" > miniconda.checksum \
+    && if [ $(sha256sum -c miniconda.checksum | awk '{print $2}') != "OK" ] ; then exit 1; fi \
     && mv Miniconda3-$CONDA_VERSION-Linux-x86_64.sh miniconda.sh \
     && sh ./miniconda.sh -b -p /opt/conda \
-    && rm miniconda.sh miniconda.md5 \
+    && rm miniconda.sh miniconda.checksum \
     && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/dask/.profile \
     && echo "conda activate base" >> /home/dask/.profile \

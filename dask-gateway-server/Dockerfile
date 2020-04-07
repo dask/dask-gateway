@@ -1,5 +1,5 @@
-FROM daskgateway/dask-gateway-base:0.6.0 AS dependencies
-LABEL MAINTAINER="Jim Crist"
+FROM daskgateway/dask-gateway-base:0.7.0 AS dependencies
+LABEL MAINTAINER="Jim Crist-Harif"
 
 # Install dependencies
 RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \

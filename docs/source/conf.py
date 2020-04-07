@@ -5,8 +5,8 @@ import dask_gateway_server
 
 # Project settings
 project = "Dask Gateway"
-copyright = "2019, Jim Crist"
-author = "Jim Crist"
+copyright = "2019, Jim Crist-Harif"
+author = "Jim Crist-Harif"
 release = version = dask_gateway_server.__version__
 
 source_suffix = ".rst"

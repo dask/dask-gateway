@@ -58,7 +58,7 @@ class YarnClusterConfig(ClusterConfig):
 
         These archives are usually created using either ``conda-pack`` or
         ``venv-pack``. For more information on distributing files, see
-        https://jcrist.github.io/skein/distributing-files.html.
+        https://jcristharif.com/skein/distributing-files.html.
         """,
         config=True,
     )

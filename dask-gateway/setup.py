@@ -19,8 +19,8 @@ extras_require = {
 setup(
     name="dask-gateway",
     version=VERSION,
-    maintainer="Jim Crist",
-    maintainer_email="jiminy.crist@gmail.com",
+    maintainer="Jim Crist-Harif",
+    maintainer_email="jcristharif@gmail.com",
     license="BSD",
     classifiers=[
         "Development Status :: 4 - Beta",
