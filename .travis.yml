@@ -85,22 +85,22 @@ jobs:
           script:
             - ./continuous_integration/docker/slurm/script.sh
 
-        #- env:
-            #- DOCS=true
-          #before_install:
-            #- source continuous_integration/before_install.sh
-          #install:
-            #- source continuous_integration/install.sh
-            #- pip install kubernetes skein sphinx doctr dask-sphinx-theme
-          #script:
-            #- |
-              #set -xe
-              #pushd docs
-              #make html
-              #popd
-              #if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_EVENT_TYPE" == "push" ]]; then
-                  #doctr deploy . --built-docs docs/build/html/
-              #fi
+        - env:
+            - DOCS=true
+          before_install:
+            - source continuous_integration/before_install.sh
+          install:
+            - source continuous_integration/install.sh
+            - pip install kubernetes_asyncio skein sphinx doctr dask-sphinx-theme
+          script:
+            - |
+              set -xe
+              pushd docs
+              make html
+              popd
+              if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_EVENT_TYPE" == "push" ]]; then
+                  doctr deploy . --built-docs docs/build/html/
+              fi
 
 notifications:
   email: false
