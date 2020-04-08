@@ -18,8 +18,7 @@ takes a few parameters:
 
 - ``address``: The full address of the dask-gateway server.
 - ``proxy_address``: The full address of the dask-gateway scheduler proxy. If
-  not provided, this defaults to port 8786 on the same host as ``address``
-  above.
+  not provided, this defaults to ``address``.
 - ``auth``: The authentication method to use
 
 The values for each of these are specific to your deployment - consult your
@@ -31,14 +30,13 @@ administrator for more information about your specific deployment.
 
     # -- Here we provide a few examples of creating a `Gateway` object --
 
-    # Gateway server running at http://mygateway.com, scheduler proxy at
-    # tls://mygateway.com:8786, with kerberos authentication
+    # Gateway server running at http://mygateway.com with kerberos authentication
     gateway = Gateway(
         address="http://mygateway.com",
         auth="kerberos"
     )
 
-    # Gateway server at http://146.148.58.187, scheduler proxy server at
+    # Gateway server at http://146.148.58.187, proxy at
     # tls://35.202.68.87:8786, with JupyterHub authentication
     gateway = Gateway(
          "http://146.148.58.187",

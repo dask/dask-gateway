@@ -1,112 +1,118 @@
 
 
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.6.1+2.g86747a7 documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.7.0 documentation</title>
   
 
   
   
   
   
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script type="text/javascript" src="_static/js/custom.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Install on an HPC Job Queue" href="install-jobqueue.html" />
     <link rel="prev" title="Install on a Hadoop Cluster" href="install-hadoop.html" />
-  <link rel="shortcut icon" href="_static/images/favicon.ico"/>
-
+    <link rel="shortcut icon" href="_static/images/favicon.ico"/>
+  
 </head>
 
 <body class="wy-body-for-nav">
 
   
+    <nav id="explore-links">
+        <a href="https://docs.dask.org/">
+        <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+        </a>
 
-<nav id="explore-links">
-  <a href="https://docs.dask.org/">
-    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
-  </a>
+        <ul>
+        <li>
+            <a>Get Started</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+            <li><a href="https://examples.dask.org"> Examples </a></li>
+            <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+            <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+            <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+            <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+            <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+            <li><a href="https://dask.org/slides"> Slides </a></li>
+            </ul>
+        </li>
 
-  <ul>
-    <li>
-      <a>Get Started</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
-        <li><a href="https://examples.dask.org"> Examples </a></li>
-        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
-        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
-        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
-        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
-        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
-        <li><a href="https://dask.org/slides"> Slides </a></li>
-      </ul>
-    </li>
+        <li>
+            <a href="">Algorithms</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+            <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+            <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+            <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+            <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+            <li><a href="http://ml.dask.org">Machine Learning</a></li>
+            <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+            </ul>
+        </li>
 
-    <li>
-      <a href="">Algorithms</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
-        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
-        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
-        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
-        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
-        <li><a href="http://ml.dask.org">Machine Learning</a></li>
-        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
-      </ul>
-    </li>
+        <li>
+            <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+            <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
+            <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+            <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+            <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+            </ul>
+        </li>
 
-    <li>
-      <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
-        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
-        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
-      </ul>
-    </li>
+        <li>
+            <a>Community</a>
+            <ul>
+            <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+            <li><a href="https://github.com/dask">Github</a></li>
+            <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+            <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+            <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+            </ul>
+        </li>
+        </ul>
 
-    <li>
-      <a>Community</a>
-      <ul>
-        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
-        <li><a href="https://github.com/dask">Github</a></li>
-        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
-        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
-        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
-      </ul>
-    </li>
-  </ul>
-
-</nav>
-
-
+    </nav>
+  
   <div class="wy-grid-for-nav">
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
@@ -115,7 +121,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Dask Gateway
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Dask Gateway
           
 
           
@@ -125,7 +131,7 @@
             
             
               <div class="version">
-                0.6.1+2.g86747a7
+                0.7.0
               </div>
             
           
@@ -142,6 +148,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -160,6 +167,7 @@
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Install on a Kubernetes Cluster</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#architecture">Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#create-a-kubernetes-cluster-optional">Create a Kubernetes Cluster (optional)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#install-helm-optional">Install Helm (optional)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#install-dask-gateway">Install Dask-Gateway</a><ul>
@@ -186,7 +194,6 @@
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">User Resource Limits</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
@@ -198,6 +205,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -261,6 +269,21 @@
 <h1>Install on a Kubernetes Cluster<a class="headerlink" href="#install-on-a-kubernetes-cluster" title="Permalink to this headline">¶</a></h1>
 <p>Here we provide instructions for installing and configuring
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a <a class="reference external" href="https://kubernetes.io/">Kubernetes Cluster</a>.</p>
+<div class="section" id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h2>
+<p>When running on Kubernetes, Dask Gateway is composed of the following components:</p>
+<ul class="simple">
+<li><p>Multiple active <strong>Dask Clusters</strong> (potentially more than one per user)</p></li>
+<li><p>A <strong>Traefik Proxy</strong> for proxying both the connection between the user’s client
+and their respective scheduler, and the Dask Web UI for each cluster</p></li>
+<li><p>A <strong>Gateway API Server</strong> that handles user API requests</p></li>
+<li><p>A <strong>Gateway Controller</strong> for managing the kubernetes objects used by each
+cluster (e.g. pods, secrets, etc…).</p></li>
+</ul>
+<a class="reference internal image-reference" href="_images/architecture-k8s.svg"><img alt="Dask-Gateway high-level kubernetes architecture" class="align-center" src="_images/architecture-k8s.svg" width="90%" /></a>
+<p>Both the Traefik Proxy deployment and the Gateway API Server deployment can be
+scaled to multiple replicas, for increased availability and scalability.</p>
+</div>
 <div class="section" id="create-a-kubernetes-cluster-optional">
 <h2>Create a Kubernetes Cluster (optional)<a class="headerlink" href="#create-a-kubernetes-cluster-optional" title="Permalink to this headline">¶</a></h2>
 <p>If you don’t already have a cluster running, you’ll want to create one. There
@@ -292,19 +315,7 @@ $ helm repo update
 <p>The Helm chart provides access to configure most aspects of the
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. These are provided via a configuration <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file (the
 name of this file doesn’t matter, we’ll use <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>).</p>
-<p>At a minimum, you’ll need to set a value for <code class="docutils literal notranslate"><span class="pre">gateway.proxyToken</span></code>. This is a
-random hex string representing 32 bytes, used as a security token between the
-gateway and its proxies. You can generate this using <code class="docutils literal notranslate"><span class="pre">openssl</span></code>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -hex <span class="m">32</span>
-</pre></div>
-</div>
-<p>Write the following into a new file <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>, replacing <code class="docutils literal notranslate"><span class="pre">&lt;RANDOM</span>
-<span class="pre">TOKEN&gt;</span></code> with the output of the previous command above.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
-  <span class="nt">proxyToken</span><span class="p">:</span> <span class="s">&quot;&lt;RANDOM</span><span class="nv"> </span><span class="s">TOKEN&gt;&quot;</span>
-</pre></div>
-</div>
-<p>The Helm chart exposes many more configuration values, see the <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default
+<p>The Helm chart exposes many configuration values, see the <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default
 values.yaml file</a> for more information.</p>
 </div>
 <div class="section" id="install-the-helm-chart">
@@ -312,7 +323,7 @@ values.yaml file</a> for more information.</p>
 <p>To install the Dask-Gateway Helm chart, run the following command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RELEASE</span><span class="o">=</span>dask-gateway
 <span class="nv">NAMESPACE</span><span class="o">=</span>dask-gateway
-<span class="nv">VERSION</span><span class="o">=</span><span class="m">0</span>.6.1
+<span class="nv">VERSION</span><span class="o">=</span><span class="m">0</span>.7.0
 
 helm upgrade --install <span class="se">\</span>
     --namespace <span class="nv">$NAMESPACE</span> <span class="se">\</span>
@@ -336,33 +347,40 @@ above.</p></li>
 </ul>
 <p>Running this command may take some time, as resources are created and images
 are downloaded. When everything is ready, running the following command will
-show the <code class="docutils literal notranslate"><span class="pre">EXTERNAL-IP</span></code> addresses for all <code class="docutils literal notranslate"><span class="pre">LoadBalancer</span></code> services (highlighted
+show the <code class="docutils literal notranslate"><span class="pre">EXTERNAL-IP</span></code> addresses for the <code class="docutils literal notranslate"><span class="pre">LoadBalancer</span></code> service (highlighted
 below).</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ kubectl get service --namespace dask-gateway
-NAME                            TYPE           CLUSTER-IP      EXTERNAL-IP      PORT<span class="o">(</span>S<span class="o">)</span>          AGE
-scheduler-api-dask-gateway      ClusterIP      <span class="m">10</span>.51.245.233   &lt;none&gt;           <span class="m">8001</span>/TCP         6m54s
-<span class="hll">scheduler-public-dask-gateway   LoadBalancer   <span class="m">10</span>.51.253.105   <span class="m">35</span>.202.68.87     <span class="m">8786</span>:31172/TCP   6m54s
-</span>web-api-dask-gateway            ClusterIP      <span class="m">10</span>.51.250.11    &lt;none&gt;           <span class="m">8001</span>/TCP         6m54s
-<span class="hll">web-public-dask-gateway         LoadBalancer   <span class="m">10</span>.51.247.160   <span class="m">146</span>.148.58.187   <span class="m">80</span>:30304/TCP     6m54s
+NAME                              TYPE           CLUSTER-IP      EXTERNAL-IP      PORT<span class="o">(</span>S<span class="o">)</span>          AGE
+api-&lt;RELEASE&gt;-dask-gateway        ClusterIP      <span class="m">10</span>.51.245.233   &lt;none&gt;           <span class="m">8000</span>/TCP         6m54s
+<span class="hll">traefik-&lt;RELEASE&gt;-dask-gateway    LoadBalancer   <span class="m">10</span>.51.247.160   <span class="m">146</span>.148.58.187   <span class="m">80</span>:30304/TCP     6m54s
 </span></pre></div>
+</div>
+<p>You can also check to make sure the <cite>daskcluster</cite> CRD has been installed successfully:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ kubectl get daskcluster -o yaml
+apiVersion: v1
+items: <span class="o">[]</span>
+kind: List
+metadata:
+  resourceVersion: <span class="s2">&quot;&quot;</span>
+  selfLink: <span class="s2">&quot;&quot;</span>
+</pre></div>
 </div>
 <p>At this point, you have a fully running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>.</p>
 </div>
 </div>
 <div class="section" id="connecting-to-the-gateway">
 <h2>Connecting to the gateway<a class="headerlink" href="#connecting-to-the-gateway" title="Permalink to this headline">¶</a></h2>
-<p>To connect to the running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, you’ll need the external
-IPs from both the <code class="docutils literal notranslate"><span class="pre">web-public-*</span></code> and <code class="docutils literal notranslate"><span class="pre">scheduler-public-*</span></code> services above.
-The <code class="docutils literal notranslate"><span class="pre">web-public-*</span></code> service provides access to API requests, and also proxies
-out the <a class="reference external" href="https://docs.dask.org/en/latest/diagnostics-distributed.html">Dask Dashboards</a>. The <code class="docutils literal notranslate"><span class="pre">scheduler-public-*</span></code> service proxies TCP
-traffic between Dask clients and schedulers.</p>
+<p>To connect to the running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, you’ll need the external IPs
+from the <code class="docutils literal notranslate"><span class="pre">traefik-*</span></code> services above. The Traefik service provides access to
+API requests, proxies out the <a class="reference external" href="https://docs.dask.org/en/latest/diagnostics-distributed.html">Dask Dashboards</a>, and proxies TCP traffic
+between Dask clients and schedulers. (You can also choose to have Traefik handle
+scheduler traffic over a separate port, see the <a class="reference internal" href="#helm-chart-reference"><span class="std std-ref">Helm chart reference</span></a>).</p>
 <p>To connect, create a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a> object, specifying the both
-addresses (the <code class="docutils literal notranslate"><span class="pre">scheduler-proxy-*</span></code> IP/port goes under <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).
-Using the same values as above:</p>
+addresses (the second <code class="docutils literal notranslate"><span class="pre">traefik-*</span></code> port goes under <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code> if using
+separate ports). Using the same values as above:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="s2">&quot;http://146.148.58.187&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">proxy_address</span><span class="o">=</span><span class="s2">&quot;tls://35.202.68.87:8786&quot;</span>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
@@ -393,10 +411,10 @@ to set on scheduler/worker pods are directly exposed by the Helm chart. To
 address this, we provide a few fields for forwarding configuration directly to
 the underlying kubernetes objects:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">gateway.clusterManager.scheduler.extraPodConfig</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">gateway.clusterManager.scheduler.extraContainerConfig</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">gateway.clusterManager.worker.extraPodConfig</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">gateway.clusterManager.worker.extraContainerConfig</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gateway.backend.scheduler.extraPodConfig</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gateway.backend.scheduler.extraContainerConfig</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gateway.backend.worker.extraPodConfig</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gateway.backend.worker.extraContainerConfig</span></code></p></li>
 </ul>
 <p>These allow configuring any unexposed fields on the pod/container for
 schedulers and workers respectively. Each takes a mapping of key-value pairs,
@@ -408,7 +426,7 @@ API.</p>
 affinities</a> on scheduler or worker pods. Here we configure a node
 anti-affinity for scheduler pods to avoid <a class="reference external" href="https://cloud.google.com/blog/products/containers-kubernetes/cutting-costs-with-google-kubernetes-engine-using-the-cluster-autoscaler-and-preemptible-vms">preemptible nodes</a>:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
-  <span class="nt">clusterManager</span><span class="p">:</span>
+  <span class="nt">backend</span><span class="p">:</span>
     <span class="nt">scheduler</span><span class="p">:</span>
       <span class="nt">extraPodConfig</span><span class="p">:</span>
         <span class="nt">affinity</span><span class="p">:</span>
@@ -440,7 +458,7 @@ This allows merging multiple <code class="docutils literal notranslate"><span cl
 natively merge maps.</p></li>
 </ul>
 <p>For example, here we use <code class="docutils literal notranslate"><span class="pre">gateway.extraConfig</span></code> to set
-<a class="reference internal" href="api-server.html#c.DaskGateway.cluster_manager_options" title="c.DaskGateway.cluster_manager_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.cluster_manager_options</span></code></a>, exposing options for worker
+<a class="reference internal" href="api-server.html#c.Backend.cluster_options" title="c.Backend.cluster_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.cluster_options</span></code></a>, exposing options for worker
 resources and image (see <a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a> for more information).</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
   <span class="nt">extraConfig</span><span class="p">:</span> <span class="p p-Indicator">|</span>
@@ -453,7 +471,7 @@ resources and image (see <a class="reference internal" href="cluster-options.htm
             <span class="no">&quot;image&quot;: options.image,</span>
         <span class="no">}</span>
 
-    <span class="no">c.DaskGateway.cluster_manager_options = Options(</span>
+    <span class="no">c.Backend.cluster_options = Options(</span>
         <span class="no">Integer(&quot;worker_cores&quot;, 2, min=1, max=4, label=&quot;Worker Cores&quot;),</span>
         <span class="no">Float(&quot;worker_memory&quot;, 4, min=1, max=8, label=&quot;Worker Memory (GiB)&quot;),</span>
         <span class="no">String(&quot;image&quot;, default=&quot;daskgateway/dask-gateway:latest&quot;, label=&quot;Image&quot;),</span>
@@ -462,7 +480,7 @@ resources and image (see <a class="reference internal" href="cluster-options.htm
 </pre></div>
 </div>
 <p>For information on all available configuration options, see the
-<a class="reference internal" href="api-server.html"><span class="doc">Configuration Reference</span></a> (in particular, the <a class="reference internal" href="api-server.html#kube-cluster-manager-config"><span class="std std-ref">KubeClusterManager</span></a>
+<a class="reference internal" href="api-server.html"><span class="doc">Configuration Reference</span></a> (in particular, the <a class="reference internal" href="api-server.html#kube-cluster-config"><span class="std std-ref">KubeClusterConfig</span></a>
 section).</p>
 </div>
 <div class="section" id="authenticating-with-jupyterhub">
@@ -516,7 +534,6 @@ object.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="s2">&quot;http://146.148.58.187&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">proxy_address</span><span class="o">=</span><span class="s2">&quot;tls://35.202.68.87:8786&quot;</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">auth</span><span class="o">=</span><span class="s2">&quot;jupyterhub&quot;</span><span class="p">,</span>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
@@ -528,31 +545,38 @@ object.</p>
 <p>The full <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default values.yaml file</a> for the dask-gateway Helm chart is included
 here for reference:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
-  <span class="c1"># Annotations to apply to the gateway-server pod.</span>
+  <span class="c1"># Number of instances of the gateway-server to run</span>
+  <span class="nt">replicas</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+
+  <span class="c1"># Annotations to apply to the gateway-server pods.</span>
   <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
-
-  <span class="c1"># A 32 byte hex-encoded secret token for encrypting cookies.</span>
-  <span class="c1"># Sets `c.DaskGateway.cookie_secret`.</span>
-  <span class="nt">cookieSecret</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
-
-  <span class="c1"># A 32 byte hex-encoded secret token for authenticating with the proxies.</span>
-  <span class="c1"># Sets `c.WebProxy.auth_token` and `c.SchedulerProxy.auth_token`.</span>
-  <span class="nt">proxyToken</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
 
   <span class="c1"># Resource requests/limits for the gateway-server pod.</span>
   <span class="nt">resources</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
+  <span class="c1"># Path prefix to serve dask-gateway api requests under</span>
+  <span class="c1"># This prefix will be added to all routes the gateway manages</span>
+  <span class="c1"># in the traefik proxy.</span>
+  <span class="nt">prefix</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/</span>
+
+  <span class="c1"># The gateway server log level</span>
+  <span class="nt">loglevel</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">INFO</span>
+
   <span class="c1"># The image to use for the gateway-server pod.</span>
   <span class="nt">image</span><span class="p">:</span>
     <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span>
-    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.6.1</span>
+    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.7.0</span>
     <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
 
-  <span class="nt">auth</span><span class="p">:</span>
-    <span class="c1"># The auth type to use. One of {dummy, kerberos, jupyterhub, custom}.</span>
-    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">dummy</span>
+  <span class="c1"># Configuration for the gateway-server service</span>
+  <span class="nt">service</span><span class="p">:</span>
+    <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
-    <span class="nt">dummy</span><span class="p">:</span>
+  <span class="nt">auth</span><span class="p">:</span>
+    <span class="c1"># The auth type to use. One of {simple, kerberos, jupyterhub, custom}.</span>
+    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">simple</span>
+
+    <span class="nt">simple</span><span class="p">:</span>
       <span class="c1"># A shared password to use for all users.</span>
       <span class="nt">password</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
 
@@ -576,31 +600,27 @@ here for reference:</p>
       <span class="c1"># Configuration fields to set on the authenticator class.</span>
       <span class="nt">options</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
-  <span class="nt">clusterManager</span><span class="p">:</span>
-    <span class="c1"># Timeout (in seconds) for starting a cluster.</span>
-    <span class="c1"># Sets `c.KubeClusterManager.cluster_start_timeout`.</span>
-    <span class="nt">clusterStartTimeout</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
-
-    <span class="c1"># Timeout (in seconds) for starting a worker.</span>
-    <span class="c1"># Sets `c.KubeClusterManager.worker_start_timeout`.</span>
-    <span class="nt">workerStartTimeout</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
-
+  <span class="nt">backend</span><span class="p">:</span>
     <span class="c1"># The image to use for both schedulers and workers.</span>
     <span class="nt">image</span><span class="p">:</span>
       <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway</span>
-      <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.6.1</span>
+      <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.7.0</span>
       <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+
+    <span class="c1"># The namespace to launch dask clusters in. If not specified, defaults to</span>
+    <span class="c1"># the same namespace the gateway is running in.</span>
+    <span class="nt">namespace</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
 
     <span class="c1"># A mapping of environment variables to set for both schedulers and workers.</span>
     <span class="nt">environment</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
 
     <span class="nt">scheduler</span><span class="p">:</span>
       <span class="c1"># Any extra configuration for the scheduler pod. Sets</span>
-      <span class="c1"># `c.KubeClusterManager.scheduler_extra_pod_config`.</span>
+      <span class="c1"># `c.KubeClusterConfig.scheduler_extra_pod_config`.</span>
       <span class="nt">extraPodConfig</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
       <span class="c1"># Any extra configuration for the scheduler container.</span>
-      <span class="c1"># Sets `c.KubeClusterManager.scheduler_extra_container_config`.</span>
+      <span class="c1"># Sets `c.KubeClusterConfig.scheduler_extra_container_config`.</span>
       <span class="nt">extraContainerConfig</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
       <span class="c1"># Cores request/limit for the scheduler.</span>
@@ -615,11 +635,11 @@ here for reference:</p>
 
     <span class="nt">worker</span><span class="p">:</span>
       <span class="c1"># Any extra configuration for the worker pod. Sets</span>
-      <span class="c1"># `c.KubeClusterManager.worker_extra_pod_config`.</span>
+      <span class="c1"># `c.KubeClusterConfig.worker_extra_pod_config`.</span>
       <span class="nt">extraPodConfig</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
       <span class="c1"># Any extra configuration for the worker container. Sets</span>
-      <span class="c1"># `c.KubeClusterManager.worker_extra_container_config`.</span>
+      <span class="c1"># `c.KubeClusterConfig.worker_extra_container_config`.</span>
       <span class="nt">extraContainerConfig</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
       <span class="c1"># Cores request/limit for each worker.</span>
@@ -639,73 +659,106 @@ here for reference:</p>
   <span class="c1"># `values.yaml` files, but is unnecessary in other cases.</span>
   <span class="nt">extraConfig</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
-<span class="nt">schedulerProxy</span><span class="p">:</span>
-  <span class="c1"># Annotations to apply to the scheduler-proxy pod.</span>
+<span class="c1"># Configuration for the gateway controller</span>
+<span class="nt">controller</span><span class="p">:</span>
+  <span class="c1"># Whether the controller should be deployed. Disabling the controller allows</span>
+  <span class="c1"># running it locally for development/debugging purposes.</span>
+  <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+
+  <span class="c1"># Any annotations to add to the controller pod</span>
   <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
-  <span class="c1"># Resource requests/limits for the scheduler-proxy pod.</span>
+  <span class="c1"># Resource requests/limits for the controller pod</span>
   <span class="nt">resources</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
-  <span class="c1"># The image to use for the scheduler-proxy.</span>
+  <span class="c1"># The controller log level</span>
+  <span class="nt">loglevel</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">INFO</span>
+
+  <span class="c1"># Max time (in seconds) to keep around records of completed clusters.</span>
+  <span class="c1"># Default is 24 hours.</span>
+  <span class="nt">completedClusterMaxAge</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">86400</span>
+
+  <span class="c1"># Time (in seconds) between cleanup tasks removing records of completed</span>
+  <span class="c1"># clusters. Default is 5 minutes.</span>
+  <span class="nt">completedClusterCleanupPeriod</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">600</span>
+
+  <span class="c1"># Base delay (in seconds) for backoff when retrying after failures.</span>
+  <span class="nt">backoffBaseDelay</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1</span>
+
+  <span class="c1"># Max delay (in seconds) for backoff when retrying after failures.</span>
+  <span class="nt">backoffMaxDelay</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">300</span>
+
+  <span class="c1"># Limit on the average number of k8s api calls per second.</span>
+  <span class="nt">k8sApiRateLimit</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">50</span>
+
+  <span class="c1"># Limit on the maximum number of k8s api calls per second.</span>
+  <span class="nt">k8sApiRateLimitBurst</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">100</span>
+
+  <span class="c1"># The image to use for the controller pod.</span>
   <span class="nt">image</span><span class="p">:</span>
     <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span>
-    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.6.1</span>
+    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.7.0</span>
     <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
 
-  <span class="c1"># Service configuration for the scheduler-proxy service. See</span>
-  <span class="c1"># https://kubernetes.io/docs/concepts/services-networking/service/ for more</span>
-  <span class="c1"># information.</span>
-  <span class="nt">service</span><span class="p">:</span>
-    <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
-    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">LoadBalancer</span>
-    <span class="nt">nodePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
-    <span class="nt">loadBalancerIP</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+<span class="c1"># Configuration for the traefik proxy</span>
+<span class="nt">traefik</span><span class="p">:</span>
+  <span class="c1"># Number of instances of the proxy to run</span>
+  <span class="nt">replicas</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
 
-<span class="nt">webProxy</span><span class="p">:</span>
-  <span class="c1"># Annotations to apply to the web-proxy pod.</span>
+  <span class="c1"># Any annotations to add to the proxy pods</span>
   <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
-  <span class="c1"># Resource requests/limits for the web-proxy pod.</span>
+  <span class="c1"># Resource requests/limits for the proxy pods</span>
   <span class="nt">resources</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
-  <span class="c1"># The image to use for the web-proxy.</span>
+  <span class="c1"># The image to use for the proxy pod</span>
   <span class="nt">image</span><span class="p">:</span>
-    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span>
-    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.6.1</span>
-    <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+    <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">traefik</span>
+    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2.1.3</span>
 
-  <span class="c1"># Service configuration for the web-proxy service. See</span>
-  <span class="c1"># https://kubernetes.io/docs/concepts/services-networking/service/ for more</span>
-  <span class="c1"># information.</span>
+  <span class="c1"># Any additional arguments to forward to traefik</span>
+  <span class="nt">additionalArguments</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
+
+  <span class="c1"># The proxy log level</span>
+  <span class="nt">loglevel</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">WARN</span>
+
+  <span class="c1"># Whether to expose the dashboard on port 9000 (enable for debugging only!)</span>
+  <span class="nt">dashboard</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+
+  <span class="c1"># Additional configuration for the traefik service</span>
   <span class="nt">service</span><span class="p">:</span>
-    <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
     <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">LoadBalancer</span>
-    <span class="nt">nodePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
-    <span class="nt">loadBalancerIP</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
+    <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+    <span class="nt">spec</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+    <span class="nt">ports</span><span class="p">:</span>
+      <span class="nt">web</span><span class="p">:</span>
+        <span class="c1"># The port HTTP(s) requests will be served on</span>
+        <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+      <span class="nt">tcp</span><span class="p">:</span>
+        <span class="c1"># The port TCP requests will be served on. Set to `web` to share the</span>
+        <span class="c1"># web service port</span>
+        <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">web</span>
+
+  <span class="c1"># Settings for nodeSelector, affinity, and tolerations for the traefik pods</span>
+  <span class="nt">nodeSelector</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+  <span class="nt">affinity</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+  <span class="nt">tolerations</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
 
 <span class="nt">rbac</span><span class="p">:</span>
   <span class="c1"># Whether to enable RBAC.</span>
   <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
 
-<span class="nt">ingress</span><span class="p">:</span>
-  <span class="c1"># Whether an Ingress object should be used.</span>
-  <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="c1"># Existing names to use if ClusterRoles, ClusterRoleBindings, and</span>
+  <span class="c1"># ServiceAccounts have already been created by other means (leave set to</span>
+  <span class="c1"># `null` to create all required roles at install time)</span>
+  <span class="nt">controller</span><span class="p">:</span>
+    <span class="nt">serviceAccountName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
 
-  <span class="c1"># Annotations to apply to the Ingress.</span>
-  <span class="nt">annotations</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
+  <span class="nt">gateway</span><span class="p">:</span>
+    <span class="nt">serviceAccountName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
 
-  <span class="c1"># A list of hosts to route requests to the proxy.</span>
-  <span class="nt">hosts</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
-
-  <span class="c1"># TLS configuration for ingress. See</span>
-  <span class="c1"># https://kubernetes.io/docs/concepts/services-networking/ingress/#tls for more</span>
-  <span class="c1"># information.</span>
-  <span class="nt">tls</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
-
-  <span class="c1"># The path to use when adding the gateway to the Ingress rules. See</span>
-  <span class="c1"># https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules</span>
-  <span class="c1"># for more information.</span>
-  <span class="nt">path</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/</span>
+  <span class="nt">traefik</span><span class="p">:</span>
+    <span class="nt">serviceAccountName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
 </pre></div>
 </div>
 </div>
@@ -731,7 +784,7 @@ here for reference:</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jim Crist
+        &copy; Copyright 2019, Jim Crist-Harif
 
     </p>
   </div>

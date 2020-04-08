@@ -24,6 +24,18 @@ Options
 .. autoclass:: dask_gateway.options.Options
 
 
+Authentication
+--------------
+
+.. autoclass:: dask_gateway.auth.GatewayAuth
+
+.. autoclass:: dask_gateway.auth.BasicAuth
+
+.. autoclass:: dask_gateway.auth.KerberosAuth
+
+.. autoclass:: dask_gateway.auth.JupyterHubAuth
+
+
 Exceptions
 ----------
 

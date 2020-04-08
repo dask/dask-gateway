@@ -1,111 +1,117 @@
 
 
 
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; Dask Gateway 0.6.1+2.g86747a7 documentation</title>
+  <title>Index &mdash; Dask Gateway 0.7.0 documentation</title>
   
 
   
   
   
   
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script type="text/javascript" src="_static/js/custom.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
-  <link rel="shortcut icon" href="_static/images/favicon.ico"/>
-
+    <link rel="shortcut icon" href="_static/images/favicon.ico"/>
+  
 </head>
 
 <body class="wy-body-for-nav">
 
   
+    <nav id="explore-links">
+        <a href="https://docs.dask.org/">
+        <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+        </a>
 
-<nav id="explore-links">
-  <a href="https://docs.dask.org/">
-    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
-  </a>
+        <ul>
+        <li>
+            <a>Get Started</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+            <li><a href="https://examples.dask.org"> Examples </a></li>
+            <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+            <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+            <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+            <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+            <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+            <li><a href="https://dask.org/slides"> Slides </a></li>
+            </ul>
+        </li>
 
-  <ul>
-    <li>
-      <a>Get Started</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
-        <li><a href="https://examples.dask.org"> Examples </a></li>
-        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
-        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
-        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
-        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
-        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
-        <li><a href="https://dask.org/slides"> Slides </a></li>
-      </ul>
-    </li>
+        <li>
+            <a href="">Algorithms</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+            <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+            <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+            <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+            <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+            <li><a href="http://ml.dask.org">Machine Learning</a></li>
+            <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+            </ul>
+        </li>
 
-    <li>
-      <a href="">Algorithms</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
-        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
-        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
-        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
-        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
-        <li><a href="http://ml.dask.org">Machine Learning</a></li>
-        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
-      </ul>
-    </li>
+        <li>
+            <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+            <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
+            <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+            <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+            <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+            </ul>
+        </li>
 
-    <li>
-      <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
-        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
-        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
-      </ul>
-    </li>
+        <li>
+            <a>Community</a>
+            <ul>
+            <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+            <li><a href="https://github.com/dask">Github</a></li>
+            <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+            <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+            <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+            </ul>
+        </li>
+        </ul>
 
-    <li>
-      <a>Community</a>
-      <ul>
-        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
-        <li><a href="https://github.com/dask">Github</a></li>
-        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
-        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
-        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
-      </ul>
-    </li>
-  </ul>
-
-</nav>
-
-
+    </nav>
+  
   <div class="wy-grid-for-nav">
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
@@ -114,7 +120,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Dask Gateway
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Dask Gateway
           
 
           
@@ -124,7 +130,7 @@
             
             
               <div class="version">
-                0.6.1+2.g86747a7
+                0.7.0
               </div>
             
           
@@ -141,6 +147,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -166,7 +173,6 @@
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">User Resource Limits</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
@@ -178,6 +184,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -245,10 +252,13 @@
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#J"><strong>J</strong></a>
+ | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#S"><strong>S</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -266,6 +276,10 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-client.html#dask_gateway.auth.BasicAuth">BasicAuth (class in dask_gateway.auth)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-server.html#dask_gateway_server.options.Bool">Bool (class in dask_gateway_server.options)</a>
 </li>
   </ul></td>
@@ -274,57 +288,37 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-server.html#c.ClusterManager.adaptive_period">c.ClusterManager.adaptive_period (built-in variable)</a>
+      <li><a href="api-server.html#c.Backend.api_url">c.Backend.api_url (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.cluster_start_timeout">c.ClusterManager.cluster_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.Backend.cluster_config_class">c.Backend.cluster_config_class (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.cluster_status_period">c.ClusterManager.cluster_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.Backend.cluster_options">c.Backend.cluster_options (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.environment">c.ClusterManager.environment (built-in variable)</a>
+      <li><a href="api-server.html#c.ClusterConfig.adaptive_period">c.ClusterConfig.adaptive_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.idle_timeout">c.ClusterManager.idle_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.ClusterConfig.environment">c.ClusterConfig.environment (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.scheduler_cmd">c.ClusterManager.scheduler_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.ClusterConfig.idle_timeout">c.ClusterConfig.idle_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.scheduler_cores">c.ClusterManager.scheduler_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.ClusterConfig.scheduler_cmd">c.ClusterConfig.scheduler_cmd (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.scheduler_memory">c.ClusterManager.scheduler_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.ClusterConfig.scheduler_cores">c.ClusterConfig.scheduler_cores (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.worker_cmd">c.ClusterManager.worker_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.ClusterConfig.scheduler_memory">c.ClusterConfig.scheduler_memory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.worker_cores">c.ClusterManager.worker_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.ClusterConfig.worker_cmd">c.ClusterConfig.worker_cmd (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.worker_memory">c.ClusterManager.worker_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.ClusterConfig.worker_cores">c.ClusterConfig.worker_cores (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.worker_start_timeout">c.ClusterManager.worker_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.ClusterConfig.worker_memory">c.ClusterConfig.worker_memory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.ClusterManager.worker_status_period">c.ClusterManager.worker_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.DaskGateway.address">c.DaskGateway.address (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.DaskGateway.authenticator_class">c.DaskGateway.authenticator_class (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.DaskGateway.check_cluster_timeout">c.DaskGateway.check_cluster_timeout (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.cluster_manager_class">c.DaskGateway.cluster_manager_class (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.cluster_manager_options">c.DaskGateway.cluster_manager_options (built-in variable)</a>
+      <li><a href="api-server.html#c.DaskGateway.backend_class">c.DaskGateway.backend_class (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.DaskGateway.config_file">c.DaskGateway.config_file (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.cookie_max_age_days">c.DaskGateway.cookie_max_age_days (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.cookie_secret">c.DaskGateway.cookie_secret (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.db_cleanup_period">c.DaskGateway.db_cleanup_period (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.db_cluster_max_age">c.DaskGateway.db_cluster_max_age (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.db_debug">c.DaskGateway.db_debug (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.db_encrypt_keys">c.DaskGateway.db_encrypt_keys (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.db_url">c.DaskGateway.db_url (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.gateway_url">c.DaskGateway.gateway_url (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.DaskGateway.log_datefmt">c.DaskGateway.log_datefmt (built-in variable)</a>
 </li>
@@ -332,23 +326,9 @@
 </li>
       <li><a href="api-server.html#c.DaskGateway.log_level">c.DaskGateway.log_level (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.DaskGateway.private_connect_url">c.DaskGateway.private_connect_url (built-in variable)</a>
+      <li><a href="api-server.html#c.JupyterHubAuthenticator.cache_max_age">c.JupyterHubAuthenticator.cache_max_age (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.DaskGateway.private_url">c.DaskGateway.private_url (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.public_connect_url">c.DaskGateway.public_connect_url (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.public_url">c.DaskGateway.public_url (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.stop_clusters_on_shutdown">c.DaskGateway.stop_clusters_on_shutdown (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.temp_dir">c.DaskGateway.temp_dir (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.tls_cert">c.DaskGateway.tls_cert (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DaskGateway.tls_key">c.DaskGateway.tls_key (built-in variable)</a>
-</li>
-      <li><a href="api-server.html#c.DummyAuthenticator.password">c.DummyAuthenticator.password (built-in variable)</a>
+      <li><a href="api-server.html#c.JupyterHubAuthenticator.cookie_name">c.JupyterHubAuthenticator.cookie_name (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.JupyterHubAuthenticator.jupyterhub_api_token">c.JupyterHubAuthenticator.jupyterhub_api_token (built-in variable)</a>
 </li>
@@ -360,299 +340,497 @@
 </li>
       <li><a href="api-server.html#c.JupyterHubAuthenticator.tls_key">c.JupyterHubAuthenticator.tls_key (built-in variable)</a>
 </li>
+      <li><a href="api-server.html#c.KerberosAuthenticator.cache_max_age">c.KerberosAuthenticator.cache_max_age (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.KerberosAuthenticator.cookie_name">c.KerberosAuthenticator.cookie_name (built-in variable)</a>
+</li>
       <li><a href="api-server.html#c.KerberosAuthenticator.keytab">c.KerberosAuthenticator.keytab (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.KerberosAuthenticator.service_name">c.KerberosAuthenticator.service_name (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.adaptive_period">c.KubeClusterManager.adaptive_period (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeBackend.api_url">c.KubeBackend.api_url (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.cluster_start_timeout">c.KubeClusterManager.cluster_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeBackend.cluster_config_class">c.KubeBackend.cluster_config_class (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.cluster_status_period">c.KubeClusterManager.cluster_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeBackend.cluster_options">c.KubeBackend.cluster_options (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.common_annotations">c.KubeClusterManager.common_annotations (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeBackend.common_annotations">c.KubeBackend.common_annotations (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.common_labels">c.KubeClusterManager.common_labels (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeBackend.common_labels">c.KubeBackend.common_labels (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.environment">c.KubeClusterManager.environment (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeBackend.crd_version">c.KubeBackend.crd_version (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.idle_timeout">c.KubeClusterManager.idle_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeBackend.gateway_instance">c.KubeBackend.gateway_instance (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.image">c.KubeClusterManager.image (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeBackend.label_selector">c.KubeBackend.label_selector (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.image_pull_policy">c.KubeClusterManager.image_pull_policy (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.adaptive_period">c.KubeClusterConfig.adaptive_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.namespace">c.KubeClusterManager.namespace (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.environment">c.KubeClusterConfig.environment (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.scheduler_cmd">c.KubeClusterManager.scheduler_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.idle_timeout">c.KubeClusterConfig.idle_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.scheduler_cores">c.KubeClusterManager.scheduler_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.image">c.KubeClusterConfig.image (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.scheduler_cores_limit">c.KubeClusterManager.scheduler_cores_limit (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.image_pull_policy">c.KubeClusterConfig.image_pull_policy (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.scheduler_extra_container_config">c.KubeClusterManager.scheduler_extra_container_config (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.namespace">c.KubeClusterConfig.namespace (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.scheduler_extra_pod_config">c.KubeClusterManager.scheduler_extra_pod_config (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.scheduler_cmd">c.KubeClusterConfig.scheduler_cmd (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.scheduler_memory">c.KubeClusterManager.scheduler_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.scheduler_cores">c.KubeClusterConfig.scheduler_cores (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.scheduler_memory_limit">c.KubeClusterManager.scheduler_memory_limit (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.scheduler_cores_limit">c.KubeClusterConfig.scheduler_cores_limit (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.worker_cmd">c.KubeClusterManager.worker_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.scheduler_extra_container_config">c.KubeClusterConfig.scheduler_extra_container_config (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.worker_cores">c.KubeClusterManager.worker_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.scheduler_extra_pod_config">c.KubeClusterConfig.scheduler_extra_pod_config (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.worker_cores_limit">c.KubeClusterManager.worker_cores_limit (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.scheduler_memory">c.KubeClusterConfig.scheduler_memory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.worker_extra_container_config">c.KubeClusterManager.worker_extra_container_config (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.scheduler_memory_limit">c.KubeClusterConfig.scheduler_memory_limit (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.worker_extra_pod_config">c.KubeClusterManager.worker_extra_pod_config (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.worker_cmd">c.KubeClusterConfig.worker_cmd (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.worker_memory">c.KubeClusterManager.worker_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.worker_cores">c.KubeClusterConfig.worker_cores (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.worker_memory_limit">c.KubeClusterManager.worker_memory_limit (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.worker_cores_limit">c.KubeClusterConfig.worker_cores_limit (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.worker_start_timeout">c.KubeClusterManager.worker_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.worker_extra_container_config">c.KubeClusterConfig.worker_extra_container_config (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.KubeClusterManager.worker_status_period">c.KubeClusterManager.worker_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.worker_extra_pod_config">c.KubeClusterConfig.worker_extra_pod_config (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.adaptive_period">c.LocalClusterManager.adaptive_period (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.worker_memory">c.KubeClusterConfig.worker_memory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.cluster_start_timeout">c.LocalClusterManager.cluster_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeClusterConfig.worker_memory_limit">c.KubeClusterConfig.worker_memory_limit (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.cluster_status_period">c.LocalClusterManager.cluster_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.address">c.KubeController.address (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.clusters_directory">c.LocalClusterManager.clusters_directory (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.api_url">c.KubeController.api_url (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.environment">c.LocalClusterManager.environment (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.backoff_base_delay">c.KubeController.backoff_base_delay (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.idle_timeout">c.LocalClusterManager.idle_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.backoff_max_delay">c.KubeController.backoff_max_delay (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.inherited_environment">c.LocalClusterManager.inherited_environment (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.common_annotations">c.KubeController.common_annotations (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.scheduler_cmd">c.LocalClusterManager.scheduler_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.common_labels">c.KubeController.common_labels (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.scheduler_cores">c.LocalClusterManager.scheduler_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.completed_cluster_cleanup_period">c.KubeController.completed_cluster_cleanup_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.scheduler_memory">c.LocalClusterManager.scheduler_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.completed_cluster_max_age">c.KubeController.completed_cluster_max_age (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.sigint_timeout">c.LocalClusterManager.sigint_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.config_file">c.KubeController.config_file (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.sigkill_timeout">c.LocalClusterManager.sigkill_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.crd_version">c.KubeController.crd_version (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.sigterm_timeout">c.LocalClusterManager.sigterm_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.gateway_instance">c.KubeController.gateway_instance (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.worker_cmd">c.LocalClusterManager.worker_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.k8s_api_rate_limit">c.KubeController.k8s_api_rate_limit (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.worker_cores">c.LocalClusterManager.worker_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.k8s_api_rate_limit_burst">c.KubeController.k8s_api_rate_limit_burst (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.worker_memory">c.LocalClusterManager.worker_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.label_selector">c.KubeController.label_selector (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.worker_start_timeout">c.LocalClusterManager.worker_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.log_datefmt">c.KubeController.log_datefmt (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.LocalClusterManager.worker_status_period">c.LocalClusterManager.worker_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.log_format">c.KubeController.log_format (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.account">c.PBSClusterManager.account (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.log_level">c.KubeController.log_level (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.adaptive_period">c.PBSClusterManager.adaptive_period (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.parallelism">c.KubeController.parallelism (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.cancel_command">c.PBSClusterManager.cancel_command (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.proxy_prefix">c.KubeController.proxy_prefix (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.cluster_start_timeout">c.PBSClusterManager.cluster_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.proxy_tcp_entrypoint">c.KubeController.proxy_tcp_entrypoint (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.cluster_status_period">c.PBSClusterManager.cluster_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.proxy_web_entrypoint">c.KubeController.proxy_web_entrypoint (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.dask_gateway_jobqueue_launcher">c.PBSClusterManager.dask_gateway_jobqueue_launcher (built-in variable)</a>
+      <li><a href="api-server.html#c.KubeController.proxy_web_middlewares">c.KubeController.proxy_web_middlewares (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.environment">c.PBSClusterManager.environment (built-in variable)</a>
+      <li><a href="api-server.html#c.LocalBackend.api_url">c.LocalBackend.api_url (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.backoff_base_delay">c.LocalBackend.backoff_base_delay (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.backoff_max_delay">c.LocalBackend.backoff_max_delay (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.check_timeouts_period">c.LocalBackend.check_timeouts_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.cluster_config_class">c.LocalBackend.cluster_config_class (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.cluster_heartbeat_period">c.LocalBackend.cluster_heartbeat_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.cluster_heartbeat_timeout">c.LocalBackend.cluster_heartbeat_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.cluster_options">c.LocalBackend.cluster_options (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.cluster_start_timeout">c.LocalBackend.cluster_start_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.cluster_status_period">c.LocalBackend.cluster_status_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.clusters_directory">c.LocalBackend.clusters_directory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.db_cleanup_period">c.LocalBackend.db_cleanup_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.db_cluster_max_age">c.LocalBackend.db_cluster_max_age (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.db_debug">c.LocalBackend.db_debug (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.db_encrypt_keys">c.LocalBackend.db_encrypt_keys (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.db_url">c.LocalBackend.db_url (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.inherited_environment">c.LocalBackend.inherited_environment (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.parallelism">c.LocalBackend.parallelism (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.sigint_timeout">c.LocalBackend.sigint_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.sigkill_timeout">c.LocalBackend.sigkill_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.sigterm_timeout">c.LocalBackend.sigterm_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.stop_clusters_on_shutdown">c.LocalBackend.stop_clusters_on_shutdown (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.worker_start_failure_limit">c.LocalBackend.worker_start_failure_limit (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.worker_start_timeout">c.LocalBackend.worker_start_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalBackend.worker_status_period">c.LocalBackend.worker_status_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.adaptive_period">c.LocalClusterConfig.adaptive_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.environment">c.LocalClusterConfig.environment (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.idle_timeout">c.LocalClusterConfig.idle_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.scheduler_cmd">c.LocalClusterConfig.scheduler_cmd (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.scheduler_cores">c.LocalClusterConfig.scheduler_cores (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.scheduler_memory">c.LocalClusterConfig.scheduler_memory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.worker_cmd">c.LocalClusterConfig.worker_cmd (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.worker_cores">c.LocalClusterConfig.worker_cores (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.worker_memory">c.LocalClusterConfig.worker_memory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.api_url">c.PBSBackend.api_url (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.backoff_base_delay">c.PBSBackend.backoff_base_delay (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.backoff_max_delay">c.PBSBackend.backoff_max_delay (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.cancel_command">c.PBSBackend.cancel_command (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.check_timeouts_period">c.PBSBackend.check_timeouts_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.cluster_config_class">c.PBSBackend.cluster_config_class (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.cluster_heartbeat_period">c.PBSBackend.cluster_heartbeat_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.cluster_heartbeat_timeout">c.PBSBackend.cluster_heartbeat_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.cluster_options">c.PBSBackend.cluster_options (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.cluster_start_timeout">c.PBSBackend.cluster_start_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.cluster_status_period">c.PBSBackend.cluster_status_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.dask_gateway_jobqueue_launcher">c.PBSBackend.dask_gateway_jobqueue_launcher (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.db_cleanup_period">c.PBSBackend.db_cleanup_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.db_cluster_max_age">c.PBSBackend.db_cluster_max_age (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.db_debug">c.PBSBackend.db_debug (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.db_encrypt_keys">c.PBSBackend.db_encrypt_keys (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.db_url">c.PBSBackend.db_url (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.gateway_hostname">c.PBSBackend.gateway_hostname (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.parallelism">c.PBSBackend.parallelism (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.status_command">c.PBSBackend.status_command (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.stop_clusters_on_shutdown">c.PBSBackend.stop_clusters_on_shutdown (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.submit_command">c.PBSBackend.submit_command (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.worker_start_failure_limit">c.PBSBackend.worker_start_failure_limit (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSBackend.worker_start_timeout">c.PBSBackend.worker_start_timeout (built-in variable)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-server.html#c.PBSClusterManager.gateway_hostname">c.PBSClusterManager.gateway_hostname (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSBackend.worker_status_period">c.PBSBackend.worker_status_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.idle_timeout">c.PBSClusterManager.idle_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.account">c.PBSClusterConfig.account (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.project">c.PBSClusterManager.project (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.adaptive_period">c.PBSClusterConfig.adaptive_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.queue">c.PBSClusterManager.queue (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.environment">c.PBSClusterConfig.environment (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.scheduler_cmd">c.PBSClusterManager.scheduler_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.idle_timeout">c.PBSClusterConfig.idle_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.scheduler_cores">c.PBSClusterManager.scheduler_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.project">c.PBSClusterConfig.project (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.scheduler_memory">c.PBSClusterManager.scheduler_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.queue">c.PBSClusterConfig.queue (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.scheduler_resource_list">c.PBSClusterManager.scheduler_resource_list (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.scheduler_cmd">c.PBSClusterConfig.scheduler_cmd (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.scheduler_setup">c.PBSClusterManager.scheduler_setup (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.scheduler_cores">c.PBSClusterConfig.scheduler_cores (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.staging_directory">c.PBSClusterManager.staging_directory (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.scheduler_memory">c.PBSClusterConfig.scheduler_memory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.submit_command">c.PBSClusterManager.submit_command (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.scheduler_resource_list">c.PBSClusterConfig.scheduler_resource_list (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.use_stagein">c.PBSClusterManager.use_stagein (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.scheduler_setup">c.PBSClusterConfig.scheduler_setup (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.worker_cmd">c.PBSClusterManager.worker_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.staging_directory">c.PBSClusterConfig.staging_directory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.worker_cores">c.PBSClusterManager.worker_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.use_stagein">c.PBSClusterConfig.use_stagein (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.worker_memory">c.PBSClusterManager.worker_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.worker_cmd">c.PBSClusterConfig.worker_cmd (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.worker_resource_list">c.PBSClusterManager.worker_resource_list (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.worker_cores">c.PBSClusterConfig.worker_cores (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.worker_setup">c.PBSClusterManager.worker_setup (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.worker_memory">c.PBSClusterConfig.worker_memory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.worker_start_timeout">c.PBSClusterManager.worker_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.worker_resource_list">c.PBSClusterConfig.worker_resource_list (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.PBSClusterManager.worker_status_period">c.PBSClusterManager.worker_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.PBSClusterConfig.worker_setup">c.PBSClusterConfig.worker_setup (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SchedulerProxy.api_connect_url">c.SchedulerProxy.api_connect_url (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.address">c.Proxy.address (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SchedulerProxy.api_url">c.SchedulerProxy.api_url (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.api_token">c.Proxy.api_token (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SchedulerProxy.auth_token">c.SchedulerProxy.auth_token (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.externally_managed">c.Proxy.externally_managed (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SchedulerProxy.connect_timeout">c.SchedulerProxy.connect_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.gateway_url">c.Proxy.gateway_url (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SchedulerProxy.externally_managed">c.SchedulerProxy.externally_managed (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.log_level">c.Proxy.log_level (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SchedulerProxy.log_level">c.SchedulerProxy.log_level (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.max_events">c.Proxy.max_events (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.account">c.SlurmClusterManager.account (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.prefix">c.Proxy.prefix (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.adaptive_period">c.SlurmClusterManager.adaptive_period (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.proxy_status_period">c.Proxy.proxy_status_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.cancel_command">c.SlurmClusterManager.cancel_command (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.tcp_address">c.Proxy.tcp_address (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.cluster_start_timeout">c.SlurmClusterManager.cluster_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.tls_cert">c.Proxy.tls_cert (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.cluster_status_period">c.SlurmClusterManager.cluster_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.Proxy.tls_key">c.Proxy.tls_key (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.dask_gateway_jobqueue_launcher">c.SlurmClusterManager.dask_gateway_jobqueue_launcher (built-in variable)</a>
+      <li><a href="api-server.html#c.SimpleAuthenticator.cache_max_age">c.SimpleAuthenticator.cache_max_age (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.environment">c.SlurmClusterManager.environment (built-in variable)</a>
+      <li><a href="api-server.html#c.SimpleAuthenticator.cookie_name">c.SimpleAuthenticator.cookie_name (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.idle_timeout">c.SlurmClusterManager.idle_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.SimpleAuthenticator.password">c.SimpleAuthenticator.password (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.partition">c.SlurmClusterManager.partition (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.api_url">c.SlurmBackend.api_url (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.qos">c.SlurmClusterManager.qos (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.backoff_base_delay">c.SlurmBackend.backoff_base_delay (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.scheduler_cmd">c.SlurmClusterManager.scheduler_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.backoff_max_delay">c.SlurmBackend.backoff_max_delay (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.scheduler_cores">c.SlurmClusterManager.scheduler_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.cancel_command">c.SlurmBackend.cancel_command (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.scheduler_memory">c.SlurmClusterManager.scheduler_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.check_timeouts_period">c.SlurmBackend.check_timeouts_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.scheduler_setup">c.SlurmClusterManager.scheduler_setup (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.cluster_config_class">c.SlurmBackend.cluster_config_class (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.staging_directory">c.SlurmClusterManager.staging_directory (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.cluster_heartbeat_period">c.SlurmBackend.cluster_heartbeat_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.submit_command">c.SlurmClusterManager.submit_command (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.cluster_heartbeat_timeout">c.SlurmBackend.cluster_heartbeat_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.worker_cmd">c.SlurmClusterManager.worker_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.cluster_options">c.SlurmBackend.cluster_options (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.worker_cores">c.SlurmClusterManager.worker_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.cluster_start_timeout">c.SlurmBackend.cluster_start_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.worker_memory">c.SlurmClusterManager.worker_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.cluster_status_period">c.SlurmBackend.cluster_status_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.worker_setup">c.SlurmClusterManager.worker_setup (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.dask_gateway_jobqueue_launcher">c.SlurmBackend.dask_gateway_jobqueue_launcher (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.worker_start_timeout">c.SlurmClusterManager.worker_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.db_cleanup_period">c.SlurmBackend.db_cleanup_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.SlurmClusterManager.worker_status_period">c.SlurmClusterManager.worker_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.db_cluster_max_age">c.SlurmBackend.db_cluster_max_age (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.adaptive_period">c.UnsafeLocalClusterManager.adaptive_period (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.db_debug">c.SlurmBackend.db_debug (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.cluster_start_timeout">c.UnsafeLocalClusterManager.cluster_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.db_encrypt_keys">c.SlurmBackend.db_encrypt_keys (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.cluster_status_period">c.UnsafeLocalClusterManager.cluster_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.db_url">c.SlurmBackend.db_url (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.clusters_directory">c.UnsafeLocalClusterManager.clusters_directory (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.parallelism">c.SlurmBackend.parallelism (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.environment">c.UnsafeLocalClusterManager.environment (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.status_command">c.SlurmBackend.status_command (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.idle_timeout">c.UnsafeLocalClusterManager.idle_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.stop_clusters_on_shutdown">c.SlurmBackend.stop_clusters_on_shutdown (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.inherited_environment">c.UnsafeLocalClusterManager.inherited_environment (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.submit_command">c.SlurmBackend.submit_command (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.scheduler_cmd">c.UnsafeLocalClusterManager.scheduler_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.worker_start_failure_limit">c.SlurmBackend.worker_start_failure_limit (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.scheduler_cores">c.UnsafeLocalClusterManager.scheduler_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.worker_start_timeout">c.SlurmBackend.worker_start_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.scheduler_memory">c.UnsafeLocalClusterManager.scheduler_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmBackend.worker_status_period">c.SlurmBackend.worker_status_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.sigint_timeout">c.UnsafeLocalClusterManager.sigint_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.account">c.SlurmClusterConfig.account (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.sigkill_timeout">c.UnsafeLocalClusterManager.sigkill_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.adaptive_period">c.SlurmClusterConfig.adaptive_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.sigterm_timeout">c.UnsafeLocalClusterManager.sigterm_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.environment">c.SlurmClusterConfig.environment (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.worker_cmd">c.UnsafeLocalClusterManager.worker_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.idle_timeout">c.SlurmClusterConfig.idle_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.worker_cores">c.UnsafeLocalClusterManager.worker_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.partition">c.SlurmClusterConfig.partition (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.worker_memory">c.UnsafeLocalClusterManager.worker_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.qos">c.SlurmClusterConfig.qos (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.worker_start_timeout">c.UnsafeLocalClusterManager.worker_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.scheduler_cmd">c.SlurmClusterConfig.scheduler_cmd (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UnsafeLocalClusterManager.worker_status_period">c.UnsafeLocalClusterManager.worker_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.scheduler_cores">c.SlurmClusterConfig.scheduler_cores (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UserLimits.max_clusters">c.UserLimits.max_clusters (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.scheduler_memory">c.SlurmClusterConfig.scheduler_memory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UserLimits.max_cores">c.UserLimits.max_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.scheduler_setup">c.SlurmClusterConfig.scheduler_setup (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.UserLimits.max_memory">c.UserLimits.max_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.staging_directory">c.SlurmClusterConfig.staging_directory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.WebProxy.api_connect_url">c.WebProxy.api_connect_url (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.worker_cmd">c.SlurmClusterConfig.worker_cmd (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.WebProxy.api_url">c.WebProxy.api_url (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.worker_cores">c.SlurmClusterConfig.worker_cores (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.WebProxy.auth_token">c.WebProxy.auth_token (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.worker_memory">c.SlurmClusterConfig.worker_memory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.WebProxy.connect_timeout">c.WebProxy.connect_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.SlurmClusterConfig.worker_setup">c.SlurmClusterConfig.worker_setup (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.WebProxy.externally_managed">c.WebProxy.externally_managed (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.api_url">c.UnsafeLocalBackend.api_url (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.WebProxy.log_level">c.WebProxy.log_level (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.backoff_base_delay">c.UnsafeLocalBackend.backoff_base_delay (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.adaptive_period">c.YarnClusterManager.adaptive_period (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.backoff_max_delay">c.UnsafeLocalBackend.backoff_max_delay (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.cluster_start_timeout">c.YarnClusterManager.cluster_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.check_timeouts_period">c.UnsafeLocalBackend.check_timeouts_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.cluster_status_period">c.YarnClusterManager.cluster_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.cluster_config_class">c.UnsafeLocalBackend.cluster_config_class (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.environment">c.YarnClusterManager.environment (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.cluster_heartbeat_period">c.UnsafeLocalBackend.cluster_heartbeat_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.idle_timeout">c.YarnClusterManager.idle_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.cluster_heartbeat_timeout">c.UnsafeLocalBackend.cluster_heartbeat_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.keytab">c.YarnClusterManager.keytab (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.cluster_options">c.UnsafeLocalBackend.cluster_options (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.localize_files">c.YarnClusterManager.localize_files (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.cluster_start_timeout">c.UnsafeLocalBackend.cluster_start_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.principal">c.YarnClusterManager.principal (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.cluster_status_period">c.UnsafeLocalBackend.cluster_status_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.queue">c.YarnClusterManager.queue (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.clusters_directory">c.UnsafeLocalBackend.clusters_directory (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.scheduler_cmd">c.YarnClusterManager.scheduler_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.db_cleanup_period">c.UnsafeLocalBackend.db_cleanup_period (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.scheduler_cores">c.YarnClusterManager.scheduler_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.db_cluster_max_age">c.UnsafeLocalBackend.db_cluster_max_age (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.scheduler_memory">c.YarnClusterManager.scheduler_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.db_debug">c.UnsafeLocalBackend.db_debug (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.scheduler_setup">c.YarnClusterManager.scheduler_setup (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.db_encrypt_keys">c.UnsafeLocalBackend.db_encrypt_keys (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.worker_cmd">c.YarnClusterManager.worker_cmd (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.db_url">c.UnsafeLocalBackend.db_url (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.worker_cores">c.YarnClusterManager.worker_cores (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.inherited_environment">c.UnsafeLocalBackend.inherited_environment (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.worker_memory">c.YarnClusterManager.worker_memory (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.parallelism">c.UnsafeLocalBackend.parallelism (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.worker_setup">c.YarnClusterManager.worker_setup (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.sigint_timeout">c.UnsafeLocalBackend.sigint_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.worker_start_timeout">c.YarnClusterManager.worker_start_timeout (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.sigkill_timeout">c.UnsafeLocalBackend.sigkill_timeout (built-in variable)</a>
 </li>
-      <li><a href="api-server.html#c.YarnClusterManager.worker_status_period">c.YarnClusterManager.worker_status_period (built-in variable)</a>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.sigterm_timeout">c.UnsafeLocalBackend.sigterm_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.stop_clusters_on_shutdown">c.UnsafeLocalBackend.stop_clusters_on_shutdown (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.worker_start_failure_limit">c.UnsafeLocalBackend.worker_start_failure_limit (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.worker_start_timeout">c.UnsafeLocalBackend.worker_start_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.UnsafeLocalBackend.worker_status_period">c.UnsafeLocalBackend.worker_status_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.api_url">c.YarnBackend.api_url (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.app_client_cache_max_size">c.YarnBackend.app_client_cache_max_size (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.backoff_base_delay">c.YarnBackend.backoff_base_delay (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.backoff_max_delay">c.YarnBackend.backoff_max_delay (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.check_timeouts_period">c.YarnBackend.check_timeouts_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.cluster_config_class">c.YarnBackend.cluster_config_class (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.cluster_heartbeat_period">c.YarnBackend.cluster_heartbeat_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.cluster_heartbeat_timeout">c.YarnBackend.cluster_heartbeat_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.cluster_options">c.YarnBackend.cluster_options (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.cluster_start_timeout">c.YarnBackend.cluster_start_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.cluster_status_period">c.YarnBackend.cluster_status_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.db_cleanup_period">c.YarnBackend.db_cleanup_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.db_cluster_max_age">c.YarnBackend.db_cluster_max_age (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.db_debug">c.YarnBackend.db_debug (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.db_encrypt_keys">c.YarnBackend.db_encrypt_keys (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.db_url">c.YarnBackend.db_url (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.keytab">c.YarnBackend.keytab (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.parallelism">c.YarnBackend.parallelism (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.principal">c.YarnBackend.principal (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.stop_clusters_on_shutdown">c.YarnBackend.stop_clusters_on_shutdown (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.worker_start_failure_limit">c.YarnBackend.worker_start_failure_limit (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.worker_start_timeout">c.YarnBackend.worker_start_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnBackend.worker_status_period">c.YarnBackend.worker_status_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.adaptive_period">c.YarnClusterConfig.adaptive_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.environment">c.YarnClusterConfig.environment (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.idle_timeout">c.YarnClusterConfig.idle_timeout (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.localize_files">c.YarnClusterConfig.localize_files (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.queue">c.YarnClusterConfig.queue (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.scheduler_cmd">c.YarnClusterConfig.scheduler_cmd (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.scheduler_cores">c.YarnClusterConfig.scheduler_cores (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.scheduler_memory">c.YarnClusterConfig.scheduler_memory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.scheduler_setup">c.YarnClusterConfig.scheduler_setup (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.worker_cmd">c.YarnClusterConfig.worker_cmd (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.worker_cores">c.YarnClusterConfig.worker_cores (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.worker_memory">c.YarnClusterConfig.worker_memory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.worker_setup">c.YarnClusterConfig.worker_setup (built-in variable)</a>
 </li>
       <li><a href="api-client.html#dask_gateway.Gateway.close">close() (dask_gateway.Gateway method)</a>
 
@@ -660,6 +838,8 @@
         <li><a href="api-client.html#dask_gateway.GatewayCluster.close">(dask_gateway.GatewayCluster method)</a>
 </li>
       </ul></li>
+      <li><a href="api-server.html#dask_gateway_server.models.Cluster">Cluster (class in dask_gateway_server.models)</a>
+</li>
       <li><a href="api-client.html#dask_gateway.Gateway.cluster_options">cluster_options() (dask_gateway.Gateway method)</a>
 </li>
       <li><a href="api-client.html#dask_gateway.Gateway.connect">connect() (dask_gateway.Gateway method)</a>
@@ -684,6 +864,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-client.html#dask_gateway.Gateway">Gateway (class in dask_gateway)</a>
 </li>
+      <li><a href="api-client.html#dask_gateway.auth.GatewayAuth">GatewayAuth (class in dask_gateway.auth)</a>
+</li>
       <li><a href="api-client.html#dask_gateway.GatewayCluster">GatewayCluster (class in dask_gateway)</a>
 </li>
       <li><a href="api-client.html#dask_gateway.GatewayClusterError">GatewayClusterError (class in dask_gateway)</a>
@@ -696,6 +878,8 @@
 </li>
       <li><a href="api-client.html#dask_gateway.Gateway.get_cluster">get_cluster() (dask_gateway.Gateway method)</a>
 </li>
+      <li><a href="api-client.html#dask_gateway.Gateway.get_versions">get_versions() (dask_gateway.Gateway method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -703,6 +887,22 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-server.html#dask_gateway_server.options.Integer">Integer (class in dask_gateway_server.options)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-client.html#dask_gateway.auth.JupyterHubAuth">JupyterHubAuth (class in dask_gateway.auth)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-client.html#dask_gateway.auth.KerberosAuth">KerberosAuth (class in dask_gateway.auth)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -757,6 +957,14 @@
   </ul></td>
 </tr></table>
 
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-server.html#dask_gateway_server.models.User">User (class in dask_gateway_server.models)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 
 
            </div>
@@ -769,7 +977,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jim Crist
+        &copy; Copyright 2019, Jim Crist-Harif
 
     </p>
   </div>

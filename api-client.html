@@ -1,112 +1,118 @@
 
 
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Client API &mdash; Dask Gateway 0.6.1+2.g86747a7 documentation</title>
+  <title>Client API &mdash; Dask Gateway 0.7.0 documentation</title>
   
 
   
   
   
   
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script type="text/javascript" src="_static/js/custom.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Configuration Reference" href="api-server.html" />
-    <link rel="prev" title="User Resource Limits" href="resource-limits.html" />
-  <link rel="shortcut icon" href="_static/images/favicon.ico"/>
-
+    <link rel="prev" title="Exposing Cluster Options" href="cluster-options.html" />
+    <link rel="shortcut icon" href="_static/images/favicon.ico"/>
+  
 </head>
 
 <body class="wy-body-for-nav">
 
   
+    <nav id="explore-links">
+        <a href="https://docs.dask.org/">
+        <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+        </a>
 
-<nav id="explore-links">
-  <a href="https://docs.dask.org/">
-    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
-  </a>
+        <ul>
+        <li>
+            <a>Get Started</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+            <li><a href="https://examples.dask.org"> Examples </a></li>
+            <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+            <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+            <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+            <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+            <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+            <li><a href="https://dask.org/slides"> Slides </a></li>
+            </ul>
+        </li>
 
-  <ul>
-    <li>
-      <a>Get Started</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
-        <li><a href="https://examples.dask.org"> Examples </a></li>
-        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
-        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
-        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
-        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
-        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
-        <li><a href="https://dask.org/slides"> Slides </a></li>
-      </ul>
-    </li>
+        <li>
+            <a href="">Algorithms</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+            <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+            <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+            <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+            <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+            <li><a href="http://ml.dask.org">Machine Learning</a></li>
+            <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+            </ul>
+        </li>
 
-    <li>
-      <a href="">Algorithms</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
-        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
-        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
-        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
-        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
-        <li><a href="http://ml.dask.org">Machine Learning</a></li>
-        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
-      </ul>
-    </li>
+        <li>
+            <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+            <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
+            <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+            <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+            <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+            </ul>
+        </li>
 
-    <li>
-      <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
-        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
-        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
-      </ul>
-    </li>
+        <li>
+            <a>Community</a>
+            <ul>
+            <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+            <li><a href="https://github.com/dask">Github</a></li>
+            <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+            <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+            <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+            </ul>
+        </li>
+        </ul>
 
-    <li>
-      <a>Community</a>
-      <ul>
-        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
-        <li><a href="https://github.com/dask">Github</a></li>
-        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
-        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
-        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
-      </ul>
-    </li>
-  </ul>
-
-</nav>
-
-
+    </nav>
+  
   <div class="wy-grid-for-nav">
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
@@ -115,7 +121,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Dask Gateway
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Dask Gateway
           
 
           
@@ -125,7 +131,7 @@
             
             
               <div class="version">
-                0.6.1+2.g86747a7
+                0.7.0
               </div>
             
           
@@ -142,6 +148,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -167,7 +174,6 @@
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">User Resource Limits</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul class="current">
@@ -175,6 +181,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#gateway">Gateway</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#gatewaycluster">GatewayCluster</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#exceptions">Exceptions</a></li>
 </ul>
 </li>
@@ -185,6 +192,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -248,18 +256,19 @@
 <h1>Client API<a class="headerlink" href="#client-api" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="gateway">
 <h2>Gateway<a class="headerlink" href="#gateway" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="dask_gateway.Gateway">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">Gateway</code><span class="sig-paren">(</span><em class="sig-param">address=None</em>, <em class="sig-param">proxy_address=None</em>, <em class="sig-param">auth=None</em>, <em class="sig-param">asynchronous=False</em>, <em class="sig-param">loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">Gateway</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proxy_address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">auth</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">asynchronous</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">loop</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway" title="Permalink to this definition">¶</a></dt>
 <dd><p>A client for a Dask Gateway Server.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>address</strong> (<em>str</em><em>, </em><em>optional</em>) – The address to the gateway server.</p></li>
-<li><p><strong>proxy_address</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>optional</em>) – The address of the scheduler proxy server. If an int, it’s used as the
-port, with the host/ip taken from <code class="docutils literal notranslate"><span class="pre">address</span></code>. Provide a full address
-if a different host/ip should be used.</p></li>
-<li><p><strong>auth</strong> (<em>GatewayAuth</em><em>, </em><em>optional</em>) – The authentication method to use.</p></li>
+<li><p><strong>proxy_address</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>optional</em>) – The address of the scheduler proxy server. Defaults to <cite>address</cite> if not
+provided. If an int, it’s used as the port, with the host/ip taken from
+<code class="docutils literal notranslate"><span class="pre">address</span></code>. Provide a full address if a different host/ip should be
+used.</p></li>
+<li><p><strong>auth</strong> (<a class="reference internal" href="#dask_gateway.auth.GatewayAuth" title="dask_gateway.auth.GatewayAuth"><em>GatewayAuth</em></a><em>, </em><em>optional</em>) – The authentication method to use.</p></li>
 <li><p><strong>asynchronous</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, starts the client in asynchronous mode, where it can be used
 in other async code.</p></li>
 <li><p><strong>loop</strong> (<em>IOLoop</em><em>, </em><em>optional</em>) – The IOLoop instance to use. Defaults to the current loop in
@@ -267,9 +276,9 @@ asynchronous mode, otherwise a background loop is started.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.Gateway.adapt_cluster">
-<code class="sig-name descname">adapt_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">minimum=None</em>, <em class="sig-param">maximum=None</em>, <em class="sig-param">active=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.adapt_cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">adapt_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="n">minimum</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">maximum</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">active</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.adapt_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configure adaptive scaling for a cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -284,15 +293,15 @@ asynchronous mode, otherwise a background loop is started.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.Gateway.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close the gateway client</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.Gateway.cluster_options">
-<code class="sig-name descname">cluster_options</code><span class="sig-paren">(</span><em class="sig-param">use_local_defaults=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.cluster_options" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cluster_options</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">use_local_defaults</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.cluster_options" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the available cluster configuration options.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -308,9 +317,9 @@ Default is True, set to False to use only the server-side defaults.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.Gateway.connect">
-<code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">shutdown_on_close=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.connect" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="n">shutdown_on_close</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.connect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to a submitted cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -329,9 +338,9 @@ Default is False.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.Gateway.get_cluster">
-<code class="sig-name descname">get_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.get_cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.get_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get information about a specific cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -346,16 +355,29 @@ Default is False.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
+<dt id="dask_gateway.Gateway.get_versions">
+<code class="sig-name descname">get_versions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.get_versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return version info for the server and client</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>version_info</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="dask_gateway.Gateway.list_clusters">
-<code class="sig-name descname">list_clusters</code><span class="sig-paren">(</span><em class="sig-param">status=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.list_clusters" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">list_clusters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">status</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.list_clusters" title="Permalink to this definition">¶</a></dt>
 <dd><p>List clusters for this user.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>status</strong> (<em>ClusterStatus</em><em>, </em><em>str</em><em>, or </em><em>list</em><em>, </em><em>optional</em>) – The cluster status (or statuses) to select. Valid options are
-‘starting’, ‘started’, ‘running’, ‘stopping’, ‘stopped’, ‘failed’.
-By default selects active clusters (‘starting’, ‘started’,
-‘running’).</p>
+‘pending’, ‘running’, ‘stopping’, ‘stopped’, ‘failed’.
+By default selects active clusters (‘pending’, ‘running’).</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>clusters</strong></p>
@@ -366,9 +388,9 @@ By default selects active clusters (‘starting’, ‘started’,
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.Gateway.new_cluster">
-<code class="sig-name descname">new_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_options=None</em>, <em class="sig-param">shutdown_on_close=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">new_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">shutdown_on_close</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a new cluster to the gateway, and wait for it to be started.</p>
 <p>Same as calling <code class="docutils literal notranslate"><span class="pre">submit</span></code> and <code class="docutils literal notranslate"><span class="pre">connect</span></code> in one go.</p>
 <dl class="field-list simple">
@@ -393,9 +415,9 @@ options are specific to each deployment of dask-gateway, see
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.Gateway.scale_cluster">
-<code class="sig-name descname">scale_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">n</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.scale_cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">scale_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.scale_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scale a cluster to n workers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -407,9 +429,9 @@ options are specific to each deployment of dask-gateway, see
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.Gateway.stop_cluster">
-<code class="sig-name descname">stop_cluster</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.stop_cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">stop_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.stop_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stop a cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -418,9 +440,9 @@ options are specific to each deployment of dask-gateway, see
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.Gateway.submit">
-<code class="sig-name descname">submit</code><span class="sig-paren">(</span><em class="sig-param">cluster_options=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.submit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">submit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.submit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a new cluster to be started.</p>
 <p>This returns quickly with a <code class="docutils literal notranslate"><span class="pre">cluster_name</span></code>, which can later be used
 to connect to the cluster.</p>
@@ -448,9 +470,9 @@ options are specific to each deployment of dask-gateway, see
 </div>
 <div class="section" id="gatewaycluster">
 <h2>GatewayCluster<a class="headerlink" href="#gatewaycluster" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="dask_gateway.GatewayCluster">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayCluster</code><span class="sig-paren">(</span><em class="sig-param">address=None</em>, <em class="sig-param">proxy_address=None</em>, <em class="sig-param">auth=None</em>, <em class="sig-param">cluster_options=None</em>, <em class="sig-param">shutdown_on_close=True</em>, <em class="sig-param">asynchronous=False</em>, <em class="sig-param">loop=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayCluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proxy_address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">auth</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cluster_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">shutdown_on_close</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">asynchronous</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">loop</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dask-gateway cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -459,7 +481,7 @@ options are specific to each deployment of dask-gateway, see
 <li><p><strong>proxy_address</strong> (<em>str</em><em>, </em><em>int</em><em>, </em><em>optional</em>) – The address of the scheduler proxy server. If an int, it’s used as the
 port, with the host/ip taken from <code class="docutils literal notranslate"><span class="pre">address</span></code>. Provide a full address
 if a different host/ip should be used.</p></li>
-<li><p><strong>auth</strong> (<em>GatewayAuth</em><em>, </em><em>optional</em>) – The authentication method to use.</p></li>
+<li><p><strong>auth</strong> (<a class="reference internal" href="#dask_gateway.auth.GatewayAuth" title="dask_gateway.auth.GatewayAuth"><em>GatewayAuth</em></a><em>, </em><em>optional</em>) – The authentication method to use.</p></li>
 <li><p><strong>cluster_options</strong> (<em>mapping</em><em>, </em><em>optional</em>) – A mapping of cluster options to use to start the cluster.</p></li>
 <li><p><strong>shutdown_on_close</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True (default), the cluster will be automatically shutdown on
 close.</p></li>
@@ -474,9 +496,9 @@ are specific to each deployment of dask-gateway, see
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.GatewayCluster.adapt">
-<code class="sig-name descname">adapt</code><span class="sig-paren">(</span><em class="sig-param">minimum=None</em>, <em class="sig-param">maximum=None</em>, <em class="sig-param">active=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.adapt" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">adapt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">minimum</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">maximum</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">active</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.adapt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configure adaptive scaling for the cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -490,9 +512,9 @@ are specific to each deployment of dask-gateway, see
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.GatewayCluster.close">
-<code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param">shutdown=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.close" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shutdown</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close the cluster object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -504,9 +526,9 @@ False to override.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.GatewayCluster.from_name">
-<em class="property">classmethod </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param">cluster_name</em>, <em class="sig-param">shutdown_on_close=False</em>, <em class="sig-param">address=None</em>, <em class="sig-param">proxy_address=None</em>, <em class="sig-param">auth=None</em>, <em class="sig-param">asynchronous=False</em>, <em class="sig-param">loop=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.from_name" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="n">shutdown_on_close</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proxy_address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">auth</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">asynchronous</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">loop</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.from_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to a submitted cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -527,9 +549,9 @@ constructor. See the docstring for more information.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.GatewayCluster.get_client">
-<code class="sig-name descname">get_client</code><span class="sig-paren">(</span><em class="sig-param">set_as_default=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.get_client" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_client</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">set_as_default</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.get_client" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a <code class="docutils literal notranslate"><span class="pre">Client</span></code> for this cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -541,9 +563,9 @@ constructor. See the docstring for more information.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.GatewayCluster.scale">
-<code class="sig-name descname">scale</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.scale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">scale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scale the cluster to <code class="docutils literal notranslate"><span class="pre">n</span></code> workers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -552,7 +574,7 @@ constructor. See the docstring for more information.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="dask_gateway.GatewayCluster.shutdown">
 <code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.shutdown" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shutdown this cluster. Alias for <code class="docutils literal notranslate"><span class="pre">close(shutdown=True)</span></code>.</p>
@@ -563,9 +585,9 @@ constructor. See the docstring for more information.</p></li>
 </div>
 <div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="dask_gateway.options.Options">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.options.</code><code class="sig-name descname">Options</code><span class="sig-paren">(</span><em class="sig-param">*fields</em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.options.Options" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.options.</code><code class="sig-name descname">Options</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">fields</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.options.Options" title="Permalink to this definition">¶</a></dt>
 <dd><p>Options to submit to dask-gateway.</p>
 <p>A mutable-mapping that describes all cluster options available for user’s
 to set. Options can be modified programatically, or via a widget when using
@@ -573,11 +595,11 @@ a web interface (e.g. Jupyter Notebooks) with <code class="docutils literal notr
 <p class="rubric">Examples</p>
 <p>Options objects are normally created via the <code class="docutils literal notranslate"><span class="pre">Gateway.cluster_options</span></code>
 method:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">cluster_options</span><span class="p">()</span>  
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span> <span class="o">=</span> <span class="n">gateway</span><span class="o">.</span><span class="n">cluster_options</span><span class="p">()</span>  
 </pre></div>
 </div>
 <p>Available options can then be accessed or set via attribute or key:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span>  
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span>  
 <span class="go">1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;worker_cores&quot;</span><span class="p">]</span>  
 <span class="go">1</span>
@@ -587,7 +609,7 @@ method:</p>
 </pre></div>
 </div>
 <p>Accessing invalid options error appropriately:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">not_a_valid_option</span> <span class="o">=</span> <span class="s1">&#39;myvalue&#39;</span>  
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">options</span><span class="o">.</span><span class="n">not_a_valid_option</span> <span class="o">=</span> <span class="s1">&#39;myvalue&#39;</span>  
 <span class="gt">Traceback (most recent call last):</span>
     <span class="o">...</span>
 <span class="gr">AttributeError</span>: <span class="n">No option &#39;not_a_valid_option&#39; available</span>
@@ -598,15 +620,42 @@ out-of-bounds, etc…).</p>
 </dd></dl>
 
 </div>
+<div class="section" id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="dask_gateway.auth.GatewayAuth">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.auth.</code><code class="sig-name descname">GatewayAuth</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.GatewayAuth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for authenticating clients in dask-gateway</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="dask_gateway.auth.BasicAuth">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.auth.</code><code class="sig-name descname">BasicAuth</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">username</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">password</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.BasicAuth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attaches HTTP Basic Authentication to the given Request object.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="dask_gateway.auth.KerberosAuth">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.auth.</code><code class="sig-name descname">KerberosAuth</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.KerberosAuth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authenticate with kerberos</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="dask_gateway.auth.JupyterHubAuth">
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.auth.</code><code class="sig-name descname">JupyterHubAuth</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">api_token</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.JupyterHubAuth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses JupyterHub API tokens to authenticate</p>
+</dd></dl>
+
+</div>
 <div class="section" id="exceptions">
 <h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="dask_gateway.GatewayClusterError">
 <em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayClusterError</code><a class="headerlink" href="#dask_gateway.GatewayClusterError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exception related to starting/stopping/scaling of a gateway cluster</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="dask_gateway.GatewayServerError">
 <em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayServerError</code><a class="headerlink" href="#dask_gateway.GatewayServerError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exception related to the operation of the gateway server.</p>
@@ -627,7 +676,7 @@ out-of-bounds, etc…).</p>
         <a href="api-server.html" class="btn btn-neutral float-right" title="Configuration Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="resource-limits.html" class="btn btn-neutral float-left" title="User Resource Limits" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="cluster-options.html" class="btn btn-neutral float-left" title="Exposing Cluster Options" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -636,7 +685,7 @@ out-of-bounds, etc…).</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jim Crist
+        &copy; Copyright 2019, Jim Crist-Harif
 
     </p>
   </div>

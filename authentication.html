@@ -1,112 +1,118 @@
 
 
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Authentication &mdash; Dask Gateway 0.6.1+2.g86747a7 documentation</title>
+  <title>Authentication &mdash; Dask Gateway 0.7.0 documentation</title>
   
 
   
   
   
   
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script type="text/javascript" src="_static/js/custom.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Security settings" href="security.html" />
     <link rel="prev" title="Install on an HPC Job Queue" href="install-jobqueue.html" />
-  <link rel="shortcut icon" href="_static/images/favicon.ico"/>
-
+    <link rel="shortcut icon" href="_static/images/favicon.ico"/>
+  
 </head>
 
 <body class="wy-body-for-nav">
 
   
+    <nav id="explore-links">
+        <a href="https://docs.dask.org/">
+        <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+        </a>
 
-<nav id="explore-links">
-  <a href="https://docs.dask.org/">
-    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
-  </a>
+        <ul>
+        <li>
+            <a>Get Started</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+            <li><a href="https://examples.dask.org"> Examples </a></li>
+            <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+            <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+            <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+            <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+            <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+            <li><a href="https://dask.org/slides"> Slides </a></li>
+            </ul>
+        </li>
 
-  <ul>
-    <li>
-      <a>Get Started</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
-        <li><a href="https://examples.dask.org"> Examples </a></li>
-        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
-        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
-        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
-        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
-        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
-        <li><a href="https://dask.org/slides"> Slides </a></li>
-      </ul>
-    </li>
+        <li>
+            <a href="">Algorithms</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+            <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+            <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+            <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+            <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+            <li><a href="http://ml.dask.org">Machine Learning</a></li>
+            <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+            </ul>
+        </li>
 
-    <li>
-      <a href="">Algorithms</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
-        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
-        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
-        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
-        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
-        <li><a href="http://ml.dask.org">Machine Learning</a></li>
-        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
-      </ul>
-    </li>
+        <li>
+            <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+            <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
+            <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+            <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+            <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+            </ul>
+        </li>
 
-    <li>
-      <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
-        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
-        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
-      </ul>
-    </li>
+        <li>
+            <a>Community</a>
+            <ul>
+            <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+            <li><a href="https://github.com/dask">Github</a></li>
+            <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+            <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+            <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+            </ul>
+        </li>
+        </ul>
 
-    <li>
-      <a>Community</a>
-      <ul>
-        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
-        <li><a href="https://github.com/dask">Github</a></li>
-        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
-        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
-        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
-      </ul>
-    </li>
-  </ul>
-
-</nav>
-
-
+    </nav>
+  
   <div class="wy-grid-for-nav">
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
@@ -115,7 +121,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Dask Gateway
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Dask Gateway
           
 
           
@@ -125,7 +131,7 @@
             
             
               <div class="version">
-                0.6.1+2.g86747a7
+                0.7.0
               </div>
             
           
@@ -142,6 +148,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -172,7 +179,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">User Resource Limits</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
@@ -184,6 +190,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -246,26 +253,26 @@
   <div class="section" id="authentication">
 <h1>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h1>
 <p>Being a multi-tenant application, <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> needs a method to
-authenticate users. Like cluster manager backends, authentication is also
-configurable by setting <a class="reference internal" href="api-server.html#c.DaskGateway.authenticator_class" title="c.DaskGateway.authenticator_class"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.authenticator_class</span></code></a>. Here we
-document a few common implementations.</p>
+authenticate users. Like backends, authentication is also configurable by
+setting <a class="reference internal" href="api-server.html#c.DaskGateway.authenticator_class" title="c.DaskGateway.authenticator_class"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.authenticator_class</span></code></a>. Here we document a few
+common implementations.</p>
 <div class="section" id="simple-authentication-for-testing">
 <h2>Simple authentication for testing<a class="headerlink" href="#simple-authentication-for-testing" title="Permalink to this headline">¶</a></h2>
-<p>For testing purposes, a simple “dummy” authentication method can be used. This
-method implements <a class="reference external" href="https://en.wikipedia.org/wiki/Basic_access_authentication">Basic</a> authentication, with no validation of the password
+<p>For testing purposes, a “simple” authentication method can be used. This
+method implements authentication with no validation of the password
 field. As such, <em>it is not suitable for production, only for testing</em>. If
 desired, an optional password can be configured to be shared across all users.
 Note that this only marginally makes things more secure, as users can still
 easily impersonate each other.</p>
 <p>This protocol is the default, and is implemented by
-<code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.auth.DummyAuthenticator</span></code>. No further configuration
+<code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.auth.SimpleAuthenticator</span></code>. No further configuration
 is needed to enable it. If you would like to add a shared password, you can do
 so by adding the following line to your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set a shared password.</span>
-<span class="n">c</span><span class="o">.</span><span class="n">DummyAuthenticator</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="s2">&quot;mypassword&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">SimpleAuthenticator</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="s2">&quot;mypassword&quot;</span>
 </pre></div>
 </div>
-<p>For more information see the <a class="reference internal" href="api-server.html#dummy-auth-config"><span class="std std-ref">DummyAuthenticator</span></a> docs.</p>
+<p>For more information see the <a class="reference internal" href="api-server.html#simple-auth-config"><span class="std std-ref">SimpleAuthenticator</span></a> docs.</p>
 </div>
 <div class="section" id="kerberos-authentication">
 <h2>Kerberos authentication<a class="headerlink" href="#kerberos-authentication" title="Permalink to this headline">¶</a></h2>
@@ -359,7 +366,7 @@ between users and the <code class="docutils literal notranslate"><span class="pr
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jim Crist
+        &copy; Copyright 2019, Jim Crist-Harif
 
     </p>
   </div>

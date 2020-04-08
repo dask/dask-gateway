@@ -1,112 +1,118 @@
 
 
+
+
+
+
+
+
+
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Hadoop Cluster &mdash; Dask Gateway 0.6.1+2.g86747a7 documentation</title>
+  <title>Install on a Hadoop Cluster &mdash; Dask Gateway 0.7.0 documentation</title>
   
 
   
   
   
   
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script type="text/javascript" src="_static/js/custom.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
 
   
   <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/explore.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/nbsphinx.css" type="text/css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script src="_static/js/custom.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Install on a Kubernetes Cluster" href="install-kube.html" />
     <link rel="prev" title="Install Locally (Quickstart)" href="install-local.html" />
-  <link rel="shortcut icon" href="_static/images/favicon.ico"/>
-
+    <link rel="shortcut icon" href="_static/images/favicon.ico"/>
+  
 </head>
 
 <body class="wy-body-for-nav">
 
   
+    <nav id="explore-links">
+        <a href="https://docs.dask.org/">
+        <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
+        </a>
 
-<nav id="explore-links">
-  <a href="https://docs.dask.org/">
-    <img class="caption" src="_static/images/dask-horizontal-white.svg"/>
-  </a>
+        <ul>
+        <li>
+            <a>Get Started</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
+            <li><a href="https://examples.dask.org"> Examples </a></li>
+            <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
+            <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
+            <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
+            <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
+            <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
+            <li><a href="https://dask.org/slides"> Slides </a></li>
+            </ul>
+        </li>
 
-  <ul>
-    <li>
-      <a>Get Started</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/install.html"> Install </a></li>
-        <li><a href="https://examples.dask.org"> Examples </a></li>
-        <li><a href="https://github.com/dask/dask-tutorial"> Tutorial </a></li>
-        <li><a href="https://docs.dask.org/en/latest/why.html"> Why Dask? </a></li>
-        <li><a href="https://stories.dask.org/en/latest"> Use Cases </a></li>
-        <li><a href="https://www.youtube.com/watch?v=RA_2qdipVng&list=PLRtz5iA93T4PQvWuoMnIyEIz1fXiJ5Pri"> Talks </a></li>
-        <li><a href="https://mybinder.org/v2/gh/dask/dask-examples/master?urlpath=lab"> Try Online </a></li>
-        <li><a href="https://dask.org/slides"> Slides </a></li>
-      </ul>
-    </li>
+        <li>
+            <a href="">Algorithms</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
+            <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
+            <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
+            <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
+            <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
+            <li><a href="http://ml.dask.org">Machine Learning</a></li>
+            <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
+            </ul>
+        </li>
 
-    <li>
-      <a href="">Algorithms</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/array.html">Arrays</a></li>
-        <li><a href="https://docs.dask.org/en/latest/dataframe.html">Dataframes</a></li>
-        <li><a href="https://docs.dask.org/en/latest/bag.html">Bags</a></li>
-        <li><a href="https://docs.dask.org/en/latest/delayed.html">Delayed (custom)</a></li>
-        <li><a href="https://docs.dask.org/en/latest/futures.html">Futures (real-time)</a></li>
-        <li><a href="http://ml.dask.org">Machine Learning</a></li>
-        <li><a href="https://xarray.pydata.org/en/latest/">XArray</a></li>
-      </ul>
-    </li>
+        <li>
+            <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
+            <ul>
+            <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
+            <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
+            <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
+            <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
+            <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
+            </ul>
+        </li>
 
-    <li>
-      <a href="https://docs.dask.org/en/latest/setup.html">Setup</a>
-      <ul>
-        <li><a href="https://docs.dask.org/en/latest/setup/single-machine.html"> Local </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/cloud.html"> Cloud </a></li>
-        <li><a href="https://docs.dask.org/en/latest/setup/hpc.html"> HPC </a></li>
-        <li><a href="https://kubernetes.dask.org/en/latest/"> Kubernetes </a></li>
-        <li><a href="https://yarn.dask.org/en/latest/"> Hadoop / Yarn </a></li>
-      </ul>
-    </li>
+        <li>
+            <a>Community</a>
+            <ul>
+            <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
+            <li><a href="https://github.com/dask">Github</a></li>
+            <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
+            <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
+            <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
+            </ul>
+        </li>
+        </ul>
 
-    <li>
-      <a>Community</a>
-      <ul>
-        <li><a href="http://docs.dask.org/en/latest/support.html">Ask for Help</a></li>
-        <li><a href="https://github.com/dask">Github</a></li>
-        <li><a href="https://stackoverflow.com/questions/tagged/dask">Stack Overflow</a></li>
-        <li><a href="https://twitter.com/dask_dev">Twitter</a></li>
-        <li><a href="https://blog.dask.org/"> Developer Blog </a></li>
-      </ul>
-    </li>
-  </ul>
-
-</nav>
-
-
+    </nav>
+  
   <div class="wy-grid-for-nav">
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
@@ -115,7 +121,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> Dask Gateway
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Dask Gateway
           
 
           
@@ -125,7 +131,7 @@
             
             
               <div class="version">
-                0.6.1+2.g86747a7
+                0.7.0
               </div>
             
           
@@ -142,6 +148,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -177,7 +184,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#example">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#open-relevant-ports">Open relevant ports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#open-relevant-port-s">Open relevant port(s)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#start-dask-gateway-server">Start dask-gateway-server</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#validate-things-are-working">Validate things are working</a></li>
 </ul>
@@ -190,7 +197,6 @@
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">User Resource Limits</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
@@ -202,6 +208,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -375,10 +382,10 @@ object.</p>
 <p>Here we’ll walk through a few common configuration options you may want to set.</p>
 <div class="section" id="enable-yarn-integration">
 <h3>Enable YARN integration<a class="headerlink" href="#enable-yarn-integration" title="Permalink to this headline">¶</a></h3>
-<p>First you’ll want to enable YARN as the cluster manager backend.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the gateway to use YARN as the cluster manager</span>
-<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">cluster_manager_class</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">&quot;dask_gateway_server.managers.yarn.YarnClusterManager&quot;</span>
+<p>First you’ll want to enable YARN as the cluster backend.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the gateway to use YARN as the backend</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">backend_class</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;dask_gateway_server.backends.yarn.YarnBackend&quot;</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -411,8 +418,8 @@ $ chmod <span class="m">400</span> /etc/dask-gateway/dask.keytab
 <p>To configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use this keytab file, you’ll need to
 add the following line to your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Specify the location of the keytab file, and the principal name</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/dask.keytab&quot;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">principal</span> <span class="o">=</span> <span class="s2">&quot;dask&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnBackend</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/dask.keytab&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnBackend</span><span class="o">.</span><span class="n">principal</span> <span class="o">=</span> <span class="s2">&quot;dask&quot;</span>
 
 <span class="c1"># Enable Kerberos for user-facing authentication</span>
 <span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">authenticator_class</span> <span class="o">=</span> <span class="s2">&quot;dask_gateway_server.auth.KerberosAuthenticator&quot;</span>
@@ -422,16 +429,20 @@ add the following line to your <code class="docutils literal notranslate"><span 
 </div>
 <div class="section" id="configure-the-server-addresses-optional">
 <h3>Configure the server addresses (optional)<a class="headerlink" href="#configure-the-server-addresses-optional" title="Permalink to this headline">¶</a></h3>
-<p>By default, <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> will listen at the following addresses:</p>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> will serve all traffic through
+<code class="docutils literal notranslate"><span class="pre">0.0.0.0:8000</span></code>. This includes both HTTP(S) requests (REST api, dashboards,
+etc…) and dask scheduler traffic.</p>
+<p>If you’d like to serve at a different address, or serve web and scheduler
+traffic on different ports, you can configure the following fields:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">http://:8000</span></code>: the public facing URL of the whole application. Set by
-<code class="docutils literal notranslate"><span class="pre">c.DaskGateway.public_url</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tls://:8786</span></code>: the scheduler proxy address, set by
-<code class="docutils literal notranslate"><span class="pre">c.DaskGateway.gateway_url</span></code>.</p></li>
+<li><p><a class="reference internal" href="api-server.html#c.Proxy.address" title="c.Proxy.address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.address</span></code></a> - Serves HTTP(S) traffic, defaults to <code class="docutils literal notranslate"><span class="pre">:8000</span></code>.</p></li>
+<li><p><a class="reference internal" href="api-server.html#c.Proxy.tcp_address" title="c.Proxy.tcp_address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code></a> - Serves dask client-to-scheduler tcp traffic,
+defaults to <a class="reference internal" href="api-server.html#c.Proxy.address" title="c.Proxy.address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.address</span></code></a>.</p></li>
 </ul>
-<p>If you’d rather serve at different ports, you can configure these yourself:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">public_url</span> <span class="o">=</span> <span class="s1">&#39;http://:&lt;PORT-1&gt;&#39;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">gateway_url</span> <span class="o">=</span> <span class="s1">&#39;http://:&lt;PORT-2&gt;&#39;</span>
+<p>Here we configure web traffic to serve on port 8000 and scheduler traffic to
+serve on port 8001:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">Proxy</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="s1">&#39;:8000&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">Proxy</span><span class="o">.</span><span class="n">tcp_address</span> <span class="o">=</span> <span class="s1">&#39;:8001&#39;</span>
 </pre></div>
 </div>
 </div>
@@ -452,18 +463,18 @@ containers. You have a few options here:</p>
 to configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use the provided Python. This could be
 done a few different ways:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-gateway-scheduler&quot;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-gateway-worker&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">scheduler_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-gateway-scheduler&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-gateway-worker&quot;</span>
 
 <span class="c1"># OR</span>
 <span class="c1"># Activate a local conda environment before startup</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/miniconda/bin/activate /path/to/environment&#39;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/miniconda/bin/activate /path/to/environment&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/miniconda/bin/activate /path/to/environment&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/miniconda/bin/activate /path/to/environment&#39;</span>
 
 <span class="c1"># OR</span>
 <span class="c1"># Activate a virtual environment before startup</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/your/environment/bin/activate&#39;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/your/environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/your/environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/your/environment/bin/activate&#39;</span>
 </pre></div>
 </div>
 </div>
@@ -477,7 +488,7 @@ user’s Python environments.</p>
 <p>Packaging environments for distribution is usually accomplished using</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://conda.github.io/conda-pack/">conda-pack</a> for <a class="reference external" href="http://conda.io/">conda</a> environments</p></li>
-<li><p><a class="reference external" href="https://jcrist.github.io/venv-pack/">venv-pack</a>  for virtual environments (both <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">venv</a> and <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">virtualenv</a> supported)</p></li>
+<li><p><a class="reference external" href="https://jcristharif.com/venv-pack/">venv-pack</a>  for virtual environments (both <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">venv</a> and <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">virtualenv</a> supported)</p></li>
 </ul>
 <p>Both are tools for taking an environment and creating an archive of it in a way
 that (most) absolute paths in any libraries or scripts are altered to be
@@ -523,23 +534,23 @@ $ hdfs dfs -chmod <span class="m">755</span> /dask-gateway
 </pre></div>
 </div>
 <p>To use the packaged environment with <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, you need to
-include the archive in <code class="docutils literal notranslate"><span class="pre">YarnClusterManager.localize_files</span></code>, and activate the
+include the archive in <code class="docutils literal notranslate"><span class="pre">YarnClusterConfig.localize_files</span></code>, and activate the
 environment in
-<code class="docutils literal notranslate"><span class="pre">YarnClusterManager.scheduler_setup</span></code>/<code class="docutils literal notranslate"><span class="pre">YarnClusterManager.worker_setup</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
+<code class="docutils literal notranslate"><span class="pre">YarnClusterConfig.scheduler_setup</span></code>/<code class="docutils literal notranslate"><span class="pre">YarnClusterConfig.worker_setup</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;hdfs:///dask-gateway/example.tar.gz&#39;</span><span class="p">,</span>
         <span class="s1">&#39;visibility&#39;</span><span class="p">:</span> <span class="s1">&#39;public&#39;</span>
     <span class="p">}</span>
 <span class="p">}</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
 </pre></div>
 </div>
 <p>Note that we set <code class="docutils literal notranslate"><span class="pre">visibility</span></code> to <code class="docutils literal notranslate"><span class="pre">public</span></code> for the environment, so that
 multiple users can all share the same localized environment (reducing the cost
 of moving the environments around).</p>
-<p>For more information, see the <a class="reference external" href="https://jcrist.github.io/skein/distributing-files.html">Skein documentation on distributing files</a>.</p>
+<p>For more information, see the <a class="reference external" href="https://jcristharif.com/skein/distributing-files.html">Skein documentation on distributing files</a>.</p>
 </div>
 </div>
 <div class="section" id="additional-configuration-options">
@@ -549,18 +560,18 @@ of moving the environments around).</p>
 you’ll probably want to configure the worker resource limits, as well as which
 YARN queue to use.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The resource limits for a worker</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">=</span> <span class="s1">&#39;4 G&#39;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">=</span> <span class="s1">&#39;4 G&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>
 
 <span class="c1"># The YARN queue to use</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="s1">&#39;...&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="s1">&#39;...&#39;</span>
 </pre></div>
 </div>
 <p>If your cluster is under high load (and jobs may be slow to start), you may
 also want to increase the cluster/worker timeout values:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Increase startup timeouts to 5 min (600 seconds) each</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">cluster_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">cluster_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
 </pre></div>
 </div>
 </div>
@@ -568,44 +579,44 @@ also want to increase the cluster/worker timeout values:</p>
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
 <p>In summary, an example <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> configuration might look
 like:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the gateway to use YARN as the cluster manager</span>
-<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">cluster_manager_class</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">&quot;dask_gateway_server.managers.yarn.YarnClusterManager&quot;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the gateway to use YARN as the backend</span>
+<span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">backend_class</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;dask_gateway_server.backends.yarn.YarnBackend&quot;</span>
 <span class="p">)</span>
 
 <span class="c1"># Specify the location of the keytab file, and the principal name</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/dask.keytab&quot;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">principal</span> <span class="o">=</span> <span class="s2">&quot;dask&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnBackend</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/dask.keytab&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnBackend</span><span class="o">.</span><span class="n">principal</span> <span class="o">=</span> <span class="s2">&quot;dask&quot;</span>
 
 <span class="c1"># Enable Kerberos for user-facing authentication</span>
 <span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">authenticator_class</span> <span class="o">=</span> <span class="s2">&quot;dask_gateway_server.auth.KerberosAuthenticator&quot;</span>
 <span class="n">c</span><span class="o">.</span><span class="n">KerberosAuthenticator</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/dask.keytab&quot;</span>
 
 <span class="c1"># Specify location of the archived Python environment</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;hdfs:///dask-gateway/example.tar.gz&#39;</span><span class="p">,</span>
         <span class="s1">&#39;visibility&#39;</span><span class="p">:</span> <span class="s1">&#39;public&#39;</span>
     <span class="p">}</span>
 <span class="p">}</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
 
 <span class="c1"># Limit resources for a single worker</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">=</span> <span class="s1">&#39;4 G&#39;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">=</span> <span class="s1">&#39;4 G&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_cores</span> <span class="o">=</span> <span class="mi">2</span>
 
 <span class="c1"># Specify the YARN queue to use</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterManager</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="s1">&#39;dask&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="s1">&#39;dask&#39;</span>
 </pre></div>
 </div>
 </div>
 </div>
-<div class="section" id="open-relevant-ports">
-<h2>Open relevant ports<a class="headerlink" href="#open-relevant-ports" title="Permalink to this headline">¶</a></h2>
-<p>For users to access the gateway server, they’ll need access to the ports set in
-<a class="reference internal" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a> above (by default these are
-<code class="docutils literal notranslate"><span class="pre">8000</span></code> and <code class="docutils literal notranslate"><span class="pre">8786</span></code>). How to open up these ports is system specific - cluster
+<div class="section" id="open-relevant-port-s">
+<h2>Open relevant port(s)<a class="headerlink" href="#open-relevant-port-s" title="Permalink to this headline">¶</a></h2>
+<p>For users to access the gateway server, they’ll need access to the public
+port(s) set in <a class="reference internal" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a> above (by default
+this is port <code class="docutils literal notranslate"><span class="pre">8000</span></code>). How to expose ports is system specific - cluster
 administrators should determine how best to perform this task.</p>
 </div>
 <div class="section" id="start-dask-gateway-server">
@@ -650,8 +661,8 @@ $ conda create -n dask-gateway -c conda-forge dask-gateway-kerberos
 </pre></div>
 </div>
 <p>You can connect to the gateway by creating a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>
-object, specifying the public address (if you changed the port for proxy server
-via <code class="docutils literal notranslate"><span class="pre">gateway_url</span></code>, you’ll also need to specify the <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).</p>
+object, specifying the public address (note that if you configured
+<a class="reference internal" href="api-server.html#c.Proxy.tcp_address" title="c.Proxy.tcp_address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code></a> you’ll also need to specify the <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
 
 <span class="go"># When running without kerberos</span>
@@ -704,7 +715,7 @@ newly created cluster.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Jim Crist
+        &copy; Copyright 2019, Jim Crist-Harif
 
     </p>
   </div>
