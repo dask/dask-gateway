@@ -77,7 +77,7 @@ Now we can install ``dask-gateway-server`` and its dependencies.
 
 .. code-block:: bash
 
-    $ conda install -y -c conda-forge dask-gateway-server
+    $ conda install -y -c conda-forge dask-gateway-server-jobqueue
 
 
 Enable permissions for the ``dask`` user

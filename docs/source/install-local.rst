@@ -22,13 +22,13 @@ Dask-Gateway can be installed with ``conda`` or ``pip``. It's composed of two pa
 
 .. code-block:: console
 
-    $ conda install -c conda-forge dask-gateway dask-gateway-server
+    $ conda install -c conda-forge dask-gateway dask-gateway-server-local
 
 **Install with pip**
 
 .. code-block:: console
 
-    $ pip install dask-gateway dask-gateway-server
+    $ pip install dask-gateway dask-gateway-server[local]
 
 
 Start the gateway server
