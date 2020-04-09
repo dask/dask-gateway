@@ -234,7 +234,6 @@ class KubeClusterConfig(ClusterConfig):
 
         This dict will be merged with ``common_annotations`` before being
         applied to user pods.
-
         """,
         config=True,
     )
@@ -250,7 +249,6 @@ class KubeClusterConfig(ClusterConfig):
 
         This dict will be merged with ``common_annotations`` before being
         applied to user pods.
-
         """,
         config=True,
     )
