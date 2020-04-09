@@ -1456,6 +1456,18 @@ and should be camelCase.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt id="c.KubeClusterConfig.scheduler_extra_pod_annotations">
+<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">scheduler_extra_pod_annotations</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterConfig.scheduler_extra_pod_annotations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Any extra annotations to be applied to a user’s scheduler pods.</p>
+<p>These annotations can be set using with cluster options (See
+<a class="reference internal" href="cluster-options.html#exposing-cluster-options"><span class="std std-ref">Exposing Cluster Options</span></a>) to allow for injecting user-specific
+information, e.g. adding an annotation based on a user’s group or
+username.</p>
+<p>This dict will be merged with <code class="docutils literal notranslate"><span class="pre">common_annotations</span></code> before being
+applied to user pods.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt id="c.KubeClusterConfig.scheduler_extra_pod_config">
 <code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">scheduler_extra_pod_config</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterConfig.scheduler_extra_pod_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Any extra configuration for the scheduler pods.</p>
@@ -1464,6 +1476,17 @@ and should be camelCase.</p>
 <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core">kubernetes spec</a>,
 and should be camelCase.</p>
 <p>See <code class="docutils literal notranslate"><span class="pre">worker_extra_pod_config</span></code> for more information.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.KubeClusterConfig.scheduler_extra_pod_labels">
+<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">scheduler_extra_pod_labels</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterConfig.scheduler_extra_pod_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Any extra labels to be applied to a user’s scheduler pods.</p>
+<p>These labels can be set using with cluster options (See
+<a class="reference internal" href="cluster-options.html#exposing-cluster-options"><span class="std std-ref">Exposing Cluster Options</span></a>) to allow for injecting user-specific
+information, e.g. adding a label based on a user’s group or username.</p>
+<p>This dict will be merged with <code class="docutils literal notranslate"><span class="pre">common_labels</span></code> before being
+applied to user pods.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -1532,6 +1555,18 @@ worker container:</p>
 </dd></dl>
 
 <dl class="py data">
+<dt id="c.KubeClusterConfig.worker_extra_pod_annotations">
+<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">worker_extra_pod_annotations</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterConfig.worker_extra_pod_annotations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Any extra annotations to be applied to a user’s worker pods.</p>
+<p>These annotations can be set using with cluster options (See
+<a class="reference internal" href="cluster-options.html#exposing-cluster-options"><span class="std std-ref">Exposing Cluster Options</span></a>) to allow for injecting user-specific
+information, e.g. adding an annotation based on a user’s group or
+username.</p>
+<p>This dict will be merged with <code class="docutils literal notranslate"><span class="pre">common_annotations</span></code> before being
+applied to user pods.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt id="c.KubeClusterConfig.worker_extra_pod_config">
 <code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">worker_extra_pod_config</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterConfig.worker_extra_pod_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Any extra configuration for the worker pods.</p>
@@ -1552,6 +1587,17 @@ and should be camelCase.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.KubeClusterConfig.worker_extra_pod_labels">
+<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">worker_extra_pod_labels</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.KubeClusterConfig.worker_extra_pod_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Any extra labels to be applied to a user’s worker pods.</p>
+<p>These labels can be set using with cluster options (See
+<a class="reference internal" href="cluster-options.html#exposing-cluster-options"><span class="std std-ref">Exposing Cluster Options</span></a>) to allow for injecting user-specific
+information, e.g. adding a label based on a user’s group or username.</p>
+<p>This dict will be merged with <code class="docutils literal notranslate"><span class="pre">common_labels</span></code> before being
+applied to user pods.</p>
 </dd></dl>
 
 <dl class="py data">

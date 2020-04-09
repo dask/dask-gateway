@@ -1,3 +1,5 @@
+.. _exposing-cluster-options:
+
 Exposing Cluster Options
 ========================
 
