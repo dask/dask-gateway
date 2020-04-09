@@ -1,5 +1,6 @@
 gateway:
   loglevel: DEBUG
+  prefix: /services/dask-gateway
   backend:
     scheduler:
       cores:
