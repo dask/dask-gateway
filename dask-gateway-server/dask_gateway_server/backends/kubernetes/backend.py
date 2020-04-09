@@ -411,13 +411,12 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             if exc.status != 404:
                 raise
 
-    def get_labels(self, cluster_name, username, component=None):
+    def get_labels(self, cluster_name, component=None):
         labels = self.common_labels.copy()
         labels.update(
             {
                 "gateway.dask.org/instance": self.gateway_instance,
                 "gateway.dask.org/cluster": cluster_name,
-                "gateway.dask.org/user": username,
             }
         )
         if component:
@@ -432,10 +431,14 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             "kind": "DaskCluster",
             "metadata": {
                 "name": cluster_name,
-                "labels": self.get_labels(cluster_name, username),
+                "labels": self.get_labels(cluster_name),
                 "annotations": self.common_annotations,
             },
-            "spec": {"options": options, "config": config.to_dict()},
+            "spec": {
+                "username": username,
+                "options": options,
+                "config": config.to_dict(),
+            },
         }
 
     def get_cluster_name(self, obj):
@@ -504,7 +507,7 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
 
             cluster = models.Cluster(
                 name=cluster_name,
-                username=obj["metadata"]["labels"]["gateway.dask.org/user"],
+                username=obj["spec"].get("username", ""),
                 options=obj["spec"].get("options") or {},
                 token="",
                 scheduler_address=scheduler_address,
