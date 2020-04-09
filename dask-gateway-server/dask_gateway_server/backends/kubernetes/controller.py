@@ -1093,6 +1093,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             )
             extra_pod_config = config.worker_extra_pod_config
             extra_container_config = config.worker_extra_container_config
+            extra_pod_annotations = config.worker_extra_pod_annotations
+            extra_pod_labels = config.worker_extra_pod_labels
             probes = {}
         else:
             container_name = "dask-scheduler"
@@ -1103,6 +1105,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             cmd = self.get_scheduler_command(namespace, cluster_name, config)
             extra_pod_config = config.scheduler_extra_pod_config
             extra_container_config = config.scheduler_extra_container_config
+            extra_pod_annotations = config.scheduler_extra_pod_annotations
+            extra_pod_labels = config.scheduler_extra_pod_labels
             # TODO: make this configurable. If supported, we should use a
             # startupProbe here instead.
             probes = {
@@ -1112,8 +1116,6 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                     "failureThreshold": 3,
                 }
             }
-
-        labels = self.get_labels(cluster_name, container_name)
 
         volume = {
             "name": "dask-credentials",
@@ -1149,10 +1151,16 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         if extra_container_config:
             container = merge_json_objects(container, extra_container_config)
 
+        annotations = self.common_annotations.copy()
+        annotations.update(extra_pod_annotations)
+
+        labels = self.get_labels(cluster_name, container_name)
+        labels.update(extra_pod_labels)
+
         pod = {
             "apiVersion": "v1",
             "kind": "Pod",
-            "metadata": {"labels": labels, "annotations": self.common_annotations},
+            "metadata": {"labels": labels, "annotations": annotations},
             "spec": {
                 "containers": [container],
                 "volumes": [volume],

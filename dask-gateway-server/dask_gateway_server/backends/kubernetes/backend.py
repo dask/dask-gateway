@@ -5,7 +5,7 @@ from base64 import b64decode
 from collections import defaultdict
 
 from traitlets import Float, Dict, Unicode, default
-from traitlets.config import Configurable
+from traitlets.config import LoggingConfigurable
 from kubernetes_asyncio import client, config
 from kubernetes_asyncio.client.rest import ApiException
 
@@ -223,8 +223,66 @@ class KubeClusterConfig(ClusterConfig):
         config=True,
     )
 
+    worker_extra_pod_annotations = Dict(
+        help="""
+        Any extra annotations to be applied to a user's worker pods.
 
-class KubeBackendAndControllerMixin(Configurable):
+        These annotations can be set using with cluster options (See
+        :ref:`exposing-cluster-options`) to allow for injecting user-specific
+        information, e.g. adding an annotation based on a user's group or
+        username.
+
+        This dict will be merged with ``common_annotations`` before being
+        applied to user pods.
+        """,
+        config=True,
+    )
+
+    scheduler_extra_pod_annotations = Dict(
+        help="""
+        Any extra annotations to be applied to a user's scheduler pods.
+
+        These annotations can be set using with cluster options (See
+        :ref:`exposing-cluster-options`) to allow for injecting user-specific
+        information, e.g. adding an annotation based on a user's group or
+        username.
+
+        This dict will be merged with ``common_annotations`` before being
+        applied to user pods.
+        """,
+        config=True,
+    )
+
+    worker_extra_pod_labels = Dict(
+        help="""
+        Any extra labels to be applied to a user's worker pods.
+
+        These labels can be set using with cluster options (See
+        :ref:`exposing-cluster-options`) to allow for injecting user-specific
+        information, e.g. adding a label based on a user's group or username.
+
+        This dict will be merged with ``common_labels`` before being
+        applied to user pods.
+        """,
+        config=True,
+    )
+
+    scheduler_extra_pod_labels = Dict(
+        help="""
+        Any extra labels to be applied to a user's scheduler pods.
+
+        These labels can be set using with cluster options (See
+        :ref:`exposing-cluster-options`) to allow for injecting user-specific
+        information, e.g. adding a label based on a user's group or username.
+
+        This dict will be merged with ``common_labels`` before being
+        applied to user pods.
+        """,
+        config=True,
+    )
+
+
+class KubeBackendAndControllerMixin(LoggingConfigurable):
     """Shared config between the backend and controller"""
 
     gateway_instance = Unicode(
