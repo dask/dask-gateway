@@ -1,0 +1,24 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "dask-gateway.fullname" . | printf "clusters-prefix-%s" | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+spec:
+  stripPrefixRegex:
+    regex:
+      - '{{ .Values.gateway.prefix | trimSuffix "/" }}/clusters/[a-zA-Z0-9.-]+'
+{{- if ne .Values.gateway.prefix "/" }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "dask-gateway.fullname" . | printf "api-prefix-%s" | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+spec:
+  stripPrefix:
+    prefixes:
+      - '{{ .Values.gateway.prefix | trimSuffix "/" }}'
+    forceSlash: false
+{{- end }}
