@@ -1093,6 +1093,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             )
             extra_pod_config = config.worker_extra_pod_config
             extra_container_config = config.worker_extra_container_config
+            extra_pod_annotations = config.worker_extra_pod_annotations
+            extra_pod_labels = config.worker_extra_pod_labels
             probes = {}
         else:
             container_name = "dask-scheduler"
@@ -1103,6 +1105,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             cmd = self.get_scheduler_command(namespace, cluster_name, config)
             extra_pod_config = config.scheduler_extra_pod_config
             extra_container_config = config.scheduler_extra_container_config
+            extra_pod_annotations = config.scheduler_extra_pod_annotations
+            extra_pod_labels = config.scheduler_extra_pod_labels
             # TODO: make this configurable. If supported, we should use a
             # startupProbe here instead.
             probes = {
@@ -1114,8 +1118,6 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             }
 
         labels = self.get_labels(cluster_name, container_name)
-        extra_annotations = config.extra_annotations
-        extra_labels = config.extra_labels
 
         volume = {
             "name": "dask-credentials",
@@ -1152,11 +1154,11 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             container = merge_json_objects(container, extra_container_config)
 
         annotations = self.common_annotations
-        if extra_annotations:
-            annotations = merge_json_objects(annotations, extra_annotations)
+        if extra_pod_annotations:
+            annotations = merge_json_objects(annotations, extra_pod_annotations)
 
-        if extra_labels:
-            labels.update(extra_labels)
+        if extra_pod_labels:
+            labels.update(extra_pod_labels)
 
         pod = {
             "apiVersion": "v1",

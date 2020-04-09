@@ -223,10 +223,9 @@ class KubeClusterConfig(ClusterConfig):
         config=True,
     )
 
-    extra_annotations = Dict(
+    worker_extra_pod_annotations = Dict(
         help="""
-        Any extra annotations to be applied to a user's scheduler and worker
-        pods.
+        Any extra annotations to be applied to a user's worker pods.
 
         These annotations can be set using with cluster options (See
         :ref:`exposing-cluster-options`) to allow for injecting user-specific
@@ -240,9 +239,39 @@ class KubeClusterConfig(ClusterConfig):
         config=True,
     )
 
-    extra_labels = Dict(
+    scheduler_extra_pod_annotations = Dict(
         help="""
-        Any extra labels to be applied to a user's scheduler and worker pods.
+        Any extra annotations to be applied to a user's scheduler pods.
+
+        These annotations can be set using with cluster options (See
+        :ref:`exposing-cluster-options`) to allow for injecting user-specific
+        information, e.g. adding an annotation based on a user's group or
+        username.
+
+        This dict will be merged with ``common_annotations`` before being
+        applied to user pods.
+
+        """,
+        config=True,
+    )
+
+    worker_extra_pod_labels = Dict(
+        help="""
+        Any extra labels to be applied to a user's worker pods.
+
+        These labels can be set using with cluster options (See
+        :ref:`exposing-cluster-options`) to allow for injecting user-specific
+        information, e.g. adding a label based on a user's group or username.
+
+        This dict will be merged with ``common_labels`` before being
+        applied to user pods.
+        """,
+        config=True,
+    )
+
+    scheduler_extra_pod_labels = Dict(
+        help="""
+        Any extra labels to be applied to a user's scheduler pods.
 
         These labels can be set using with cluster options (See
         :ref:`exposing-cluster-options`) to allow for injecting user-specific
