@@ -112,11 +112,10 @@ def test_make_cluster_object():
     name = obj["metadata"]["name"]
     labels = obj["metadata"]["labels"]
     assert labels["gateway.dask.org/instance"] == "instance-1234"
-    assert labels["gateway.dask.org/user"] == "alice"
     assert labels["gateway.dask.org/cluster"] == name
 
     spec = obj["spec"]
-    sol = {"options": options, "config": config.to_dict()}
+    sol = {"options": options, "config": config.to_dict(), "username": "alice"}
     assert spec == sol
 
 
@@ -160,11 +159,8 @@ def test_make_pod(is_worker):
     config = example_config()
     namespace = config.namespace
     cluster_name = "c1234"
-    username = "alice"
 
-    pod = controller.make_pod(
-        namespace, cluster_name, username, config, is_worker=is_worker
-    )
+    pod = controller.make_pod(namespace, cluster_name, config, is_worker=is_worker)
 
     if is_worker:
         component = "dask-worker"
@@ -186,7 +182,6 @@ def test_make_pod(is_worker):
     labels = pod["metadata"]["labels"]
     assert labels["gateway.dask.org/instance"] == "instance-1234"
     assert labels["gateway.dask.org/cluster"] == cluster_name
-    assert labels["gateway.dask.org/user"] == username
     assert labels["app.kubernetes.io/component"] == component
 
     assert pod["spec"]["tolerations"] == tolerations
@@ -202,14 +197,12 @@ def test_make_secret():
     )
 
     cluster_name = "c1234"
-    username = "alice"
 
-    secret = controller.make_secret(cluster_name, username)
+    secret = controller.make_secret(cluster_name)
 
     labels = secret["metadata"]["labels"]
     assert labels["gateway.dask.org/instance"] == "instance-1234"
     assert labels["gateway.dask.org/cluster"] == cluster_name
-    assert labels["gateway.dask.org/user"] == username
     assert labels["app.kubernetes.io/component"] == "credentials"
 
     assert set(secret["data"].keys()) == {"dask.crt", "dask.pem", "api-token"}
@@ -221,14 +214,12 @@ def test_make_service():
     )
 
     cluster_name = "c1234"
-    username = "alice"
 
-    service = controller.make_service(cluster_name, username)
+    service = controller.make_service(cluster_name)
 
     labels = service["metadata"]["labels"]
     assert labels["gateway.dask.org/instance"] == "instance-1234"
     assert labels["gateway.dask.org/cluster"] == cluster_name
-    assert labels["gateway.dask.org/user"] == username
     assert labels["app.kubernetes.io/component"] == "dask-scheduler"
 
     selector = service["spec"]["selector"]
@@ -248,15 +239,13 @@ def test_make_ingressroute():
     )
 
     cluster_name = "c1234"
-    username = "alice"
     namespace = "mynamespace"
 
-    ingress = controller.make_ingressroute(cluster_name, username, namespace)
+    ingress = controller.make_ingressroute(cluster_name, namespace)
 
     labels = ingress["metadata"]["labels"]
     assert labels["gateway.dask.org/instance"] == "instance-1234"
     assert labels["gateway.dask.org/cluster"] == cluster_name
-    assert labels["gateway.dask.org/user"] == username
     assert labels["app.kubernetes.io/component"] == "dask-scheduler"
 
     route = ingress["spec"]["routes"][0]
@@ -272,15 +261,13 @@ def test_make_ingressroutetcp():
     )
 
     cluster_name = "c1234"
-    username = "alice"
     namespace = "mynamespace"
 
-    ingress = controller.make_ingressroutetcp(cluster_name, username, namespace)
+    ingress = controller.make_ingressroutetcp(cluster_name, namespace)
 
     labels = ingress["metadata"]["labels"]
     assert labels["gateway.dask.org/instance"] == "instance-1234"
     assert labels["gateway.dask.org/cluster"] == cluster_name
-    assert labels["gateway.dask.org/user"] == username
     assert labels["app.kubernetes.io/component"] == "dask-scheduler"
 
     route = ingress["spec"]["routes"][0]

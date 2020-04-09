@@ -817,10 +817,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     async def handle_scale_up(self, cluster, sched_pod, info, replicas, delta):
         name = cluster["metadata"]["name"]
         namespace = cluster["metadata"]["namespace"]
-        username = cluster["metadata"]["labels"].get("gateway.dask.org/user")
         config = FrozenAttrDict(cluster["spec"]["config"])
 
-        pod = self.make_pod(namespace, name, username, config, is_worker=True)
+        pod = self.make_pod(namespace, name, config, is_worker=True)
         pod["metadata"]["ownerReferences"] = [
             {
                 "apiVersion": "v1",
@@ -904,8 +903,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     async def create_secret_if_not_exists(self, cluster):
         name = cluster["metadata"]["name"]
         namespace = cluster["metadata"]["namespace"]
-        username = cluster["metadata"]["labels"].get("gateway.dask.org/user")
-        secret = self.make_secret(name, username)
+        secret = self.make_secret(name)
         secret["metadata"]["ownerReferences"] = [
             {
                 "apiVersion": cluster["apiVersion"],
@@ -927,9 +925,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     async def create_scheduler_pod_if_not_exists(self, cluster):
         name = cluster["metadata"]["name"]
         namespace = cluster["metadata"]["namespace"]
-        username = cluster["metadata"]["labels"].get("gateway.dask.org/user")
         config = FrozenAttrDict(cluster["spec"]["config"])
-        pod = self.make_pod(namespace, name, username, config)
+        pod = self.make_pod(namespace, name, config)
         pod["metadata"]["ownerReferences"] = [
             {
                 "apiVersion": cluster["apiVersion"],
@@ -955,8 +952,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     async def create_service_if_not_exists(self, cluster, sched_pod):
         name = cluster["metadata"]["name"]
         namespace = cluster["metadata"]["namespace"]
-        username = cluster["metadata"]["labels"].get("gateway.dask.org/user")
-        service = self.make_service(name, username)
+        service = self.make_service(name)
         service["metadata"]["ownerReferences"] = [
             {
                 "apiVersion": "v1",
@@ -978,8 +974,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     async def create_ingressroute_if_not_exists(self, cluster, sched_pod):
         name = cluster["metadata"]["name"]
         namespace = cluster["metadata"]["namespace"]
-        username = cluster["metadata"]["labels"].get("gateway.dask.org/user")
-        route = self.make_ingressroute(name, username, namespace)
+        route = self.make_ingressroute(name, namespace)
         route["metadata"]["ownerReferences"] = [
             {
                 "apiVersion": "v1",
@@ -1005,8 +1000,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     async def create_ingressroutetcp_if_not_exists(self, cluster, sched_pod):
         name = cluster["metadata"]["name"]
         namespace = cluster["metadata"]["namespace"]
-        username = cluster["metadata"]["labels"].get("gateway.dask.org/user")
-        route = self.make_ingressroutetcp(name, username, namespace)
+        route = self.make_ingressroutetcp(name, namespace)
         route["metadata"]["ownerReferences"] = [
             {
                 "apiVersion": "v1",
@@ -1069,20 +1063,19 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         )
         return [{"name": k, "value": v} for k, v in env.items()]
 
-    def get_labels(self, cluster_name, username, component=None):
+    def get_labels(self, cluster_name, component=None):
         labels = self.common_labels.copy()
         labels.update(
             {
                 "gateway.dask.org/instance": self.gateway_instance,
                 "gateway.dask.org/cluster": cluster_name,
-                "gateway.dask.org/user": username,
             }
         )
         if component:
             labels["app.kubernetes.io/component"] = component
         return labels
 
-    def make_pod(self, namespace, cluster_name, username, config, is_worker=False):
+    def make_pod(self, namespace, cluster_name, config, is_worker=False):
         env = self.get_env(namespace, cluster_name, config)
 
         if is_worker:
@@ -1120,7 +1113,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 }
             }
 
-        labels = self.get_labels(cluster_name, username, container_name)
+        labels = self.get_labels(cluster_name, container_name)
 
         volume = {
             "name": "dask-credentials",
@@ -1178,11 +1171,11 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
         return pod
 
-    def make_secret(self, cluster_name, username):
+    def make_secret(self, cluster_name):
         api_token = uuid.uuid4().hex
         tls_cert, tls_key = new_keypair(cluster_name)
 
-        labels = self.get_labels(cluster_name, username, "credentials")
+        labels = self.get_labels(cluster_name, "credentials")
 
         return {
             "apiVersion": "v1",
@@ -1202,10 +1195,10 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     def make_service_name(self, cluster_name):
         return f"dask-gateway-{cluster_name}"
 
-    def make_service(self, cluster_name, username):
+    def make_service(self, cluster_name):
         return {
             "metadata": {
-                "labels": self.get_labels(cluster_name, username, "dask-scheduler"),
+                "labels": self.get_labels(cluster_name, "dask-scheduler"),
                 "annotations": self.common_annotations,
                 "name": self.make_service_name(cluster_name),
             },
@@ -1224,13 +1217,13 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             },
         }
 
-    def make_ingressroute(self, cluster_name, username, namespace):
+    def make_ingressroute(self, cluster_name, namespace):
         route = f"{self.proxy_prefix}/clusters/{namespace}.{cluster_name}/"
         return {
             "apiVersion": "traefik.containo.us/v1alpha1",
             "kind": "IngressRoute",
             "metadata": {
-                "labels": self.get_labels(cluster_name, username, "dask-scheduler"),
+                "labels": self.get_labels(cluster_name, "dask-scheduler"),
                 "annotations": self.common_annotations,
                 "name": f"dask-gateway-{cluster_name}",
             },
@@ -1253,12 +1246,12 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             },
         }
 
-    def make_ingressroutetcp(self, cluster_name, username, namespace):
+    def make_ingressroutetcp(self, cluster_name, namespace):
         return {
             "apiVersion": "traefik.containo.us/v1alpha1",
             "kind": "IngressRouteTCP",
             "metadata": {
-                "labels": self.get_labels(cluster_name, username, "dask-scheduler"),
+                "labels": self.get_labels(cluster_name, "dask-scheduler"),
                 "annotations": self.common_annotations,
                 "name": f"dask-gateway-{cluster_name}",
             },

@@ -15,7 +15,10 @@ if not os.environ.get("TEST_DASK_GATEWAY_KUBE"):
 @pytest.fixture
 async def gateway():
     addr = os.environ.get("TEST_DASK_GATEWAY_KUBE_ADDRESS", "http://localhost:8000")
-    async with dask_gateway.Gateway(address=addr, asynchronous=True) as gateway:
+    auth = dask_gateway.BasicAuth(username="alice@non-alpha.characters")
+    async with dask_gateway.Gateway(
+        address=addr, asynchronous=True, auth=auth
+    ) as gateway:
         for cluster in await gateway.list_clusters():
             await gateway.stop_cluster(cluster.name)
 
