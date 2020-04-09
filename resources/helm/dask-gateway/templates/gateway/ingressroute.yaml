@@ -13,3 +13,7 @@ spec:
     services:
     - name: {{ include "dask-gateway.apiName" . }}
       port: 8000
+    {{- if ne .Values.gateway.prefix "/"}}
+    middlewares:
+    - name: '{{ include "dask-gateway.fullname" . | printf "api-prefix-%s" | trunc 63 | trimSuffix "-" }}'
+    {{- end }}
