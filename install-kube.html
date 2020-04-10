@@ -14,7 +14,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.7.0 documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.7.1 documentation</title>
   
 
   
@@ -131,7 +131,7 @@
             
             
               <div class="version">
-                0.7.0
+                0.7.1
               </div>
             
           
@@ -323,7 +323,7 @@ values.yaml file</a> for more information.</p>
 <p>To install the Dask-Gateway Helm chart, run the following command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RELEASE</span><span class="o">=</span>dask-gateway
 <span class="nv">NAMESPACE</span><span class="o">=</span>dask-gateway
-<span class="nv">VERSION</span><span class="o">=</span><span class="m">0</span>.7.0
+<span class="nv">VERSION</span><span class="o">=</span><span class="m">0</span>.7.1
 
 helm upgrade --install <span class="se">\</span>
     --namespace <span class="nv">$NAMESPACE</span> <span class="se">\</span>
@@ -565,7 +565,7 @@ here for reference:</p>
   <span class="c1"># The image to use for the gateway-server pod.</span>
   <span class="nt">image</span><span class="p">:</span>
     <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span>
-    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.7.0</span>
+    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.7.1</span>
     <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
 
   <span class="c1"># Configuration for the gateway-server service</span>
@@ -604,7 +604,7 @@ here for reference:</p>
     <span class="c1"># The image to use for both schedulers and workers.</span>
     <span class="nt">image</span><span class="p">:</span>
       <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway</span>
-      <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.7.0</span>
+      <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.7.1</span>
       <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
 
     <span class="c1"># The namespace to launch dask clusters in. If not specified, defaults to</span>
@@ -697,7 +697,7 @@ here for reference:</p>
   <span class="c1"># The image to use for the controller pod.</span>
   <span class="nt">image</span><span class="p">:</span>
     <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span>
-    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.7.0</span>
+    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.7.1</span>
     <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
 
 <span class="c1"># Configuration for the traefik proxy</span>
