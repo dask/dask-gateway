@@ -345,8 +345,7 @@ sudo-executed as them for permissions to be transferred appropriately.</p>
 <p>An example entry in <code class="docutils literal notranslate"><span class="pre">sudoers</span></code> might look like:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Cmnd_Alias DASK_GATEWAY_JOBQUEUE_LAUNCHER = /opt/dask-gateway/miniconda/bin/dask-gateway-jobqueue-launcher
 
-%dask_users ALL=(dask) /usr/bin/sudo
-dask ALL=(%dask_users) NOPASSWD:DASK_GATEWAY_JOBQUEUE_LAUNCHER
+dask ALL=(%dask_users,!root) NOPASSWD:DASK_GATEWAY_JOBQUEUE_LAUNCHER
 </pre></div>
 </div>
 <p>Additionaly, when using <a class="reference external" href="https://www.pbspro.org/">PBS</a> you’ll need to make the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user a PBS

@@ -98,8 +98,7 @@ An example entry in ``sudoers`` might look like:
 
     Cmnd_Alias DASK_GATEWAY_JOBQUEUE_LAUNCHER = /opt/dask-gateway/miniconda/bin/dask-gateway-jobqueue-launcher
 
-    %dask_users ALL=(dask) /usr/bin/sudo
-    dask ALL=(%dask_users) NOPASSWD:DASK_GATEWAY_JOBQUEUE_LAUNCHER
+    dask ALL=(%dask_users,!root) NOPASSWD:DASK_GATEWAY_JOBQUEUE_LAUNCHER
 
 
 Additionaly, when using PBS_ you'll need to make the ``dask`` user a PBS
