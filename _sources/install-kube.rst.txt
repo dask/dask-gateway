@@ -87,7 +87,7 @@ To install the Dask-Gateway Helm chart, run the following command:
         --version $VERSION \
         --values path/to/your/config.yaml \
         $RELEASE \
-        dask-gateway/dask-gateway
+        daskgateway/dask-gateway
 
 where:
 
