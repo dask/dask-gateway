@@ -61,7 +61,7 @@ gateway:
     initialDelaySeconds: 5
     timeoutSeconds: 2
     periodSeconds: 10
-    failureThreshold: 3
+    failureThreshold: 6
   readinessProbe:
     # Enables the readinessProbe.
     enabled: true
@@ -69,7 +69,7 @@ gateway:
     initialDelaySeconds: 5
     timeoutSeconds: 2
     periodSeconds: 10
-    failureThreshold: 1
+    failureThreshold: 3
 
   backend:
     # The image to use for both schedulers and workers.
