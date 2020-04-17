@@ -69,7 +69,7 @@ spec:
             failureThreshold: {{ .Values.gateway.livenessProbe.failureThreshold }}
           {{- end }}
 
-          {{- if .Values.gateway.livenessProbe.enabled }}
+          {{- if .Values.gateway.readinessProbe.enabled }}
           readinessProbe:
             httpGet:
               path: /api/health
