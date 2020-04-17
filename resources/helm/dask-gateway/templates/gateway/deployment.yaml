@@ -57,19 +57,25 @@ spec:
           ports:
             - containerPort: 8000
               name: api
+
+          {{- if .Values.gateway.livenessProbe.enabled }}
           livenessProbe:
             httpGet:
               path: /api/health
               port: api
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 3
+            initialDelaySeconds: {{ .Values.gateway.livenessProbe.initialDelaySecond }}
+            periodSeconds: {{ .Values.gateway.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.gateway.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.gateway.livenessProbe.failureThreshold }}
+          {{- end }}
+
+          {{- if .Values.gateway.livenessProbe.enabled }}
           readinessProbe:
             httpGet:
               path: /api/health
               port: api
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 1
+            initialDelaySeconds: {{ .Values.gateway.readinessProbe.initialDelaySecond }}
+            periodSeconds: {{ .Values.gateway.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.gateway.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.gateway.readinessProbe.failureThreshold }}
+          {{- end }}
