@@ -600,6 +600,23 @@ here for reference:</p>
       <span class="c1"># Configuration fields to set on the authenticator class.</span>
       <span class="nt">options</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
+  <span class="nt">livenessProbe</span><span class="p">:</span>
+    <span class="c1"># Enables the livenessProbe. </span>
+    <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+    <span class="c1"># Configures the livenessProbe. </span>
+    <span class="nt">initialDelaySeconds</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
+    <span class="nt">timeoutSeconds</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+    <span class="nt">periodSeconds</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+    <span class="nt">failureThreshold</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">6</span>
+  <span class="nt">readinessProbe</span><span class="p">:</span>
+    <span class="c1"># Enables the readinessProbe.</span>
+    <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+    <span class="c1"># Configures the readinessProbe.</span>
+    <span class="nt">initialDelaySeconds</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
+    <span class="nt">timeoutSeconds</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+    <span class="nt">periodSeconds</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+    <span class="nt">failureThreshold</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
+
   <span class="nt">backend</span><span class="p">:</span>
     <span class="c1"># The image to use for both schedulers and workers.</span>
     <span class="nt">image</span><span class="p">:</span>
