@@ -63,7 +63,7 @@ spec:
             httpGet:
               path: /api/health
               port: api
-            initialDelaySeconds: {{ .Values.gateway.livenessProbe.initialDelaySecond }}
+            initialDelaySeconds: {{ .Values.gateway.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.gateway.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.gateway.livenessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.gateway.livenessProbe.failureThreshold }}
@@ -74,7 +74,7 @@ spec:
             httpGet:
               path: /api/health
               port: api
-            initialDelaySeconds: {{ .Values.gateway.readinessProbe.initialDelaySecond }}
+            initialDelaySeconds: {{ .Values.gateway.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.gateway.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.gateway.readinessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.gateway.readinessProbe.failureThreshold }}
