@@ -54,6 +54,23 @@ gateway:
       # Configuration fields to set on the authenticator class.
       options: {}
 
+  livenessProbe:
+    # Enables the livenessProbe. 
+    enabled: true
+    # Configures the livenessProbe. 
+    initialDelaySeconds: 5
+    timeoutSeconds: 2
+    periodSeconds: 10
+    failureThreshold: 6
+  readinessProbe:
+    # Enables the readinessProbe.
+    enabled: true
+    # Configures the readinessProbe.
+    initialDelaySeconds: 5
+    timeoutSeconds: 2
+    periodSeconds: 10
+    failureThreshold: 3
+
   backend:
     # The image to use for both schedulers and workers.
     image:
