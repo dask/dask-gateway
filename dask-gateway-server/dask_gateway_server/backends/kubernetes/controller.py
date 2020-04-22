@@ -1173,9 +1173,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             pod["spec"] = merge_json_objects(pod["spec"], extra_pod_config)
 
         if is_worker:
-            pod["metadata"]["generateName"] = "dask-gateway-"
+            pod["metadata"]["generateName"] = f"dask-gateway-worker-{cluster_name}-"
         else:
-            pod["metadata"]["name"] = f"dask-gateway-{cluster_name}"
+            pod["metadata"]["name"] = f"dask-gateway-scheduler-{cluster_name}"
 
         return pod
 
