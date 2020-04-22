@@ -13,8 +13,8 @@ pip install \
     ipywidgets \
     jupyterhub \
     notebook \
-    "pytest>=5.4.0" \
-    pytest-asyncio \
+    pytest \
+    pytest-asyncio==0.10.0 \
     sqlalchemy \
     tornado \
     traitlets \
