@@ -94,7 +94,8 @@ Each field supports the following standard parameters:
   valid Python identifier. Optional, if not provided ``field`` will be used.
 
 After validation (type, bounds, etc...), a dictionary of all options for a
-requested cluster is passed to a ``handler`` function. Here any additional
+requested cluster is passed to a ``handler`` function. This function is run on
+the ``dask-gateway-server``.  Here any additional
 validation can be done (errors raised in the handler are forwarded to the
 user), as well as any conversion needed between the exposed option fields and
 configuration fields on the backing :ref:`ClusterConfig <cluster-config>`.  The
