@@ -14,7 +14,7 @@ pip install \
     jupyterhub \
     notebook \
     "pytest<5.4.0" \
-    pytest-asyncio \
+    "pytest-asyncio==0.10.0" \
     sqlalchemy \
     tornado \
     traitlets \
