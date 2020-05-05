@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -xe
 
-pip install \
+pip install -U \
     aiohttp \
     black \
     colorlog \
