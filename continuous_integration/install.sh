@@ -13,7 +13,7 @@ pip install \
     ipywidgets \
     jupyterhub \
     notebook \
-    "pytest<5.4.0" \
+    pytest \
     pytest-asyncio \
     sqlalchemy \
     tornado \
