@@ -2,7 +2,7 @@ set -xe
 
 npm install -g configurable-http-proxy
 
-pip install \
+pip install -U \
     aiohttp \
     black \
     colorlog \
@@ -13,7 +13,7 @@ pip install \
     ipywidgets \
     jupyterhub \
     notebook \
-    "pytest<5.4.0" \
+    pytest \
     pytest-asyncio \
     sqlalchemy \
     tornado \
