@@ -2,7 +2,7 @@ set -xe
 
 npm install -g configurable-http-proxy
 
-pip install \
+pip install -U \
     aiohttp \
     black \
     colorlog \
