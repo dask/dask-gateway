@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -xe
 
-pip install \
+pip install -U \
     aiohttp \
     black \
     colorlog \
@@ -9,7 +9,7 @@ pip install \
     dask \
     distributed \
     flake8 \
-    "pytest<5.4.0" \
+    pytest \
     pytest-asyncio \
     kubernetes-asyncio \
     sqlalchemy \
