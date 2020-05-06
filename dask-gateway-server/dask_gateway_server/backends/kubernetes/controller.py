@@ -1119,7 +1119,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
         volume = {
             "name": "dask-credentials",
-            "secret": {"secretName": f"dask-gateway-{cluster_name}"},
+            "secret": {"secretName": self.make_secret_name(cluster_name)},
         }
 
         container = {
@@ -1173,11 +1173,14 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             pod["spec"] = merge_json_objects(pod["spec"], extra_pod_config)
 
         if is_worker:
-            pod["metadata"]["generateName"] = "dask-gateway-"
+            pod["metadata"]["generateName"] = f"dask-worker-{cluster_name}-"
         else:
-            pod["metadata"]["name"] = f"dask-gateway-{cluster_name}"
+            pod["metadata"]["name"] = f"dask-scheduler-{cluster_name}"
 
         return pod
+
+    def make_secret_name(self, cluster_name):
+        return f"dask-credentials-{cluster_name}"
 
     def make_secret(self, cluster_name):
         api_token = uuid.uuid4().hex
@@ -1191,7 +1194,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             "metadata": {
                 "labels": labels,
                 "annotations": self.common_annotations,
-                "name": f"dask-gateway-{cluster_name}",
+                "name": self.make_secret_name(cluster_name),
             },
             "data": {
                 "dask.crt": b64encode(tls_cert).decode(),
@@ -1201,7 +1204,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         }
 
     def make_service_name(self, cluster_name):
-        return f"dask-gateway-{cluster_name}"
+        return f"dask-{cluster_name}"
 
     def make_service(self, cluster_name):
         return {
@@ -1233,7 +1236,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             "metadata": {
                 "labels": self.get_labels(cluster_name, "dask-scheduler"),
                 "annotations": self.common_annotations,
-                "name": f"dask-gateway-{cluster_name}",
+                "name": f"dask-{cluster_name}",
             },
             "spec": {
                 "entryPoints": [self.proxy_web_entrypoint],
@@ -1243,7 +1246,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                         "match": f"PathPrefix(`{route}`)",
                         "services": [
                             {
-                                "name": f"dask-gateway-{cluster_name}",
+                                "name": self.make_service_name(cluster_name),
                                 "namespace": namespace,
                                 "port": 8787,
                             }
@@ -1261,7 +1264,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             "metadata": {
                 "labels": self.get_labels(cluster_name, "dask-scheduler"),
                 "annotations": self.common_annotations,
-                "name": f"dask-gateway-{cluster_name}",
+                "name": f"dask-{cluster_name}",
             },
             "spec": {
                 "entryPoints": [self.proxy_tcp_entrypoint],
@@ -1270,7 +1273,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                         "match": f"HostSNI(`daskgateway-{namespace}.{cluster_name}`)",
                         "services": [
                             {
-                                "name": f"dask-gateway-{cluster_name}",
+                                "name": self.make_service_name(cluster_name),
                                 "namespace": namespace,
                                 "port": 8786,
                             }
