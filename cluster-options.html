@@ -362,7 +362,8 @@ will be the keyword users use to set this field programmatically (e.g.
 valid Python identifier. Optional, if not provided <code class="docutils literal notranslate"><span class="pre">field</span></code> will be used.</p></li>
 </ul>
 <p>After validation (type, bounds, etc…), a dictionary of all options for a
-requested cluster is passed to a <code class="docutils literal notranslate"><span class="pre">handler</span></code> function. Here any additional
+requested cluster is passed to a <code class="docutils literal notranslate"><span class="pre">handler</span></code> function. This function is run on
+the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>.  Here any additional
 validation can be done (errors raised in the handler are forwarded to the
 user), as well as any conversion needed between the exposed option fields and
 configuration fields on the backing <a class="reference internal" href="api-server.html#cluster-config"><span class="std std-ref">ClusterConfig</span></a>.  The
