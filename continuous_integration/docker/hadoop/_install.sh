@@ -16,7 +16,7 @@ pip install \
     traitlets \
     sqlalchemy \
     skein \
-    "pytest<5.4.0" \
+    pytest \
     pytest-asyncio
 
 pushd dask-gateway
