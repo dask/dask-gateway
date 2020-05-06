@@ -244,6 +244,10 @@ async def test_client_reprs():
             assert cluster.name in cluster._repr_html_()
             assert cluster.dashboard_link in cluster._repr_html_()
 
+            # Client dashboard link
+            client = cluster.get_client()
+            assert client.dashboard_link == cluster.dashboard_link
+
             # HTML repr with no dashboard
             cluster.dashboard_link = None
             assert "Not Available" in cluster._repr_html_()

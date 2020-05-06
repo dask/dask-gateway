@@ -1021,7 +1021,7 @@ class GatewayCluster(object):
         client : dask.distributed.Client
         """
         client = Client(
-            self.scheduler_address,
+            self,
             security=self.security,
             set_as_default=set_as_default,
             asynchronous=self.asynchronous,
