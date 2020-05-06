@@ -248,6 +248,10 @@ class Gateway(object):
         provided. If an int, it's used as the port, with the host/ip taken from
         ``address``. Provide a full address if a different host/ip should be
         used.
+    public_address : str, optional
+        The address to the gateway server, as accessible from a web browser.
+        This will be used as the root of all browser-facing links (e.g. the
+        dask dashboard).  Defaults to ``address`` if not provided.
     auth : GatewayAuth, optional
         The authentication method to use.
     asynchronous : bool, optional
@@ -259,7 +263,13 @@ class Gateway(object):
     """
 
     def __init__(
-        self, address=None, proxy_address=None, auth=None, asynchronous=False, loop=None
+        self,
+        address=None,
+        proxy_address=None,
+        public_address=None,
+        auth=None,
+        asynchronous=False,
+        loop=None,
     ):
         if address is None:
             address = format_template(dask.config.get("gateway.address"))
@@ -269,7 +279,8 @@ class Gateway(object):
             )
         address = address.rstrip("/")
 
-        public_address = format_template(dask.config.get("gateway.public-address"))
+        if public_address is None:
+            public_address = format_template(dask.config.get("gateway.public-address"))
         if public_address is None:
             public_address = address
         else:
@@ -738,6 +749,10 @@ class GatewayCluster(object):
         The address of the scheduler proxy server. If an int, it's used as the
         port, with the host/ip taken from ``address``. Provide a full address
         if a different host/ip should be used.
+    public_address : str, optional
+        The address to the gateway server, as accessible from a web browser.
+        This will be used as the root of all browser-facing links (e.g. the
+        dask dashboard).  Defaults to ``address`` if not provided.
     auth : GatewayAuth, optional
         The authentication method to use.
     cluster_options : mapping, optional
@@ -764,6 +779,7 @@ class GatewayCluster(object):
         self,
         address=None,
         proxy_address=None,
+        public_address=None,
         auth=None,
         cluster_options=None,
         shutdown_on_close=True,
@@ -774,6 +790,7 @@ class GatewayCluster(object):
         self._init_internal(
             address=address,
             proxy_address=proxy_address,
+            public_address=public_address,
             auth=auth,
             cluster_options=cluster_options,
             cluster_kwargs=kwargs,
@@ -789,6 +806,7 @@ class GatewayCluster(object):
         shutdown_on_close=False,
         address=None,
         proxy_address=None,
+        public_address=None,
         auth=None,
         asynchronous=False,
         loop=None,
@@ -814,6 +832,7 @@ class GatewayCluster(object):
         self._init_internal(
             address=address,
             proxy_address=proxy_address,
+            public_address=public_address,
             auth=auth,
             asynchronous=asynchronous,
             loop=loop,
@@ -826,6 +845,7 @@ class GatewayCluster(object):
         self,
         address=None,
         proxy_address=None,
+        public_address=None,
         auth=None,
         cluster_options=None,
         cluster_kwargs=None,
@@ -843,6 +863,7 @@ class GatewayCluster(object):
         self.gateway = Gateway(
             address=address,
             proxy_address=proxy_address,
+            public_address=public_address,
             auth=auth,
             asynchronous=asynchronous,
             loop=loop,
