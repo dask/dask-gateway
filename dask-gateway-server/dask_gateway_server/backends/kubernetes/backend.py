@@ -456,6 +456,21 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             len(msg["closed_workers"]),
         )
 
+        cluster = self.clusters.get(cluster_name)
+        if cluster is None:
+            return
+        max_workers = cluster.config.get("cluster_max_workers")
+        if max_workers is not None and count > max_workers:
+            # This shouldn't happen under normal operation, but could if the
+            # user does something malicious (or there's a bug).
+            self.log.info(
+                "Cluster %s heartbeat requested %d workers, exceeding limit of %s.",
+                cluster_name,
+                count,
+                max_workers,
+            )
+            count = max_workers
+
         try:
             await self.custom_client.patch_namespaced_custom_object(
                 "gateway.dask.org",
@@ -567,6 +582,7 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
                 name=cluster_name,
                 username=obj["spec"].get("username", ""),
                 options=obj["spec"].get("options") or {},
+                config=obj["spec"].get("config") or {},
                 token="",
                 scheduler_address=scheduler_address,
                 dashboard_address=dashboard_address,

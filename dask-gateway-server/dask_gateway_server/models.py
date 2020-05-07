@@ -78,6 +78,8 @@ class Cluster(object):
         The normalized set of configuration options provided when starting this
         cluster. These values are user-facing, and don't necessarily correspond
         with the ``ClusterConfig`` options on the backend.
+    config : dict
+        The serialized version of ``ClusterConfig`` for this cluster.
     status : ClusterStatus
         The status of the cluster.
     scheduler_address : str
@@ -103,6 +105,7 @@ class Cluster(object):
         username,
         token,
         options,
+        config,
         status,
         scheduler_address="",
         dashboard_address="",
@@ -116,6 +119,7 @@ class Cluster(object):
         self.username = username
         self.token = token
         self.options = options
+        self.config = config
         self.status = status
         self.scheduler_address = scheduler_address
         self.dashboard_address = dashboard_address

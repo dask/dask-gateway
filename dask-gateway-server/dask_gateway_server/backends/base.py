@@ -1,13 +1,13 @@
 import asyncio
 
 import aiohttp
-from traitlets import Instance, Integer, Float, Dict, Union, Unicode, default
+from traitlets import Instance, Integer, Float, Dict, Union, Unicode, default, validate
 from traitlets.config import LoggingConfigurable, Configurable
 
 from .. import models
 from ..options import Options
 from ..traitlets import MemoryLimit, Type, Callable
-from ..utils import awaitable
+from ..utils import awaitable, format_bytes
 
 
 __all__ = ("Backend", "ClusterConfig")
@@ -287,6 +287,20 @@ class ClusterConfig(Configurable):
         config=True,
     )
 
+    @validate("scheduler_memory")
+    def _validate_scheduler_memory(self, proposal):
+        if (
+            self.max_cluster_memory is not None
+            and proposal.value > self.max_cluster_memory
+        ):
+            proposed = format_bytes(proposal.value)
+            limit = format_bytes(self.max_cluster_memory)
+            raise ValueError(
+                f"Scheduler memory request of {proposed} exceeds cluster memory "
+                f"limit of {limit}"
+            )
+        return proposal.value
+
     scheduler_cores = Integer(
         1,
         min=1,
@@ -295,6 +309,18 @@ class ClusterConfig(Configurable):
         """,
         config=True,
     )
+
+    @validate("scheduler_cores")
+    def _validate_scheduler_cores(self, proposal):
+        if (
+            self.max_cluster_cores is not None
+            and proposal.value > self.max_cluster_cores
+        ):
+            raise ValueError(
+                f"Scheduler cores request of {proposal.value} exceeds cluster "
+                f"cores limit of {self.max_cluster_cores}"
+            )
+        return proposal.value
 
     adaptive_period = Float(
         3,
@@ -319,6 +345,68 @@ class ClusterConfig(Configurable):
         """,
         config=True,
     )
+
+    cluster_max_memory = MemoryLimit(
+        None,
+        help="""
+        The maximum amount of memory (in bytes) available to this cluster.
+        Allows the following suffixes:
+
+        - K -> Kibibytes
+        - M -> Mebibytes
+        - G -> Gibibytes
+        - T -> Tebibytes
+
+        Set to ``None`` for no limit (default).
+        """,
+        min=0,
+        allow_none=True,
+        config=True,
+    )
+
+    cluster_max_cores = Float(
+        None,
+        help="""
+        The maximum number of cores available to this cluster.
+
+        Set to ``None`` for no limit (default).
+        """,
+        min=0.0,
+        allow_none=True,
+        config=True,
+    )
+
+    cluster_max_workers = Integer(
+        help="""
+        The maximum number of workers available to this cluster.
+
+        By default this is computed from ``cluster_max_memory`` and
+        ``cluster_max_cores``.
+
+        Set to ``None`` for no limit (default).
+        """,
+        allow_none=True,
+        min=0,
+        config=True,
+    )
+
+    @default("cluster_max_workers")
+    def _default_cluster_max_workers(self):
+        inf = max_workers = float("inf")
+        if self.cluster_max_memory is not None:
+            max_workers = min(
+                (self.cluster_max_memory - self.scheduler_memory) // self.worker_memory,
+                max_workers,
+            )
+        if self.cluster_max_cores is not None:
+            max_workers = min(
+                (self.cluster_max_cores - self.scheduler_cores) // self.worker_cores,
+                max_workers,
+            )
+
+        if max_workers == inf:
+            return None
+        return max(0, int(max_workers))
 
     def to_dict(self):
         return {
