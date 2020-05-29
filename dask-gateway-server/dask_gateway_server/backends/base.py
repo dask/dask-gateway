@@ -6,7 +6,7 @@ from traitlets.config import LoggingConfigurable, Configurable
 
 from .. import models
 from ..options import Options
-from ..traitlets import MemoryLimit, Type, Callable
+from ..traitlets import MemoryLimit, Type, Callable, Command
 from ..utils import awaitable
 
 
@@ -231,13 +231,13 @@ class Backend(LoggingConfigurable):
 class ClusterConfig(Configurable):
     """Base class for holding individual Dask cluster configurations"""
 
-    scheduler_cmd = Unicode(
+    scheduler_cmd = Command(
         "dask-gateway-scheduler",
         help="Shell command to start a dask-gateway scheduler.",
         config=True,
     )
 
-    worker_cmd = Unicode(
+    worker_cmd = Command(
         "dask-gateway-worker",
         help="Shell command to start a dask-gateway worker.",
         config=True,

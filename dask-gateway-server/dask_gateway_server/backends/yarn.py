@@ -131,8 +131,7 @@ class YarnBackend(DBBackendBase):
         return out
 
     def get_worker_command(self, cluster):
-        return [
-            cluster.config.worker_cmd,
+        return cluster.config.worker_cmd + [
             "--nthreads",
             "$SKEIN_RESOURCE_VCORES",
             "--memory-limit",
