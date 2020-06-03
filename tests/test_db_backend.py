@@ -11,7 +11,7 @@ from traitlets import Integer, Float
 from traitlets.config import Config
 
 import dask
-from dask_gateway import GatewayClusterError, GatewayCluster
+from dask_gateway import GatewayCluster, GatewayClusterError, GatewayWarning
 from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.backends import db_base
 from dask_gateway_server.backends.base import ClusterConfig
@@ -849,6 +849,88 @@ async def test_adaptive_scaling():
 
                 # Turn off adaptive scaling explicitly
                 await cluster.adapt(active=False)
+
+
+def test_cluster_config_resource_limits():
+    # Default no limit
+    config = ClusterConfig()
+    assert config.cluster_max_workers is None
+
+    # Worker limit inferred from cores limit
+    config = ClusterConfig(cluster_max_cores=6, worker_cores=2, scheduler_cores=1)
+    assert config.cluster_max_workers == 2
+
+    # Worker limit inferred from memory limit
+    config = ClusterConfig(
+        cluster_max_memory="6G", worker_memory="2G", scheduler_memory="1G"
+    )
+    assert config.cluster_max_workers == 2
+
+    common = dict(
+        worker_cores=2,
+        scheduler_cores=1,
+        cluster_max_memory="6G",
+        worker_memory="2G",
+        scheduler_memory="1G",
+    )
+
+    # Worker limit is min of cores, memory, explicit count
+    config = ClusterConfig(cluster_max_cores=10, **common)
+    assert config.cluster_max_workers == 2
+
+    config = ClusterConfig(cluster_max_cores=4, **common)
+    assert config.cluster_max_workers == 1
+
+    config = ClusterConfig(cluster_max_workers=10, cluster_max_cores=6, **common)
+    assert config.cluster_max_workers == 2
+
+    config = ClusterConfig(cluster_max_workers=1, cluster_max_cores=6, **common)
+    assert config.cluster_max_workers == 1
+
+    # Explicit None doesn't break validators
+    config = ClusterConfig(cluster_max_workers=None)
+    assert config.cluster_max_workers is None
+
+    config = ClusterConfig(cluster_max_workers=None, cluster_max_cores=6, **common)
+    assert config.cluster_max_workers == 2
+
+
+@pytest.mark.parametrize(
+    "opts",
+    [
+        dict(cluster_max_cores=0.1),
+        dict(cluster_max_memory="0.5G"),
+        dict(cluster_max_cores=1, scheduler_cores=2),
+        dict(cluster_max_memory="1G", scheduler_memory="2G"),
+    ],
+)
+def test_cluster_config_resource_limits_less_than_scheduler_usage(opts):
+    with pytest.raises(ValueError, match="Scheduler (cores|memory) request"):
+        ClusterConfig(**opts)
+
+
+@pytest.mark.asyncio
+async def test_cluster_resource_limits():
+    config = Config()
+    config.ClusterConfig.cluster_max_workers = 2
+    async with temp_gateway(config=config) as g:
+        async with g.gateway_client() as gateway:
+            async with gateway.new_cluster() as cluster:
+                # Limits on scale count
+                with pytest.warns(GatewayWarning, match="Scaling to 2 instead"):
+                    await cluster.scale(3)
+
+                # Limits on adapt maximum
+                with pytest.warns(
+                    GatewayWarning, match="Using `maximum=2, minimum=0` instead"
+                ):
+                    await cluster.adapt(maximum=3)
+
+                # Limits on adapt minimum
+                with pytest.warns(
+                    GatewayWarning, match="Using `maximum=2, minimum=2` instead"
+                ):
+                    await cluster.adapt(minimum=3, maximum=4)
 
 
 @pytest.mark.asyncio

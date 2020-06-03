@@ -241,12 +241,18 @@ async def adapt_cluster(request):
     if max_workers is not None:
         if maximum is None:
             maximum = max_workers
-        elif maximum > max_workers:
+        if minimum is None:
+            minimum = 0
+        if maximum > max_workers or minimum > max_workers:
+            orig_max = maximum
+            orig_min = minimum
+            maximum = min(max_workers, maximum)
+            minimum = min(max_workers, minimum)
             resp_msg = (
-                f"Adapt with `maximum={maximum}` workers would exceed resource limit of "
-                f"{max_workers} workers. Using `maximum={max_workers}` instead."
+                f"Adapt with `maximum={orig_max}, minimum={orig_min}` workers "
+                f"would exceed resource limit of {max_workers} workers. Using "
+                f"`maximum={maximum}, minimum={minimum}` instead."
             )
-            maximum = max_workers
 
     try:
         await backend.forward_message_to_scheduler(
