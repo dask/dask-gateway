@@ -367,8 +367,9 @@ class Gateway(object):
         self.close()
 
     def __del__(self):
+        is_async = hasattr(self, "_asynchronous") and self._asynchronous
         if (
-            not self.asynchronous
+            not is_async
             and hasattr(self, "_loop_runner")
             and not sys.is_finalizing()
         ):
