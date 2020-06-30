@@ -33,7 +33,7 @@ from .utils_test import temp_gateway, LocalTestingBackend, wait_for_workers
 def ensure_clusters_closed():
     instances = len(GatewayCluster._instances)
     for c in list(GatewayCluster._instances):
-        if not c.asynchronous:
+        if hasattr(c, "asynchronous") and not c.asynchronous:
             c.close()
     assert instances == 0
 
