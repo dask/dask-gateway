@@ -316,3 +316,21 @@ class Select(Field):
         import ipywidgets
 
         return ipywidgets.Dropdown(value=self.value, options=self.options)
+
+
+@register_field_type("dict")
+class Dict(Field):
+    """A dict string option field"""
+    def __init__(self, field, default, label=None, options=None):
+        self.label=label
+        super().__init__(field, default, label=label)
+
+    def validate(self, x):
+        if not isinstance(x, str):
+            raise TypeError("%s must be a string, got %r" % (self.field, x))
+        return {self.label: x}
+
+    def _widget(self):
+        import ipywidgets
+
+        return ipywidgets.Text(value=self.value, continuous_update=False)

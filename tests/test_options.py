@@ -303,6 +303,45 @@ def test_frozen_attr_dict():
     assert "for" not in tabs
 
 
+def test_dict():
+    field = "environment"
+    default = "S3fs"
+    label = "EXTRA_PIP_PACKAGES"
+
+    # Default values
+    s_opt = server_options.Dict(field)
+    assert s_opt.default == ""
+    assert s_opt.label == field
+    assert s_opt.target == field
+
+    # Specified values propogate
+    s_opt = server_options.Dict(field, default=default, label=label)
+    assert s_opt.default == default
+    assert s_opt.label == label
+
+    def check(opt):
+        print(opt.validate("S3fs"))
+        assert opt.validate("S3fs").items() <= {"EXTRA_PIP_PACKAGES": "S3fs"}.items()
+
+        with pytest.raises(TypeError):
+            opt.validate(1)
+
+    # Server-side validation
+    check(s_opt)
+
+    # Serialization works
+    spec = s_opt.json_spec()
+
+    c_opt = client_options.Field._from_spec(spec)
+
+    assert isinstance(c_opt, client_options.Dict)
+    assert c_opt.value == {label: default}
+    assert c_opt.label == label
+
+    # Client-side validation
+    check(c_opt)
+
+
 @pytest.fixture
 def server_opts():
     return server_options.Options(

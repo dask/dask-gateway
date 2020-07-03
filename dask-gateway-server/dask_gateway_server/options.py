@@ -296,3 +296,33 @@ class Select(Field):
 
     def json_type_spec(self):
         return {"type": "select", "options": list(self.options)}
+
+
+@field_doc(
+    description="A dictionary field, allowing users to define cluster config dictionary fields",
+    params="""
+    default : string, optional
+        String to be assigned as dictionary value.    
+    label   : string, optional
+        Label used to define dictionary key.
+        Empty (None) value will assume field variable
+    eg.
+        Dict("s3fs pandas==1.0.5", default="", label="EXTRA_PIP_PACKAGES") 
+        ==> 
+        {"EXTRA_PIP_PACKAGES":  "s3fs pandas==1.0.5"}
+    """,
+)
+class Dict(String):
+    def __init__(self, field, default="", label=None):
+        self.label = label
+        super().__init__(field, default=default, label=label)
+
+    def validate(self, x):
+        if not isinstance(x, str):
+            raise TypeError(
+                "%s must be a str,  got %r" % (self.field, x)
+            )
+        return {self.label: x}
+
+    def json_type_spec(self):
+        return {"type": "dict"}
