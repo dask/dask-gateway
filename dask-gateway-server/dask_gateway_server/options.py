@@ -312,7 +312,7 @@ class Select(Field):
         {"EXTRA_PIP_PACKAGES":  "s3fs pandas==1.0.5"}
     """,
 )
-class Dict(String):
+class Dict(Field):
     def __init__(self, field, default="", label=None):
         self.label = label
         super().__init__(field, default=default, label=label)
