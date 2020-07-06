@@ -25,7 +25,6 @@ from distributed.proctitle import (
 
 from . import __version__ as VERSION
 from .utils import cancel_task
-from ._compat import DISTRIBUTED_2_17_0
 
 
 logger = logging.getLogger(__name__)
@@ -245,16 +244,14 @@ class GatewaySchedulerService(object):
                 return
             if self.scheduler.unrunnable:
                 return
-            if DISTRIBUTED_2_17_0:
-                idle_since = self.scheduler.idle_since
-            else:
-                idle_since = (
-                    self.scheduler.transition_log[-1][-1]
-                    if self.scheduler.transition_log
-                    else self.scheduler.time_started
-                )
 
-            if self.loop.time() - idle_since > self.idle_timeout:
+            last_action = (
+                self.scheduler.transition_log[-1][-1]
+                if self.scheduler.transition_log
+                else self.scheduler.time_started
+            )
+
+            if self.loop.time() - last_action > self.idle_timeout:
                 logger.warning(
                     "Cluster has been idle for %.2f seconds, shutting down",
                     self.idle_timeout,
