@@ -207,6 +207,7 @@ class Cluster(object):
             username=self.username,
             token=self.token,
             options=self.options,
+            config=self.config,
             status=self.model_status,
             scheduler_address=self.scheduler_address,
             dashboard_address=self.dashboard_address,
@@ -955,6 +956,18 @@ class DBBackendBase(Backend):
             len(closing_workers),
             len(closed_workers),
         )
+
+        max_workers = cluster.config.get("cluster_max_workers")
+        if max_workers is not None and count > max_workers:
+            # This shouldn't happen under normal operation, but could if the
+            # user does something malicious (or there's a bug).
+            self.log.info(
+                "Cluster %s heartbeat requested %d workers, exceeding limit of %s.",
+                cluster_name,
+                count,
+                max_workers,
+            )
+            count = max_workers
 
         if count != cluster.count:
             cluster_update["count"] = count

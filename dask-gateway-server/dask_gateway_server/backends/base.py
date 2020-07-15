@@ -1,13 +1,23 @@
 import asyncio
 
 import aiohttp
-from traitlets import Instance, Integer, Float, Dict, Union, Unicode, default
+from traitlets import (
+    Instance,
+    Integer,
+    Float,
+    Dict,
+    Union,
+    Unicode,
+    default,
+    validate,
+    observe,
+)
 from traitlets.config import LoggingConfigurable, Configurable
 
 from .. import models
 from ..options import Options
 from ..traitlets import MemoryLimit, Type, Callable, Command
-from ..utils import awaitable
+from ..utils import awaitable, format_bytes
 
 
 __all__ = ("Backend", "ClusterConfig")
@@ -319,6 +329,126 @@ class ClusterConfig(Configurable):
         """,
         config=True,
     )
+
+    cluster_max_memory = MemoryLimit(
+        None,
+        help="""
+        The maximum amount of memory (in bytes) available to this cluster.
+        Allows the following suffixes:
+
+        - K -> Kibibytes
+        - M -> Mebibytes
+        - G -> Gibibytes
+        - T -> Tebibytes
+
+        Set to ``None`` for no memory limit (default).
+        """,
+        min=0,
+        allow_none=True,
+        config=True,
+    )
+
+    cluster_max_cores = Float(
+        None,
+        help="""
+        The maximum number of cores available to this cluster.
+
+        Set to ``None`` for no cores limit (default).
+        """,
+        min=0.0,
+        allow_none=True,
+        config=True,
+    )
+
+    cluster_max_workers = Integer(
+        help="""
+        The maximum number of workers available to this cluster.
+
+        Note that this will be combined with ``cluster_max_cores`` and
+        ``cluster_max_memory`` at runtime to determine the actual maximum
+        number of workers available to this cluster.
+        """,
+        allow_none=True,
+        min=0,
+        config=True,
+    )
+
+    def _check_scheduler_memory(self, scheduler_memory, cluster_max_memory):
+        if cluster_max_memory is not None and scheduler_memory > cluster_max_memory:
+            memory = format_bytes(scheduler_memory)
+            limit = format_bytes(cluster_max_memory)
+            raise ValueError(
+                f"Scheduler memory request of {memory} exceeds cluster memory "
+                f"limit of {limit}"
+            )
+
+    def _check_scheduler_cores(self, scheduler_cores, cluster_max_cores):
+        if cluster_max_cores is not None and scheduler_cores > cluster_max_cores:
+            raise ValueError(
+                f"Scheduler cores request of {scheduler_cores} exceeds cluster "
+                f"cores limit of {cluster_max_cores}"
+            )
+
+    def _worker_limit_from_resources(self):
+        inf = max_workers = float("inf")
+        if self.cluster_max_memory is not None:
+            max_workers = min(
+                (self.cluster_max_memory - self.scheduler_memory) // self.worker_memory,
+                max_workers,
+            )
+        if self.cluster_max_cores is not None:
+            max_workers = min(
+                (self.cluster_max_cores - self.scheduler_cores) // self.worker_cores,
+                max_workers,
+            )
+
+        if max_workers == inf:
+            return None
+        return max(0, int(max_workers))
+
+    @validate("scheduler_memory")
+    def _validate_scheduler_memory(self, proposal):
+        self._check_scheduler_memory(proposal.value, self.cluster_max_memory)
+        return proposal.value
+
+    @validate("scheduler_cores")
+    def _validate_scheduler_cores(self, proposal):
+        self._check_scheduler_cores(proposal.value, self.cluster_max_cores)
+        return proposal.value
+
+    @validate("cluster_max_memory")
+    def _validate_cluster_max_memory(self, proposal):
+        self._check_scheduler_memory(self.scheduler_memory, proposal.value)
+        return proposal.value
+
+    @validate("cluster_max_cores")
+    def _validate_cluster_max_cores(self, proposal):
+        self._check_scheduler_cores(self.scheduler_cores, proposal.value)
+        return proposal.value
+
+    @validate("cluster_max_workers")
+    def _validate_cluster_max_workers(self, proposal):
+        lim = self._worker_limit_from_resources()
+        if lim is None:
+            return proposal.value
+        if proposal.value is None:
+            return lim
+        return min(proposal.value, lim)
+
+    @observe("cluster_max_workers")
+    def _observe_cluster_max_workers(self, change):
+        # This shouldn't be needed, but traitlet validators don't run
+        # if a value is `None` and `allow_none` is true, so we need to
+        # add an observer to handle the event of an *explicit* `None`
+        # set for `cluster_max_workers`
+        if change.new is None:
+            lim = self._worker_limit_from_resources()
+            if lim is not None:
+                self.cluster_max_workers = lim
+
+    @default("cluster_max_workers")
+    def _default_cluster_max_workers(self):
+        return self._worker_limit_from_resources()
 
     def to_dict(self):
         return {

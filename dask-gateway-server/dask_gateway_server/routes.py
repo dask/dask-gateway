@@ -198,13 +198,23 @@ async def scale_cluster(request):
             reason=f"Scale expects a non-negative integer, got {count}"
         )
 
+    max_workers = cluster.config.get("cluster_max_workers")
+    resp_msg = None
+    if max_workers is not None and count > max_workers:
+        resp_msg = (
+            f"Scale request of {count} workers would exceed resource limit of "
+            f"{max_workers} workers. Scaling to {max_workers} instead."
+        )
+        count = max_workers
+
     try:
         await backend.forward_message_to_scheduler(
             cluster, {"op": "scale", "count": count}
         )
     except PublicException as exc:
         raise web.HTTPConflict(reason=str(exc))
-    return web.Response()
+
+    return web.json_response({"ok": not resp_msg, "msg": resp_msg})
 
 
 @default_routes.post("/api/v1/clusters/{cluster_name}/adapt")
@@ -226,6 +236,24 @@ async def adapt_cluster(request):
     maximum = msg.get("maximum", None)
     active = msg.get("active", True)
 
+    max_workers = cluster.config.get("cluster_max_workers")
+    resp_msg = None
+    if max_workers is not None:
+        if maximum is None:
+            maximum = max_workers
+        if minimum is None:
+            minimum = 0
+        if maximum > max_workers or minimum > max_workers:
+            orig_max = maximum
+            orig_min = minimum
+            maximum = min(max_workers, maximum)
+            minimum = min(max_workers, minimum)
+            resp_msg = (
+                f"Adapt with `maximum={orig_max}, minimum={orig_min}` workers "
+                f"would exceed resource limit of {max_workers} workers. Using "
+                f"`maximum={maximum}, minimum={minimum}` instead."
+            )
+
     try:
         await backend.forward_message_to_scheduler(
             cluster,
@@ -233,7 +261,8 @@ async def adapt_cluster(request):
         )
     except PublicException as exc:
         raise web.HTTPConflict(reason=str(exc))
-    return web.Response()
+
+    return web.json_response({"ok": not resp_msg, "msg": resp_msg})
 
 
 @default_routes.post("/api/v1/clusters/{cluster_name}/heartbeat")
@@ -242,7 +271,10 @@ async def handle_heartbeat(request):
     backend = request.app["backend"]
     cluster_name = request.match_info["cluster_name"]
     msg = await request.json()
-    await backend.on_cluster_heartbeat(cluster_name, msg)
+    try:
+        await backend.on_cluster_heartbeat(cluster_name, msg)
+    except PublicException as exc:
+        raise web.HTTPConflict(reason=str(exc))
     return web.Response()
 
 

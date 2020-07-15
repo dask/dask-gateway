@@ -652,7 +652,13 @@ class Gateway(object):
 
     async def _scale_cluster(self, cluster_name, n):
         url = "%s/api/v1/clusters/%s/scale" % (self.address, cluster_name)
-        await self._request("POST", url, json={"count": n})
+        resp = await self._request("POST", url, json={"count": n})
+        try:
+            msg = await resp.json()
+        except Exception:
+            msg = {}
+        if not msg.get("ok", True) and msg.get("msg"):
+            warnings.warn(GatewayWarning(msg["msg"]))
 
     def scale_cluster(self, cluster_name, n, **kwargs):
         """Scale a cluster to n workers.
@@ -669,11 +675,17 @@ class Gateway(object):
     async def _adapt_cluster(
         self, cluster_name, minimum=None, maximum=None, active=True
     ):
-        await self._request(
+        resp = await self._request(
             "POST",
             "%s/api/v1/clusters/%s/adapt" % (self.address, cluster_name),
             json={"minimum": minimum, "maximum": maximum, "active": active},
         )
+        try:
+            msg = await resp.json()
+        except Exception:
+            msg = {}
+        if not msg.get("ok", True) and msg.get("msg"):
+            warnings.warn(GatewayWarning(msg["msg"]))
 
     def adapt_cluster(
         self, cluster_name, minimum=None, maximum=None, active=True, **kwargs
