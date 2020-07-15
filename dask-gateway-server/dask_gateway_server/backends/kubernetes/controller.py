@@ -1022,8 +1022,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         return route["metadata"]["name"]
 
     def get_scheduler_command(self, namespace, cluster_name, config):
-        return [
-            config.scheduler_cmd,
+        return config.scheduler_cmd + [
             "--scheduler-address",
             ":8786",
             "--dashboard-address",
@@ -1040,8 +1039,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     def get_worker_command(self, namespace, cluster_name, config):
         service_name = self.make_service_name(cluster_name)
-        return [
-            config.worker_cmd,
+        return config.worker_cmd + [
             "--nthreads",
             str(int(config.worker_cores_limit)),
             "--memory-limit",

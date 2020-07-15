@@ -1382,8 +1382,7 @@ class DBBackendBase(Backend):
         return out
 
     def get_scheduler_command(self, cluster):
-        return [
-            cluster.config.scheduler_cmd,
+        return cluster.config.scheduler_cmd + [
             "--heartbeat-period",
             str(self.cluster_heartbeat_period),
             "--adaptive-period",
@@ -1393,7 +1392,7 @@ class DBBackendBase(Backend):
         ]
 
     def get_worker_command(self, cluster):
-        return [cluster.config.worker_cmd]
+        return cluster.config.worker_cmd
 
     # Subclasses should implement these methods
     supports_bulk_shutdown = False

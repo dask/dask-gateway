@@ -1,4 +1,4 @@
-from traitlets import TraitError, TraitType, Integer, Type as _Type
+from traitlets import TraitError, TraitType, Integer, List, Unicode, Type as _Type
 from traitlets.config import Application
 
 
@@ -68,4 +68,21 @@ class Type(_Type):
                     "Failed to import %r for trait '%s.%s':\n\n%s"
                     % (value, type(obj).__name__, self.name, exc)
                 )
+        return super().validate(obj, value)
+
+
+class Command(List):
+    """Traitlet for a command that should be a list of strings,
+    but allows it to be specified as a single string.
+    """
+
+    def __init__(self, default_value=None, **kwargs):
+        kwargs.setdefault("minlen", 1)
+        if isinstance(default_value, str):
+            default_value = [default_value]
+        super().__init__(Unicode(), default_value, **kwargs)
+
+    def validate(self, obj, value):
+        if isinstance(value, str):
+            value = [value]
         return super().validate(obj, value)

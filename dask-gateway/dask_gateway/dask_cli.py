@@ -571,6 +571,12 @@ worker_parser.add_argument(
     default=":0",
     help="The address the dashboard should listen at. Defaults to `:0`",
 )
+worker_parser.add_argument(
+    "--no-nanny",
+    action="store_false",
+    dest="nanny",
+    help="Do not use nanny for management",
+)
 
 
 async def start_worker(
@@ -622,6 +628,7 @@ def worker(argv=None):
     nthreads = args.nthreads
     memory_limit = args.memory_limit
     scheduler_address = args.scheduler_address
+    nanny = args.nanny
     dashboard_address = args.dashboard_address
 
     gateway = make_gateway_client()
@@ -641,6 +648,7 @@ def worker(argv=None):
             memory_limit,
             scheduler_address,
             dashboard_address=dashboard_address,
+            nanny=nanny,
         )
         await worker.finished()
 
