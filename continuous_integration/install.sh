@@ -14,7 +14,7 @@ pip install -U \
     jupyterhub \
     notebook \
     pytest \
-    pytest-asyncio \
+    pytest-asyncio==0.12.0 \
     sqlalchemy \
     tornado \
     traitlets \
@@ -29,3 +29,5 @@ python setup.py develop
 popd
 
 pip list
+
+set +xe

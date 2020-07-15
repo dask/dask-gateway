@@ -131,10 +131,12 @@ def test_client_init():
 
     config["gateway"]["address"] = "http://127.0.0.1:8888"
     config["gateway"]["proxy-address"] = None
+    config["gateway"]["public-address"] = "https://public.com/dask"
 
     with dask.config.set(config):
         g = Gateway()
         assert g.proxy_address == "gateway://127.0.0.1:8888"
+        assert g._public_address == "https://public.com/dask"
 
 
 def test_gateway_proxy_address_infer_port():

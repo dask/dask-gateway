@@ -565,6 +565,18 @@ worker_parser.add_argument("--name", default=None, help="The worker name")
 worker_parser.add_argument(
     "--scheduler-address", default=None, help="The scheduler address"
 )
+worker_parser.add_argument(
+    "--dashboard-address",
+    type=str,
+    default=":0",
+    help="The address the dashboard should listen at. Defaults to `:0`",
+)
+worker_parser.add_argument(
+    "--no-nanny",
+    action="store_false",
+    dest="nanny",
+    help="Do not use nanny for management",
+)
 
 
 async def start_worker(
@@ -574,8 +586,10 @@ async def start_worker(
     nthreads=1,
     memory_limit="auto",
     scheduler_address=None,
-    local_directory="",
+    local_directory=None,
     nanny=True,
+    dashboard=True,
+    dashboard_address=":0",
 ):
     loop = IOLoop.current()
 
@@ -592,6 +606,8 @@ async def start_worker(
         security=security,
         name=worker_name,
         local_directory=local_directory,
+        dashboard=dashboard,
+        dashboard_address=dashboard_address,
     )
 
     if nanny:
@@ -612,6 +628,8 @@ def worker(argv=None):
     nthreads = args.nthreads
     memory_limit = args.memory_limit
     scheduler_address = args.scheduler_address
+    nanny = args.nanny
+    dashboard_address = args.dashboard_address
 
     gateway = make_gateway_client()
     security = make_security()
@@ -623,7 +641,14 @@ def worker(argv=None):
 
     async def run():
         worker = await start_worker(
-            gateway, security, worker_name, nthreads, memory_limit, scheduler_address
+            gateway,
+            security,
+            worker_name,
+            nthreads,
+            memory_limit,
+            scheduler_address,
+            dashboard_address=dashboard_address,
+            nanny=nanny,
         )
         await worker.finished()
 

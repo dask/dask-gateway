@@ -17,7 +17,7 @@ pip install \
     sqlalchemy \
     skein \
     pytest \
-    pytest-asyncio
+    pytest-asyncio==0.12.0
 
 pushd dask-gateway
 python setup.py develop
