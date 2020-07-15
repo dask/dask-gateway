@@ -943,7 +943,11 @@ async def test_idle_timeout():
             cluster = await gateway.new_cluster()
             # Add some workers
             await cluster.scale(2)
-            await wait_for_workers(cluster, atleast=1)
+
+            # Schedule some work that takes enough time that the idle check
+            # will loop at least once
+            async with cluster.get_client(set_as_default=False) as client:
+                await client.submit(time.sleep, 1)
 
             waited = 0
             while await gateway.list_clusters():
