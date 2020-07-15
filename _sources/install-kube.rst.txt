@@ -56,7 +56,7 @@ To avoid downloading the chart locally from GitHub, you can use the
 
 .. code-block:: shell
 
-    $ helm repo add dask-gateway https://dask.org/dask-gateway-helm-repo/
+    $ helm repo add daskgateway https://dask.org/dask-gateway-helm-repo/
     $ helm repo update
 
 
