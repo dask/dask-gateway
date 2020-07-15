@@ -574,7 +574,7 @@ async def start_worker(
     nthreads=1,
     memory_limit="auto",
     scheduler_address=None,
-    local_directory="",
+    local_directory=None,
     nanny=True,
 ):
     loop = IOLoop.current()
