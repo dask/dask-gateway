@@ -500,7 +500,7 @@ server.</p>
 
 <dl class="py data">
 <dt id="c.ClusterConfig.scheduler_cmd">
-<code class="sig-prename descclassname">c.ClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.ClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.ClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.ClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway scheduler.</p>
 </dd></dl>
 
@@ -525,7 +525,7 @@ suffixes:</p>
 
 <dl class="py data">
 <dt id="c.ClusterConfig.worker_cmd">
-<code class="sig-prename descclassname">c.ClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.ClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.ClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.ClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway worker.</p>
 </dd></dl>
 
@@ -603,7 +603,7 @@ server.</p>
 
 <dl class="py data">
 <dt id="c.LocalClusterConfig.scheduler_cmd">
-<code class="sig-prename descclassname">c.LocalClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.LocalClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.LocalClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.LocalClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway scheduler.</p>
 </dd></dl>
 
@@ -628,7 +628,7 @@ suffixes:</p>
 
 <dl class="py data">
 <dt id="c.LocalClusterConfig.worker_cmd">
-<code class="sig-prename descclassname">c.LocalClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.LocalClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.LocalClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.LocalClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway worker.</p>
 </dd></dl>
 
@@ -1129,7 +1129,7 @@ configuring the following:</p>
 
 <dl class="py data">
 <dt id="c.YarnClusterConfig.scheduler_cmd">
-<code class="sig-prename descclassname">c.YarnClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.YarnClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.YarnClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.YarnClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway scheduler.</p>
 </dd></dl>
 
@@ -1160,7 +1160,7 @@ suffixes:</p>
 
 <dl class="py data">
 <dt id="c.YarnClusterConfig.worker_cmd">
-<code class="sig-prename descclassname">c.YarnClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.YarnClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.YarnClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.YarnClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway worker.</p>
 </dd></dl>
 
@@ -1428,7 +1428,7 @@ defaults to the current namespace. If not, defaults to <cite>default</cite></p>
 
 <dl class="py data">
 <dt id="c.KubeClusterConfig.scheduler_cmd">
-<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.KubeClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.KubeClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway scheduler.</p>
 </dd></dl>
 
@@ -1519,7 +1519,7 @@ following suffixes:</p>
 
 <dl class="py data">
 <dt id="c.KubeClusterConfig.worker_cmd">
-<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.KubeClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.KubeClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway worker.</p>
 </dd></dl>
 
@@ -1880,7 +1880,7 @@ server.</p>
 
 <dl class="py data">
 <dt id="c.PBSClusterConfig.scheduler_cmd">
-<code class="sig-prename descclassname">c.PBSClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.PBSClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.PBSClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.PBSClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway scheduler.</p>
 </dd></dl>
 
@@ -1945,7 +1945,7 @@ to False and rely on the networked filesystem for access.</p>
 
 <dl class="py data">
 <dt id="c.PBSClusterConfig.worker_cmd">
-<code class="sig-prename descclassname">c.PBSClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.PBSClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.PBSClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.PBSClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway worker.</p>
 </dd></dl>
 
@@ -2230,7 +2230,7 @@ server.</p>
 
 <dl class="py data">
 <dt id="c.SlurmClusterConfig.scheduler_cmd">
-<code class="sig-prename descclassname">c.SlurmClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Unicode('dask-gateway-scheduler')</em><a class="headerlink" href="#c.SlurmClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.SlurmClusterConfig.</code><code class="sig-name descname">scheduler_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.SlurmClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway scheduler.</p>
 </dd></dl>
 
@@ -2275,7 +2275,7 @@ will be removed.</p>
 
 <dl class="py data">
 <dt id="c.SlurmClusterConfig.worker_cmd">
-<code class="sig-prename descclassname">c.SlurmClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Unicode('dask-gateway-worker')</em><a class="headerlink" href="#c.SlurmClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">c.SlurmClusterConfig.</code><code class="sig-name descname">worker_cmd</code><em class="property"> = Command('')</em><a class="headerlink" href="#c.SlurmClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shell command to start a dask-gateway worker.</p>
 </dd></dl>
 
