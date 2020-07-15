@@ -175,6 +175,7 @@
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul class="current">
@@ -486,6 +487,36 @@ server.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt id="c.ClusterConfig.cluster_max_cores">
+<code class="sig-prename descclassname">c.ClusterConfig.</code><code class="sig-name descname">cluster_max_cores</code><em class="property"> = Float(None)</em><a class="headerlink" href="#c.ClusterConfig.cluster_max_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of cores available to this cluster.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no cores limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.ClusterConfig.cluster_max_memory">
+<code class="sig-prename descclassname">c.ClusterConfig.</code><code class="sig-name descname">cluster_max_memory</code><em class="property"> = MemoryLimit(None)</em><a class="headerlink" href="#c.ClusterConfig.cluster_max_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum amount of memory (in bytes) available to this cluster.
+Allows the following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no memory limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.ClusterConfig.cluster_max_workers">
+<code class="sig-prename descclassname">c.ClusterConfig.</code><code class="sig-name descname">cluster_max_workers</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.ClusterConfig.cluster_max_workers" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of workers available to this cluster.</p>
+<p>Note that this will be combined with <code class="docutils literal notranslate"><span class="pre">cluster_max_cores</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cluster_max_memory</span></code> at runtime to determine the actual maximum
+number of workers available to this cluster.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt id="c.ClusterConfig.environment">
 <code class="sig-prename descclassname">c.ClusterConfig.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.ClusterConfig.environment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Environment variables to set for both the worker and scheduler processes.</p>
@@ -586,6 +617,36 @@ cluster. See the documentation for more information:</p>
 <p>A smaller period will decrease scale up/down latency when responding to
 cluster load changes, but may also result in higher load on the gateway
 server.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.LocalClusterConfig.cluster_max_cores">
+<code class="sig-prename descclassname">c.LocalClusterConfig.</code><code class="sig-name descname">cluster_max_cores</code><em class="property"> = Float(None)</em><a class="headerlink" href="#c.LocalClusterConfig.cluster_max_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of cores available to this cluster.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no cores limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.LocalClusterConfig.cluster_max_memory">
+<code class="sig-prename descclassname">c.LocalClusterConfig.</code><code class="sig-name descname">cluster_max_memory</code><em class="property"> = MemoryLimit(None)</em><a class="headerlink" href="#c.LocalClusterConfig.cluster_max_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum amount of memory (in bytes) available to this cluster.
+Allows the following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no memory limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.LocalClusterConfig.cluster_max_workers">
+<code class="sig-prename descclassname">c.LocalClusterConfig.</code><code class="sig-name descname">cluster_max_workers</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.LocalClusterConfig.cluster_max_workers" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of workers available to this cluster.</p>
+<p>Note that this will be combined with <code class="docutils literal notranslate"><span class="pre">cluster_max_cores</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cluster_max_memory</span></code> at runtime to determine the actual maximum
+number of workers available to this cluster.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -1083,6 +1144,36 @@ server.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt id="c.YarnClusterConfig.cluster_max_cores">
+<code class="sig-prename descclassname">c.YarnClusterConfig.</code><code class="sig-name descname">cluster_max_cores</code><em class="property"> = Float(None)</em><a class="headerlink" href="#c.YarnClusterConfig.cluster_max_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of cores available to this cluster.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no cores limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.YarnClusterConfig.cluster_max_memory">
+<code class="sig-prename descclassname">c.YarnClusterConfig.</code><code class="sig-name descname">cluster_max_memory</code><em class="property"> = MemoryLimit(None)</em><a class="headerlink" href="#c.YarnClusterConfig.cluster_max_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum amount of memory (in bytes) available to this cluster.
+Allows the following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no memory limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.YarnClusterConfig.cluster_max_workers">
+<code class="sig-prename descclassname">c.YarnClusterConfig.</code><code class="sig-name descname">cluster_max_workers</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.YarnClusterConfig.cluster_max_workers" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of workers available to this cluster.</p>
+<p>Note that this will be combined with <code class="docutils literal notranslate"><span class="pre">cluster_max_cores</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cluster_max_memory</span></code> at runtime to determine the actual maximum
+number of workers available to this cluster.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt id="c.YarnClusterConfig.environment">
 <code class="sig-prename descclassname">c.YarnClusterConfig.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.YarnClusterConfig.environment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Environment variables to set for both the worker and scheduler processes.</p>
@@ -1391,6 +1482,36 @@ of failures.</p>
 <p>A smaller period will decrease scale up/down latency when responding to
 cluster load changes, but may also result in higher load on the gateway
 server.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.KubeClusterConfig.cluster_max_cores">
+<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">cluster_max_cores</code><em class="property"> = Float(None)</em><a class="headerlink" href="#c.KubeClusterConfig.cluster_max_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of cores available to this cluster.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no cores limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.KubeClusterConfig.cluster_max_memory">
+<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">cluster_max_memory</code><em class="property"> = MemoryLimit(None)</em><a class="headerlink" href="#c.KubeClusterConfig.cluster_max_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum amount of memory (in bytes) available to this cluster.
+Allows the following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no memory limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.KubeClusterConfig.cluster_max_workers">
+<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">cluster_max_workers</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.KubeClusterConfig.cluster_max_workers" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of workers available to this cluster.</p>
+<p>Note that this will be combined with <code class="docutils literal notranslate"><span class="pre">cluster_max_cores</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cluster_max_memory</span></code> at runtime to determine the actual maximum
+number of workers available to this cluster.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -1854,6 +1975,36 @@ server.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt id="c.PBSClusterConfig.cluster_max_cores">
+<code class="sig-prename descclassname">c.PBSClusterConfig.</code><code class="sig-name descname">cluster_max_cores</code><em class="property"> = Float(None)</em><a class="headerlink" href="#c.PBSClusterConfig.cluster_max_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of cores available to this cluster.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no cores limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.PBSClusterConfig.cluster_max_memory">
+<code class="sig-prename descclassname">c.PBSClusterConfig.</code><code class="sig-name descname">cluster_max_memory</code><em class="property"> = MemoryLimit(None)</em><a class="headerlink" href="#c.PBSClusterConfig.cluster_max_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum amount of memory (in bytes) available to this cluster.
+Allows the following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no memory limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.PBSClusterConfig.cluster_max_workers">
+<code class="sig-prename descclassname">c.PBSClusterConfig.</code><code class="sig-name descname">cluster_max_workers</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.PBSClusterConfig.cluster_max_workers" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of workers available to this cluster.</p>
+<p>Note that this will be combined with <code class="docutils literal notranslate"><span class="pre">cluster_max_cores</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cluster_max_memory</span></code> at runtime to determine the actual maximum
+number of workers available to this cluster.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt id="c.PBSClusterConfig.environment">
 <code class="sig-prename descclassname">c.PBSClusterConfig.</code><code class="sig-name descname">environment</code><em class="property"> = Dict('')</em><a class="headerlink" href="#c.PBSClusterConfig.environment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Environment variables to set for both the worker and scheduler processes.</p>
@@ -2201,6 +2352,36 @@ of failures.</p>
 <p>A smaller period will decrease scale up/down latency when responding to
 cluster load changes, but may also result in higher load on the gateway
 server.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.SlurmClusterConfig.cluster_max_cores">
+<code class="sig-prename descclassname">c.SlurmClusterConfig.</code><code class="sig-name descname">cluster_max_cores</code><em class="property"> = Float(None)</em><a class="headerlink" href="#c.SlurmClusterConfig.cluster_max_cores" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of cores available to this cluster.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no cores limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.SlurmClusterConfig.cluster_max_memory">
+<code class="sig-prename descclassname">c.SlurmClusterConfig.</code><code class="sig-name descname">cluster_max_memory</code><em class="property"> = MemoryLimit(None)</em><a class="headerlink" href="#c.SlurmClusterConfig.cluster_max_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum amount of memory (in bytes) available to this cluster.
+Allows the following suffixes:</p>
+<ul class="simple">
+<li><p>K -&gt; Kibibytes</p></li>
+<li><p>M -&gt; Mebibytes</p></li>
+<li><p>G -&gt; Gibibytes</p></li>
+<li><p>T -&gt; Tebibytes</p></li>
+</ul>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for no memory limit (default).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.SlurmClusterConfig.cluster_max_workers">
+<code class="sig-prename descclassname">c.SlurmClusterConfig.</code><code class="sig-name descname">cluster_max_workers</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.SlurmClusterConfig.cluster_max_workers" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum number of workers available to this cluster.</p>
+<p>Note that this will be combined with <code class="docutils literal notranslate"><span class="pre">cluster_max_cores</span></code> and
+<code class="docutils literal notranslate"><span class="pre">cluster_max_memory</span></code> at runtime to determine the actual maximum
+number of workers available to this cluster.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -2775,7 +2956,7 @@ valid Python variable name. If not provided, <code class="docutils literal notra
 <h3>Cluster<a class="headerlink" href="#cluster" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="dask_gateway_server.models.Cluster">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.models.</code><code class="sig-name descname">Cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">username</span></em>, <em class="sig-param"><span class="n">token</span></em>, <em class="sig-param"><span class="n">options</span></em>, <em class="sig-param"><span class="n">status</span></em>, <em class="sig-param"><span class="n">scheduler_address</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">dashboard_address</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">api_address</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">tls_cert</span><span class="o">=</span><span class="default_value">b''</span></em>, <em class="sig-param"><span class="n">tls_key</span><span class="o">=</span><span class="default_value">b''</span></em>, <em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">stop_time</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.models.Cluster" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">dask_gateway_server.models.</code><code class="sig-name descname">Cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">username</span></em>, <em class="sig-param"><span class="n">token</span></em>, <em class="sig-param"><span class="n">options</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">status</span></em>, <em class="sig-param"><span class="n">scheduler_address</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">dashboard_address</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">api_address</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">tls_cert</span><span class="o">=</span><span class="default_value">b''</span></em>, <em class="sig-param"><span class="n">tls_key</span><span class="o">=</span><span class="default_value">b''</span></em>, <em class="sig-param"><span class="n">start_time</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">stop_time</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway_server.models.Cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>A cluster record.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -2788,6 +2969,7 @@ cluster with the gateway.</p></li>
 <li><p><strong>options</strong> (<em>dict</em>) – The normalized set of configuration options provided when starting this
 cluster. These values are user-facing, and don’t necessarily correspond
 with the <code class="docutils literal notranslate"><span class="pre">ClusterConfig</span></code> options on the backend.</p></li>
+<li><p><strong>config</strong> (<em>dict</em>) – The serialized version of <code class="docutils literal notranslate"><span class="pre">ClusterConfig</span></code> for this cluster.</p></li>
 <li><p><strong>status</strong> (<em>ClusterStatus</em>) – The status of the cluster.</p></li>
 <li><p><strong>scheduler_address</strong> (<em>str</em>) – The scheduler address. The empty string if the cluster is not running.</p></li>
 <li><p><strong>dashboard_address</strong> (<em>str</em>) – The dashboard address. The empty string if the cluster is not running,

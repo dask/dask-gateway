@@ -14,7 +14,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Configuration &mdash; Dask Gateway 0.7.1 documentation</title>
+  <title>Cluster Resource Limits &mdash; Dask Gateway 0.7.1 documentation</title>
   
 
   
@@ -46,8 +46,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Install Locally (Quickstart)" href="install-local.html" />
-    <link rel="prev" title="Usage" href="usage.html" />
+    <link rel="next" title="Client API" href="api-client.html" />
+    <link rel="prev" title="Exposing Cluster Options" href="cluster-options.html" />
     <link rel="shortcut icon" href="_static/images/favicon.ico"/>
   
 </head>
@@ -158,13 +158,10 @@
             
             
               <p class="caption"><span class="caption-text">For Users</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#default-configuration">Default Configuration</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Admin - Installation</span></p>
 <ul>
@@ -174,11 +171,14 @@
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Admin - Customization</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Cluster Resource Limits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
@@ -231,13 +231,13 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Configuration</li>
+      <li>Cluster Resource Limits</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/configuration-user.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/resource-limits.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -250,83 +250,28 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="configuration">
-<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
-<p>Specifying all parameters to the <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gateway</span></code></a> or <a class="reference internal" href="api-client.html#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">GatewayCluster</span></code></a>
-constructors every time may be error prone, especially when sharing this
-workflow with new users. To simplify things you can provide defaults in a
-configuration file, traditionally held in <code class="docutils literal notranslate"><span class="pre">~/.config/dask/gateway.yaml</span></code> or
-<code class="docutils literal notranslate"><span class="pre">/etc/dask/gateway.yaml</span></code>.  Note that this configuration is <em>optional</em>, and
-only changes the defaults when not specified in the constructors. You only need
-to set the fields you care about, unset fields will fall back to the <a class="reference internal" href="#default-configuration">default
-configuration</a>.</p>
-<p>We recommend administrators create a configuration file to share with their
-users, specifying the addresses and authentication necessary to connect to
-their <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. For example:</p>
-<p><strong>Example:</strong></p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># ~/.config/dask/gateway.yaml</span>
-<span class="nt">gateway</span><span class="p">:</span>
-  <span class="c1"># The full address to the dask-gateway server.</span>
-  <span class="nt">address</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">http://146.148.58.187</span>
-
-  <span class="c1"># The full address to the dask-gateway scheduler proxy</span>
-  <span class="nt">proxy-address</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tls://35.202.68.87:8786</span>
-
-<span class=" -Error"> </span><span class="nt">auth</span><span class="p">:</span>
-   <span class="c1"># Use kerberos for authentication</span>
-   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">kerberos</span>
-</pre></div>
-</div>
-<p>Users can now create <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gateway</span></code></a> or <a class="reference internal" href="api-client.html#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">GatewayCluster</span></code></a> objects
-without specifying any additional information.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">GatewayCluster</span>
-
-<span class="n">cluster</span> <span class="o">=</span> <span class="n">GatewayCluster</span><span class="p">()</span>
-<span class="n">cluster</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>For more information on Dask configuration see the <a class="reference external" href="https://docs.dask.org/en/latest/configuration.html">Dask configuration
-documentation</a>.</p>
-<div class="section" id="default-configuration">
-<h2>Default Configuration<a class="headerlink" href="#default-configuration" title="Permalink to this headline">¶</a></h2>
-<p>The default configuration file is as follows</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
-  <span class="nt">address</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>         <span class="c1"># The full address to the dask-gateway server.</span>
-                        <span class="c1"># May also be a template string, which will be formatted</span>
-                        <span class="c1"># with any environment variables before usage.</span>
-
-  <span class="nt">public-address</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>  <span class="c1"># The address to the dask-gateway server, as accessible</span>
-                        <span class="c1"># from a web browser. This will be used as the root of</span>
-                        <span class="c1"># all browser-facing links (e.g. the dask dashboard).</span>
-                        <span class="c1"># If `None` (default), `gateway.address` will be used.</span>
-                        <span class="c1"># May be a template string.</span>
-
-  <span class="nt">proxy-address</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>   <span class="c1"># The full address or port to the dask-gateway</span>
-                        <span class="c1"># scheduler proxy. If a port, the host/ip is taken from</span>
-                        <span class="c1"># ``address``. If null, defaults to `address`.</span>
-                        <span class="c1"># May also be a template string.</span>
-
-  <span class="nt">auth</span><span class="p">:</span>
-    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">basic</span>         <span class="c1"># The authentication type to use. Options are basic,</span>
-                        <span class="c1"># kerberos, jupyterhub, or a full class path to a</span>
-                        <span class="c1"># custom class.</span>
-
-    <span class="nt">kwargs</span><span class="p">:</span> <span class="p p-Indicator">{}</span>          <span class="c1"># Keyword arguments to use when instantiating the</span>
-                        <span class="c1"># authentication class above. Values may be template</span>
-                        <span class="c1"># strings.</span>
-
-  <span class="nt">http-client</span><span class="p">:</span>
-    <span class="nt">proxy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>         <span class="c1"># The http proxy configuration to use when contacting</span>
-                        <span class="c1"># the dask-gateway server. If `true` (default), this is</span>
-                        <span class="c1"># inferred from your environment (i.e. `HTTP(S)_PROXY`</span>
-                        <span class="c1"># environment variables).  Set to `false` to disable</span>
-                        <span class="c1"># this inference. You may also specify a proxy address</span>
-                        <span class="c1"># explicitly (e.g.  `http://user:password@host:port`).</span>
-                        <span class="c1"># May be a template string.</span>
-
-  <span class="nt">cluster</span><span class="p">:</span>
-    <span class="nt">options</span><span class="p">:</span> <span class="p p-Indicator">{}</span>         <span class="c1"># Default options to use when calling ``new_cluster`` or</span>
-                        <span class="c1"># ``cluster_options``. Values may be template strings.</span>
+  <div class="section" id="cluster-resource-limits">
+<h1>Cluster Resource Limits<a class="headerlink" href="#cluster-resource-limits" title="Permalink to this headline">¶</a></h1>
+<p>By default users can create clusters with as many workers and resources as they
+want.  In shared environments this may not always be desirable. To remedy this
+administrators can set per-cluster resource limits.</p>
+<p>A few limits are available:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="api-server.html#c.ClusterConfig.cluster_max_cores" title="c.ClusterConfig.cluster_max_cores"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.cluster_max_cores</span></code></a>: Maximum number of cores per cluster</p></li>
+<li><p><a class="reference internal" href="api-server.html#c.ClusterConfig.cluster_max_memory" title="c.ClusterConfig.cluster_max_memory"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.cluster_max_memory</span></code></a>: Maximum amount of memory per cluster</p></li>
+<li><p><a class="reference internal" href="api-server.html#c.ClusterConfig.cluster_max_workers" title="c.ClusterConfig.cluster_max_workers"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.cluster_max_workers</span></code></a>: Maximum number of workers per cluster</p></li>
+</ul>
+<p>If a cluster is at capacity for any of these limits, requests for new workers
+or workers will warn with an informative message saying they’re at capacity.</p>
+<div class="section" id="example">
+<h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
+<p>Here we limit each cluster to:</p>
+<ul class="simple">
+<li><p>A max of 80 active cores</p></li>
+<li><p>A max of 1 TiB of RAM</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">ClusterConfig</span><span class="o">.</span><span class="n">cluster_max_cores</span> <span class="o">=</span> <span class="mi">80</span>
+<span class="n">c</span><span class="o">.</span><span class="n">ClusterConfig</span><span class="o">.</span><span class="n">cluster_max_memory</span> <span class="o">=</span> <span class="s2">&quot;1 T&quot;</span>
 </pre></div>
 </div>
 </div>
@@ -340,10 +285,10 @@ documentation</a>.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="install-local.html" class="btn btn-neutral float-right" title="Install Locally (Quickstart)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="api-client.html" class="btn btn-neutral float-right" title="Client API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="cluster-options.html" class="btn btn-neutral float-left" title="Exposing Cluster Options" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

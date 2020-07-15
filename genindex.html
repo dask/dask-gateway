@@ -173,6 +173,7 @@
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Reference</span></p>
 <ul>
@@ -296,6 +297,12 @@
 </li>
       <li><a href="api-server.html#c.ClusterConfig.adaptive_period">c.ClusterConfig.adaptive_period (built-in variable)</a>
 </li>
+      <li><a href="api-server.html#c.ClusterConfig.cluster_max_cores">c.ClusterConfig.cluster_max_cores (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.ClusterConfig.cluster_max_memory">c.ClusterConfig.cluster_max_memory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.ClusterConfig.cluster_max_workers">c.ClusterConfig.cluster_max_workers (built-in variable)</a>
+</li>
       <li><a href="api-server.html#c.ClusterConfig.environment">c.ClusterConfig.environment (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.ClusterConfig.idle_timeout">c.ClusterConfig.idle_timeout (built-in variable)</a>
@@ -365,6 +372,12 @@
       <li><a href="api-server.html#c.KubeBackend.label_selector">c.KubeBackend.label_selector (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.KubeClusterConfig.adaptive_period">c.KubeClusterConfig.adaptive_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.KubeClusterConfig.cluster_max_cores">c.KubeClusterConfig.cluster_max_cores (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.KubeClusterConfig.cluster_max_memory">c.KubeClusterConfig.cluster_max_memory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.KubeClusterConfig.cluster_max_workers">c.KubeClusterConfig.cluster_max_workers (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.KubeClusterConfig.environment">c.KubeClusterConfig.environment (built-in variable)</a>
 </li>
@@ -508,6 +521,12 @@
 </li>
       <li><a href="api-server.html#c.LocalClusterConfig.adaptive_period">c.LocalClusterConfig.adaptive_period (built-in variable)</a>
 </li>
+      <li><a href="api-server.html#c.LocalClusterConfig.cluster_max_cores">c.LocalClusterConfig.cluster_max_cores (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.cluster_max_memory">c.LocalClusterConfig.cluster_max_memory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.LocalClusterConfig.cluster_max_workers">c.LocalClusterConfig.cluster_max_workers (built-in variable)</a>
+</li>
       <li><a href="api-server.html#c.LocalClusterConfig.environment">c.LocalClusterConfig.environment (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.LocalClusterConfig.idle_timeout">c.LocalClusterConfig.idle_timeout (built-in variable)</a>
@@ -579,6 +598,12 @@
       <li><a href="api-server.html#c.PBSClusterConfig.account">c.PBSClusterConfig.account (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.PBSClusterConfig.adaptive_period">c.PBSClusterConfig.adaptive_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSClusterConfig.cluster_max_cores">c.PBSClusterConfig.cluster_max_cores (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSClusterConfig.cluster_max_memory">c.PBSClusterConfig.cluster_max_memory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.PBSClusterConfig.cluster_max_workers">c.PBSClusterConfig.cluster_max_workers (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.PBSClusterConfig.environment">c.PBSClusterConfig.environment (built-in variable)</a>
 </li>
@@ -691,6 +716,12 @@
       <li><a href="api-server.html#c.SlurmClusterConfig.account">c.SlurmClusterConfig.account (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.SlurmClusterConfig.adaptive_period">c.SlurmClusterConfig.adaptive_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.SlurmClusterConfig.cluster_max_cores">c.SlurmClusterConfig.cluster_max_cores (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.SlurmClusterConfig.cluster_max_memory">c.SlurmClusterConfig.cluster_max_memory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.SlurmClusterConfig.cluster_max_workers">c.SlurmClusterConfig.cluster_max_workers (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.SlurmClusterConfig.environment">c.SlurmClusterConfig.environment (built-in variable)</a>
 </li>
@@ -815,6 +846,12 @@
       <li><a href="api-server.html#c.YarnBackend.worker_status_period">c.YarnBackend.worker_status_period (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.YarnClusterConfig.adaptive_period">c.YarnClusterConfig.adaptive_period (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.cluster_max_cores">c.YarnClusterConfig.cluster_max_cores (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.cluster_max_memory">c.YarnClusterConfig.cluster_max_memory (built-in variable)</a>
+</li>
+      <li><a href="api-server.html#c.YarnClusterConfig.cluster_max_workers">c.YarnClusterConfig.cluster_max_workers (built-in variable)</a>
 </li>
       <li><a href="api-server.html#c.YarnClusterConfig.environment">c.YarnClusterConfig.environment (built-in variable)</a>
 </li>
