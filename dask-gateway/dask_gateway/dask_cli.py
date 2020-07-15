@@ -241,9 +241,9 @@ class GatewaySchedulerService(object):
         while True:
             await asyncio.sleep(self.idle_timeout / 4)
             if any(ws.processing for ws in self.scheduler.workers.values()):
-                return
+                continue
             if self.scheduler.unrunnable:
-                return
+                continue
 
             last_action = (
                 self.scheduler.transition_log[-1][-1]
