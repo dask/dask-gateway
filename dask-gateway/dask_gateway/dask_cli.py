@@ -634,8 +634,13 @@ def worker(argv=None):
 
     async def run():
         worker = await start_worker(
-            gateway, security, worker_name, nthreads, memory_limit, scheduler_address,
-            dashboard_address=dashboard_address
+            gateway,
+            security,
+            worker_name,
+            nthreads,
+            memory_limit,
+            scheduler_address,
+            dashboard_address=dashboard_address,
         )
         await worker.finished()
 
