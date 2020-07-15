@@ -17,11 +17,11 @@ def test_Type_traitlet():
 
 def test_Command_traitlet():
     class C(HasTraits):
-        cmd = Command('default command')
-        cmd2 = Command(['default_cmd'])
+        cmd = Command("default command")
+        cmd2 = Command(["default_cmd"])
 
     c = C()
-    assert c.cmd == ['default command']
-    assert c.cmd2 == ['default_cmd']
-    c.cmd = 'foo bar'
-    assert c.cmd == ['foo bar']
+    assert c.cmd == ["default command"]
+    assert c.cmd2 == ["default_cmd"]
+    c.cmd = "foo bar"
+    assert c.cmd == ["foo bar"]

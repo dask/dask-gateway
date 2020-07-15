@@ -566,7 +566,10 @@ worker_parser.add_argument(
     "--scheduler-address", default=None, help="The scheduler address"
 )
 worker_parser.add_argument(
-    "--no-nanny", action="store_false", dest="nanny", help="Do not use nanny for management"
+    "--no-nanny",
+    action="store_false",
+    dest="nanny",
+    help="Do not use nanny for management",
 )
 
 
@@ -627,7 +630,13 @@ def worker(argv=None):
 
     async def run():
         worker = await start_worker(
-            gateway, security, worker_name, nthreads, memory_limit, scheduler_address, nanny=nanny
+            gateway,
+            security,
+            worker_name,
+            nthreads,
+            memory_limit,
+            scheduler_address,
+            nanny=nanny,
         )
         await worker.finished()
 

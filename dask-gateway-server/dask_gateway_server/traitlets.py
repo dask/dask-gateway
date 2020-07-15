@@ -77,7 +77,7 @@ class Command(List):
     """
 
     def __init__(self, default_value=None, **kwargs):
-        kwargs.setdefault('minlen', 1)
+        kwargs.setdefault("minlen", 1)
         if isinstance(default_value, str):
             default_value = [default_value]
         super().__init__(Unicode(), default_value, **kwargs)

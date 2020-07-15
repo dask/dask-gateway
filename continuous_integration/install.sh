@@ -29,3 +29,5 @@ python setup.py develop
 popd
 
 pip list
+
+set +xe
