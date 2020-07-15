@@ -1046,6 +1046,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             str(config.worker_memory_limit),
             "--scheduler-address",
             f"tls://{service_name}.{namespace}:8786",
+            "--dashboard-address",
+            ":8787",
         ]
 
     def get_env(self, namespace, cluster_name, config):

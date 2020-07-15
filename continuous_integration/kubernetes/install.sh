@@ -10,7 +10,7 @@ pip install -U \
     distributed \
     flake8 \
     pytest \
-    pytest-asyncio \
+    pytest-asyncio==0.12.0 \
     kubernetes-asyncio \
     sqlalchemy \
     traitlets
