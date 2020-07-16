@@ -3,6 +3,8 @@ from collections import OrderedDict
 from collections.abc import MutableMapping, Sequence
 from keyword import iskeyword
 
+import yaml
+
 
 __all__ = ("Options",)
 
@@ -54,15 +56,17 @@ class Options(MutableMapping):
             try:
                 import ipywidgets
 
-                children = [ipywidgets.HTML("<h2>Cluster Options</h2>")]
-                children.extend([f.widget() for f in self._fields.values()])
-                column = ipywidgets.Box(
+                title = ipywidgets.HTML("<h2>Cluster Options</h2>")
+                children = [item for f in self._fields.values() for item in f.widget()]
+                form = ipywidgets.GridBox(
                     children=children,
                     layout=ipywidgets.Layout(
-                        display="flex", flex_flow="column", align_items="stretch"
+                        justify_content="flex-start",
+                        grid_template_columns="auto auto auto",
+                        grid_gap="5px 5px",
                     ),
                 )
-                widget = ipywidgets.Box(children=[column])
+                widget = ipywidgets.VBox(children=[title, form])
             except ImportError:
                 widget = None
             object.__setattr__(self, "_cached_widget", widget)
@@ -177,22 +181,15 @@ class Field(object):
         def handler(change):
             self.set(change.new)
 
+        label = ipywidgets.HTML("<p style='font-weight: bold'>%s:</p>" % self.label)
+
         input = self._widget()
         input.observe(handler, "value")
         self._widgets.add(input)
 
-        label = ipywidgets.HTML(
-            "<p style='font-weight: bold; margin-right: 8px'>%s:</p>" % self.label
-        )
+        status = ipywidgets.HTML("")
 
-        row = ipywidgets.Box(
-            children=[label, input],
-            layout=ipywidgets.Layout(
-                display="flex", flex_flow="row wrap", justify_content="space-between"
-            ),
-        )
-
-        return row
+        return label, input, status
 
 
 @register_field_type("string")
@@ -260,8 +257,8 @@ class Integer(Number):
         else:
             return ipywidgets.BoundedIntText(
                 value=self.value,
-                min=self.min or -(2 ** 63),
-                max=self.max or (2 ** 63 - 1),
+                min=-(2 ** 63) if self.min is None else self.min,
+                max=(2 ** 63 - 1) if self.max is None else self.max,
             )
 
 
@@ -316,3 +313,83 @@ class Select(Field):
         import ipywidgets
 
         return ipywidgets.Dropdown(value=self.value, options=self.options)
+
+
+@register_field_type("mapping")
+class Mapping(Field):
+    """A mapping option field"""
+
+    def validate(self, x):
+        if not isinstance(x, dict):
+            raise TypeError(
+                "%s must be a dict, got %r" % (self.field, type(x).__name__)
+            )
+        return x
+
+    def transform(self, value):
+        if not value:
+            return ""
+        try:
+            return yaml.safe_dump(value)
+        except Exception:
+            # Yes this says json, and the check above is with yaml. Since the
+            # client->server interactions take place via json, and only widget
+            # users will see yaml things, we error with "json" instead.
+            raise ValueError("%s must be json serializable" % self.field) from None
+
+    def set(self, value):
+        value = self.validate(value)
+        text = self.transform(value)
+        self.value = value
+        # Update all linked widgets
+        for w in self._widgets:
+            w.value = text
+
+    def widget(self):
+        import ipywidgets
+
+        def handler(change):
+            tooltip = None
+            try:
+                text = change.new.strip()
+                data = yaml.safe_load(text) if text else {}
+                try:
+                    self.set(data)
+                except Exception as exc:
+                    tooltip = str(exc)
+            except Exception:
+                tooltip = "Invalid YAML"
+            if tooltip is None:
+                status.value = ""
+            else:
+                # We have do all styling inline. Since css selectors aren't
+                # available for inline css, we rely on javascript instead. This
+                # works well enough.
+                status.value = """
+                <div
+                    onMouseEnter="this.children[0].style.visibility = 'visible'"
+                    onMouseLeave="this.children[0].style.visibility = 'hidden'"
+                > &#10060
+                <span
+                style="visibility:hidden;z-index:1;font-size:0.8em;padding:2px;position:relative;display:inline-block"
+                >
+                {tooltip}
+                </span>
+                </div>
+                """.format(
+                    tooltip=tooltip
+                )
+
+        label = ipywidgets.HTML("<p style='font-weight: bold'>%s:</p>" % self.label)
+
+        input = ipywidgets.Textarea(
+            value=self.transform(self.value),
+            continuous_update=False,
+            placeholder="Enter yaml or json...",
+        )
+        input.observe(handler, "value")
+        self._widgets.add(input)
+
+        status = ipywidgets.HTML("")
+
+        return label, input, status

@@ -1,3 +1,4 @@
+import copy
 import textwrap
 from collections import OrderedDict
 from collections.abc import Sequence
@@ -5,7 +6,7 @@ from collections.abc import Sequence
 from .utils import FrozenAttrDict
 
 
-__all__ = ("Options", "String", "Bool", "Integer", "Float", "Select")
+__all__ = ("Options", "String", "Bool", "Integer", "Float", "Select", "Mapping")
 
 
 class Options(object):
@@ -70,12 +71,14 @@ class Options(object):
             raise ValueError("Unknown fields %r" % sorted(extra))
         # Validate options
         return {
-            f.field: f.validate(request.get(f.field, f.default)) for f in self.fields
+            f.field: f.validate(request.get(f.field, f.get_default()))
+            for f in self.fields
         }
 
     def transform_options(self, options):
         return {
-            f.target: f.transform(options.get(f.field, f.default)) for f in self.fields
+            f.target: f.transform(options.get(f.field, f.get_default()))
+            for f in self.fields
         }
 
     def get_configuration(self, options):
@@ -134,6 +137,9 @@ class Field(object):
 
     def json_type_spec(self):
         raise NotImplementedError
+
+    def get_default(self):
+        return self.default
 
     def validate(self, x):
         """Check that x is valid, and do any normalization.
@@ -296,3 +302,28 @@ class Select(Field):
 
     def json_type_spec(self):
         return {"type": "select", "options": list(self.options)}
+
+
+@field_doc(
+    description="A mapping field.",
+    params="""
+    default : dict, optional
+        The default value. Default is an empty dict (``{}``).
+    """,
+)
+class Mapping(Field):
+    def __init__(self, field, default=None, label=None, target=None):
+        if default is None:
+            default = {}
+        super().__init__(field, default=default, label=label, target=target)
+
+    def validate(self, x):
+        if not isinstance(x, dict):
+            raise TypeError("%s must be a mapping, got %r" % (self.field, x))
+        return x
+
+    def get_default(self):
+        return copy.deepcopy(self.default)
+
+    def json_type_spec(self):
+        return {"type": "mapping"}
