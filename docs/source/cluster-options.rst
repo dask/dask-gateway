@@ -81,6 +81,7 @@ different common type:
     ~dask_gateway_server.options.Bool
     ~dask_gateway_server.options.String
     ~dask_gateway_server.options.Select
+    ~dask_gateway_server.options.Mapping
 
 Each field supports the following standard parameters:
 

@@ -1,4 +1,5 @@
 import pytest
+import yaml
 
 import dask_gateway.options as client_options
 import dask_gateway_server.options as server_options
@@ -267,6 +268,51 @@ def test_select():
         client_options.Select(field, default, options=[])
 
 
+def test_mapping():
+    field = "field_name"
+    default = {"some": "default"}
+    target = "target_name"
+    label = "Field Name"
+
+    # Default values
+    s_opt = server_options.Mapping(field)
+    assert s_opt.default == {}
+    assert s_opt.label == field
+    assert s_opt.target == field
+
+    # Specified values propogate
+    s_opt = server_options.Mapping(field, default=default, target=target, label=label)
+    assert s_opt.default is default
+    assert s_opt.target == target
+    assert s_opt.label == label
+
+    # default is copied when returned to server
+    assert s_opt.get_default() == default
+    assert s_opt.get_default() is not default
+
+    def check(opt):
+        value = {"a": {"nested": "mapping"}, "b": 2}
+        assert opt.validate(value) == value
+
+        with pytest.raises(TypeError):
+            opt.validate(1)
+
+    # Server-side validation
+    check(s_opt)
+
+    # Serialization works
+    spec = s_opt.json_spec()
+
+    c_opt = client_options.Field._from_spec(spec)
+
+    assert isinstance(c_opt, client_options.Mapping)
+    assert c_opt.value == default
+    assert c_opt.label == label
+
+    # Client-side validation
+    check(c_opt)
+
+
 def test_frozen_attr_dict():
     d = {"valid": 1, "not valid": 2, "for": 3}
     ad = FrozenAttrDict(d)
@@ -364,6 +410,9 @@ def client_opts():
         ),
         client_options.Bool("keep_logs", False, label="Keep Logs"),
         client_options.String("queue", "default", label="Queue"),
+        client_options.Mapping(
+            "environ", {"default": "vals"}, label="Environment variables"
+        ),
     )
 
 
@@ -377,7 +426,9 @@ def get_widget_for_field(options, field):
     else:
         raise ValueError("No field %s" % field)
     # This is fragile to the formatting of the widgets
-    return widget.children[0].children[n + 1].children[1]
+    input = widget.children[1].children[3 * n + 1]
+    status = widget.children[1].children[3 * n + 2]
+    return input, status
 
 
 def test_client_options(client_opts):
@@ -443,7 +494,7 @@ def test_client_options_widget(client_opts):
 
 
 def check_opt_widget(opts, field, val1, val2, *bad_values):
-    widget = get_widget_for_field(opts, field)
+    widget, _ = get_widget_for_field(opts, field)
     assert widget.value == getattr(opts, field)
     # widget to opts
     widget.value = val1
@@ -480,3 +531,52 @@ def test_client_integer_widget(client_opts):
 def test_client_float_widget(client_opts):
     check_opt_widget(client_opts, "worker_memory", 2.5, 3.5, 100, -1, "bad value")
     check_opt_widget(client_opts, "scheduler_memory", 2.5, 3.5, "bad value")
+
+
+def test_client_mapping_widget(client_opts):
+    pytest.importorskip("ipywidgets")
+
+    textarea, status = get_widget_for_field(client_opts, "environ")
+
+    val1 = {"hello": "world"}
+    val2 = {"some": {"nested": "values"}, "other": 2}
+    text2 = yaml.safe_dump(val2)
+    test_cases = [({}, ""), (val1, yaml.safe_dump(val1)), (val2, text2)]
+
+    # widget to opts
+    for val, text in test_cases:
+        textarea.value = text
+        assert client_opts.environ == val
+        assert status.value == ""
+
+    # opts to widget
+    for val, text in test_cases:
+        client_opts.environ = val
+        assert textarea.value == text
+        assert status.value == ""
+
+    # Validation in opts
+    for val in [None, 1, [1, 2, 3], {"a": object()}]:
+        with pytest.raises(Exception):
+            client_opts.environ = val
+        # Unchanged
+        assert client_opts.environ == val2
+        assert textarea.value == text2
+        assert status.value == ""
+
+    # Validation in widget
+    for text in ["{", "1", "[1, 2, 3]"]:
+        textarea.value = text
+        # Unchanged
+        assert client_opts.environ == val2
+        assert status.value != ""
+
+    # Resets status once valid again
+    textarea.value = "HELLO: WORLD"
+    assert client_opts.environ == {"HELLO": "WORLD"}
+    assert status.value == ""
+
+    # Whitespace is ignored
+    textarea.value = "    "
+    assert client_opts.environ == {}
+    assert status.value == ""
