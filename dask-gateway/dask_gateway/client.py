@@ -379,7 +379,14 @@ class Gateway(object):
 
     async def _request(self, method, url, json=None):
         if self._session is None:
-            self._session = aiohttp.ClientSession()
+            # "unsafe" allows cookies to be set for ip addresses, which can
+            # commonly serve dask-gateway deployments. Since this client is
+            # only ever used with a single endpoint, there is no danger of
+            # leaking cookies to a different server that happens to have the
+            # same ip.
+            self._session = aiohttp.ClientSession(
+                cookie_jar=aiohttp.CookieJar(unsafe=True)
+            )
         session = self._session
 
         resp = await session.request(method, url, json=json, **self._request_kwargs)
