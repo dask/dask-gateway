@@ -161,6 +161,8 @@ Cluster Manager Options
 
 .. autoclass:: dask_gateway_server.options.Select
 
+.. autoclass:: dask_gateway_server.options.Mapping
+
 
 Models
 ------
