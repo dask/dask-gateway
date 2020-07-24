@@ -35,10 +35,9 @@ excellent `documentation provided by zero-to-jupyterhub-k8s`_.
 Install Helm (optional)
 -----------------------
 
-If you don't already have Helm_ installed, you'll need to install it locally,
-and ensure ``tiller`` is running on your cluster. As with above, there are
-plenty of instructional materials online for doing this. We recommend following
-the `guide provided by zero-to-jupyterhub-k8s`_.
+If you don't already have Helm_ installed, you'll need to install it locally.
+As with above, there are plenty of instructional materials online for doing
+this. We recommend following the `guide provided by zero-to-jupyterhub-k8s`_.
 
 
 Install Dask-Gateway
@@ -353,7 +352,7 @@ here for reference:
 .. _Helm: https://helm.sh/
 .. _documentation provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/create-k8s-cluster.html
 .. _zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/
-.. _guide provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-helm.html
+.. _guide provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-jupyterhub/setup-helm3.html
 .. _Helm chart repository:
 .. _dask-gateway helm chart repository: https://dask.org/dask-gateway-helm-repo/
 .. _dask-gateway github repo: https://github.com/dask/dask-gateway/
