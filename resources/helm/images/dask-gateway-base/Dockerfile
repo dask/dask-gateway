@@ -1,8 +1,8 @@
-FROM debian:10.3-slim
+FROM debian:10.4-slim
 LABEL MAINTAINER="Jim Crist-Harif"
 
-ENV CONDA_VERSION py37_4.8.2
-ENV CONDA_SHA256 957d2f0f0701c3d1335e3b39f235d197837ad69a944fa6f5d8ad2c686b69df3b
+ENV CONDA_VERSION py37_4.8.3
+ENV CONDA_SHA256 bb2e3cedd2e78a8bb6872ab3ab5b1266a90f8c7004a22d8dc2ea5effeb6a439a
 
 # We do the following all in one block:
 # - Create user dask

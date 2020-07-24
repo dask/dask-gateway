@@ -1,4 +1,4 @@
-FROM daskgateway/dask-gateway-base:0.7.0 AS dependencies
+FROM daskgateway/dask-gateway-base:0.7.1 AS dependencies
 LABEL MAINTAINER="Jim Crist-Harif"
 
 # Install dependencies

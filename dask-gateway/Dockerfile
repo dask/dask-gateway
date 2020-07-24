@@ -1,4 +1,4 @@
-FROM daskgateway/dask-gateway-base:0.7.0 as dependencies
+FROM daskgateway/dask-gateway-base:0.7.1 as dependencies
 LABEL MAINTAINER="Jim Crist-Harif"
 
 # Does the following in one layer
@@ -9,9 +9,10 @@ LABEL MAINTAINER="Jim Crist-Harif"
 # - Removes unminified bokeh js
 RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
         aiohttp=3.6.2 \
-        dask==2.14.0 \
-        numpy==1.18.1 \
-        pandas==1.0.3 \
+        dask==2.21.0 \
+        distributed==2.21.0 \
+        numpy==1.19.1 \
+        pandas==1.0.5 \
     && /opt/conda/bin/conda clean -afy \
     && find /opt/conda/ -follow -type f -name '*.a' -delete \
     && find /opt/conda/ -follow -type f -name '*.js.map' -delete \
