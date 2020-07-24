@@ -228,12 +228,12 @@ Not all configuration options have been exposed via the helm chart. To set
 unexposed options, you can use the ``gateway.extraConfig`` field. This takes
 either:
 
-- A python code-block (as a string) to append to the end of the generated
-  ``dask_gateway_config.py`` file.
-- A map of keys -> code-blocks. When applied in this form, code-blocks are
-  appended in alphabetical order by key (the keys themselves are meaningless).
-  This allows merging multiple ``values.yaml`` files together, as Helm can
-  natively merge maps.
+- A single python code-block (as a string) to append to the end of the
+  generated ``dask_gateway_config.py`` file.
+- A map of keys -> code-blocks (recommended). When applied in this form,
+  code-blocks are appended in alphabetical order by key (the keys themselves
+  are meaningless).  This allows merging multiple ``values.yaml`` files
+  together, as Helm can natively merge maps.
 
 For example, here we use ``gateway.extraConfig`` to set
 :data:`c.Backend.cluster_options`, exposing options for worker
@@ -242,22 +242,25 @@ resources and image (see :doc:`cluster-options` for more information).
 .. code-block:: yaml
 
     gateway:
-      extraConfig: |
-        from dask_gateway_server.options import Options, Integer, Float, String
+      extraConfig:
+        # Note that the key name here doesn't matter. Values in the
+        # `extraConfig` map are concatenated, sorted by key name.
+        clusteroptions: |
+            from dask_gateway_server.options import Options, Integer, Float, String
 
-        def option_handler(options):
-            return {
-                "worker_cores": options.worker_cores,
-                "worker_memory": "%fG" % options.worker_memory,
-                "image": options.image,
-            }
+            def option_handler(options):
+                return {
+                    "worker_cores": options.worker_cores,
+                    "worker_memory": "%fG" % options.worker_memory,
+                    "image": options.image,
+                }
 
-        c.Backend.cluster_options = Options(
-            Integer("worker_cores", 2, min=1, max=4, label="Worker Cores"),
-            Float("worker_memory", 4, min=1, max=8, label="Worker Memory (GiB)"),
-            String("image", default="daskgateway/dask-gateway:latest", label="Image"),
-            handler=option_handler,
-        )
+            c.Backend.cluster_options = Options(
+                Integer("worker_cores", 2, min=1, max=4, label="Worker Cores"),
+                Float("worker_memory", 4, min=1, max=8, label="Worker Memory (GiB)"),
+                String("image", default="daskgateway/dask-gateway:latest", label="Image"),
+                handler=option_handler,
+            )
 
 For information on all available configuration options, see the
 :doc:`api-server` (in particular, the :ref:`kube-cluster-config`
