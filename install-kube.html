@@ -452,33 +452,36 @@ anti-affinity for scheduler pods to avoid <a class="reference external" href="ht
 unexposed options, you can use the <code class="docutils literal notranslate"><span class="pre">gateway.extraConfig</span></code> field. This takes
 either:</p>
 <ul class="simple">
-<li><p>A python code-block (as a string) to append to the end of the generated
-<code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file.</p></li>
-<li><p>A map of keys -&gt; code-blocks. When applied in this form, code-blocks are
-appended in alphabetical order by key (the keys themselves are meaningless).
-This allows merging multiple <code class="docutils literal notranslate"><span class="pre">values.yaml</span></code> files together, as Helm can
-natively merge maps.</p></li>
+<li><p>A single python code-block (as a string) to append to the end of the
+generated <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file.</p></li>
+<li><p>A map of keys -&gt; code-blocks (recommended). When applied in this form,
+code-blocks are appended in alphabetical order by key (the keys themselves
+are meaningless).  This allows merging multiple <code class="docutils literal notranslate"><span class="pre">values.yaml</span></code> files
+together, as Helm can natively merge maps.</p></li>
 </ul>
 <p>For example, here we use <code class="docutils literal notranslate"><span class="pre">gateway.extraConfig</span></code> to set
 <a class="reference internal" href="api-server.html#c.Backend.cluster_options" title="c.Backend.cluster_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.cluster_options</span></code></a>, exposing options for worker
 resources and image (see <a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a> for more information).</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
-  <span class="nt">extraConfig</span><span class="p">:</span> <span class="p p-Indicator">|</span>
-    <span class="no">from dask_gateway_server.options import Options, Integer, Float, String</span>
+  <span class="nt">extraConfig</span><span class="p">:</span>
+    <span class="c1"># Note that the key name here doesn&#39;t matter. Values in the</span>
+    <span class="c1"># `extraConfig` map are concatenated, sorted by key name.</span>
+    <span class="nt">clusteroptions</span><span class="p">:</span> <span class="p p-Indicator">|</span>
+        <span class="no">from dask_gateway_server.options import Options, Integer, Float, String</span>
 
-    <span class="no">def option_handler(options):</span>
-        <span class="no">return {</span>
-            <span class="no">&quot;worker_cores&quot;: options.worker_cores,</span>
-            <span class="no">&quot;worker_memory&quot;: &quot;%fG&quot; % options.worker_memory,</span>
-            <span class="no">&quot;image&quot;: options.image,</span>
-        <span class="no">}</span>
+        <span class="no">def option_handler(options):</span>
+            <span class="no">return {</span>
+                <span class="no">&quot;worker_cores&quot;: options.worker_cores,</span>
+                <span class="no">&quot;worker_memory&quot;: &quot;%fG&quot; % options.worker_memory,</span>
+                <span class="no">&quot;image&quot;: options.image,</span>
+            <span class="no">}</span>
 
-    <span class="no">c.Backend.cluster_options = Options(</span>
-        <span class="no">Integer(&quot;worker_cores&quot;, 2, min=1, max=4, label=&quot;Worker Cores&quot;),</span>
-        <span class="no">Float(&quot;worker_memory&quot;, 4, min=1, max=8, label=&quot;Worker Memory (GiB)&quot;),</span>
-        <span class="no">String(&quot;image&quot;, default=&quot;daskgateway/dask-gateway:latest&quot;, label=&quot;Image&quot;),</span>
-        <span class="no">handler=option_handler,</span>
-    <span class="no">)</span>
+        <span class="no">c.Backend.cluster_options = Options(</span>
+            <span class="no">Integer(&quot;worker_cores&quot;, 2, min=1, max=4, label=&quot;Worker Cores&quot;),</span>
+            <span class="no">Float(&quot;worker_memory&quot;, 4, min=1, max=8, label=&quot;Worker Memory (GiB)&quot;),</span>
+            <span class="no">String(&quot;image&quot;, default=&quot;daskgateway/dask-gateway:latest&quot;, label=&quot;Image&quot;),</span>
+            <span class="no">handler=option_handler,</span>
+        <span class="no">)</span>
 </pre></div>
 </div>
 <p>For information on all available configuration options, see the
