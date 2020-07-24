@@ -26,7 +26,7 @@ def fail(msg):
 
 
 def main():
-    go_version = "1.12"
+    go_version = "1.14"
     python_versions = "cp37-cp37m"
 
     golang = GOLANG.format(go_version)

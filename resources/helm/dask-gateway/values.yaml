@@ -19,7 +19,7 @@ gateway:
   # The image to use for the gateway-server pod.
   image:
     name: daskgateway/dask-gateway-server
-    tag: 0.7.1
+    tag: 0.8.0
     pullPolicy: IfNotPresent
 
   # Configuration for the gateway-server service
@@ -75,7 +75,7 @@ gateway:
     # The image to use for both schedulers and workers.
     image:
       name: daskgateway/dask-gateway
-      tag: 0.7.1
+      tag: 0.8.0
       pullPolicy: IfNotPresent
 
     # The namespace to launch dask clusters in. If not specified, defaults to
@@ -168,7 +168,7 @@ controller:
   # The image to use for the controller pod.
   image:
     name: daskgateway/dask-gateway-server
-    tag: 0.7.1
+    tag: 0.8.0
     pullPolicy: IfNotPresent
 
 # Configuration for the traefik proxy
