@@ -269,6 +269,41 @@ def test_make_ingressroute():
         route["match"] == f"PathPrefix(`/foo/bar/clusters/{namespace}.{cluster_name}/`)"
     )
 
+    tls_options = ingress["spec"].get("tls")
+    assert not tls_options
+
+
+def test_make_ingressroute_with_tls_domain():
+    middlewares = [{"name": "my-middleware"}]
+    domains = {"main": "my-main.domain.com", "sub": "sub.my-main.domain.com"}
+
+    controller = KubeController(
+        gateway_instance="instance-1234",
+        api_url="http://example.com/api",
+        proxy_prefix="/foo/bar",
+        proxy_web_middlewares=middlewares,
+        proxy_web_tls_domains=domains,
+    )
+
+    cluster_name = "c1234"
+    namespace = "mynamespace"
+
+    ingress = controller.make_ingressroute(cluster_name, namespace)
+
+    labels = ingress["metadata"]["labels"]
+    assert labels["gateway.dask.org/instance"] == "instance-1234"
+    assert labels["gateway.dask.org/cluster"] == cluster_name
+    assert labels["app.kubernetes.io/component"] == "dask-scheduler"
+
+    route = ingress["spec"]["routes"][0]
+    assert route["middlewares"] == middlewares
+    assert (
+        route["match"] == f"PathPrefix(`/foo/bar/clusters/{namespace}.{cluster_name}/`)"
+    )
+
+    tls_options = ingress["spec"]["tls"]["options"]
+    assert tls_options["domains"] == domains
+
 
 def test_make_ingressroutetcp():
     controller = KubeController(
