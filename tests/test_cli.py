@@ -1,10 +1,8 @@
 import os
 import pytest
 
-from dask_gateway_server import __version__ as VERSION
 from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.proxy.core import ProxyApp, _PROXY_EXE
-from dask_gateway.dask_cli import worker, scheduler
 
 
 def test_generate_config(tmpdir, capfd):
@@ -80,20 +78,3 @@ def test_proxy_cli(tmpdir, monkeypatch):
     ]
 
     assert "DASK_GATEWAY_PROXY_TOKEN" in env
-
-
-@pytest.mark.parametrize("cmd", [scheduler, worker])
-def test_dask_gateway_dask_cli(cmd, capfd):
-    with pytest.raises(SystemExit) as exc:
-        cmd(["--help"])
-    assert not exc.value.code
-    out, err = capfd.readouterr()
-    assert out
-    assert not err
-
-    with pytest.raises(SystemExit) as exc:
-        cmd(["--version"])
-    assert not exc.value.code
-    out, err = capfd.readouterr()
-    assert VERSION in out
-    assert not err

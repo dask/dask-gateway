@@ -115,9 +115,7 @@ class PBSBackend(JobQueueBackend):
             return "dask.crt", "dask.pem"
         return super().get_tls_paths(cluster)
 
-    def get_submit_cmd_env_stdin(self, cluster, worker_name=None):
-        env = self.get_env(cluster)
-
+    def get_submit_cmd_env_stdin(self, cluster, worker=None):
         cmd = [self.submit_command]
         cmd.extend(["-N", "dask-gateway"])
         if cluster.config.queue:
@@ -132,8 +130,7 @@ class PBSBackend(JobQueueBackend):
             staging_dir = self.get_staging_directory(cluster)
             cmd.append("-Wstagein=.@%s:%s/*" % (self.gateway_hostname, staging_dir))
 
-        if worker_name:
-            env["DASK_GATEWAY_WORKER_NAME"] = worker_name
+        if worker:
             resources = format_resource_list(
                 cluster.config.worker_resource_list,
                 cluster.config.worker_cores,
@@ -142,9 +139,10 @@ class PBSBackend(JobQueueBackend):
             script = "\n".join(
                 [
                     cluster.config.worker_setup,
-                    " ".join(self.get_worker_command(cluster)),
+                    " ".join(self.get_worker_command(cluster, worker.name)),
                 ]
             )
+            env = self.get_worker_env(cluster)
         else:
             resources = format_resource_list(
                 cluster.config.scheduler_resource_list,
@@ -157,6 +155,7 @@ class PBSBackend(JobQueueBackend):
                     " ".join(self.get_scheduler_command(cluster)),
                 ]
             )
+            env = self.get_scheduler_env(cluster)
 
         cmd.extend(["-v", ",".join(sorted(env))])
         cmd.extend(["-l", resources])

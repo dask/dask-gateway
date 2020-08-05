@@ -60,7 +60,7 @@ class JobQueueBackend(DBBackendBase):
 
     status_command = Unicode(help="The path to the job status command", config=True)
 
-    def get_submit_cmd_env_stdin(self, cluster, worker_name=None):
+    def get_submit_cmd_env_stdin(self, cluster, worker=None):
         raise NotImplementedError
 
     def get_stop_cmd_env(self, job_id):

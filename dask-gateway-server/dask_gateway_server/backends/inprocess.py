@@ -1,9 +1,6 @@
-from dask_gateway.dask_cli import (
-    make_security,
-    make_gateway_client,
-    start_scheduler,
-    start_worker,
-)
+from dask_gateway.scheduler_preload import make_gateway_client, GatewaySchedulerService
+from distributed import Security, Scheduler, Worker
+from distributed.core import Status
 from tornado import gen
 
 from .local import UnsafeLocalBackend
@@ -17,7 +14,13 @@ class InProcessBackend(UnsafeLocalBackend):
 
     def get_security(self, cluster):
         cert_path, key_path = self.get_tls_paths(cluster)
-        return make_security(cert_path, key_path)
+        return Security(
+            tls_ca_file=cert_path,
+            tls_scheduler_cert=cert_path,
+            tls_scheduler_key=key_path,
+            tls_worker_cert=cert_path,
+            tls_worker_key=key_path,
+        )
 
     def get_gateway_client(self, cluster):
         return make_gateway_client(
@@ -28,7 +31,7 @@ class InProcessBackend(UnsafeLocalBackend):
         out = []
         for x in objs:
             x = mapping.get(x.name)
-            ok = x is not None and not x.status.startswith("clos")
+            ok = x is not None and not x.status != Status.closed
             out.append(ok)
         return out
 
@@ -43,18 +46,25 @@ class InProcessBackend(UnsafeLocalBackend):
         security = self.get_security(cluster)
         gateway_client = self.get_gateway_client(cluster)
 
-        scheduler = await start_scheduler(
-            gateway_client,
-            security,
-            exit_on_failure=False,
-            adaptive_period=cluster.config.adaptive_period,
-            idle_timeout=cluster.config.idle_timeout,
-            scheduler_address="tls://127.0.0.1:0",
+        self.schedulers[cluster.name] = scheduler = Scheduler(
+            protocol="tls",
+            host="127.0.0.1",
+            port=0,
             dashboard_address="127.0.0.1:0",
-            api_address="127.0.0.1:0",
+            security=security,
+            services={
+                ("gateway", ":0"): (
+                    GatewaySchedulerService,
+                    {
+                        "gateway": gateway_client,
+                        "heartbeat_period": self.cluster_heartbeat_period,
+                        "adaptive_period": cluster.config.adaptive_period,
+                        "idle_timeout": cluster.config.idle_timeout,
+                    },
+                )
+            },
         )
-
-        self.schedulers[cluster.name] = scheduler
+        await scheduler
         yield {"workdir": workdir, "started": True}
 
     async def do_stop_cluster(self, cluster):
@@ -72,12 +82,16 @@ class InProcessBackend(UnsafeLocalBackend):
 
     async def do_start_worker(self, worker):
         security = self.get_security(worker.cluster)
-        gateway_client = self.get_gateway_client(worker.cluster)
         workdir = worker.cluster.state["workdir"]
-        worker = await start_worker(
-            gateway_client, security, worker.name, local_directory=workdir, nanny=False
+        self.workers[worker.name] = worker = Worker(
+            worker.cluster.scheduler_address,
+            nthreads=worker.cluster.config.worker_cores,
+            memory_limit=0,
+            security=security,
+            name=worker.name,
+            local_directory=workdir,
         )
-        self.workers[worker.name] = worker
+        await worker
         yield {"started": True}
 
     async def do_stop_worker(self, worker):
@@ -96,4 +110,4 @@ class InProcessBackend(UnsafeLocalBackend):
         worker = self.workers.get(worker_name)
         if worker is None:
             return False
-        return not worker.status.startswith("clos")
+        return not worker.status != Status.closed

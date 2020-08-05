@@ -242,15 +242,11 @@ class ClusterConfig(Configurable):
     """Base class for holding individual Dask cluster configurations"""
 
     scheduler_cmd = Command(
-        "dask-gateway-scheduler",
-        help="Shell command to start a dask-gateway scheduler.",
-        config=True,
+        "dask-scheduler", help="Shell command to start a dask scheduler.", config=True,
     )
 
     worker_cmd = Command(
-        "dask-gateway-worker",
-        help="Shell command to start a dask-gateway worker.",
-        config=True,
+        "dask-worker", help="Shell command to start a dask worker.", config=True,
     )
 
     environment = Dict(

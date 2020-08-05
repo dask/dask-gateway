@@ -276,20 +276,3 @@ async def handle_heartbeat(request):
     except PublicException as exc:
         raise web.HTTPConflict(reason=str(exc))
     return web.Response()
-
-
-@default_routes.get("/api/v1/clusters/{cluster_name}/addresses")
-@api_handler(token_authenticated=True)
-async def handle_addresses(request):
-    cluster_name = request.match_info["cluster_name"]
-    backend = request.app["backend"]
-    cluster = await backend.get_cluster(cluster_name)
-    if cluster is None:
-        raise web.HTTPNotFound(reason=f"Cluster {cluster_name} not found")
-    return web.json_response(
-        {
-            "api_address": cluster.api_address,
-            "dashboard_address": cluster.dashboard_address,
-            "scheduler_address": cluster.scheduler_address,
-        }
-    )

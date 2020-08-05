@@ -130,13 +130,8 @@ class YarnBackend(DBBackendBase):
             self.app_client_cache.put(cluster.name, out)
         return out
 
-    def get_worker_command(self, cluster):
-        return cluster.config.worker_cmd + [
-            "--nthreads",
-            "$SKEIN_RESOURCE_VCORES",
-            "--memory-limit",
-            "${SKEIN_RESOURCE_MEMORY}MiB",
-        ]
+    def worker_nthreads_memory_limit_args(self, cluster):
+        return "$SKEIN_RESOURCE_VCORES", "${SKEIN_RESOURCE_MEMORY}MiB"
 
     def _build_specification(self, cluster, cert_path, key_path):
         files = {
@@ -147,10 +142,14 @@ class YarnBackend(DBBackendBase):
         files["dask.crt"] = cert_path
         files["dask.pem"] = key_path
 
-        env = self.get_env(cluster)
-
         scheduler_cmd = " ".join(self.get_scheduler_command(cluster))
-        worker_cmd = " ".join(self.get_worker_command(cluster))
+        worker_cmd = " ".join(
+            self.get_worker_command(
+                cluster,
+                worker_name="$DASK_GATEWAY_WORKER_NAME",
+                scheduler_address="$DASK_GATEWAY_SCHEDULER_ADDRESS",
+            )
+        )
         scheduler_script = f"{cluster.config.scheduler_setup}\n{scheduler_cmd}"
         worker_script = f"{cluster.config.worker_setup}\n{worker_cmd}"
 
@@ -161,7 +160,7 @@ class YarnBackend(DBBackendBase):
                 vcores=cluster.config.scheduler_cores,
             ),
             files=files,
-            env=env,
+            env=self.get_scheduler_env(cluster),
             script=scheduler_script,
         )
 
@@ -175,7 +174,7 @@ class YarnBackend(DBBackendBase):
                 max_restarts=0,
                 allow_failures=True,
                 files=files,
-                env=env,
+                env=self.get_worker_env(cluster),
                 script=worker_script,
             )
         }
@@ -243,7 +242,10 @@ class YarnBackend(DBBackendBase):
         container = await self.async_apply(
             app.add_container,
             "dask.worker",
-            env={"DASK_GATEWAY_WORKER_NAME": worker.name},
+            env={
+                "DASK_GATEWAY_WORKER_NAME": worker.name,
+                "DASK_GATEWAY_SCHEDULER_ADDRESS": worker.cluster.scheduler_address,
+            },
         )
         yield {"container_id": container.id}
 
