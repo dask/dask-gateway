@@ -193,9 +193,9 @@ the provided Python. This could be done a few different ways:
 
 .. code-block:: python
 
-    # Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs
-    c.JobQueueClusterConfig.scheduler_cmd = "/path/to/dask-gateway-scheduler"
-    c.JobQueueClusterConfig.worker_cmd = "/path/to/dask-gateway-worker"
+    # Configure the paths to the dask-scheduler/dask-worker CLIs
+    c.JobQueueClusterConfig.scheduler_cmd = "/path/to/dask-scheduler"
+    c.JobQueueClusterConfig.worker_cmd = "/path/to/dask-worker"
 
     # OR
     # Activate a local conda environment before startup
@@ -276,9 +276,9 @@ look like:
     # Configure the gateway to use PBS as the backend
     c.DaskGateway.backend_class = "dask_gateway_server.backends.pbs.PBSBackend"
 
-    # Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs
-    c.PBSClusterConfig.scheduler_cmd = "~/miniconda/bin/dask-gateway-scheduler"
-    c.PBSClusterConfig.worker_cmd = "~/miniconda/bin/dask-gateway-worker"
+    # Configure the paths to the dask-scheduler/dask-worker CLIs
+    c.PBSClusterConfig.scheduler_cmd = "~/miniconda/bin/dask-scheduler"
+    c.PBSClusterConfig.worker_cmd = "~/miniconda/bin/dask-worker"
 
     # Limit resources for a single worker
     c.PBSClusterConfig.worker_memory = '4 G'

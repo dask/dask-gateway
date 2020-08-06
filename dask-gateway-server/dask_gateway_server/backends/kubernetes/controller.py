@@ -1023,31 +1023,38 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     def get_scheduler_command(self, namespace, cluster_name, config):
         return config.scheduler_cmd + [
-            "--scheduler-address",
-            ":8786",
+            "--protocol",
+            "tls",
+            "--host",
+            "",
+            "--port",
+            "8786",
             "--dashboard-address",
             ":8787",
-            "--api-address",
+            "--dg-api-address",
             ":8788",
-            "--heartbeat-period",
+            "--preload",
+            "dask_gateway.scheduler_preload",
+            "--dg-heartbeat-period",
             "0",
-            "--adaptive-period",
+            "--dg-adaptive-period",
             str(config.adaptive_period),
-            "--idle-timeout",
+            "--dg-idle-timeout",
             str(config.idle_timeout),
         ]
 
     def get_worker_command(self, namespace, cluster_name, config):
         service_name = self.make_service_name(cluster_name)
         return config.worker_cmd + [
+            f"tls://{service_name}.{namespace}:8786",
+            "--dashboard-address",
+            ":8787",
+            "--name",
+            "$(DASK_GATEWAY_WORKER_NAME)",
             "--nthreads",
             str(int(config.worker_cores_limit)),
             "--memory-limit",
             str(config.worker_memory_limit),
-            "--scheduler-address",
-            f"tls://{service_name}.{namespace}:8786",
-            "--dashboard-address",
-            ":8787",
         ]
 
     def get_env(self, namespace, cluster_name, config):
@@ -1057,8 +1064,11 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 "DASK_GATEWAY_API_URL": self.api_url,
                 "DASK_GATEWAY_CLUSTER_NAME": f"{namespace}.{cluster_name}",
                 "DASK_GATEWAY_API_TOKEN": "/etc/dask-credentials/api-token",
-                "DASK_GATEWAY_TLS_CERT": "/etc/dask-credentials/dask.crt",
-                "DASK_GATEWAY_TLS_KEY": "/etc/dask-credentials/dask.pem",
+                "DASK_DISTRIBUTED__COMM__TLS__CA_FILE": "/etc/dask-credentials/dask.crt",
+                "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__CERT": "/etc/dask-credentials/dask.crt",
+                "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__KEY": "/etc/dask-credentials/dask.pem",
+                "DASK_DISTRIBUTED__COMM__TLS__WORKER__CERT": "/etc/dask-credentials/dask.crt",
+                "DASK_DISTRIBUTED__COMM__TLS__WORKER__KEY": "/etc/dask-credentials/dask.pem",
             }
         )
         return [{"name": k, "value": v} for k, v in env.items()]

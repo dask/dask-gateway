@@ -134,6 +134,8 @@ class LocalBackend(DBBackendBase):
         config=True,
     )
 
+    default_host = "127.0.0.1"
+
     def set_file_permissions(self, paths, username):
         pwnam = getpwnam(username)
         for p in paths:
@@ -215,20 +217,6 @@ class LocalBackend(DBBackendBase):
         env["USER"] = cluster.username
         return env
 
-    def get_scheduler_command(self, cluster):
-        cmd = super().get_scheduler_command(cluster)
-        cmd.extend(
-            [
-                "--scheduler-address",
-                "tls://127.0.0.1:0",
-                "--dashboard-address",
-                "127.0.0.1:0",
-                "--api-address",
-                "127.0.0.1:0",
-            ]
-        )
-        return cmd
-
     async def start_process(self, cluster, cmd, env, name):
         workdir = cluster.state["workdir"]
         logsdir = self.get_logs_directory(workdir)
@@ -274,7 +262,7 @@ class LocalBackend(DBBackendBase):
         pid = await self.start_process(
             cluster,
             self.get_scheduler_command(cluster),
-            self.get_env(cluster),
+            self.get_scheduler_env(cluster),
             "scheduler",
         )
         yield {"workdir": workdir, "pid": pid}
@@ -296,9 +284,8 @@ class LocalBackend(DBBackendBase):
         return [self._check_status(c) for c in clusters]
 
     async def do_start_worker(self, worker):
-        cmd = self.get_worker_command(worker.cluster)
-        env = self.get_env(worker.cluster)
-        env["DASK_GATEWAY_WORKER_NAME"] = worker.name
+        cmd = self.get_worker_command(worker.cluster, worker.name)
+        env = self.get_worker_env(worker.cluster)
         pid = await self.start_process(
             worker.cluster, cmd, env, "worker-%s" % worker.name
         )

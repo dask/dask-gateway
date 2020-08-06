@@ -1381,31 +1381,83 @@ class DBBackendBase(Backend):
     def get_env(self, cluster):
         """Get a dict of environment variables to set for the process"""
         out = dict(cluster.config.environment)
-        tls_cert_path, tls_key_path = self.get_tls_paths(cluster)
         # Set values that dask-gateway needs to run
         out.update(
             {
                 "DASK_GATEWAY_API_URL": self.api_url,
                 "DASK_GATEWAY_API_TOKEN": cluster.token,
                 "DASK_GATEWAY_CLUSTER_NAME": cluster.name,
-                "DASK_GATEWAY_TLS_CERT": tls_cert_path,
-                "DASK_GATEWAY_TLS_KEY": tls_key_path,
+                "DASK_DISTRIBUTED__COMM__REQUIRE_ENCRYPTION": "True",
             }
         )
         return out
 
+    def get_scheduler_env(self, cluster):
+        env = self.get_env(cluster)
+        tls_cert_path, tls_key_path = self.get_tls_paths(cluster)
+        env.update(
+            {
+                "DASK_DISTRIBUTED__COMM__TLS__CA_FILE": tls_cert_path,
+                "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__KEY": tls_key_path,
+                "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__CERT": tls_cert_path,
+            }
+        )
+        return env
+
+    def get_worker_env(self, cluster):
+        env = self.get_env(cluster)
+        tls_cert_path, tls_key_path = self.get_tls_paths(cluster)
+        env.update(
+            {
+                "DASK_DISTRIBUTED__COMM__TLS__CA_FILE": tls_cert_path,
+                "DASK_DISTRIBUTED__COMM__TLS__WORKER__KEY": tls_key_path,
+                "DASK_DISTRIBUTED__COMM__TLS__WORKER__CERT": tls_cert_path,
+            }
+        )
+        return env
+
+    default_host = "0.0.0.0"
+
     def get_scheduler_command(self, cluster):
         return cluster.config.scheduler_cmd + [
-            "--heartbeat-period",
+            "--protocol",
+            "tls",
+            "--port",
+            "0",
+            "--host",
+            self.default_host,
+            "--dashboard-address",
+            f"{self.default_host}:0",
+            "--preload",
+            "dask_gateway.scheduler_preload",
+            "--dg-api-address",
+            f"{self.default_host}:0",
+            "--dg-heartbeat-period",
             str(self.cluster_heartbeat_period),
-            "--adaptive-period",
+            "--dg-adaptive-period",
             str(cluster.config.adaptive_period),
-            "--idle-timeout",
+            "--dg-idle-timeout",
             str(cluster.config.idle_timeout),
         ]
 
-    def get_worker_command(self, cluster):
-        return cluster.config.worker_cmd
+    def worker_nthreads_memory_limit_args(self, cluster):
+        return str(cluster.config.worker_cores), str(cluster.config.worker_memory)
+
+    def get_worker_command(self, cluster, worker_name, scheduler_address=None):
+        nthreads, memory_limit = self.worker_nthreads_memory_limit_args(cluster)
+        if scheduler_address is None:
+            scheduler_address = cluster.scheduler_address
+        return cluster.config.worker_cmd + [
+            scheduler_address,
+            "--dashboard-address",
+            f"{self.default_host}:0",
+            "--name",
+            worker_name,
+            "--nthreads",
+            nthreads,
+            "--memory-limit",
+            memory_limit,
+        ]
 
     # Subclasses should implement these methods
     supports_bulk_shutdown = False

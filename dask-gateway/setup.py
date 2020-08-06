@@ -48,11 +48,5 @@ setup(
     package_data={"dask_gateway": ["*.yaml"]},
     install_requires=install_requires,
     extras_require=extras_require,
-    entry_points={
-        "console_scripts": [
-            "dask-gateway-scheduler = dask_gateway.dask_cli:scheduler",
-            "dask-gateway-worker = dask_gateway.dask_cli:worker",
-        ]
-    },
     zip_safe=False,
 )

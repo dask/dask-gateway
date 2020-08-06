@@ -1,7 +1,8 @@
 from __future__ import print_function, division, absolute_import
 
+import click
+
 import asyncio
-import argparse
 import collections
 import json
 import logging
@@ -11,19 +12,10 @@ from urllib.parse import urlparse
 
 from tornado import web
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
-from tornado.ioloop import IOLoop, TimeoutError
 
-from distributed import Scheduler, Worker, Nanny
 from distributed.diagnostics.plugin import SchedulerPlugin
-from distributed.security import Security
 from distributed.scheduler import logger as scheduler_logger
-from distributed.cli.utils import install_signal_handlers
-from distributed.proctitle import (
-    enable_proctitle_on_children,
-    enable_proctitle_on_current,
-)
 
-from . import __version__ as VERSION
 from .utils import cancel_task
 
 
@@ -391,61 +383,6 @@ class GatewayClient(object):
         )
         await client.fetch(req)
 
-    async def get_scheduler_address(self):
-        client = AsyncHTTPClient()
-        url = f"{self.api_url}/v1/clusters/{self.cluster_name}/addresses"
-        req = HTTPRequest(
-            url, method="GET", headers={"Authorization": "token %s" % self.token}
-        )
-        resp = await client.fetch(req)
-        data = json.loads(resp.body.decode("utf8", "replace"))
-        return data["scheduler_address"]
-
-
-scheduler_parser = argparse.ArgumentParser(
-    prog="dask-gateway-scheduler", description="Start a dask-gateway scheduler"
-)
-scheduler_parser.add_argument("--version", action="version", version=VERSION)
-scheduler_parser.add_argument(
-    "--adaptive-period",
-    type=float,
-    default=3,
-    help="Period (in seconds) between adaptive scaling calls",
-)
-scheduler_parser.add_argument(
-    "--heartbeat-period",
-    type=float,
-    default=15,
-    help=(
-        "Period (in seconds) between heartbeat calls. Set to 0 to send "
-        "heartbeats only when scaling."
-    ),
-)
-scheduler_parser.add_argument(
-    "--idle-timeout",
-    type=float,
-    default=0,
-    help="Idle timeout (in seconds) before shutting down the cluster",
-)
-scheduler_parser.add_argument(
-    "--scheduler-address",
-    type=str,
-    default="tls://:0",
-    help="The address the scheduler should listen at. Defaults to `:0`",
-)
-scheduler_parser.add_argument(
-    "--dashboard-address",
-    type=str,
-    default=":0",
-    help="The address the dashboard should listen at. Defaults to `:0`",
-)
-scheduler_parser.add_argument(
-    "--api-address",
-    type=str,
-    default=":0",
-    help="The address the api should listen at. Defaults to `:0`",
-)
-
 
 def getenv(key):
     out = os.environ.get(key)
@@ -453,20 +390,6 @@ def getenv(key):
         logger.error("Environment variable %r not found, shutting down", key)
         sys.exit(1)
     return out
-
-
-def make_security(tls_cert=None, tls_key=None):
-    tls_cert = tls_cert or getenv("DASK_GATEWAY_TLS_CERT")
-    tls_key = tls_key or getenv("DASK_GATEWAY_TLS_KEY")
-
-    return Security(
-        require_encryption=True,
-        tls_ca_file=tls_cert,
-        tls_scheduler_cert=tls_cert,
-        tls_scheduler_key=tls_key,
-        tls_worker_cert=tls_cert,
-        tls_worker_key=tls_key,
-    )
 
 
 def make_gateway_client(cluster_name=None, api_url=None, api_token=None):
@@ -479,180 +402,55 @@ def make_gateway_client(cluster_name=None, api_url=None, api_token=None):
     return GatewayClient(cluster_name, api_token, api_url)
 
 
-def scheduler(argv=None):
-    args = scheduler_parser.parse_args(argv)
-
-    gateway = make_gateway_client()
-    security = make_security()
-
-    loop = IOLoop.current()
-
-    install_signal_handlers(loop)
-    enable_proctitle_on_current()
-    enable_proctitle_on_children()
-
-    if sys.platform.startswith("linux"):
-        import resource  # module fails importing on Windows
-
-        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-        limit = max(soft, hard // 2)
-        resource.setrlimit(resource.RLIMIT_NOFILE, (limit, hard))
-
-    async def run():
-        scheduler = await start_scheduler(
-            gateway,
-            security,
-            adaptive_period=args.adaptive_period,
-            heartbeat_period=args.heartbeat_period,
-            idle_timeout=args.idle_timeout,
-            scheduler_address=args.scheduler_address,
-            dashboard_address=args.dashboard_address,
-            api_address=args.api_address,
-        )
-        await scheduler.finished()
-
-    try:
-        loop.run_sync(run)
-    except (KeyboardInterrupt, TimeoutError):
-        pass
-
-
-async def start_scheduler(
-    gateway,
-    security,
-    adaptive_period=3,
-    heartbeat_period=15,
-    idle_timeout=0,
-    scheduler_address="tls://:0",
-    dashboard_address=":0",
-    api_address=":0",
-    exit_on_failure=True,
-):
-    loop = IOLoop.current()
-    services = {
-        ("gateway", api_address or 0): (
-            GatewaySchedulerService,
-            {
-                "gateway": gateway,
-                "adaptive_period": adaptive_period,
-                "heartbeat_period": heartbeat_period,
-                "idle_timeout": idle_timeout,
-            },
-        )
-    }
-    scheduler = Scheduler(
-        host=scheduler_address,
-        loop=loop,
-        services=services,
-        security=security,
-        dashboard_address=dashboard_address,
-    )
-    return await scheduler
-
-
-worker_parser = argparse.ArgumentParser(
-    prog="dask-gateway-worker", description="Start a dask-gateway worker"
+@click.command()
+@click.option(
+    "--dg-adaptive-period",
+    default=3.0,
+    type=float,
+    help="Period (in seconds) between adaptive scaling calls",
 )
-
-worker_parser.add_argument("--version", action="version", version=VERSION)
-worker_parser.add_argument(
-    "--nthreads", type=int, default=1, help="The number of threads to use"
+@click.option(
+    "--dg-heartbeat-period",
+    default=15.0,
+    type=float,
+    help=(
+        "Period (in seconds) between heartbeat calls. Set to 0 to send "
+        "heartbeats only when scaling."
+    ),
 )
-worker_parser.add_argument(
-    "--memory-limit", default="auto", help="The maximum amount of memory to allow"
+@click.option(
+    "--dg-idle-timeout",
+    type=float,
+    default=0.0,
+    help="Idle timeout (in seconds) before shutting down the cluster",
 )
-worker_parser.add_argument("--name", default=None, help="The worker name")
-worker_parser.add_argument(
-    "--scheduler-address", default=None, help="The scheduler address"
-)
-worker_parser.add_argument(
-    "--dashboard-address",
+@click.option(
+    "--dg-api-address",
     type=str,
     default=":0",
-    help="The address the dashboard should listen at. Defaults to `:0`",
+    help="The address the api should listen at. Defaults to `:0`",
 )
-worker_parser.add_argument(
-    "--no-nanny",
-    action="store_false",
-    dest="nanny",
-    help="Do not use nanny for management",
-)
-
-
-async def start_worker(
-    gateway,
-    security,
-    worker_name,
-    nthreads=1,
-    memory_limit="auto",
-    scheduler_address=None,
-    local_directory=None,
-    nanny=True,
-    dashboard=True,
-    dashboard_address=":0",
+def dask_setup(
+    scheduler, dg_adaptive_period, dg_heartbeat_period, dg_idle_timeout, dg_api_address
 ):
-    loop = IOLoop.current()
-
-    if not scheduler_address:
-        scheduler_address = await gateway.get_scheduler_address()
-
-    typ = Nanny if nanny else Worker
-
-    worker = typ(
-        scheduler_address,
-        loop=loop,
-        nthreads=nthreads,
-        memory_limit=memory_limit,
-        security=security,
-        name=worker_name,
-        local_directory=local_directory,
-        dashboard=dashboard,
-        dashboard_address=dashboard_address,
-    )
-
-    if nanny:
-
-        async def close(signalnum):
-            await worker.close(timeout=2)
-
-        install_signal_handlers(loop, cleanup=close)
-
-    await worker
-    return worker
-
-
-def worker(argv=None):
-    args = worker_parser.parse_args(argv)
-
-    worker_name = args.name or getenv("DASK_GATEWAY_WORKER_NAME")
-    nthreads = args.nthreads
-    memory_limit = args.memory_limit
-    scheduler_address = args.scheduler_address
-    nanny = args.nanny
-    dashboard_address = args.dashboard_address
-
-    gateway = make_gateway_client()
-    security = make_security()
-
-    enable_proctitle_on_current()
-    enable_proctitle_on_children()
-
-    loop = IOLoop.current()
-
-    async def run():
-        worker = await start_worker(
-            gateway,
-            security,
-            worker_name,
-            nthreads,
-            memory_limit,
-            scheduler_address,
-            dashboard_address=dashboard_address,
-            nanny=nanny,
-        )
-        await worker.finished()
+    try:
+        host, port = dg_api_address.split(":")
+        port = int(port)
+    except Exception:
+        logger.error("Invalid api address %r", dg_api_address, exc_info=True)
+        sys.exit(1)
 
     try:
-        loop.run_sync(run)
-    except (KeyboardInterrupt, TimeoutError):
-        pass
+        service = GatewaySchedulerService(
+            scheduler,
+            gateway=make_gateway_client(),
+            adaptive_period=dg_adaptive_period,
+            heartbeat_period=dg_heartbeat_period,
+            idle_timeout=dg_idle_timeout,
+        )
+        service.listen((host, port))
+    except Exception:
+        logger.error("Error starting gateway service", exc_info=True)
+        sys.exit(1)
+
+    scheduler.services["gateway"] = service

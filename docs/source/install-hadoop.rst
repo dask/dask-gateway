@@ -245,9 +245,9 @@ done a few different ways:
 
 .. code-block:: python
 
-    # Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs
-    c.YarnClusterConfig.scheduler_cmd = "/path/to/dask-gateway-scheduler"
-    c.YarnClusterConfig.worker_cmd = "/path/to/dask-gateway-worker"
+    # Configure the paths to the dask-scheduler/dask-worker CLIs
+    c.YarnClusterConfig.scheduler_cmd = "/path/to/dask-scheduler"
+    c.YarnClusterConfig.worker_cmd = "/path/to/dask-worker"
 
     # OR
     # Activate a local conda environment before startup

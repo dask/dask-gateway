@@ -54,9 +54,7 @@ class SlurmBackend(JobQueueBackend):
     def _default_status_command(self):
         return shutil.which("squeue") or "squeue"
 
-    def get_submit_cmd_env_stdin(self, cluster, worker_name=None):
-        env = self.get_env(cluster)
-
+    def get_submit_cmd_env_stdin(self, cluster, worker=None):
         cmd = [self.submit_command, "--parsable"]
         cmd.append("--job-name=dask-gateway")
         if cluster.config.partition:
@@ -66,18 +64,18 @@ class SlurmBackend(JobQueueBackend):
         if cluster.config.qos:
             cmd.extend("--qos=" + cluster.config.qos)
 
-        if worker_name:
-            env["DASK_GATEWAY_WORKER_NAME"] = worker_name
+        if worker:
             cpus = cluster.config.worker_cores
             mem = slurm_format_memory(cluster.config.worker_memory)
-            log_file = "dask-worker-%s.log" % worker_name
+            log_file = "dask-worker-%s.log" % worker.name
             script = "\n".join(
                 [
                     "#!/bin/sh",
                     cluster.config.worker_setup,
-                    " ".join(self.get_worker_command(cluster)),
+                    " ".join(self.get_worker_command(cluster, worker.name)),
                 ]
             )
+            env = self.get_worker_env(cluster)
         else:
             cpus = cluster.config.scheduler_cores
             mem = slurm_format_memory(cluster.config.scheduler_memory)
@@ -89,6 +87,7 @@ class SlurmBackend(JobQueueBackend):
                     " ".join(self.get_scheduler_command(cluster)),
                 ]
             )
+            env = self.get_scheduler_env(cluster)
 
         staging_dir = self.get_staging_directory(cluster)
 
