@@ -62,8 +62,8 @@ class PBSTestingBackend(PBSBackend):
 @pytest.mark.asyncio
 async def test_pbs_backend():
     c = Config()
-    c.PBSClusterConfig.scheduler_cmd = "/opt/miniconda/bin/dask-gateway-scheduler"
-    c.PBSClusterConfig.worker_cmd = "/opt/miniconda/bin/dask-gateway-worker"
+    c.PBSClusterConfig.scheduler_cmd = "/opt/miniconda/bin/dask-scheduler"
+    c.PBSClusterConfig.worker_cmd = "/opt/miniconda/bin/dask-worker"
     c.PBSClusterConfig.scheduler_memory = "256M"
     c.PBSClusterConfig.worker_memory = "256M"
     c.PBSClusterConfig.scheduler_cores = 1

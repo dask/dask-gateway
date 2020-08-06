@@ -69,8 +69,8 @@ class SlurmTestingBackend(SlurmBackend):
 async def test_slurm_backend():
     c = Config()
 
-    c.SlurmClusterConfig.scheduler_cmd = "/opt/miniconda/bin/dask-gateway-scheduler"
-    c.SlurmClusterConfig.worker_cmd = "/opt/miniconda/bin/dask-gateway-worker"
+    c.SlurmClusterConfig.scheduler_cmd = "/opt/miniconda/bin/dask-scheduler"
+    c.SlurmClusterConfig.worker_cmd = "/opt/miniconda/bin/dask-worker"
     c.SlurmClusterConfig.scheduler_memory = "256M"
     c.SlurmClusterConfig.worker_memory = "256M"
     c.SlurmClusterConfig.scheduler_cores = 1
