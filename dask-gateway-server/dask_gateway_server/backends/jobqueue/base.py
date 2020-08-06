@@ -188,7 +188,7 @@ class JobQueueBackend(DBBackendBase):
             await self.stop_job(cluster.username, job_id, staging_dir=staging_dir)
 
     async def do_start_worker(self, worker):
-        cmd, env, stdin = self.get_submit_cmd_env_stdin(worker.cluster, worker.name)
+        cmd, env, stdin = self.get_submit_cmd_env_stdin(worker.cluster, worker)
         job_id = await self.start_job(worker.cluster.username, cmd, env, stdin)
         self.log.info("Job %s submitted for worker %s", job_id, worker.name)
         yield {"job_id": job_id}
