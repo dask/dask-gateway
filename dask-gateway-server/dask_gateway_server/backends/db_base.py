@@ -1416,7 +1416,7 @@ class DBBackendBase(Backend):
         )
         return env
 
-    scheduler_host = ""
+    default_host = ""
 
     def get_scheduler_command(self, cluster):
         return cluster.config.scheduler_cmd + [
@@ -1425,13 +1425,13 @@ class DBBackendBase(Backend):
             "--port",
             "0",
             "--host",
-            self.scheduler_host,
+            self.default_host,
             "--dashboard-address",
-            f"{self.scheduler_host}:0",
-            "--dg-api-address",
-            f"{self.scheduler_host}:0",
+            f"{self.default_host}:0",
             "--preload",
             "dask_gateway.scheduler_preload",
+            "--dg-api-address",
+            f"{self.default_host}:0",
             "--dg-heartbeat-period",
             str(self.cluster_heartbeat_period),
             "--dg-adaptive-period",
@@ -1449,6 +1449,8 @@ class DBBackendBase(Backend):
             scheduler_address = cluster.scheduler_address
         return cluster.config.worker_cmd + [
             scheduler_address,
+            "--dashboard-address",
+            f"{self.default_host}:0",
             "--name",
             worker_name,
             "--nthreads",

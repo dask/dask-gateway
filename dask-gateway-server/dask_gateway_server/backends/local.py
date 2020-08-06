@@ -134,7 +134,7 @@ class LocalBackend(DBBackendBase):
         config=True,
     )
 
-    scheduler_host = "127.0.0.1"
+    default_host = "127.0.0.1"
 
     def set_file_permissions(self, paths, username):
         pwnam = getpwnam(username)
@@ -230,7 +230,7 @@ class LocalBackend(DBBackendBase):
                 preexec_fn=self.make_preexec_fn(cluster),
                 start_new_session=True,
                 env=env,
-                # stdout=fd,
+                stdout=fd,
                 stderr=asyncio.subprocess.STDOUT,
             )
         finally:
