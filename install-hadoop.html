@@ -464,9 +464,9 @@ containers. You have a few options here:</p>
 <p>If you’ve installed identical Python environments on every node, you only need
 to configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use the provided Python. This could be
 done a few different ways:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the paths to the dask-gateway-scheduler/dask-gateway-worker CLIs</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">scheduler_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-gateway-scheduler&quot;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-gateway-worker&quot;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the paths to the dask-scheduler/dask-worker CLIs</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">scheduler_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-scheduler&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_cmd</span> <span class="o">=</span> <span class="s2">&quot;/path/to/dask-worker&quot;</span>
 
 <span class="c1"># OR</span>
 <span class="c1"># Activate a local conda environment before startup</span>
