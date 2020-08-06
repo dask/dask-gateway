@@ -1416,7 +1416,7 @@ class DBBackendBase(Backend):
         )
         return env
 
-    default_host = ""
+    default_host = "0.0.0.0"
 
     def get_scheduler_command(self, cluster):
         return cluster.config.scheduler_cmd + [
