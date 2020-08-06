@@ -10,10 +10,6 @@ branches:
   only:
     - master
 
-env:
-  global:
-    - secure: "kHo3xQM15V2soeT7tkOgyjIr+Iq3Dj7qvJO/3nHzOU0QluyewaHG5r1wQscyomQ9cSElCMkln3A0vtgeoDdslFnsMIhwUa7PXTZEIZYKb/tbP6WPntaqceHbgpzq27dw7Y4WVGZemDuyYblLKAYgyp5zbqYkoJb1YaIb+JGas2YF+mbVQF51Bk4mWyxlSc7AcKN0fi54GFq7PRjVCqkTI7uuY5MpPuPO+idX1tcmpsHf3rlpyOqlR4UiPv8w2JJCI5OOQf2DRCOOaDtItldFUaqzI5P/FY/MALA1p/ubvXrpoNgQaHPfRygqGQOsEOZnolg1gcRA8KjPA+Q04SCbZrx5G21CdGN5Kju1NeP3N7RXXJw5jl2zB51kwOf3msgIufds0gC/9ZGVks1lgpiHqwCG34ArUJo4omwYxg8z9ez7jT9vM2VCAdwwwUYmFWdmycld3lvn5MsvRbX2bVuee09rjwe2Sbj2+xBjg33CV5JDwv+rbI1JeYfD+EzXHI8MTj/O5DVINISqNO5ee3sQqJWnv1Fy/l5OSg6rugdNnkj4m1pPuqEGksj39W/m5FS3wBb4YXLQ+do/9aCFJIsQ8xnDw6BVVkwaTjyfhsNI+6vYQlkaTPVinRYyWUhSyApYcArw++NRycWglATS2zHCsZKiRF6Ass3Fs+/KFzkZ52k="
-
 jobs:
     fast_finish: true
 
@@ -87,6 +83,7 @@ jobs:
 
         - env:
             - DOCS=true
+            - secure: "kHo3xQM15V2soeT7tkOgyjIr+Iq3Dj7qvJO/3nHzOU0QluyewaHG5r1wQscyomQ9cSElCMkln3A0vtgeoDdslFnsMIhwUa7PXTZEIZYKb/tbP6WPntaqceHbgpzq27dw7Y4WVGZemDuyYblLKAYgyp5zbqYkoJb1YaIb+JGas2YF+mbVQF51Bk4mWyxlSc7AcKN0fi54GFq7PRjVCqkTI7uuY5MpPuPO+idX1tcmpsHf3rlpyOqlR4UiPv8w2JJCI5OOQf2DRCOOaDtItldFUaqzI5P/FY/MALA1p/ubvXrpoNgQaHPfRygqGQOsEOZnolg1gcRA8KjPA+Q04SCbZrx5G21CdGN5Kju1NeP3N7RXXJw5jl2zB51kwOf3msgIufds0gC/9ZGVks1lgpiHqwCG34ArUJo4omwYxg8z9ez7jT9vM2VCAdwwwUYmFWdmycld3lvn5MsvRbX2bVuee09rjwe2Sbj2+xBjg33CV5JDwv+rbI1JeYfD+EzXHI8MTj/O5DVINISqNO5ee3sQqJWnv1Fy/l5OSg6rugdNnkj4m1pPuqEGksj39W/m5FS3wBb4YXLQ+do/9aCFJIsQ8xnDw6BVVkwaTjyfhsNI+6vYQlkaTPVinRYyWUhSyApYcArw++NRycWglATS2zHCsZKiRF6Ass3Fs+/KFzkZ52k="
           before_install:
             - source continuous_integration/before_install.sh
           install:
