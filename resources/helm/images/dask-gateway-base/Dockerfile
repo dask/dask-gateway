@@ -1,8 +1,16 @@
-FROM debian:10.4-slim
+# python 3.8: -> python:3.8-slim-buster
+ARG base_image=debian:10.4-slim
+FROM ${base_image}
+# FROM python:3.8-slim-buster
 LABEL MAINTAINER="Jim Crist-Harif"
 
-ENV CONDA_VERSION py37_4.8.3
-ENV CONDA_SHA256 bb2e3cedd2e78a8bb6872ab3ab5b1266a90f8c7004a22d8dc2ea5effeb6a439a
+# python 3.8: -> py38_4.8.3
+ARG conda_version=py37_4.8.3
+# pythom 3.8" -> 879457af6a0bf5b34b48c12de31d4df0ee2f06a8e68768e5758c3293b2daf688
+ARG conda_sha256=bb2e3cedd2e78a8bb6872ab3ab5b1266a90f8c7004a22d8dc2ea5effeb6a439a
+ENV CONDA_VERSION ${conda_version}
+ENV CONDA_SHA256 ${conda_sha256}
+ENV DEBIAN_FRONTEND noninteractive
 
 # We do the following all in one block:
 # - Create user dask

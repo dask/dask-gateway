@@ -1,4 +1,5 @@
-FROM daskgateway/dask-gateway-base:0.7.1 AS dependencies
+ARG base_image=daskgateway/dask-gateway-base:0.7.1
+FROM ${base_image} as dependencies
 LABEL MAINTAINER="Jim Crist-Harif"
 
 # Install dependencies
