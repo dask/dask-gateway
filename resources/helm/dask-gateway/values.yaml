@@ -22,6 +22,9 @@ gateway:
     tag: 0.8.0
     pullPolicy: IfNotPresent
 
+  # Image pull secrets for gateway-server pod
+  imagePullSecrets: []
+
   # Configuration for the gateway-server service
   service:
     annotations: {}
@@ -141,6 +144,9 @@ controller:
 
   # Resource requests/limits for the controller pod
   resources: {}
+
+  # Image pull secrets for controller pod
+  imagePullSecrets: []
 
   # The controller log level
   loglevel: INFO
