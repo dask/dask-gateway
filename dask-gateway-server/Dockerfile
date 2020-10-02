@@ -1,16 +1,18 @@
-FROM daskgateway/dask-gateway-base:0.7.1 AS dependencies
+FROM python:3.8.6-slim-buster as dependencies
 LABEL MAINTAINER="Jim Crist-Harif"
 
-# Install dependencies
-RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
-        aiohttp=3.6.2 \
-        colorlog \
-        cryptography \
-        traitlets=4.3.3 \
-        pyyaml \
-    && /opt/conda/bin/pip install kubernetes-asyncio==10.0.1 --no-cache-dir --no-deps \
-    && /opt/conda/bin/conda clean -afy \
-    && find /opt/conda/ -follow -type f -name '*.a' -delete
+RUN apt-get update \
+    && apt-get install -y tini \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir \
+    aiohttp==3.6.2 \
+    colorlog \
+    cryptography \
+    traitlets==4.3.3 \
+    pyyaml \
+    kubernetes-asyncio==11.0.0
 
 # Build dask-gateway-server from source in a builder stage
 FROM dependencies AS builder
@@ -19,7 +21,7 @@ RUN mkdir -p /tmp/workdir
 RUN mkdir -p /tmp/install-prefix
 COPY . /tmp/workdir/
 WORKDIR /tmp/workdir/
-RUN /opt/conda/bin/python setup.py install \
+RUN python setup.py install \
     --no-build-proxy \
     --single-version-externally-managed \
     --record=record.txt \
@@ -28,12 +30,13 @@ RUN /opt/conda/bin/python setup.py install \
 # Final image - merge dependencies and built dask-gateway
 FROM dependencies
 
-COPY --from=builder /tmp/install-prefix /opt/conda/
+COPY --from=builder /tmp/install-prefix/bin/dask-gateway-server /usr/local/bin/
+COPY --from=builder /tmp/install-prefix/lib /usr/local/lib/
 
-# Setup working directory
-USER root
+# Create non-root user and working directory
 WORKDIR /srv/dask-gateway
-RUN chown dask:dask /srv/dask-gateway
-
+RUN useradd -m -U -u 1000 dask && chown dask:dask /srv/dask-gateway
 USER 1000:1000
+
+ENTRYPOINT ["tini", "-g", "--"]
 CMD ["dask-gateway-server", "--config", "/etc/dask-gateway/dask_gateway_config.py"]
