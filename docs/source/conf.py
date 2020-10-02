@@ -34,4 +34,3 @@ extlinks = {
 # Sphinx Theme
 html_theme = "dask_sphinx_theme"
 templates_path = ["_templates"]
-html_static_path = ["_static"]

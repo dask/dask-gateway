@@ -88,7 +88,7 @@ jobs:
             - source continuous_integration/before_install.sh
           install:
             - source continuous_integration/install.sh
-            - pip install kubernetes_asyncio skein sphinx doctr dask-sphinx-theme
+            - pip install kubernetes_asyncio skein sphinx doctr dask-sphinx-theme sphinx-rtd-theme==0.4.3
           script:
             - |
               set -xe
