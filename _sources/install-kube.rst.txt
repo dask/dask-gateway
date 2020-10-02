@@ -176,6 +176,32 @@ Here we provide a few configuration snippets for common deployment scenarios.
 For all available configuration fields see the :ref:`helm-chart-reference`.
 
 
+Using a custom image
+~~~~~~~~~~~~~~~~~~~~
+
+By default schedulers/workers started by dask-gateway will use the
+``daskgateway/dask-gateway`` image. This is a basic image with only the minimal
+dependencies installed. To use a custom image, you can configure:
+
+- ``gateway.backend.image.name``: the default image name
+- ``gateway.backend.image.tag``: the default image tag
+
+For an image to work with dask-gateway, it must have a compatible version of
+``dask-gateway`` installed (we recommend always using the same version as
+deployed on the ``dask-gateway-server``).
+
+Additionally, we recommend using an `init process`_ in your images. This isn't
+strictly required, but running without an init process may lead to odd worker
+behaviors. We recommend using tini_, but any init process should be fine.
+
+There are no other requirements for images, any image that meets the above
+should work fine. You may install any additional libraries or dependencies you
+require.
+
+To develop your own image, you may either base it on a compatible version of
+``daskgateway/dask-gateway``, or use our `example dockerfile`_ as a reference
+and develop your own.
+
 Using ``extraPodConfig``/``extraContainerConfig``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -369,3 +395,6 @@ here for reference:
 .. _tolerations: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 .. _node affinities: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 .. _preemptible nodes: https://cloud.google.com/blog/products/containers-kubernetes/cutting-costs-with-google-kubernetes-engine-using-the-cluster-autoscaler-and-preemptible-vms
+.. _init process: https://en.wikipedia.org/wiki/Init
+.. _tini: https://github.com/krallin/tini
+.. _example dockerfile: https://github.com/dask/dask-gateway/blob/master/resources/helm/example-images/Dockerfile

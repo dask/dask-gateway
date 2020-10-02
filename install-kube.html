@@ -180,6 +180,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#connecting-to-the-gateway">Connecting to the gateway</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#shutting-everything-down">Shutting everything down</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#additional-configuration">Additional configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-a-custom-image">Using a custom image</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#using-extrapodconfig-extracontainerconfig">Using <code class="docutils literal notranslate"><span class="pre">extraPodConfig</span></code>/<code class="docutils literal notranslate"><span class="pre">extraContainerConfig</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#using-extraconfig">Using <code class="docutils literal notranslate"><span class="pre">extraConfig</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#authenticating-with-jupyterhub">Authenticating with JupyterHub</a></li>
@@ -405,6 +406,28 @@ clean everything up. You can do this with <code class="docutils literal notransl
 <h2>Additional configuration<a class="headerlink" href="#additional-configuration" title="Permalink to this headline">¶</a></h2>
 <p>Here we provide a few configuration snippets for common deployment scenarios.
 For all available configuration fields see the <a class="reference internal" href="#helm-chart-reference"><span class="std std-ref">Helm chart reference</span></a>.</p>
+<div class="section" id="using-a-custom-image">
+<h3>Using a custom image<a class="headerlink" href="#using-a-custom-image" title="Permalink to this headline">¶</a></h3>
+<p>By default schedulers/workers started by dask-gateway will use the
+<code class="docutils literal notranslate"><span class="pre">daskgateway/dask-gateway</span></code> image. This is a basic image with only the minimal
+dependencies installed. To use a custom image, you can configure:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gateway.backend.image.name</span></code>: the default image name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gateway.backend.image.tag</span></code>: the default image tag</p></li>
+</ul>
+<p>For an image to work with dask-gateway, it must have a compatible version of
+<code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> installed (we recommend always using the same version as
+deployed on the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>).</p>
+<p>Additionally, we recommend using an <a class="reference external" href="https://en.wikipedia.org/wiki/Init">init process</a> in your images. This isn’t
+strictly required, but running without an init process may lead to odd worker
+behaviors. We recommend using <a class="reference external" href="https://github.com/krallin/tini">tini</a>, but any init process should be fine.</p>
+<p>There are no other requirements for images, any image that meets the above
+should work fine. You may install any additional libraries or dependencies you
+require.</p>
+<p>To develop your own image, you may either base it on a compatible version of
+<code class="docutils literal notranslate"><span class="pre">daskgateway/dask-gateway</span></code>, or use our <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/example-images/Dockerfile">example dockerfile</a> as a reference
+and develop your own.</p>
+</div>
 <div class="section" id="using-extrapodconfig-extracontainerconfig">
 <h3>Using <code class="docutils literal notranslate"><span class="pre">extraPodConfig</span></code>/<code class="docutils literal notranslate"><span class="pre">extraContainerConfig</span></code><a class="headerlink" href="#using-extrapodconfig-extracontainerconfig" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/">Kubernetes API</a> is large, and not all configuration fields you may want
