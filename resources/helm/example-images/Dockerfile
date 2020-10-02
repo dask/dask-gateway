@@ -1,10 +1,26 @@
-# ** A base miniconda image **
-FROM debian:buster-slim as miniconda
-LABEL MAINTAINER="Jim Crist-Harif"
+# An example Dockerfile for creating an image to use as a dask scheduler/worker
+# with dask-gateway.
+#
+# The only requirement for such an image is that it has a version of
+# `dask-gateway` installed that is compatible with the corresponding
+# `dask-gateway-server`.
+#
+# Additionally, it is recommended that your `dask-gateway` image uses an init
+# process (we recommend `tini` https://github.com/krallin/tini). This isn't
+# strictly required, but you may run into weird bugs without an init process.
+#
+# Note that the version of Python or Python distribution doesn't matter. Here
+# we'll install python via miniconda, then use `conda` to install all
+# dependencies
+FROM debian:buster-slim
 
+# The miniconda version and corresponding SHA256 to use.
+# You can see all available options here:
+# https://docs.conda.io/en/latest/miniconda_hashes.html
 ARG CONDA_VERSION=py38_4.8.3
 ARG CONDA_SHA256=879457af6a0bf5b34b48c12de31d4df0ee2f06a8e68768e5758c3293b2daf688
 
+# Does the following in one layer:
 # - Create user dask
 # - Install tini
 # - Install miniconda build dependencies
@@ -37,44 +53,19 @@ RUN useradd -m -U -u 1000 dask \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Setup the dask user's environment
 USER 1000:1000
 ENV PATH="/opt/conda/bin:$PATH"
 WORKDIR /home/dask/
 
+# Configure the entrypoint to use tini
 ENTRYPOINT ["tini", "-g", "--"]
 
-# ** An image with all of dask-gateway's dependencies **
-FROM miniconda as dependencies
-
-ARG DASK_VERSION=2.28.0
-
-# - Installs dask and dependencies
-# - Cleans up conda files
-# - Removes unnecessary static libraries
-# - Removes unnecessary *.js.map files
-# - Removes unminified bokeh js
-RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
-        aiohttp=3.6.2 \
-        dask==$DASK_VERSION \
-        distributed==$DASK_VERSION \
-        numpy==1.19.1 \
-        pandas==1.1.2 \
-    && /opt/conda/bin/conda clean -afy \
-    && find /opt/conda/ -follow -type f -name '*.a' -delete \
-    && find /opt/conda/ -follow -type f -name '*.js.map' -delete \
-    && find /opt/conda/lib/python*/site-packages/bokeh/server/static -follow -type f -name '*.js' ! -name '*.min.js' -delete
-
-# ** Build dask-gateway from source in a temporary image **
-FROM dependencies AS builder
-
-RUN mkdir -p /tmp/workdir
-RUN mkdir -p /tmp/install-prefix
-COPY . /tmp/workdir/
-WORKDIR /tmp/workdir/
-RUN /opt/conda/bin/pip install . --no-cache-dir --no-deps --prefix /tmp/install-prefix
-
-# ** The final image **
-FROM dependencies
-
-# Copy over the built dask-gateway
-COPY --from=builder /tmp/install-prefix /opt/conda/
+# Install dask-gateway.
+# If you need additional libraries, you can add them here.
+# We run `conda clean -af` afterwards to drop unnecessary files from the
+# docker image. This helps reduce the image size.
+RUN conda install -c conda-forge --freeze-installed \
+        dask-gateway \
+        && \
+    conda clean -af
