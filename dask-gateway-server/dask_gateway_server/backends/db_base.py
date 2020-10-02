@@ -603,19 +603,21 @@ class DBBackendBase(Backend):
 
     @default("db_encrypt_keys")
     def _db_encrypt_keys_default(self):
-        keys = os.environb.get(b"DASK_GATEWAY_ENCRYPT_KEYS", b"").strip()
-        if not keys:
-            return []
-        return [_normalize_encrypt_key(k) for k in keys.split(b";") if k.strip()]
+        keys = [
+            k.strip()
+            for k in os.environb.get(b"DASK_GATEWAY_ENCRYPT_KEYS", b"").split(b";")
+            if k.strip()
+        ]
+        return self._db_encrypt_keys_validate({"value": keys})
 
     @validate("db_encrypt_keys")
     def _db_encrypt_keys_validate(self, proposal):
-        if not proposal.value and not _is_in_memory_db(self.db_url):
+        if not proposal["value"] and not _is_in_memory_db(self.db_url):
             raise ValueError(
                 "Must configure `db_encrypt_keys`/`DASK_GATEWAY_ENCRYPT_KEYS` "
                 "when not using an in-memory database"
             )
-        return [_normalize_encrypt_key(k) for k in proposal.value]
+        return [_normalize_encrypt_key(k) for k in proposal["value"]]
 
     db_debug = Bool(
         False, help="If True, all database operations will be logged", config=True
