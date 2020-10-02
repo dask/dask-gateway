@@ -470,7 +470,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     async def delete_cluster(self, namespace, name):
         await self.custom_client.delete_namespaced_custom_object(
-            "gateway.dask.org", self.crd_version, namespace, "daskclusters", name, {}
+            "gateway.dask.org", self.crd_version, namespace, "daskclusters", name
         )
 
     async def cleanup_expired_cluster_records_loop(self):
