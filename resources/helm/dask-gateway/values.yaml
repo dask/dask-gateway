@@ -123,6 +123,11 @@ gateway:
         request: null
         limit: null
 
+  # Settings for nodeSelector, affinity, and tolerations for the gateway pods
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
   # Any extra configuration code to append to the generated `dask_gateway_config.py`
   # file. Can be either a single code-block, or a map of key -> code-block
   # (code-blocks are run in alphabetical order by key, the key value itself is
@@ -170,6 +175,11 @@ controller:
     name: daskgateway/dask-gateway-server
     tag: 0.8.0
     pullPolicy: IfNotPresent
+
+  # Settings for nodeSelector, affinity, and tolerations for the controller pods
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
 
 # Configuration for the traefik proxy
 traefik:
