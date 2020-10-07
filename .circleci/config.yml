@@ -1,0 +1,63 @@
+version: 2.1
+
+jobs:
+  test_core:
+    docker:
+      - image: daskgateway/circleci-common:latest
+    steps:
+      - checkout
+      - run:
+          name: Install
+          command: |
+            set -xe
+            npm install -g configurable-http-proxy
+
+            pip install -U \
+                aiohttp \
+                black \
+                colorlog \
+                cryptography \
+                dask \
+                distributed \
+                flake8 \
+                ipywidgets \
+                jupyterhub \
+                notebook \
+                pytest \
+                pytest-asyncio==0.12.0 \
+                sqlalchemy \
+                tornado \
+                traitlets \
+                trustme
+
+            pushd dask-gateway
+            python setup.py develop
+            popd
+
+            pushd dask-gateway-server
+            python setup.py develop
+            popd
+
+            pip list
+      - run:
+          name: Run core tests
+          command: py.test tests/ -v
+      - run:
+          name: Run flake8
+          command: flake8
+      - run:
+          name: Run black
+          command: black . --check
+      - run:
+          name: Run Go tests
+          command: |
+            pushd dask-gateway-server/dask-gateway-proxy
+            go test
+            popd
+
+workflows:
+  version: 2
+
+  test_core:
+    jobs:
+      - test_core
