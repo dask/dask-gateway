@@ -8,6 +8,7 @@ jobs:
       - checkout
       - run:
           name: Install
+          shell: /bin/bash -elo pipefail
           command: |
             set -xe
             conda install \
@@ -41,15 +42,19 @@ jobs:
             pip list
       - run:
           name: Run core tests
+          shell: /bin/bash -elo pipefail
           command: py.test tests/ -v
       - run:
           name: Run flake8
+          shell: /bin/bash -elo pipefail
           command: flake8
       - run:
           name: Run black
+          shell: /bin/bash -elo pipefail
           command: black . --check
       - run:
           name: Run Go tests
+          shell: /bin/bash -elo pipefail
           command: |
             pushd dask-gateway-server/dask-gateway-proxy
             go test
