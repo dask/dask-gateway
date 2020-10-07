@@ -52,10 +52,14 @@ jobs:
             - ./continuous_integration/kubernetes/k3d-create.sh
             - export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
           install:
+            - stern "" > k8s-logs &
+            - export STERN_PID=$!
             - ./continuous_integration/kubernetes/helm-install.sh
             - ./continuous_integration/kubernetes/install.sh
           script:
             - ./continuous_integration/kubernetes/script.sh
+            - kill $STERN_PID
+            - cat k8s-logs
 
         - if: (commit_message !~ skip-tests) AND ((commit_message ~= test-all) OR (commit_message ~= test-jobqueue) OR (commit_message ~= test-pbs))
           env:

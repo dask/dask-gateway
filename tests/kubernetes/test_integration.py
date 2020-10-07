@@ -66,6 +66,8 @@ async def test_cluster_operations(gateway):
     # Scale up, connect, and compute
     await cluster.scale(2)
 
+    await wait_for_workers(cluster, exact=2, timeout=120)
+
     async with cluster.get_client(set_as_default=False) as client:
         res = await client.submit(lambda x: x + 1, 1)
         assert res == 2
