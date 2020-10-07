@@ -15,7 +15,7 @@ from dask_gateway import Gateway
 
 
 class aiohttp_server(object):
-    def __init__(self, routes=None, app=None, host="localhost", port=None):
+    def __init__(self, routes=None, app=None, host="127.0.0.1", port=None):
         self.app = app or web.Application()
         if routes is not None:
             self.app.add_routes(routes)
