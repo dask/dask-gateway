@@ -1,8 +1,8 @@
 FROM centos:7.6.1810
 
 # Install miniconda and tini
-RUN yum install -y bzip2 \
-    && curl https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
+RUN yum install -y bzip2 git tar gzip \
+    && curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
     && /bin/bash /tmp/miniconda.sh -b -p /opt/miniconda \
     && rm /tmp/miniconda.sh \
     && /opt/miniconda/bin/conda update conda -y \
@@ -16,7 +16,7 @@ RUN yum install -y bzip2 \
     && rm -rf /var/cache/yum
 
 # Install go
-RUN curl https://dl.google.com/go/go1.12.2.linux-amd64.tar.gz -o /tmp/go.tar.gz \
+RUN curl https://dl.google.com/go/go1.15.2.linux-amd64.tar.gz -o /tmp/go.tar.gz \
     && tar -xzf /tmp/go.tar.gz -C /opt/ \
     && rm /tmp/go.tar.gz
 
@@ -31,3 +31,5 @@ RUN useradd -m dask \
     && echo 'export PATH="/opt/miniconda/bin:$PATH"' >> /home/dask/.bashrc \
     && echo 'export PATH="/opt/miniconda/bin:$PATH"' >> /home/alice/.bashrc \
     && echo 'export PATH="/opt/miniconda/bin:$PATH"' >> /home/bob/.bashrc
+
+ENTRYPOINT ["/opt/miniconda/bin/tini", "-g", "--"]

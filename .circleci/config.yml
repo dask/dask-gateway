@@ -10,25 +10,25 @@ jobs:
           name: Install
           command: |
             set -xe
-            npm install -g configurable-http-proxy
+            conda install \
+              configurable-http-proxy \
+              aiohttp \
+              black \
+              colorlog \
+              cryptography \
+              dask-core \
+              distributed \
+              flake8 \
+              ipywidgets \
+              jupyterhub \
+              notebook \
+              pytest \
+              pytest-asyncio=0.12.0 \
+              sqlalchemy \
+              tornado \
+              traitlets
 
-            pip install -U \
-                aiohttp \
-                black \
-                colorlog \
-                cryptography \
-                dask \
-                distributed \
-                flake8 \
-                ipywidgets \
-                jupyterhub \
-                notebook \
-                pytest \
-                pytest-asyncio==0.12.0 \
-                sqlalchemy \
-                tornado \
-                traitlets \
-                trustme
+            pip install -U trustme
 
             pushd dask-gateway
             python setup.py develop
