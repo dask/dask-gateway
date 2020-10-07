@@ -10,26 +10,21 @@ jobs:
           name: Install
           shell: /bin/bash -elo pipefail
           command: |
-            set -xe
             conda install \
               configurable-http-proxy \
               aiohttp \
-              black \
               colorlog \
               cryptography \
               dask-core \
               distributed \
-              flake8 \
               ipywidgets \
               jupyterhub \
               notebook \
-              pytest \
-              pytest-asyncio=0.12.0 \
               sqlalchemy \
               tornado \
               traitlets
 
-            pip install -U trustme
+            pip install -U trustme black flake8 pytest pytest-asyncio==0.12.0
 
             pushd dask-gateway
             python setup.py develop
