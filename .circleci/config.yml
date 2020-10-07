@@ -60,7 +60,9 @@ jobs:
     machine: true
     steps:
       - checkout
-      - echo "Hello"
+      - run:
+          name: Trial
+          command: echo "Hello"
 
 workflows:
   version: 2
