@@ -52,7 +52,8 @@ jobs:
           shell: /bin/bash -elo pipefail
           command: |
             pushd dask-gateway-server/dask-gateway-proxy
-            go test
+            go get github.com/stretchr/testify/assert
+            CGO_ENABLED=0 go test
             popd
 
 workflows:
