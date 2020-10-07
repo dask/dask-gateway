@@ -17,13 +17,20 @@ CHART_PATH = os.path.abspath(
 )
 
 
-def helm_template(name, values):
-    with tempfile.NamedTemporaryFile() as fil:
+def helm_install_dry_run(name, values):
+    with tempfile.NamedTemporaryFile("w+", encoding="utf-8") as fil:
         fil.write(values)
-        out = subprocess.check_output(
-            ["helm", "template", name, CHART_PATH, "-f", fil.name]
+        res = subprocess.run(
+            ["helm", "install", "--dry-run", name, CHART_PATH, "-f", fil.name],
+            capture_output=True,
         )
-        return list(yaml.safe_load_all(out))
+        stdout = res.stdout.decode()
+        if res.returncode != 0:
+            raise Exception("helm install failed:\n%s" % stdout)
+        start = stdout.index("---\n") + 4
+        end = stdout.index("NOTES:")
+        rendered = stdout[start:end]
+        return list(yaml.safe_load_all(rendered))
 
 
 def test_helm_lint():
@@ -31,4 +38,44 @@ def test_helm_lint():
 
 
 def test_render_default():
-    helm_template("foo", b"")
+    helm_install_dry_run("foo", "")
+
+
+values_with_affinity = """
+gateway:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/e2e-az-name
+            operator: In
+            values:
+            - e2e-az1
+
+controller:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/e2e-az-name
+            operator: In
+            values:
+            - e2e-az1
+
+traefik:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/e2e-az-name
+            operator: In
+            values:
+            - e2e-az1
+"""
+
+
+def test_render_with_affinity():
+    helm_install_dry_run("foo", values_with_affinity)

@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from async_timeout import timeout
 
 import dask_gateway
 
@@ -66,9 +67,12 @@ async def test_cluster_operations(gateway):
     # Scale up, connect, and compute
     await cluster.scale(2)
 
-    async with cluster.get_client(set_as_default=False) as client:
-        res = await client.submit(lambda x: x + 1, 1)
-        assert res == 2
+    await wait_for_workers(cluster, exact=2, timeout=120)
+
+    async with timeout(15):
+        async with cluster.get_client(set_as_default=False) as client:
+            res = await client.submit(lambda x: x + 1, 1)
+            assert res == 2
 
     # Scale down
     await cluster.scale(1)
@@ -76,9 +80,10 @@ async def test_cluster_operations(gateway):
     await wait_for_workers(cluster, exact=1, timeout=120)
 
     # Can still compute
-    async with cluster.get_client(set_as_default=False) as client:
-        res = await client.submit(lambda x: x + 1, 1)
-        assert res == 2
+    async with timeout(15):
+        async with cluster.get_client(set_as_default=False) as client:
+            res = await client.submit(lambda x: x + 1, 1)
+            assert res == 2
 
     # Shutdown the cluster
     await cluster.shutdown()
@@ -131,9 +136,10 @@ async def test_adaptive_scaling(gateway):
         await cluster.adapt()
 
         # Worker is automatically requested
-        async with cluster.get_client(set_as_default=False) as client:
-            res = await client.submit(lambda x: x + 1, 1)
-            assert res == 2
+        async with timeout(120):
+            async with cluster.get_client(set_as_default=False) as client:
+                res = await client.submit(lambda x: x + 1, 1)
+                assert res == 2
 
         # Scales down automatically
         await wait_for_workers(cluster, exact=0, timeout=120)
