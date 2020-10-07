@@ -58,6 +58,7 @@ jobs:
             - ./continuous_integration/kubernetes/install.sh
           script:
             - ./continuous_integration/kubernetes/script.sh
+          after_script:
             - kill $STERN_PID
             - cat k8s-logs
 
