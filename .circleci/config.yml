@@ -56,9 +56,16 @@ jobs:
             CGO_ENABLED=0 go test
             popd
 
+  test_kube:
+    machine: true
+    steps:
+      - checkout
+      - echo "Hello"
+
 workflows:
   version: 2
 
-  test_core:
+  tests:
     jobs:
       - test_core
+      - test_kube
