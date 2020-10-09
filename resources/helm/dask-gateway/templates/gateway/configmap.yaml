@@ -118,3 +118,8 @@ data:
     {{- end }}
     {{- end }}
     {{- end }}
+
+    {{/* Configuration pulled in through *_config.py files in the extensions directory */}}
+    {{ range $path, $_ :=  .Files.Glob  "**_config.py" }}
+        {{ $.Files.Get $path | nindent 4 }}
+    {{ end }}
