@@ -69,7 +69,10 @@ A :class:`dask_gateway_server.options.Options` object takes two arguments:
 
 - ``handler``: An optional handler function for translating the values set by
   those options into configuration values to set on the corresponding
-  :ref:`ClusterConfig <cluster-config>`.
+  :ref:`ClusterConfig <cluster-config>`. Should have the signature
+  ``handler(options)`` or ``handler(options, user)``, where ``options`` is the
+  validated dict of user options, and ``user`` is a ``User`` model for that
+  user.
 
 ``Field`` objects provide typed specifications for a user facing option. There
 are several different ``Field`` classes available, each representing a
@@ -173,7 +176,7 @@ Different Options per User Group
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Cluster options may be configured to differ based on the user by providing a
-function for :data:`c.Backend.cluster_options`. This function recieves a
+function for :data:`c.Backend.cluster_options`. This function receives a
 :class:`dask_gateway_server.models.User` object and should return a
 :class:`dask_gateway_server.options.Options` object. It may optionally be an
 ``async`` function.
@@ -196,18 +199,46 @@ member of the "power-users" group.
     def generate_options(user):
         if "power-users" in user.groups:
             options = Options(
-                Integer("worker_cores", default=1, min=1, max=4, label="Worker Cores"),
-                Float("worker_memory", default=1, min=1, max=8, label="Worker Memory (GiB)"),
-                handler=options_handler,
-                )
-        else:
-            options = Options(
                 Integer("worker_cores", default=1, min=1, max=8, label="Worker Cores"),
                 Float("worker_memory", default=1, min=1, max=16, label="Worker Memory (GiB)"),
                 handler=options_handler,
-                )
+            )
+        else:
+            options = Options(
+                Integer("worker_cores", default=1, min=1, max=4, label="Worker Cores"),
+                Float("worker_memory", default=1, min=1, max=8, label="Worker Memory (GiB)"),
+                handler=options_handler,
+            )
 
     c.Backend.cluster_options = generate_options
+
+User-specific Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Since the ``handler`` function can optionally take in the ``User`` object, you
+can use this to add user-specific configuration. Note that you don't have to
+expose any configuration options to make use of this, the options handler is
+called regardless.
+
+Here we configure the worker cores and memory based on the user's groups:
+
+.. code-block:: python
+
+    from dask_gateway_server.options import Options
+
+    def options_handler(options, user):
+        if "power-users" in user.groups:
+            return {
+                "worker_cores": 8,
+                "worker_memory": "16 G"
+            }
+        else:
+            return {
+                "worker_cores": 4,
+                "worker_memory": "8 G"
+            }
+
+    c.Backend.cluster_options = Options(handler=options_handler)
 
 
 .. _ipywidgets: https://ipywidgets.readthedocs.io/en/latest/

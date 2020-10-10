@@ -2826,10 +2826,12 @@ full refesh.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*fields</strong> (<em>Field</em>) – Zero or more configurable fields.</p></li>
-<li><p><strong>handler</strong> (<em>callable</em><em>, </em><em>optional</em>) – A callable with the signature <code class="docutils literal notranslate"><span class="pre">handler(options)</span></code>, where <code class="docutils literal notranslate"><span class="pre">options</span></code>
-is the validated dict of user options. Should return a dict of
-configuration overrides to forward to the cluster manager. If not
-provided, the default will return the options unchanged.</p></li>
+<li><p><strong>handler</strong> (<em>callable</em><em>, </em><em>optional</em>) – A callable with the signature <code class="docutils literal notranslate"><span class="pre">handler(options)</span></code> or
+<code class="docutils literal notranslate"><span class="pre">handler(options,</span> <span class="pre">user)</span></code>, where <code class="docutils literal notranslate"><span class="pre">options</span></code> is the validated dict of
+user options, and <code class="docutils literal notranslate"><span class="pre">user</span></code> is a <code class="docutils literal notranslate"><span class="pre">User</span></code> model for that user. Should
+return a dict of configuration overrides to forward to the cluster
+manager. If not provided, the default will return the options
+unchanged.</p></li>
 </ul>
 </dd>
 </dl>
