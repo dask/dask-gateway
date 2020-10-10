@@ -96,7 +96,7 @@ class Backend(LoggingConfigurable):
         try:
             cluster_options = await self.get_cluster_options(user)
             requested_options = cluster_options.parse_options(request)
-            overrides = cluster_options.get_configuration(requested_options)
+            overrides = cluster_options.get_configuration(requested_options, user)
             config = self.cluster_config_class(parent=self, **overrides)
         except asyncio.CancelledError:
             raise
