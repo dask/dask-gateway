@@ -1,4 +1,5 @@
 import copy
+import inspect
 import textwrap
 from collections import OrderedDict
 from collections.abc import Sequence
@@ -17,10 +18,12 @@ class Options(object):
     *fields : Field
         Zero or more configurable fields.
     handler : callable, optional
-        A callable with the signature ``handler(options)``, where ``options``
-        is the validated dict of user options. Should return a dict of
-        configuration overrides to forward to the cluster manager. If not
-        provided, the default will return the options unchanged.
+        A callable with the signature ``handler(options)`` or
+        ``handler(options, user)``, where ``options`` is the validated dict of
+        user options, and ``user`` is a ``User`` model for that user. Should
+        return a dict of configuration overrides to forward to the cluster
+        manager. If not provided, the default will return the options
+        unchanged.
 
     Example
     -------
@@ -59,6 +62,24 @@ class Options(object):
         self.fields = fields
         self.handler = handler
 
+    @property
+    def handler(self):
+        return self._handler
+
+    @handler.setter
+    def handler(self, handler):
+        if handler is None:
+            self._handler = None
+        else:
+            sig = inspect.signature(handler)
+            if len(sig.parameters) == 1 and not any(
+                a.kind == inspect.Parameter.VAR_POSITIONAL
+                for a in sig.parameters.values()
+            ):
+                self._handler = lambda options, user: handler(options)
+            else:
+                self._handler = handler
+
     def get_specification(self):
         return [f.json_spec() for f in self.fields]
 
@@ -81,11 +102,11 @@ class Options(object):
             for f in self.fields
         }
 
-    def get_configuration(self, options):
+    def get_configuration(self, options, user):
         options = self.transform_options(options)
         if self.handler is None:
             return options
-        return self.handler(FrozenAttrDict(options))
+        return self.handler(FrozenAttrDict(options), user)
 
 
 _field_doc_template = """\

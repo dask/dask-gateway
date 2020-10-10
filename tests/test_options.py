@@ -4,6 +4,7 @@ import yaml
 import dask_gateway.options as client_options
 import dask_gateway_server.options as server_options
 from dask_gateway_server.options import FrozenAttrDict
+from dask_gateway_server.models import User
 
 
 def test_string():
@@ -381,19 +382,29 @@ def test_server_options_parse_options(server_opts):
 def test_server_options_get_configuration(server_opts):
     options = {"integer_field": 2}
     sol = {"integer_field2": 2, "float_field": 2.5, "select_field": 5}
+    user = User("alice")
 
     # Default handler
-    config = server_opts.get_configuration(options)
+    config = server_opts.get_configuration(options, user)
     assert config == sol
 
-    # Custom handler
+    # Custom handler, no user
     def handler(options):
         assert isinstance(options, FrozenAttrDict)
         assert dict(options) == sol
         return {"a": 1}
 
     server_opts.handler = handler
-    assert server_opts.get_configuration(options) == {"a": 1}
+    assert server_opts.get_configuration(options, user) == {"a": 1}
+
+    # Custom handler, with user
+    def handler(options, user):
+        assert isinstance(options, FrozenAttrDict)
+        assert dict(options) == sol
+        return {"a": 1, "username": user.name}
+
+    server_opts.handler = handler
+    assert server_opts.get_configuration(options, user) == {"a": 1, "username": "alice"}
 
 
 @pytest.fixture
