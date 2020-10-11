@@ -375,6 +375,33 @@ async def test_GatewayCluster_shutdown_on_close():
 
 
 @pytest.mark.asyncio
+async def test_GatewayCluster_client_error_doesnt_prevent_cleanup():
+    """Check that an error on closing clients doesn't prevent cluster shutdown"""
+    async with temp_gateway() as g:
+
+        class BadGatewayCluster(GatewayCluster):
+            async def _stop_async(self):
+                await super()._stop_async()
+                raise ValueError("OH NO")
+
+        def test():
+            cluster = BadGatewayCluster(
+                address=g.address, proxy_address=g.proxy_address
+            )
+            assert cluster in GatewayCluster._instances
+
+        loop = get_running_loop()
+        await loop.run_in_executor(None, test)
+
+        assert len(GatewayCluster._instances) == 0
+
+        async with g.gateway_client() as gateway:
+            # No cluster running
+            clusters = await gateway.list_clusters()
+            assert not clusters
+
+
+@pytest.mark.asyncio
 async def test_GatewayCluster_cleanup_atexit():
     async with temp_gateway() as g:
 
