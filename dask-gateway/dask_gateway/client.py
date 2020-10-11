@@ -1,6 +1,7 @@
 import asyncio
 import atexit
 import enum
+import logging
 import os
 import ssl
 import sys
@@ -17,7 +18,7 @@ import yarl
 from distributed import Client
 from distributed.core import rpc
 from distributed.security import Security
-from distributed.utils import LoopRunner, format_bytes, log_errors
+from distributed.utils import LoopRunner, format_bytes
 
 # Register gateway protocol
 from . import comm
@@ -28,6 +29,9 @@ from .utils import format_template, cancel_task
 del comm
 
 __all__ = ("Gateway", "GatewayCluster", "GatewayClusterError", "GatewayServerError")
+
+
+logger = logging.getLogger("distributed.client")
 
 
 class GatewayClusterError(Exception):
@@ -975,13 +979,23 @@ class GatewayCluster(object):
         self._instances.discard(self)
         if self._stop_task is None:
             self._stop_task = asyncio.ensure_future(self._stop_async())
-        await self._stop_task
+        try:
+            await self._stop_task
+        except Exception:
+            logger.warning("Exception raised while closing clients", exc_info=True)
 
         if shutdown is None:
             shutdown = self.shutdown_on_close
 
         if shutdown and self.name is not None:
-            await self.gateway._stop_cluster(self.name)
+            try:
+                await self.gateway._stop_cluster(self.name)
+            except Exception:
+                logger.error(
+                    "Exception raised while shutting down cluster %s",
+                    self.name,
+                    exc_info=True,
+                )
 
         await self.gateway._cleanup()
 
@@ -1179,8 +1193,10 @@ class GatewayCluster(object):
 
         @scale.on_click
         def scale_cb(b):
-            with log_errors():
+            try:
                 self.scale(request.value)
+            except Exception as e:
+                logger.exception(e)
 
         @adapt.on_click
         def adapt_cb(b):
