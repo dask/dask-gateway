@@ -1,7 +1,7 @@
-// +build !go1.12
+// +build !go1.11
 
 package main
 
 func compileTimeError() {
-	GO_1_12_REQUIRED_FOR_BUILD
+	GO_1_11_REQUIRED_FOR_BUILD
 }
