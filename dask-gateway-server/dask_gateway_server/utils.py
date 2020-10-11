@@ -195,7 +195,15 @@ class LogFormatter(ColoredFormatter):
 
 class AccessLogger(aiohttp.abc.AbstractAccessLogger):
     def log(self, request, response, time):
-        self.logger.info(
+        if response.status >= 500:
+            level = self.logger.error
+        elif response.status >= 400:
+            level = self.logger.warning
+        elif request.path.endswith("/api/health"):
+            level = self.logger.debug
+        else:
+            level = self.logger.info
+        level(
             "%d %s %s %.3fms",
             response.status,
             request.method,
