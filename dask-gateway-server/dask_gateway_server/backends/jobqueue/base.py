@@ -76,9 +76,16 @@ class JobQueueBackend(DBBackendBase):
         raise NotImplementedError
 
     def get_staging_directory(self, cluster):
-        staging_dir = cluster.config.staging_directory.format(
-            home=pwd.getpwnam(cluster.username).pw_dir, username=cluster.username
-        )
+        from string import Formatter
+        staging_dir = cluster.config.staging_directory
+        fields = [tup[1] for tup in Formatter().parse(staging_dir)
+                  if tup[1] is not None]
+
+        if len(fields) != 0:
+            staging_dir = staging_dir.format(
+                home=pwd.getpwnam(cluster.username).pw_dir, username=cluster.username
+            )
+
         return os.path.join(staging_dir, cluster.name)
 
     def get_tls_paths(self, cluster):
@@ -89,7 +96,7 @@ class JobQueueBackend(DBBackendBase):
         return cert_path, key_path
 
     async def do_as_user(self, user, action, **kwargs):
-        cmd = ["sudo", "-nHu", user, self.dask_gateway_jobqueue_launcher]
+        #cmd = ["sudo", "-nHu", user, self.dask_gateway_jobqueue_launcher]
         kwargs["action"] = action
         proc = await asyncio.create_subprocess_exec(
             *cmd,
@@ -139,6 +146,7 @@ class JobQueueBackend(DBBackendBase):
     async def stop_job(self, username, job_id, staging_dir=None):
         cmd, env = self.get_stop_cmd_env(job_id)
 
+        env.update(os.environ.copy())
         code, stdout, stderr = await self.do_as_user(
             user=username, action="stop", cmd=cmd, env=env, staging_dir=staging_dir
         )
@@ -150,6 +158,7 @@ class JobQueueBackend(DBBackendBase):
             return {}
         self.log.debug("Checking status of %d jobs", len(job_ids))
         cmd, env = self.get_status_cmd_env(job_ids)
+        env.update(os.environ.copy())
         proc = await asyncio.create_subprocess_exec(
             *cmd,
             env=env,

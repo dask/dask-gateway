@@ -1404,6 +1404,7 @@ class DBBackendBase(Backend):
                 "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__CERT": tls_cert_path,
             }
         )
+        print(env)
         return env
 
     def get_worker_env(self, cluster):

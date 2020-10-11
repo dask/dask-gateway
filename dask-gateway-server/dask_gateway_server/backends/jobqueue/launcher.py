@@ -17,6 +17,9 @@ def run_command(cmd, env, stdin=None):
     else:
         STDIN = None
 
+    # forward base environment
+    env.update(os.environ.copy())
+
     proc = subprocess.Popen(
         cmd,
         env=env,
@@ -57,7 +60,8 @@ def stop(cmd, env, staging_dir=None):
         if not os.path.exists(staging_dir):
             return
         try:
-            shutil.rmtree(staging_dir)
+            #shutil.rmtree(staging_dir)
+            pass
         except Exception as exc:
             finish(
                 ok=False,
