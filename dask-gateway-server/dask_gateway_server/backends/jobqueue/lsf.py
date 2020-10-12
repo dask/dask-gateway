@@ -112,11 +112,13 @@ class LSFBackend(JobQueueBackend):
 
         script.append('#BSUB -o {}'.format(os.path.join(staging_dir, stdout_file)))
         script.append('#BSUB -e {}'.format(os.path.join(staging_dir, stderr_file)))
-        script.append('#BSUB -env all, %s' % (",".join(['{}={}'.format(var,env[var]) for var in sorted(env)]))),
+        script.append('')
+
+        for var in env:
+            script.append('export {}={}'.format(var,env[var]))
 
         cmd.append('-nnodes {}'.format(nodes))
 
-        script.append('')
         script.append('cd {}'.format(staging_dir))
 
         if worker:
