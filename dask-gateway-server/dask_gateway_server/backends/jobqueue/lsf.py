@@ -136,13 +136,14 @@ class LSFBackend(JobQueueBackend):
         return [self.cancel_command, job_id], {}
 
     def get_status_cmd_env(self, job_ids):
-        cmd = [self.status_command, "-o", "jobid stat", "-noheader"," %s" % " ".join(job_ids)]
+        cmd = [self.status_command, "-json", " %s" % " ".join(job_ids)]
         return cmd, {}
 
     def parse_job_states(self, stdout):
+        result = json.loads(stdout)
         states = {}
-        for l in stdout.splitlines():
-            job_id, state = l.split()
+        for record in result['RECORDS']:
+            job_id, state = record['JOBID'], record['STAT']
             states[job_id] = state in ("RUN", "PEND", "WAIT")
         return states
 
