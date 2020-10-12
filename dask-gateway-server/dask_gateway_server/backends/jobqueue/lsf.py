@@ -100,6 +100,7 @@ class LSFBackend(JobQueueBackend):
 
             stdout_file = "dask-worker-%s.out" % worker.name
             stderr_file = "dask-worker-%s.err" % worker.name
+            env = self.get_worker_env(cluster)
         else:
             nodes = cluster.config.scheduler_nodes
             if cluster.config.scheduler_queue:
@@ -107,27 +108,23 @@ class LSFBackend(JobQueueBackend):
 
             stdout_file = "dask-scheduler-%s.out" % cluster.name
             stderr_file = "dask-scheduler-%s.err" % cluster.name
+            env = self.get_scheduler_env(cluster)
 
         script.append('#BSUB -o {}'.format(os.path.join(staging_dir, stdout_file)))
         script.append('#BSUB -e {}'.format(os.path.join(staging_dir, stderr_file)))
+        script.append('#BSUB -env all, %s' % (",".join(['{}={}'.format(var,env[var]) for var in sorted(env)]))),
+
         cmd.append('-nnodes {}'.format(nodes))
-        script.append('cd {}'.format(staging_dir))
+
         script.append('')
+        script.append('cd {}'.format(staging_dir))
 
         if worker:
             script.append(cluster.config.worker_setup)
             script.append(' '.join(self.get_worker_command(cluster, worker.name)))
-            env = self.get_worker_env(cluster)
         else:
             script.append(cluster.config.scheduler_setup)
             script.append(' '.join(self.get_scheduler_command(cluster)))
-            env = self.get_scheduler_env(cluster)
-
-        cmd.extend(
-            [
-                '-env all, %s' % (",".join(['{}={}'.format(var,env[var]) for var in sorted(env)])),
-            ]
-        )
 
         script = '\n'.join(script)
         return cmd, env, script
