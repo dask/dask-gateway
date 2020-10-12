@@ -807,6 +807,24 @@ class DBBackendBase(Backend):
         config=True,
     )
 
+    scheduler_port = Integer(
+        default=0,
+        help="""
+        The internally used port the dask schedulers will listen for connections on. If not specified,
+        each scheduler will chose a random port.
+        """,
+        config=True,
+    )
+
+    dashboard_port = Integer(
+        default=0,
+        help="""
+        The internally used port the dask schedulers expose the bokeh dashboard on. If not specified,
+        each scheduler will chose a random port.
+        """,
+        config=True,
+    )
+
     @default("api_url")
     def _api_url_default(self):
         proxy = self.proxy
@@ -1425,11 +1443,11 @@ class DBBackendBase(Backend):
             "--protocol",
             "tls",
             "--port",
-            "0",
+            f"{self.scheduler_port}",
             "--host",
             self.default_host,
             "--dashboard-address",
-            f"{self.default_host}:0",
+            f"{self.default_host}:{self.dashboard_port}",
             "--preload",
             "dask_gateway.scheduler_preload",
             "--dg-api-address",
