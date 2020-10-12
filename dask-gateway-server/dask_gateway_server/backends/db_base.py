@@ -825,6 +825,15 @@ class DBBackendBase(Backend):
         config=True,
     )
 
+    dg_api_port = Integer(
+        default=0,
+        help="""
+        The internally used port the dask schedulers use for the gateway API. If not specified,
+        each scheduler will chose a random port.
+        """,
+        config=True,
+    )
+
     @default("api_url")
     def _api_url_default(self):
         proxy = self.proxy
@@ -1451,7 +1460,7 @@ class DBBackendBase(Backend):
             "--preload",
             "dask_gateway.scheduler_preload",
             "--dg-api-address",
-            f"{self.default_host}:0",
+            f"{self.default_host}:{self.dg_api_port}",
             "--dg-heartbeat-period",
             str(self.cluster_heartbeat_period),
             "--dg-adaptive-period",
