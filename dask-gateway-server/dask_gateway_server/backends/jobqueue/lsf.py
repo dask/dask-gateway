@@ -129,9 +129,7 @@ class LSFBackend(JobQueueBackend):
             ]
         )
 
-        print(script)
         script = '\n'.join(script)
-        print(script)
         return cmd, env, script
 
     def get_stop_cmd_env(self, job_id):
