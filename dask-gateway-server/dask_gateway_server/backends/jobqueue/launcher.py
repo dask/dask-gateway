@@ -60,7 +60,7 @@ def stop(cmd, env, staging_dir=None):
         if not os.path.exists(staging_dir):
             return
         try:
-            #shutil.rmtree(staging_dir)
+            shutil.rmtree(staging_dir)
             pass
         except Exception as exc:
             finish(
