@@ -96,7 +96,7 @@ class JobQueueBackend(DBBackendBase):
         return cert_path, key_path
 
     async def do_as_user(self, user, action, **kwargs):
-        #cmd = ["sudo", "-nHu", user, self.dask_gateway_jobqueue_launcher]
+        cmd = ["sudo", "-nHu", user, self.dask_gateway_jobqueue_launcher]
         kwargs["action"] = action
         proc = await asyncio.create_subprocess_exec(
             *cmd,
