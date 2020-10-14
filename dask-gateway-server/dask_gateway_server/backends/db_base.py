@@ -550,10 +550,10 @@ class DataManager(object):
         with self.db.begin() as conn:
             conn.execute(
                 workers.update().where(workers.c.id == sa.bindparam("_id")),
-                [{"_id": w.id, **u} for w, u in updates],
+                [{"_id": w.id, **updates[w]} for w in updates],
             )
-            for w, u in updates:
-                for k, v in u.items():
+            for w in updates:
+                for k, v in updates[w].items():
                     setattr(w, k, v)
 
 
@@ -977,7 +977,7 @@ class DBBackendBase(Backend):
         created_workers = set()
         submitted_workers = set()
         active_jobs = set()
-        target_updates = set()
+        target_updates = dict()
         newly_running = set()
         close_expected = set()
         for worker in cluster.workers.values():
@@ -995,7 +995,7 @@ class DBBackendBase(Backend):
                 target = (
                     JobStatus.STOPPED if worker.close_expected else JobStatus.FAILED
                 )
-                target_updates.add((worker, {"target": target}))
+                target_updates[worker] = {"target": target}
             else:
                 if worker.status == JobStatus.SUBMITTED:
                     submitted_workers.add(worker)
@@ -1007,26 +1007,26 @@ class DBBackendBase(Backend):
         n_to_stop = len(active_jobs) + n_pending - count
         if n_to_stop > 0:
             for w in islice(chain(created_workers, submitted_workers), n_to_stop):
-                target_updates.append((w, {"target": JobStatus.STOPPED}))
+                target_updates[w] = {"target": JobStatus.STOPPED}
 
         if cluster_update:
             self.db.update_cluster(cluster, **cluster_update)
             self.queue.put(cluster)
 
         self.db.update_workers(target_updates)
-        for w, u in target_updates:
+        for w in target_updates:
             self.queue.put(w)
 
         if newly_running:
             # At least one worker successfully started, reset failure count
             cluster.worker_start_failure_count = 0
             self.db.update_workers(
-                [(w, {"status": JobStatus.RUNNING}) for w in newly_running]
+                {w: {"status": JobStatus.RUNNING} for w in newly_running}
             )
             for w in newly_running:
                 self.log.info("Worker %s is running", w.name)
 
-        self.db.update_workers([(w, {"close_expected": True}) for w in close_expected])
+        self.db.update_workers({w: {"close_expected": True} for w in close_expected})
 
     async def check_timeouts_loop(self):
         while True:
@@ -1048,7 +1048,7 @@ class DBBackendBase(Backend):
         cluster_start_cutoff = now - self.cluster_start_timeout * 1000
         worker_start_cutoff = now - self.worker_start_timeout * 1000
         cluster_updates = []
-        worker_updates = []
+        worker_updates = {}
         for cluster in self.db.active_clusters():
             if cluster.status == JobStatus.SUBMITTED:
                 # Check if submitted clusters have timed out
@@ -1069,7 +1069,7 @@ class DBBackendBase(Backend):
                             and w.start_time < worker_start_cutoff
                         ):
                             self.log.info("Worker %s startup timed out", w.name)
-                            worker_updates.append((w, {"target": JobStatus.FAILED}))
+                            worker_updates[w] = {"target": JobStatus.FAILED}
         self.db.update_clusters(cluster_updates)
         for c, _ in cluster_updates:
             self.queue.put(c)
@@ -1121,11 +1121,10 @@ class DBBackendBase(Backend):
                     if w.status == JobStatus.SUBMITTED
                 ]
                 statuses = await self.do_check_workers(workers)
-                updates = [
-                    (w, {"target": JobStatus.FAILED})
+                updates = {w: {"target": JobStatus.FAILED}
                     for w, ok in zip(workers, statuses)
                     if not ok
-                ]
+                }
                 self.db.update_workers(updates)
                 for w, _ in updates:
                     self.log.info("Worker %s failed during startup", w.name)
@@ -1270,7 +1269,7 @@ class DBBackendBase(Backend):
         self.log.debug("Preparing to stop cluster %s", cluster.name)
         target = JobStatus.CLOSING if self.supports_bulk_shutdown else JobStatus.STOPPED
         workers = [w for w in cluster.workers.values() if w.target < target]
-        self.db.update_workers([(w, {"target": target}) for w in workers])
+        self.db.update_workers({w: {"target": target} for w in workers})
         for w in workers:
             self.queue.put(w)
         self.db.update_cluster(cluster, status=JobStatus.CLOSING)
@@ -1449,9 +1448,10 @@ class DBBackendBase(Backend):
 
     def get_worker_command(self, cluster, worker_name, scheduler_address=None):
         nthreads, memory_limit = self.worker_nthreads_memory_limit_args(cluster)
+        extra_cmdline_args = cluster.config.extra_worker_cmdline_args
         if scheduler_address is None:
             scheduler_address = cluster.scheduler_address
-        return cluster.config.worker_cmd + [
+        cmd = cluster.config.worker_cmd + [
             scheduler_address,
             "--dashboard-address",
             f"{self.default_host}:0",
@@ -1462,6 +1462,10 @@ class DBBackendBase(Backend):
             "--memory-limit",
             memory_limit,
         ]
+
+        if extra_cmdline_args is not None:
+            cmd.extend(extra_cmdline_args)
+        return cmd
 
     # Subclasses should implement these methods
     supports_bulk_shutdown = False

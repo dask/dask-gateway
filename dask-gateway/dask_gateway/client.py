@@ -1176,7 +1176,7 @@ class GatewayCluster(object):
 
         status = HTML(self._widget_status(), layout=Layout(min_width="150px"))
 
-        request = IntText(0, description="Workers", layout=layout)
+        request = BoundedIntText(0, min=0, description="Jobs", layout=layout)
         scale = Button(description="Scale", layout=layout)
 
         minimum = IntText(0, description="Minimum", layout=layout)

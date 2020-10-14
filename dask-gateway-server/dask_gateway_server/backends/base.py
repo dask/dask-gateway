@@ -6,6 +6,7 @@ from traitlets import (
     Integer,
     Float,
     Dict,
+    List,
     Union,
     Unicode,
     default,
@@ -368,6 +369,15 @@ class ClusterConfig(Configurable):
         min=0,
         config=True,
     )
+
+    extra_worker_cmdline_args = List(
+        help="""
+        List of extra command line arguments for the worker, in the format
+        ``['--argument1': 'value1', '--option2']``
+        """,
+        config=True,
+    )
+
 
     def _check_scheduler_memory(self, scheduler_memory, cluster_max_memory):
         if cluster_max_memory is not None and scheduler_memory > cluster_max_memory:

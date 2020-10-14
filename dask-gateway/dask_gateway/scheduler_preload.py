@@ -118,6 +118,11 @@ class GatewayPlugin(SchedulerPlugin):
     def remove_worker(self, scheduler, worker):
         self.service.worker_removed(worker)
 
+def _get_worker_common_name(worker):
+    return worker.rsplit('-', maxsplit=1)[0]
+
+def _get_worker_jobs(workers):
+    return set([_get_worker_common_name(w) for w in workers])
 
 class GatewaySchedulerService(object):
     def __init__(
@@ -176,7 +181,7 @@ class GatewaySchedulerService(object):
         self.closing_workers.discard(ws.name)
         self.closed_workers.discard(ws.name)
 
-        if len(self.active_workers) > self.count:
+        if len(_get_worker_jobs(self.active_workers)) > self.count:
             self.waiter.interrupt_soon()
 
     def worker_removed(self, worker_address):
@@ -251,9 +256,11 @@ class GatewaySchedulerService(object):
                 await self.gateway.shutdown()
 
     async def heartbeat(self):
-        if self.count < len(self.active_workers):
+        if self.count < len(_get_worker_jobs(self.active_workers)):
             closing_workers = self.scheduler.workers_to_close(
-                target=self.count, attribute="name"
+                target=self.count,
+                key=lambda w: _get_worker_common_name(w.name),
+                attribute="name"
             )
             active_workers = list(self.active_workers.difference(closing_workers))
         else:
@@ -342,19 +349,19 @@ class GatewaySchedulerService(object):
 
                 window.append(target)
 
-                if target > self.count:
-                    await self._scale(target)
-                elif target < self.count:
+                # scale up/down by one
+                if target > len(self.active_workers):
+                    await self._scale(self.count+1)
+                elif target < len(self.active_workers):
                     max_window = max(window)
-                    if max_window < self.count:
-                        await self._scale(max_window)
+                    if max_window < len(self.active_workers):
+                        await self._scale(self.count-1)
             except asyncio.CancelledError:
                 break
             except Exception as exc:
                 logger.warning("Error in adaptive loop", exc_info=exc)
 
             await asyncio.sleep(self.adaptive_period)
-
 
 class GatewayClient(object):
     def __init__(self, cluster_name, api_token, api_url):
