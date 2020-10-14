@@ -974,35 +974,37 @@ class DBBackendBase(Backend):
         if count != cluster.count:
             cluster_update["count"] = count
 
-        created_workers = []
-        submitted_workers = []
-        target_updates = []
-        newly_running = []
-        close_expected = []
+        created_workers = set()
+        submitted_workers = set()
+        active_jobs = set()
+        target_updates = set()
+        newly_running = set()
+        close_expected = set()
         for worker in cluster.workers.values():
             if worker.status >= JobStatus.STOPPED:
                 continue
-            elif worker.name in closing_workers:
+            elif any([w.startswith(worker.name) for w in closing_workers]):
                 if worker.status < JobStatus.RUNNING:
-                    newly_running.append(worker)
-                close_expected.append(worker)
-            elif worker.name in active_workers:
+                    newly_running.add(worker)
+                close_expected.add(worker)
+            elif any([w.startswith(worker.name) for w in active_workers]):
+                active_jobs.add(worker)
                 if worker.status < JobStatus.RUNNING:
-                    newly_running.append(worker)
-            elif worker.name in closed_workers:
+                    newly_running.add(worker)
+            elif any([w.startswith(worker.name) for w in closed_workers]):
                 target = (
                     JobStatus.STOPPED if worker.close_expected else JobStatus.FAILED
                 )
-                target_updates.append((worker, {"target": target}))
+                target_updates.add((worker, {"target": target}))
             else:
                 if worker.status == JobStatus.SUBMITTED:
-                    submitted_workers.append(worker)
+                    submitted_workers.add(worker)
                 else:
                     assert worker.status == JobStatus.CREATED
-                    created_workers.append(worker)
+                    created_workers.add(worker)
 
         n_pending = len(created_workers) + len(submitted_workers)
-        n_to_stop = len(active_workers) + n_pending - count
+        n_to_stop = len(active_jobs) + n_pending - count
         if n_to_stop > 0:
             for w in islice(chain(created_workers, submitted_workers), n_to_stop):
                 target_updates.append((w, {"target": JobStatus.STOPPED}))
