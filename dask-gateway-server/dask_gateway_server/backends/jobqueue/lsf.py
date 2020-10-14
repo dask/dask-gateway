@@ -32,7 +32,8 @@ class LSFClusterConfig(JobQueueClusterConfig):
     alloc_flags = Unicode("", help="allocation flags (BSUB -alloc_flags) associated with each job.", config=True)
 
     account = Unicode("", help="Account string associated with each job.", config=True)
-
+    extra_bsub_options_scheduler = List([], help="Additional options to bsub for the scheduler.", config=True)
+    extra_bsub_options_worker = List([], help="Additional options to bsub for the scheduler.", config=True)
 
 class LSFBackend(JobQueueBackend):
     """A backend for deploying Dask on an LSF cluster."""
@@ -106,6 +107,8 @@ class LSFBackend(JobQueueBackend):
 
             stdout_file = "dask-worker-%s.out" % worker.name
             stderr_file = "dask-worker-%s.err" % worker.name
+            for o in cluster.config.extra_bsub_options_worker:
+                script.append('#BSUB {}'.format(o))
             env = self.get_worker_env(cluster)
         else:
             nodes = cluster.config.scheduler_nodes
@@ -114,10 +117,13 @@ class LSFBackend(JobQueueBackend):
 
             stdout_file = "dask-scheduler-%s.out" % cluster.name
             stderr_file = "dask-scheduler-%s.err" % cluster.name
+            for o in cluster.config.extra_bsub_options_scheduler:
+                script.append('#BSUB {}'.format(o))
             env = self.get_scheduler_env(cluster)
 
         script.append('#BSUB -o {}'.format(os.path.join(staging_dir, stdout_file)))
         script.append('#BSUB -e {}'.format(os.path.join(staging_dir, stderr_file)))
+
         script.append('')
 
         for var in env:
