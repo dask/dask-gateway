@@ -7,7 +7,7 @@ import json
 from traitlets import Unicode, Integer, default
 
 from .base import JobQueueBackend, JobQueueClusterConfig
-from ...traitlets import Type
+from ...traitlets import Type, Command
 
 
 __all__ = ("LSFBackend", "LSFClusterConfig")
@@ -15,6 +15,12 @@ __all__ = ("LSFBackend", "LSFClusterConfig")
 
 class LSFClusterConfig(JobQueueClusterConfig):
     """Dask cluster configuration options when running on SLURM"""
+
+    worker_cmd = Command(
+        "dask-worker", help="""Shell command to start a dask worker.
+        The ``{nnodes}`` format string is expanded to the number of nodes.
+        """, config=True
+    )
 
     worker_queue = Unicode("", help="The queue to submit worker jobs to.", config=True)
     scheduler_queue = Unicode("", help="The queue to submit scheduler jobs to.", config=True)
@@ -31,7 +37,7 @@ class LSFClusterConfig(JobQueueClusterConfig):
 class LSFBackend(JobQueueBackend):
     """A backend for deploying Dask on an LSF cluster."""
 
-    # override the sudo commandm, which *really* should *never* be necessary
+    # override the sudo command
     async def do_as_user(self, user, action, **kwargs):
         cmd = [self.dask_gateway_jobqueue_launcher]
         kwargs["action"] = action
@@ -123,7 +129,13 @@ class LSFBackend(JobQueueBackend):
 
         if worker:
             script.append(cluster.config.worker_setup)
-            script.append(' '.join(self.get_worker_command(cluster, worker.name)))
+            script.append(' '.join(
+                    self.get_worker_command(
+                        cluster,
+                        worker.name
+                    )
+                ).format(nnodes=nodes)
+            )
         else:
             script.append(cluster.config.scheduler_setup)
             script.append(' '.join(self.get_scheduler_command(cluster)))
