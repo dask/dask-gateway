@@ -4,7 +4,7 @@ import shutil
 import asyncio
 import json
 
-from traitlets import Unicode, Integer, default
+from traitlets import Unicode, Integer, List, default
 
 from .base import JobQueueBackend, JobQueueClusterConfig
 from ...traitlets import Type, Command
