@@ -18,6 +18,7 @@ data:
     {{- end }}
     import os
     import json
+    import sys
 
     _PROPERTIES = json.loads({{- $values | toJson | quote }})
 
@@ -107,6 +108,11 @@ data:
     else:
         raise ValueError("Unknown authenticator type %r" % auth_type)
 
+    # Add /etc/dask-gateway/ to the Python path.
+    # This is required for side-loaded extensions to work.
+    configuration_directory = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, configuration_directory)
+
     {{- if $extraConfig }}
     {{ if kindIs "string" $extraConfig }}
     # From gateway.extraConfig
@@ -119,7 +125,7 @@ data:
     {{- end }}
     {{- end }}
 
-    {{/* Configuration pulled in through *_config.py files in the extensions directory */}}
-    {{ range $path, $_ :=  .Files.Glob  "**_config.py" }}
-        {{ $.Files.Get $path | nindent 4 }}
-    {{ end }}
+  {{- /* Glob files to be added to the ConfigMap. */ -}}
+  {{- /* These files are mounted alongside dask_gateway_config.py */ -}}
+  {{- /* key = filename; value = content of file */ -}}
+  {{- (.Files.Glob "extensions/gateway/*").AsConfig | nindent 2 }}
