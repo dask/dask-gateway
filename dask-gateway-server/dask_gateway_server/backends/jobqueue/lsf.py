@@ -88,7 +88,7 @@ class LSFBackend(JobQueueBackend):
 
         script = ['#!/bin/sh']
 
-        script.append("#BSUB -J dask-gateway")
+        script.append("#BSUB -J dask-gateway-{}".format(cluster.name))
         if cluster.config.account:
             cmd.append("-P " + cluster.config.account)
         if cluster.config.alloc_flags:
