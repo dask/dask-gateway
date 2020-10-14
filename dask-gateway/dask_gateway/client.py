@@ -1165,7 +1165,8 @@ class GatewayCluster(object):
             return None
 
         try:
-            from ipywidgets import Layout, VBox, HBox, IntText, Button, HTML, Accordion
+            from ipywidgets import Layout, VBox, HBox, IntText, BoundedIntText,
+                                   Button, HTML, Accordion
         except ImportError:
             self._cached_widget = None
             return None
