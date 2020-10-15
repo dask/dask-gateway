@@ -277,7 +277,8 @@ class GatewaySchedulerService(object):
             "closed_workers": list(self.closed_workers),
         }
 
-        await self.gateway.heartbeat(msg)
+        await self.gateway.heartbeat(msg,
+            request_timeout=self.heartbeat_period*2)
 
         if closing_workers:
             self.closing_workers.update(closing_workers)
@@ -369,7 +370,7 @@ class GatewayClient(object):
         self.token = api_token
         self.api_url = api_url
 
-    async def heartbeat(self, msg):
+    async def heartbeat(self, msg, request_timeout):
         client = AsyncHTTPClient()
         req = HTTPRequest(
             method="POST",
@@ -379,6 +380,8 @@ class GatewayClient(object):
                 "Content-type": "application/json",
             },
             body=json.dumps(msg),
+            request_timeout=request_timeout,
+            connect_timeout=request_timeout
         )
         await client.fetch(req)
 
