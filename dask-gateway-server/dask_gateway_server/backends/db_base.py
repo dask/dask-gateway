@@ -1126,7 +1126,7 @@ class DBBackendBase(Backend):
                     if not ok
                 }
                 self.db.update_workers(updates)
-                for w, _ in updates:
+                for w in updates:
                     self.log.info("Worker %s failed during startup", w.name)
                     w.cluster.worker_start_failure_count += 1
                     self.queue.put(w)
