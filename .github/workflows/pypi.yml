@@ -1,0 +1,102 @@
+name: PyPI
+on:
+  push:
+    branches:
+      - master
+      - auto-release
+  pull_request:
+    branches: [master]
+  release:
+    types: [published]
+
+jobs:
+  build_gateway:
+    name: Build source distribution - dask-gateway
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Build dask-gateway as an sdist and a bdist_wheel
+        run: |
+          cd dask-gateway
+          python setup.py sdist
+          pip install wheel
+          python setup.py bdist_wheel
+          cd ..
+      - name: Check the sdist installs and imports
+        run: |
+          mkdir -p test-sdist
+          cd test-sdist
+          python -m venv venv-sdist
+          venv-sdist/bin/python -m pip install ../dask-gateway/dist/dask-gateway-*.tar.gz
+          venv-sdist/bin/python -c "import dask_gateway;print(dask_gateway.__version__)"
+          cd ..
+      - uses: actions/upload-artifact@v2
+        with:
+          name: artifact_gateway
+          path: dask-gateway/dist/*
+
+  build_gateway_server:
+    name: Build source distribution - dask-gateway-server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Build dask-gateway-server as an sdist and a bdist_wheel
+        run: |
+          cd dask-gateway-server
+          python setup.py sdist
+          pip install wheel
+          python build_tools/build_macos.py
+          python build_tools/build_manylinux.py
+          cd ..
+      - name: Check the sdist installs and imports
+        run: |
+          mkdir -p test-sdist
+          cd test-sdist
+          python -m venv venv-sdist
+          venv-sdist/bin/python -m pip install ../dask-gateway-server/dist/dask-gateway-server-*.tar.gz
+          venv-sdist/bin/python -c "import dask_gateway_server;print(dask_gateway_server.__version__)"
+          cd ..
+      - uses: actions/upload-artifact@v2
+        with:
+          name: artifact_gateway_server
+          path: dask-gateway-server/dist/*
+
+  upload_pypi:
+    name: Upload to PyPI on release - dask-gateway
+    needs: [build_gateway]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact_gateway
+          path: dask-gateway/dist
+      - uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_secret }}
+
+  upload_pypi_server:
+    name: Upload to PyPI on release - dask-gateway-server
+    needs: [build_gateway_server]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact_gateway_server
+          path: dask-gateway-server/dist
+      - uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_secret }}
