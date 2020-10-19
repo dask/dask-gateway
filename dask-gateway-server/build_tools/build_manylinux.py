@@ -42,7 +42,6 @@ def main():
         [
             "docker",
             "run",
-            "-it",
             "--rm",
             "--volume",
             "{}:/dist:rw".format(DIST_DIR),
