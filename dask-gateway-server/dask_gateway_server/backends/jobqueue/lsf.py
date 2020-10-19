@@ -44,6 +44,7 @@ class LSFBackend(JobQueueBackend):
         kwargs["action"] = action
         proc = await asyncio.create_subprocess_exec(
             *cmd,
+            env=os.environ.copy(),
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
