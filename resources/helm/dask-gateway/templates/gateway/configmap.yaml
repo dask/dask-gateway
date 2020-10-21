@@ -6,9 +6,9 @@ metadata:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 data:
   dask_gateway_config.py: |-
-    {{/* Extract extraConfig, as its handled separately */}}
+    {{- /* Extract extraConfig, as its handled separately */}}
     {{- $extraConfig := .Values.gateway.extraConfig }}
-    {{/* Remove secrets and extraConfig before forwarding configuration */}}
+    {{- /* Remove secrets and extraConfig before forwarding configuration */}}
     {{- $values := pick .Values "gateway" }}
     {{- $_ := set $values "gateway" (omit $values.gateway "extraConfig") }}
     {{- if $values.gateway.auth.jupyterhub.apiToken }}
@@ -19,6 +19,9 @@ data:
     import os
     import json
     import sys
+
+    # Add this directory to path to support extension modules
+    sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
     _PROPERTIES = json.loads({{- $values | toJson | quote }})
 
@@ -108,11 +111,6 @@ data:
     else:
         raise ValueError("Unknown authenticator type %r" % auth_type)
 
-    # Add /etc/dask-gateway/ to the Python path.
-    # This is required for side-loaded extensions to work.
-    configuration_directory = os.path.dirname(os.path.realpath(__file__))
-    sys.path.insert(0, configuration_directory)
-
     {{- if $extraConfig }}
     {{ if kindIs "string" $extraConfig }}
     # From gateway.extraConfig
@@ -125,7 +123,8 @@ data:
     {{- end }}
     {{- end }}
 
-  {{- /* Glob files to be added to the ConfigMap. */ -}}
-  {{- /* These files are mounted alongside dask_gateway_config.py */ -}}
-  {{- /* key = filename; value = content of file */ -}}
-  {{- (.Files.Glob "extensions/gateway/*").AsConfig | nindent 2 }}
+  {{- /* Load any extension modules */ -}}
+  {{- $exts := .Files.Glob "extensions/gateway/*" }}
+  {{- if $exts }}
+    {{- $exts.AsConfig | nindent 2 }}
+  {{- end }}

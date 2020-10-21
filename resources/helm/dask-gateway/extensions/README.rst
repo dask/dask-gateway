@@ -1,63 +1,62 @@
 Extensions
 ==========
 
-The extensions directory is one of two mechanisms for injecting extensions into
-the Dask Gateway API.
+Some Dask Gateway deployments will require non-trivial configuration (e.g. a
+new ``Authenticator`` class). You have a few options to add such "extensions":
 
-One approach is to inject your extensions through ``extraConfig`` in
-``values.yaml``.
+1. Add all extension code in the ``gateway.extraConfig`` of your Helm values
+   file. For simple extensions this is the recommended approach.
+2. Package your code as part of a custom image, and configure the Dask Gateway
+   api server to use that image via ``gateway.image``. Recommended if your
+   extension is large enough (Helm charts have a size limit of 1 MiB) or
+   requires additional dependencies.
+3. Clone the helm chart locally, and make use of the ``extensions`` directory.
+   This approach prevents using the published Helm chart, but may be useful in
+   some cases.
 
-The other approach is to store your extensions as discrete Python modules in the
-``extensions`` directory.
+To use the ``extensions`` directory, clone the Helm chart locally, and copy
+whatever extra files you require into the ``extensions/gateway`` directory.
+All files in ``extensions/gateway`` will be copied into ``/etc/dask-gateway``
+in the deployed Dask Gateway API server pods. This directory is added to
+``PYTHONPATH``, so any Python code will be importable. You can then import what
+functionality you need in a smaller section in ``gateway.extraConfig`` to
+configure the Dask Gateway server as needed.
 
-The extensions directory approach provides the following benefits:
+Example
+-------
 
-- It disentangles your Python code from your Helm YAML. 
-- It allows you to implement unit tests and maintain continuous integration.
-
-That being said, the extensions directory approach assumes that you have cloned
-the upstream chart locally, which may not necessarily be the case. Different
-use-cases call for different solutions. 
-
-To leverage the extensions directory approach, copy your Python modules into
-``extensions/gateway`` and update ``extraConfig`` in ``values.yaml`` to import
-and implement them.
-
-For example, suppose you copy ``foo.py`` into ``extensions/gateway``.
-
-``foo.py`` contains a single function:
-
-.. code-block:: python
-
-    def bar():
-        print("bar")
-
-Simply update ``extraConfig`` in ``values.yaml`` to import your module:
-
-.. code-block:: YAML
-
-    from foo import bar
-
-You now have access to the ``bar`` function. 
-
-Practically speaking, your modules will most likely consist of subclasses that
-inherit from upstream base classes alongside configuration declarations that
-point to the subclasses.
-
-Please note, for a custom authenticator, you can use the ``custom``
-authentication type in ``values.yaml``:
+For example, say ``myauthenticator.py`` contains a custom ``Authenticator``
+class:
 
 .. code-block:: python
 
-  auth:
-    type: custom custom:
-      class: <module>.<class>
+   from dask_gateway_server.auth import Authenticator
 
-Under the hood, Helm globs the contents of ``extensions/gateway`` and adds them
-as key-value pairs to a ConfigMap. When the ConfigMap is mounted on the Dask
-Gateway API pods, all of the files are available in ``/etc/dask-gateway``, which
-is part of the Python path.
+   class MyAuthenticator(Authenticator):
+       """My custom authenticator"""
+       ...
 
-Please note, if your extensions rely on packages that are not installed by
-default in the upstream Dask Gateway API image, you will need to add those
-packages yourself.
+After adding ``myauthenticator.py`` to ``extensions/gateway``, you can
+configure the Dask Gateway API server to use your authenticator via the proper
+fields in ``values.yaml``. For an authenticator, you can make use of
+``gateway.auth``:
+
+.. code-block:: yaml
+
+   gateway:
+     auth:
+       type: custom
+       custom:
+         class: myauthenticator.MyAuthenticator
+
+For other types of extensions (say ``c.KubeBackend.cluster_options``) you'd
+need to import and configure things in ``gateway.extraConfig``:
+
+.. code-block:: yaml
+
+   gateway:
+     extraConfig:
+       my-extension: |
+         # import your extension and configure appropriately
+         from myextension import my_cluster_options
+         c.KubeBackend.cluster_options = my_cluster_options
