@@ -6,9 +6,9 @@ metadata:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 data:
   dask_gateway_config.py: |-
-    {{/* Extract extraConfig, as its handled separately */}}
+    {{- /* Extract extraConfig, as its handled separately */}}
     {{- $extraConfig := .Values.gateway.extraConfig }}
-    {{/* Remove secrets and extraConfig before forwarding configuration */}}
+    {{- /* Remove secrets and extraConfig before forwarding configuration */}}
     {{- $values := pick .Values "gateway" }}
     {{- $_ := set $values "gateway" (omit $values.gateway "extraConfig") }}
     {{- if $values.gateway.auth.jupyterhub.apiToken }}
@@ -18,6 +18,10 @@ data:
     {{- end }}
     import os
     import json
+    import sys
+
+    # Add this directory to path to support extension modules
+    sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
     _PROPERTIES = json.loads({{- $values | toJson | quote }})
 
@@ -118,3 +122,9 @@ data:
     {{- end }}
     {{- end }}
     {{- end }}
+
+  {{- /* Load any extension modules */ -}}
+  {{- $exts := .Files.Glob "extensions/gateway/*" }}
+  {{- if $exts }}
+    {{- $exts.AsConfig | nindent 2 }}
+  {{- end }}
