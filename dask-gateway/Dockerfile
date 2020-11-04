@@ -46,7 +46,8 @@ ENTRYPOINT ["tini", "-g", "--"]
 # ** An image with all of dask-gateway's dependencies **
 FROM miniconda as dependencies
 
-ARG DASK_VERSION=2.28.0
+ARG DASK_VERSION=2.30.0
+ARG DISTRIBUTED_VERSION=2.30.1
 
 # - Installs dask and dependencies
 # - Cleans up conda files
@@ -56,9 +57,9 @@ ARG DASK_VERSION=2.28.0
 RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
         aiohttp=3.6.2 \
         dask==$DASK_VERSION \
-        distributed==$DASK_VERSION \
-        numpy==1.19.1 \
-        pandas==1.1.2 \
+        distributed==$DISTRIBUTED_VERSION \
+        numpy==1.19.2 \
+        pandas==1.1.4 \
     && /opt/conda/bin/conda clean -afy \
     && find /opt/conda/ -follow -type f -name '*.a' -delete \
     && find /opt/conda/ -follow -type f -name '*.js.map' -delete \

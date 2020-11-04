@@ -7,7 +7,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir \
-    aiohttp==3.6.2 \
+    aiohttp==3.7.2 \
     colorlog \
     cryptography \
     traitlets==4.3.3 \
