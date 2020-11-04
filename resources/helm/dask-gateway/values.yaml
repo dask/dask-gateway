@@ -215,10 +215,12 @@ traefik:
       web:
         # The port HTTP(s) requests will be served on
         port: 80
+        nodePort: null
       tcp:
         # The port TCP requests will be served on. Set to `web` to share the
         # web service port
         port: web
+        nodePort: null
 
   # Settings for nodeSelector, affinity, and tolerations for the traefik pods
   nodeSelector: {}
