@@ -35,6 +35,10 @@ spec:
         - name: configmap
           configMap:
             name: {{ include "dask-gateway.controllerName" . }}
+      {{- with .Values.controller.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: controller
           image: {{ .Values.controller.image.name }}:{{ .Values.controller.image.tag }}
