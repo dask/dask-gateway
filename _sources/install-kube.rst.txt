@@ -79,7 +79,7 @@ To install the Dask-Gateway Helm chart, run the following command:
 
     RELEASE=dask-gateway
     NAMESPACE=dask-gateway
-    VERSION=0.8.0
+    VERSION=0.9.0
 
     helm upgrade --install \
         --namespace $NAMESPACE \

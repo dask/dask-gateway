@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.8.0 documentation</title>
+  <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.9.0 documentation</title>
   
 
   
@@ -45,20 +45,20 @@
   <meta name="Description" content="Install on a Kubernetes Cluster">
   <meta property="og:description" content="Install on a Kubernetes Cluster">
   <meta name="twitter:description" content="Install on a Kubernetes Cluster" />
-  <meta property="og:title" content="Dask Gateway 0.8.0 documentation - Install on a Kubernetes Cluster">
+  <meta property="og:title" content="Dask Gateway 0.9.0 documentation - Install on a Kubernetes Cluster">
   <meta property="og:image" content="https://github.com/dask.png">
   <meta property="og:image:secure_url" content="https://github.com/dask.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="380" />
   <meta property="og:image:height" content="380" />
   <meta property="og:url" content="install-kube.html">
-  <meta property="og:site_name" content="Dask Gateway 0.8.0 documentation">
+  <meta property="og:site_name" content="Dask Gateway 0.9.0 documentation">
 
   <meta name="twitter:site" content="https://dask.org" />
   <meta name="twitter:creator" content="@dask_dev" />
   <meta name="twitter:card" content="summary">
   <meta name="twitter:image" content="https://github.com/dask.png" />
-  <meta name="twitter:image:alt" content="Dask Gateway 0.8.0 documentation">
+  <meta name="twitter:image:alt" content="Dask Gateway 0.9.0 documentation">
   
 
 </head>
@@ -143,7 +143,7 @@
             
             
               <div class="version">
-                0.8.0
+                0.9.0
               </div>
             
           
@@ -334,7 +334,7 @@ values.yaml file</a> for more information.</p>
 <p>To install the Dask-Gateway Helm chart, run the following command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RELEASE</span><span class="o">=</span>dask-gateway
 <span class="nv">NAMESPACE</span><span class="o">=</span>dask-gateway
-<span class="nv">VERSION</span><span class="o">=</span><span class="m">0</span>.8.0
+<span class="nv">VERSION</span><span class="o">=</span><span class="m">0</span>.9.0
 
 helm upgrade --install <span class="se">\</span>
     --namespace <span class="nv">$NAMESPACE</span> <span class="se">\</span>
@@ -601,8 +601,11 @@ here for reference:</p>
   <span class="c1"># The image to use for the gateway-server pod.</span>
   <span class="nt">image</span><span class="p">:</span>
     <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span>
-    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8.0</span>
+    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.9.0</span>
     <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+
+  <span class="c1"># Image pull secrets for gateway-server pod</span>
+  <span class="nt">imagePullSecrets</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
 
   <span class="c1"># Configuration for the gateway-server service</span>
   <span class="nt">service</span><span class="p">:</span>
@@ -657,7 +660,7 @@ here for reference:</p>
     <span class="c1"># The image to use for both schedulers and workers.</span>
     <span class="nt">image</span><span class="p">:</span>
       <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway</span>
-      <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8.0</span>
+      <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.9.0</span>
       <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
 
     <span class="c1"># The namespace to launch dask clusters in. If not specified, defaults to</span>
@@ -729,6 +732,9 @@ here for reference:</p>
   <span class="c1"># Resource requests/limits for the controller pod</span>
   <span class="nt">resources</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
 
+  <span class="c1"># Image pull secrets for controller pod</span>
+  <span class="nt">imagePullSecrets</span><span class="p">:</span> <span class="p p-Indicator">[]</span>
+
   <span class="c1"># The controller log level</span>
   <span class="nt">loglevel</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">INFO</span>
 
@@ -755,7 +761,7 @@ here for reference:</p>
   <span class="c1"># The image to use for the controller pod.</span>
   <span class="nt">image</span><span class="p">:</span>
     <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span>
-    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.8.0</span>
+    <span class="nt">tag</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.9.0</span>
     <span class="nt">pullPolicy</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
 
   <span class="c1"># Settings for nodeSelector, affinity, and tolerations for the controller pods</span>
@@ -797,10 +803,12 @@ here for reference:</p>
       <span class="nt">web</span><span class="p">:</span>
         <span class="c1"># The port HTTP(s) requests will be served on</span>
         <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+        <span class="nt">nodePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
       <span class="nt">tcp</span><span class="p">:</span>
         <span class="c1"># The port TCP requests will be served on. Set to `web` to share the</span>
         <span class="c1"># web service port</span>
         <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">web</span>
+        <span class="nt">nodePort</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
 
   <span class="c1"># Settings for nodeSelector, affinity, and tolerations for the traefik pods</span>
   <span class="nt">nodeSelector</span><span class="p">:</span> <span class="p p-Indicator">{}</span>
