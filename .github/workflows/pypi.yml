@@ -4,10 +4,9 @@ on:
     branches:
       - master
       - auto-release
+    tags: ["*"]
   pull_request:
     branches: [master]
-  release:
-    types: [published]
 
 jobs:
   build_gateway:
@@ -75,7 +74,7 @@ jobs:
     name: Upload to PyPI on release - dask-gateway
     needs: [build_gateway]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
+    if: github.tag != ''
     steps:
       - uses: actions/download-artifact@v2
         with:
@@ -90,7 +89,7 @@ jobs:
     name: Upload to PyPI on release - dask-gateway-server
     needs: [build_gateway_server]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
+    if: github.tag != ''
     steps:
       - uses: actions/download-artifact@v2
         with:
