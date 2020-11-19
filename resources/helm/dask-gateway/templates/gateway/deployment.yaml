@@ -15,6 +15,7 @@ spec:
       labels:
         {{- include "dask-gateway.labels" . | nindent 8 }}
         app.kubernetes.io/component: gateway
+        hub.jupyter.org/network-access-hub: "true"
       annotations:
         checksum/configmap: {{ include (print .Template.BasePath "/gateway/configmap.yaml") . | sha256sum }}
         checksum/secret: {{ include (print .Template.BasePath "/gateway/secret.yaml") . | sha256sum }}
