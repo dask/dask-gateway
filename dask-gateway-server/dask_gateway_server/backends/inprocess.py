@@ -85,7 +85,7 @@ class InProcessBackend(UnsafeLocalBackend):
         workdir = worker.cluster.state["workdir"]
         self.workers[worker.name] = worker = Worker(
             worker.cluster.scheduler_address,
-            nthreads=worker.cluster.config.worker_cores,
+            nthreads=worker.cluster.config.worker_threads,
             memory_limit=0,
             security=security,
             name=worker.name,

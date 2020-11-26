@@ -279,6 +279,16 @@ class ClusterConfig(Configurable):
         config=True,
     )
 
+    # Number of threads per worker. Defaults to the number of cores
+    worker_threads = Integer(
+        1,
+        min=1,
+        help="""
+        Number of threads available for a dask worker.
+        """,
+        config=True,
+    )
+
     scheduler_memory = MemoryLimit(
         "2 G",
         help="""
