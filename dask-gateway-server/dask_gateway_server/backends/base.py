@@ -281,13 +281,18 @@ class ClusterConfig(Configurable):
 
     # Number of threads per worker. Defaults to the number of cores
     worker_threads = Integer(
-        1,
         min=1,
         help="""
         Number of threads available for a dask worker.
+
+        Defaults to ``worker_cores``.
         """,
         config=True,
     )
+
+    @default("worker_threads")
+    def _default_worker_threads(self):
+        return self.worker_cores
 
     scheduler_memory = MemoryLimit(
         "2 G",

@@ -82,7 +82,7 @@ class KubeClusterConfig(ClusterConfig):
 
     @default("worker_threads")
     def _default_worker_threads(self):
-        return int(self.worker_cores)
+        return int(self.worker_cores_limit)
 
     worker_memory_limit = MemoryLimit(
         help="""
