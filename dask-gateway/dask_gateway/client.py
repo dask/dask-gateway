@@ -324,6 +324,8 @@ class Gateway(object):
         self._loop_runner = LoopRunner(loop=loop, asynchronous=asynchronous)
         self._loop_runner.start()
 
+        self.current_cluster_index = 0
+
     @property
     def loop(self):
         return self._loop_runner.loop
@@ -587,6 +589,31 @@ class Gateway(object):
                     )
             # Not started yet, try again later
             await asyncio.sleep(0.5)
+
+    def get_cluster_with_load_balance(self, shutdown_on_close=False):
+        """Connect to a submitted cluster.
+
+        Parameters
+        ----------
+        cluster_name : str
+            The cluster to connect to.
+        shutdown_on_close : bool, optional
+            If True, the cluster will be automatically shutdown on close.
+            Default is False.
+
+        Returns
+        -------
+        cluster : GatewayCluster
+        """
+        cluster_list = self.list_clusters()
+        if self.current_cluster_index >= len(cluster_list):
+            name = None
+        else:
+            name = cluster_list[self.current_cluster_index].name
+        self.current_cluster_index = self.current_cluster_index + 1
+        if self.current_cluster_index >= len(cluster_list):
+            self.current_cluster_index = 0
+        return self.connect(name,shutdown_on_close)
 
     def connect(self, cluster_name, shutdown_on_close=False):
         """Connect to a submitted cluster.
