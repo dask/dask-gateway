@@ -591,12 +591,10 @@ class Gateway(object):
             await asyncio.sleep(0.5)
 
     def get_cluster_with_load_balance(self, shutdown_on_close=False):
-        """Connect to a submitted cluster.
+        """The function of accessing clusters in the form of load balance.
 
         Parameters
         ----------
-        cluster_name : str
-            The cluster to connect to.
         shutdown_on_close : bool, optional
             If True, the cluster will be automatically shutdown on close.
             Default is False.
