@@ -743,7 +743,6 @@ _widget_status_template = """
 </style>
 <table style="text-align: right;">
     <tr><th>Workers</th> <td>%d</td></tr>
-    <tr><th>Cores</th> <td>%d</td></tr>
     <tr><th>Threads</th> <td>%d</td></tr>
     <tr><th>Memory</th> <td>%s</td></tr>
 </table>
@@ -1150,11 +1149,10 @@ class GatewayCluster(object):
             return None
         else:
             n_workers = len(workers)
-            cores = sum(w["cores"] for w in workers.values())
             threads = sum(w["nthreads"] for w in workers.values())
             memory = sum(w["memory_limit"] for w in workers.values())
 
-            return _widget_status_template % (n_workers, cores, threads, format_bytes(memory))
+            return _widget_status_template % (n_workers, threads, format_bytes(memory))
 
     def _widget(self):
         """ Create IPython widget for display within a notebook """
