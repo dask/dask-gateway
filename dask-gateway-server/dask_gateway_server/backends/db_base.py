@@ -1443,7 +1443,7 @@ class DBBackendBase(Backend):
         ]
 
     def worker_nthreads_memory_limit_args(self, cluster):
-        return str(cluster.config.worker_cores), str(cluster.config.worker_memory)
+        return str(cluster.config.worker_threads), str(cluster.config.worker_memory)
 
     def get_worker_command(self, cluster, worker_name, scheduler_address=None):
         nthreads, memory_limit = self.worker_nthreads_memory_limit_args(cluster)
