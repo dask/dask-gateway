@@ -600,6 +600,13 @@ suffixes:</p>
 </ul>
 </dd></dl>
 
+<dl class="py data">
+<dt id="c.ClusterConfig.worker_threads">
+<code class="sig-prename descclassname">c.ClusterConfig.</code><code class="sig-name descname">worker_threads</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.ClusterConfig.worker_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of threads available for a dask worker.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="backend">
 <h4>Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h4>
@@ -731,6 +738,13 @@ suffixes:</p>
 <li><p>G -&gt; Gibibytes</p></li>
 <li><p>T -&gt; Tebibytes</p></li>
 </ul>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.LocalClusterConfig.worker_threads">
+<code class="sig-prename descclassname">c.LocalClusterConfig.</code><code class="sig-name descname">worker_threads</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.LocalClusterConfig.worker_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of threads available for a dask worker.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
 </dd></dl>
 
 </div>
@@ -1301,6 +1315,13 @@ suffixes:</p>
 <dd><p>Script to run before dask worker starts.</p>
 </dd></dl>
 
+<dl class="py data">
+<dt id="c.YarnClusterConfig.worker_threads">
+<code class="sig-prename descclassname">c.YarnClusterConfig.</code><code class="sig-name descname">worker_threads</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.YarnClusterConfig.worker_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of threads available for a dask worker.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="yarnbackend">
 <h4>YarnBackend<a class="headerlink" href="#yarnbackend" title="Permalink to this headline">¶</a></h4>
@@ -1770,6 +1791,13 @@ following suffixes:</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_memory</span></code>.</p>
 </dd></dl>
 
+<dl class="py data">
+<dt id="c.KubeClusterConfig.worker_threads">
+<code class="sig-prename descclassname">c.KubeClusterConfig.</code><code class="sig-name descname">worker_threads</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.KubeClusterConfig.worker_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of threads available for a dask worker.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="kubebackend">
 <h4>KubeBackend<a class="headerlink" href="#kubebackend" title="Permalink to this headline">¶</a></h4>
@@ -2169,6 +2197,13 @@ suffixes:</p>
 <dd><p>Script to run before dask worker starts.</p>
 </dd></dl>
 
+<dl class="py data">
+<dt id="c.PBSClusterConfig.worker_threads">
+<code class="sig-prename descclassname">c.PBSClusterConfig.</code><code class="sig-name descname">worker_threads</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.PBSClusterConfig.worker_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of threads available for a dask worker.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="pbsbackend">
 <h4>PBSBackend<a class="headerlink" href="#pbsbackend" title="Permalink to this headline">¶</a></h4>
@@ -2516,6 +2551,13 @@ suffixes:</p>
 <dt id="c.SlurmClusterConfig.worker_setup">
 <code class="sig-prename descclassname">c.SlurmClusterConfig.</code><code class="sig-name descname">worker_setup</code><em class="property"> = Unicode('')</em><a class="headerlink" href="#c.SlurmClusterConfig.worker_setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Script to run before dask worker starts.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="c.SlurmClusterConfig.worker_threads">
+<code class="sig-prename descclassname">c.SlurmClusterConfig.</code><code class="sig-name descname">worker_threads</code><em class="property"> = Int(0)</em><a class="headerlink" href="#c.SlurmClusterConfig.worker_threads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of threads available for a dask worker.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
 </dd></dl>
 
 </div>
