@@ -10,9 +10,9 @@ LICENSE
 -------
 
 New BSD. See the `License File
-<https://github.com/dask/dask-gateway/blob/master/dask-gateway-server/LICENSE>`_.
+<https://github.com/dask/dask-gateway/blob/main/dask-gateway-server/LICENSE>`_.
 
-.. |travis| image:: https://travis-ci.org/dask/dask-gateway.svg?branch=master
+.. |travis| image:: https://travis-ci.org/dask/dask-gateway.svg?branch=main
    :target: https://travis-ci.org/dask/dask-gateway
 .. |pypi-dask-gateway| image:: https://img.shields.io/pypi/v/dask-gateway.svg?label=dask-gateway
    :target: https://pypi.org/project/dask-gateway/

@@ -8,7 +8,7 @@ git:
 
 branches:
   only:
-    - master
+    - main
 
 jobs:
     fast_finish: true
@@ -100,7 +100,7 @@ jobs:
               pushd docs
               make html
               popd
-              if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_EVENT_TYPE" == "push" ]]; then
+              if [[ "$TRAVIS_BRANCH" == "main" && "$TRAVIS_EVENT_TYPE" == "push" ]]; then
                   doctr deploy . --built-docs docs/build/html/
               fi
 
