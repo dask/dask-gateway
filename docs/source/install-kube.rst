@@ -378,7 +378,7 @@ here for reference:
 .. _Helm: https://helm.sh/
 .. _documentation provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/create-k8s-cluster.html
 .. _zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/
-.. _guide provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-jupyterhub/setup-helm3.html
+.. _guide provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/stable/kubernetes/setup-helm.html
 .. _Helm chart repository:
 .. _dask-gateway helm chart repository: https://dask.org/dask-gateway-helm-repo/
 .. _dask-gateway github repo: https://github.com/dask/dask-gateway/
