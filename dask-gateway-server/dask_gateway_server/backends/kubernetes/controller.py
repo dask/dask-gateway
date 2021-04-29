@@ -16,6 +16,7 @@ from kubernetes_asyncio import client, config
 from kubernetes_asyncio.client.rest import ApiException
 
 from ... import __version__ as VERSION
+from ...traitlets import Callable
 from ...utils import (
     AccessLogger,
     LogFormatter,
@@ -69,6 +70,64 @@ def get_cluster_key(obj):
         return f"{namespace}.{name}"
     except KeyError:
         return None
+
+
+def _make_ingressroute(self, cluster_name, namespace):
+    route = f"{self.proxy_prefix}/clusters/{namespace}.{cluster_name}/"
+    return {
+        "apiVersion": "traefik.containo.us/v1alpha1",
+        "kind": "IngressRoute",
+        "metadata": {
+            "labels": self.get_labels(cluster_name, "dask-scheduler"),
+            "annotations": self.common_annotations,
+            "name": f"dask-{cluster_name}",
+        },
+        "spec": {
+            "entryPoints": [self.proxy_web_entrypoint],
+            "routes": [
+                {
+                    "kind": "Rule",
+                    "match": f"PathPrefix(`{route}`)",
+                    "services": [
+                        {
+                            "name": self.make_service_name(cluster_name),
+                            "namespace": namespace,
+                            "port": 8787,
+                        }
+                    ],
+                    "middlewares": self.proxy_web_middlewares,
+                }
+            ],
+        },
+    }
+
+
+def _make_ingressroutetcp(self, cluster_name, namespace):
+    return {
+        "apiVersion": "traefik.containo.us/v1alpha1",
+        "kind": "IngressRouteTCP",
+        "metadata": {
+            "labels": self.get_labels(cluster_name, "dask-scheduler"),
+            "annotations": self.common_annotations,
+            "name": f"dask-{cluster_name}",
+        },
+        "spec": {
+            "entryPoints": [self.proxy_tcp_entrypoint],
+            "routes": [
+                {
+                    "match": f"HostSNI(`daskgateway-{namespace}.{cluster_name}`)",
+                    "services": [
+                        {
+                            "name": self.make_service_name(cluster_name),
+                            "namespace": namespace,
+                            "port": 8786,
+                        }
+                    ],
+                }
+            ],
+            "tls": {"passthrough": True},
+        },
+    }
 
 
 class ClusterInfo(object):
@@ -283,6 +342,18 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     proxy_web_middlewares = List(
         help="A list of middlewares to apply to web routes added to the proxy.",
         config=True,
+    )
+
+    make_ingressroute = Callable(
+        _make_ingressroute,
+        help="A callable function to override the default traefik ingressroute resource",
+        config=True
+    )
+
+    make_ingressroutetcp = Callable(
+        _make_ingressroutetcp,
+        help="A callable function to override the default traefik ingressroutetcp resource",
+        config=True
     )
 
     _log_formatter_cls = LogFormatter
@@ -974,7 +1045,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     async def create_ingressroute_if_not_exists(self, cluster, sched_pod):
         name = cluster["metadata"]["name"]
         namespace = cluster["metadata"]["namespace"]
-        route = self.make_ingressroute(name, namespace)
+        route = self.make_ingressroute(self, name, namespace)
         route["metadata"]["ownerReferences"] = [
             {
                 "apiVersion": "v1",
@@ -1000,7 +1071,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     async def create_ingressroutetcp_if_not_exists(self, cluster, sched_pod):
         name = cluster["metadata"]["name"]
         namespace = cluster["metadata"]["namespace"]
-        route = self.make_ingressroutetcp(name, namespace)
+        route = self.make_ingressroutetcp(self, name, namespace)
         route["metadata"]["ownerReferences"] = [
             {
                 "apiVersion": "v1",
@@ -1235,62 +1306,6 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                     {"name": "dashboard", "port": 8787, "target_port": "dashboard"},
                     {"name": "api", "port": 8788, "target_port": "api"},
                 ],
-            },
-        }
-
-    def make_ingressroute(self, cluster_name, namespace):
-        route = f"{self.proxy_prefix}/clusters/{namespace}.{cluster_name}/"
-        return {
-            "apiVersion": "traefik.containo.us/v1alpha1",
-            "kind": "IngressRoute",
-            "metadata": {
-                "labels": self.get_labels(cluster_name, "dask-scheduler"),
-                "annotations": self.common_annotations,
-                "name": f"dask-{cluster_name}",
-            },
-            "spec": {
-                "entryPoints": [self.proxy_web_entrypoint],
-                "routes": [
-                    {
-                        "kind": "Rule",
-                        "match": f"PathPrefix(`{route}`)",
-                        "services": [
-                            {
-                                "name": self.make_service_name(cluster_name),
-                                "namespace": namespace,
-                                "port": 8787,
-                            }
-                        ],
-                        "middlewares": self.proxy_web_middlewares,
-                    }
-                ],
-            },
-        }
-
-    def make_ingressroutetcp(self, cluster_name, namespace):
-        return {
-            "apiVersion": "traefik.containo.us/v1alpha1",
-            "kind": "IngressRouteTCP",
-            "metadata": {
-                "labels": self.get_labels(cluster_name, "dask-scheduler"),
-                "annotations": self.common_annotations,
-                "name": f"dask-{cluster_name}",
-            },
-            "spec": {
-                "entryPoints": [self.proxy_tcp_entrypoint],
-                "routes": [
-                    {
-                        "match": f"HostSNI(`daskgateway-{namespace}.{cluster_name}`)",
-                        "services": [
-                            {
-                                "name": self.make_service_name(cluster_name),
-                                "namespace": namespace,
-                                "port": 8786,
-                            }
-                        ],
-                    }
-                ],
-                "tls": {"passthrough": True},
             },
         }
 
