@@ -168,7 +168,7 @@ from.
             ["small", "medium", "large"],
             default="medium",
             label="Cluster Profile",
-        )
+        ),
         handler=lambda options: profiles[options.profile],
     )
 
