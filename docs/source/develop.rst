@@ -91,6 +91,11 @@ of the repository.
     # or, build and install as a regular package
     $ pip install ./dask-gateway-server
 
+.. warning::
+   Starting with Go version 1.16 you need to use the environment
+   variable ``GO111MODULE=auto`` during installation. This will be
+   fixed in a future release.
+
 **Building dask-gateway**
 
 .. code-block:: shell
