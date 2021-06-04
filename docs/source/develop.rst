@@ -94,7 +94,8 @@ of the repository.
 .. warning::
    Starting with Go version 1.16 you need to use the environment
    variable ``GO111MODULE=auto`` during installation. This will be
-   fixed in a future release.
+   fixed in a future release. See
+   https://blog.golang.org/go116-module-changes for more information.
 
 **Building dask-gateway**
 
