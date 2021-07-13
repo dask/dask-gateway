@@ -114,9 +114,19 @@ class temp_hub(object):
         type(self.hub).clear_instance()
 
 
+def configure_dask_gateway(jhub_api_token, jhub_bind_url):
+    config = Config()
+    config.DaskGateway.authenticator_class = (
+        "dask_gateway_server.auth.JupyterHubAuthenticator"
+    )
+    config.JupyterHubAuthenticator.jupyterhub_api_token = jhub_api_token
+    config.JupyterHubAuthenticator.jupyterhub_api_url = jhub_bind_url + "api/"
+    return config
+
+
 @pytest.mark.skipif(not hub_mocking, reason="JupyterHub not installed")
 @pytest.mark.asyncio
-async def test_jupyterhub_auth(monkeypatch):
+async def test_jupyterhub_auth_user(monkeypatch):
     from jupyterhub.tests.utils import add_user
 
     jhub_api_token = uuid.uuid4().hex
@@ -135,12 +145,7 @@ async def test_jupyterhub_auth(monkeypatch):
     hub = MockHub(config=hub_config)
 
     # Configure gateway
-    config = Config()
-    config.DaskGateway.authenticator_class = (
-        "dask_gateway_server.auth.JupyterHubAuthenticator"
-    )
-    config.JupyterHubAuthenticator.jupyterhub_api_token = jhub_api_token
-    config.JupyterHubAuthenticator.jupyterhub_api_url = jhub_bind_url + "api/"
+    config = configure_dask_gateway(jhub_api_token, jhub_bind_url)
 
     async with temp_gateway(config=config) as g:
         async with temp_hub(hub):
@@ -159,4 +164,41 @@ async def test_jupyterhub_auth(monkeypatch):
 
                 # Auth works with correct token
                 auth.api_token = api_token
+                await gateway.list_clusters()
+
+
+@pytest.mark.skipif(not hub_mocking, reason="JupyterHub not installed")
+@pytest.mark.asyncio
+async def test_jupyterhub_auth_service(monkeypatch):
+    jhub_api_token = uuid.uuid4().hex
+    jhub_service_token = uuid.uuid4().hex
+    jhub_bind_url = "http://127.0.0.1:%i/@/space%%20word/" % random_port()
+
+    hub_config = Config()
+    hub_config.JupyterHub.services = [
+        {"name": "dask-gateway", "api_token": jhub_api_token},
+        {"name": "any-service", "api_token": jhub_service_token}
+    ]
+    hub_config.JupyterHub.bind_url = jhub_bind_url
+
+    class MockHub(hub_mocking.MockHub):
+        def init_logging(self):
+            pass
+
+    hub = MockHub(config=hub_config)
+
+    # Configure gateway
+    config = configure_dask_gateway(jhub_api_token, jhub_bind_url)
+
+    async with temp_gateway(config=config) as g:
+        async with temp_hub(hub):
+            # Configure auth with incorrect api token
+            auth = JupyterHubAuth(api_token=uuid.uuid4().hex)
+            async with g.gateway_client(auth=auth) as gateway:
+                # Auth fails with bad token
+                with pytest.raises(Exception):
+                    await gateway.list_clusters()
+
+                # Auth works with service token
+                auth.api_token = jhub_api_token
                 await gateway.list_clusters()
