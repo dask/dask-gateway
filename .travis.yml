@@ -6,10 +6,6 @@ python:
 git:
   depth: false  # Ensure latest tag is pulled
 
-branches:
-  only:
-    - main
-
 jobs:
     fast_finish: true
 
