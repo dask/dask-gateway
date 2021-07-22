@@ -391,7 +391,7 @@ class JupyterHubAuthenticator(Authenticator):
         if resp.status < 400:
             data = await resp.json()
             # "groups" attribute doesn't exists in case of a service
-            return User(data["name"], groups=data.get("groups", []), admin=data["admin"])
+            return User(data["name"], groups=data.get("groups", []), admin=data.get("admin", False))
         elif resp.status == 404:
             self.log.debug("Token for non-existent user requested")
             raise unauthorized("jupyterhub")
