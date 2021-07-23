@@ -26,8 +26,7 @@ jobs:
 
       - name: Setup Node
         uses: actions/setup-node@v2
-        with:
-          node-version: '6'
+
       - name: Install requirements
         run: |
           go get github.com/stretchr/testify/assert
