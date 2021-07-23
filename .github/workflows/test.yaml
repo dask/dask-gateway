@@ -38,7 +38,7 @@ jobs:
 
       - name: Run Tests
         run: |
-          py.test tests/ -v
+          py.test tests/ -k 'not kubernetes' -v
 
       - name: Flake8 and Black
         run: |
