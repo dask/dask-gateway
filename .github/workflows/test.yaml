@@ -32,6 +32,10 @@ jobs:
           go get github.com/stretchr/testify/assert
           source continuous_integration/install.sh
 
+      - name: List Packages
+        run: |
+          pip freeze
+
       - name: Run Tests
         run: |
           py.test tests/ -v
