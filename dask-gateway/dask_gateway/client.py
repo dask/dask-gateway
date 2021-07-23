@@ -1155,7 +1155,7 @@ class GatewayCluster(object):
             return _widget_status_template % (n_workers, threads, format_bytes(memory))
 
     def _widget(self):
-        """ Create IPython widget for display within a notebook """
+        """Create IPython widget for display within a notebook"""
         try:
             return self._cached_widget
         except AttributeError:

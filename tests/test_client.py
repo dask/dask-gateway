@@ -253,6 +253,7 @@ async def test_client_reprs():
             # HTML repr with no dashboard
             cluster.dashboard_link = None
             assert "Not Available" in cluster._repr_html_()
+            await cluster.shutdown()
 
 
 @pytest.mark.asyncio
