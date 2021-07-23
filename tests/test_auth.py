@@ -177,7 +177,7 @@ async def test_jupyterhub_auth_service(monkeypatch):
     hub_config = Config()
     hub_config.JupyterHub.services = [
         {"name": "dask-gateway", "api_token": jhub_api_token},
-        {"name": "any-service", "api_token": jhub_service_token}
+        {"name": "any-service", "api_token": jhub_service_token},
     ]
     hub_config.JupyterHub.bind_url = jhub_bind_url
 
