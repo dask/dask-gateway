@@ -64,6 +64,8 @@ async def cluster_and_security(tmpdir):
         tls_scheduler_cert=tls_cert_path,
         tls_client_key=tls_key_path,
         tls_client_cert=tls_cert_path,
+        tls_worker_key=tls_key_path,
+        tls_worker_cert=tls_cert_path,
         tls_ca_file=tls_cert_path,
         require_encryption=True,
     )
