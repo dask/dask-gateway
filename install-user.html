@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Installation &mdash; Dask Gateway 0.9.0 documentation</title>
@@ -167,7 +168,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">For Users</span></p>
+              <p><span class="caption-text">For Users</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#kerberos-authentication-dependencies-optional">Kerberos Authentication Dependencies (Optional)</a></li>
@@ -176,21 +177,21 @@
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<p><span class="caption-text">Admin - Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<p><span class="caption-text">Admin - Customization</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
@@ -259,7 +260,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="installation">
+  <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>Dask-Gateway is composed of two packages:</p>
 <ul class="simple">
@@ -279,7 +280,7 @@ with the server. It can be installed with <code class="docutils literal notransl
 <p>The version of the client library should match that of <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>
 running on the server. If you don’t know the version running on your server,
 contact your administrator.</p>
-<div class="section" id="kerberos-authentication-dependencies-optional">
+<section id="kerberos-authentication-dependencies-optional">
 <h2>Kerberos Authentication Dependencies (Optional)<a class="headerlink" href="#kerberos-authentication-dependencies-optional" title="Permalink to this headline">¶</a></h2>
 <p>If your Dask-Gateway server uses <a class="reference external" href="https://en.wikipedia.org/wiki/Kerberos_(protocol)">Kerberos</a> for authentication, you’ll also need
 to install the kerberos dependencies. This can be done with either <code class="docutils literal notranslate"><span class="pre">conda</span></code> or
@@ -292,8 +293,8 @@ to install the kerberos dependencies. This can be done with either <code class="
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install dask-gateway<span class="o">[</span>kerberos<span class="o">]</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

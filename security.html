@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Security settings &mdash; Dask Gateway 0.9.0 documentation</title>
@@ -167,20 +168,20 @@
               
             
             
-              <p class="caption"><span class="caption-text">For Users</span></p>
+              <p><span class="caption-text">For Users</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<p><span class="caption-text">Admin - Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<p><span class="caption-text">Admin - Customization</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Security settings</a><ul>
@@ -196,7 +197,7 @@
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
@@ -265,16 +266,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="security-settings">
+  <section id="security-settings">
 <h1>Security settings<a class="headerlink" href="#security-settings" title="Permalink to this headline">¶</a></h1>
 <p>Here we present a few common security fields you’ll likely want to configure in
 a production deployment.</p>
-<div class="section" id="enabling-tls">
+<section id="enabling-tls">
 <h2>Enabling TLS<a class="headerlink" href="#enabling-tls" title="Permalink to this headline">¶</a></h2>
 <p>As a web application, any production deployment of Dask-Gateway should be run
 with TLS encryption (<a class="reference external" href="https://en.wikipedia.org/wiki/HTTPS">HTTPS</a>) enabled. There are a few common options for
 enabling this.</p>
-<div class="section" id="using-your-own-tls-certificate">
+<section id="using-your-own-tls-certificate">
 <h3>Using your own TLS certificate<a class="headerlink" href="#using-your-own-tls-certificate" title="Permalink to this headline">¶</a></h3>
 <p>If you have your own TLS certificate/key pair, you can specify the file
 locations in your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file. The relevant configuration
@@ -289,8 +290,8 @@ fields are:</p>
 </div>
 <p>Note that the certificate and key <em>must</em> be stored in a secure location where
 they are readable only by admin users.</p>
-</div>
-<div class="section" id="using-letsencrypt">
+</section>
+<section id="using-letsencrypt">
 <h3>Using letsencrypt<a class="headerlink" href="#using-letsencrypt" title="Permalink to this headline">¶</a></h3>
 <p>It is also possible to use <a class="reference external" href="https://letsencrypt.org/">letsencrypt</a> to automatically obtain TLS
 certificates. If you have letsencrypt running using the default options, you
@@ -301,14 +302,14 @@ file:</p>
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">FQDN</span></code> is the  <a class="reference external" href="https://en.wikipedia.org/wiki/Fully_qualified_domain_name">fully qualified domain name</a> for your server.</p>
-</div>
-<div class="section" id="using-external-tls-termination">
+</section>
+<section id="using-external-tls-termination">
 <h3>Using external TLS termination<a class="headerlink" href="#using-external-tls-termination" title="Permalink to this headline">¶</a></h3>
 <p>If <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> is running behind a proxy that does TLS termination
 (e.g. <a class="reference external" href="https://docs.nginx.com/nginx/admin-guide/security-controls/terminating-ssl-http/">NGINX</a>), then no further configuration is needed.</p>
-</div>
-</div>
-<div class="section" id="proxy-authentication-tokens">
+</section>
+</section>
+<section id="proxy-authentication-tokens">
 <h2>Proxy authentication tokens<a class="headerlink" href="#proxy-authentication-tokens" title="Permalink to this headline">¶</a></h2>
 <p>To secure communication between the proxy and the gateway server, a secret
 token is used. By default this token is generated automatically. It’s necessary
@@ -328,8 +329,8 @@ to create these is through the <code class="docutils literal notranslate"><span 
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -hex <span class="m">32</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

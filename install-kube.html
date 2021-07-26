@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Install on a Kubernetes Cluster &mdash; Dask Gateway 0.9.0 documentation</title>
@@ -167,13 +168,13 @@
               
             
             
-              <p class="caption"><span class="caption-text">For Users</span></p>
+              <p><span class="caption-text">For Users</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<p><span class="caption-text">Admin - Installation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
@@ -201,14 +202,14 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<p><span class="caption-text">Admin - Customization</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
@@ -277,11 +278,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="install-on-a-kubernetes-cluster">
+  <section id="install-on-a-kubernetes-cluster">
 <h1>Install on a Kubernetes Cluster<a class="headerlink" href="#install-on-a-kubernetes-cluster" title="Permalink to this headline">¶</a></h1>
 <p>Here we provide instructions for installing and configuring
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a <a class="reference external" href="https://kubernetes.io/">Kubernetes Cluster</a>.</p>
-<div class="section" id="architecture">
+<section id="architecture">
 <h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h2>
 <p>When running on Kubernetes, Dask Gateway is composed of the following components:</p>
 <ul class="simple">
@@ -295,24 +296,24 @@ cluster (e.g. pods, secrets, etc…).</p></li>
 <a class="reference internal image-reference" href="_images/architecture-k8s.svg"><img alt="Dask-Gateway high-level kubernetes architecture" class="align-center" src="_images/architecture-k8s.svg" width="90%" /></a>
 <p>Both the Traefik Proxy deployment and the Gateway API Server deployment can be
 scaled to multiple replicas, for increased availability and scalability.</p>
-</div>
-<div class="section" id="create-a-kubernetes-cluster-optional">
+</section>
+<section id="create-a-kubernetes-cluster-optional">
 <h2>Create a Kubernetes Cluster (optional)<a class="headerlink" href="#create-a-kubernetes-cluster-optional" title="Permalink to this headline">¶</a></h2>
 <p>If you don’t already have a cluster running, you’ll want to create one. There
 are plenty of guides online for how to do this. We recommend following the
 excellent <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/create-k8s-cluster.html">documentation provided by zero-to-jupyterhub-k8s</a>.</p>
-</div>
-<div class="section" id="install-helm-optional">
+</section>
+<section id="install-helm-optional">
 <h2>Install Helm (optional)<a class="headerlink" href="#install-helm-optional" title="Permalink to this headline">¶</a></h2>
 <p>If you don’t already have <a class="reference external" href="https://helm.sh/">Helm</a> installed, you’ll need to install it locally.
 As with above, there are plenty of instructional materials online for doing
 this. We recommend following the <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/setup-jupyterhub/setup-helm3.html">guide provided by zero-to-jupyterhub-k8s</a>.</p>
-</div>
-<div class="section" id="install-dask-gateway">
+</section>
+<section id="install-dask-gateway">
 <h2>Install Dask-Gateway<a class="headerlink" href="#install-dask-gateway" title="Permalink to this headline">¶</a></h2>
 <p>At this point you should have a Kubernetes cluster with Helm installed and
 configured. You are now ready to install Dask-Gateway on your cluster.</p>
-<div class="section" id="add-the-helm-chart-repository">
+<section id="add-the-helm-chart-repository">
 <h3>Add the Helm Chart Repository<a class="headerlink" href="#add-the-helm-chart-repository" title="Permalink to this headline">¶</a></h3>
 <p>To avoid downloading the chart locally from GitHub, you can use the
 <a class="reference external" href="https://dask.org/dask-gateway-helm-repo/">Dask-Gateway Helm chart repository</a>.</p>
@@ -320,16 +321,16 @@ configured. You are now ready to install Dask-Gateway on your cluster.</p>
 $ helm repo update
 </pre></div>
 </div>
-</div>
-<div class="section" id="configuration">
+</section>
+<section id="configuration">
 <h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
 <p>The Helm chart provides access to configure most aspects of the
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. These are provided via a configuration <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file (the
 name of this file doesn’t matter, we’ll use <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>).</p>
-<p>The Helm chart exposes many configuration values, see the <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default
+<p>The Helm chart exposes many configuration values, see the <a class="reference external" href="https://github.com/dask/dask-gateway/blob/main/resources/helm/dask-gateway/values.yaml">default
 values.yaml file</a> for more information.</p>
-</div>
-<div class="section" id="install-the-helm-chart">
+</section>
+<section id="install-the-helm-chart">
 <h3>Install the Helm Chart<a class="headerlink" href="#install-the-helm-chart" title="Permalink to this headline">¶</a></h3>
 <p>To install the Dask-Gateway Helm chart, run the following command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RELEASE</span><span class="o">=</span>dask-gateway
@@ -377,9 +378,9 @@ metadata:
 </pre></div>
 </div>
 <p>At this point, you have a fully running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>.</p>
-</div>
-</div>
-<div class="section" id="connecting-to-the-gateway">
+</section>
+</section>
+<section id="connecting-to-the-gateway">
 <h2>Connecting to the gateway<a class="headerlink" href="#connecting-to-the-gateway" title="Permalink to this headline">¶</a></h2>
 <p>To connect to the running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, you’ll need the external IPs
 from the <code class="docutils literal notranslate"><span class="pre">traefik-*</span></code> services above. The Traefik service provides access to
@@ -402,20 +403,20 @@ empty list as you have no clusters running yet.</p>
 <span class="go">[]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="shutting-everything-down">
+</section>
+<section id="shutting-everything-down">
 <h2>Shutting everything down<a class="headerlink" href="#shutting-everything-down" title="Permalink to this headline">¶</a></h2>
 <p>When you’re done with the gateway, you’ll want to delete your deployment and
 clean everything up. You can do this with <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">delete</span></code>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ helm delete --purge <span class="nv">$RELEASE</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="additional-configuration">
+</section>
+<section id="additional-configuration">
 <h2>Additional configuration<a class="headerlink" href="#additional-configuration" title="Permalink to this headline">¶</a></h2>
 <p>Here we provide a few configuration snippets for common deployment scenarios.
 For all available configuration fields see the <a class="reference internal" href="#helm-chart-reference"><span class="std std-ref">Helm chart reference</span></a>.</p>
-<div class="section" id="using-a-custom-image">
+<section id="using-a-custom-image">
 <h3>Using a custom image<a class="headerlink" href="#using-a-custom-image" title="Permalink to this headline">¶</a></h3>
 <p>By default schedulers/workers started by dask-gateway will use the
 <code class="docutils literal notranslate"><span class="pre">daskgateway/dask-gateway</span></code> image. This is a basic image with only the minimal
@@ -434,10 +435,10 @@ behaviors. We recommend using <a class="reference external" href="https://github
 should work fine. You may install any additional libraries or dependencies you
 require.</p>
 <p>To develop your own image, you may either base it on a compatible version of
-<code class="docutils literal notranslate"><span class="pre">daskgateway/dask-gateway</span></code>, or use our <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/example-images/Dockerfile">example dockerfile</a> as a reference
+<code class="docutils literal notranslate"><span class="pre">daskgateway/dask-gateway</span></code>, or use our <a class="reference external" href="https://github.com/dask/dask-gateway/blob/main/resources/helm/example-images/Dockerfile">example dockerfile</a> as a reference
 and develop your own.</p>
-</div>
-<div class="section" id="using-extrapodconfig-extracontainerconfig">
+</section>
+<section id="using-extrapodconfig-extracontainerconfig">
 <h3>Using <code class="docutils literal notranslate"><span class="pre">extraPodConfig</span></code>/<code class="docutils literal notranslate"><span class="pre">extraContainerConfig</span></code><a class="headerlink" href="#using-extrapodconfig-extracontainerconfig" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/">Kubernetes API</a> is large, and not all configuration fields you may want
 to set on scheduler/worker pods are directly exposed by the Helm chart. To
@@ -476,8 +477,8 @@ anti-affinity for scheduler pods to avoid <a class="reference external" href="ht
 <li><p><a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core">PodSpec Configuration</a></p></li>
 <li><p><a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core">Container Configuration</a></p></li>
 </ul>
-</div>
-<div class="section" id="using-extraconfig">
+</section>
+<section id="using-extraconfig">
 <h3>Using <code class="docutils literal notranslate"><span class="pre">extraConfig</span></code><a class="headerlink" href="#using-extraconfig" title="Permalink to this headline">¶</a></h3>
 <p>Not all configuration options have been exposed via the helm chart. To set
 unexposed options, you can use the <code class="docutils literal notranslate"><span class="pre">gateway.extraConfig</span></code> field. This takes
@@ -518,8 +519,8 @@ resources and image (see <a class="reference internal" href="cluster-options.htm
 <p>For information on all available configuration options, see the
 <a class="reference internal" href="api-server.html"><span class="doc">Configuration Reference</span></a> (in particular, the <a class="reference internal" href="api-server.html#kube-cluster-config"><span class="std std-ref">KubeClusterConfig</span></a>
 section).</p>
-</div>
-<div class="section" id="authenticating-with-jupyterhub">
+</section>
+<section id="authenticating-with-jupyterhub">
 <h3>Authenticating with JupyterHub<a class="headerlink" href="#authenticating-with-jupyterhub" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference external" href="https://jupyterhub.readthedocs.io/">JupyterHub</a> provides a multi-user interactive <a class="reference external" href="https://jupyter.org/">notebook</a> environment. Through
 the <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/">zero-to-jupyterhub-k8s</a> project, many companies and institutions have setup
@@ -574,11 +575,11 @@ object.</p>
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="helm-chart-reference">
+</section>
+</section>
+<section id="helm-chart-reference">
 <span id="id1"></span><h2>Helm chart reference<a class="headerlink" href="#helm-chart-reference" title="Permalink to this headline">¶</a></h2>
-<p>The full <a class="reference external" href="https://github.com/dask/dask-gateway/blob/master/resources/helm/dask-gateway/values.yaml">default values.yaml file</a> for the dask-gateway Helm chart is included
+<p>The full <a class="reference external" href="https://github.com/dask/dask-gateway/blob/main/resources/helm/dask-gateway/values.yaml">default values.yaml file</a> for the dask-gateway Helm chart is included
 here for reference:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
   <span class="c1"># Number of instances of the gateway-server to run</span>
@@ -832,8 +833,8 @@ here for reference:</p>
     <span class="nt">serviceAccountName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">null</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

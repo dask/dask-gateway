@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Cluster Resource Limits &mdash; Dask Gateway 0.9.0 documentation</title>
@@ -167,20 +168,20 @@
               
             
             
-              <p class="caption"><span class="caption-text">For Users</span></p>
+              <p><span class="caption-text">For Users</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<p><span class="caption-text">Admin - Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<p><span class="caption-text">Admin - Customization</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
@@ -190,7 +191,7 @@
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
@@ -259,7 +260,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="cluster-resource-limits">
+  <section id="cluster-resource-limits">
 <h1>Cluster Resource Limits<a class="headerlink" href="#cluster-resource-limits" title="Permalink to this headline">¶</a></h1>
 <p>By default users can create clusters with as many workers and resources as they
 want.  In shared environments this may not always be desirable. To remedy this
@@ -272,7 +273,7 @@ administrators can set per-cluster resource limits.</p>
 </ul>
 <p>If a cluster is at capacity for any of these limits, requests for new workers
 or workers will warn with an informative message saying they’re at capacity.</p>
-<div class="section" id="example">
+<section id="example">
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h2>
 <p>Here we limit each cluster to:</p>
 <ul class="simple">
@@ -283,8 +284,8 @@ or workers will warn with an informative message saying they’re at capacity.</
 <span class="n">c</span><span class="o">.</span><span class="n">ClusterConfig</span><span class="o">.</span><span class="n">cluster_max_memory</span> <span class="o">=</span> <span class="s2">&quot;1 T&quot;</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

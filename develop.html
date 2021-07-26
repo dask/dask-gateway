@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Development &mdash; Dask Gateway 0.9.0 documentation</title>
@@ -166,27 +167,27 @@
               
             
             
-              <p class="caption"><span class="caption-text">For Users</span></p>
+              <p><span class="caption-text">For Users</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<p><span class="caption-text">Admin - Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<p><span class="caption-text">Admin - Customization</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
@@ -269,20 +270,20 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="development">
+  <section id="development">
 <h1>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h1>
 <p>This page provides information on how to build, test, and develop
 <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code>.</p>
-<div class="section" id="building-dask-gateway">
+<section id="building-dask-gateway">
 <h2>Building Dask-Gateway<a class="headerlink" href="#building-dask-gateway" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="clone-repository">
+<section id="clone-repository">
 <h3>Clone Repository<a class="headerlink" href="#clone-repository" title="Permalink to this headline">¶</a></h3>
 <p>Clone the Dask-Gateway git repository:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/dask/dask-gateway.git
 </pre></div>
 </div>
-</div>
-<div class="section" id="install-dependencies-conda">
+</section>
+<section id="install-dependencies-conda">
 <h3>Install Dependencies (Conda)<a class="headerlink" href="#install-dependencies-conda" title="Permalink to this headline">¶</a></h3>
 <p>We recommend using the <a class="reference external" href="https://conda.io/docs/">Conda</a> package manager to setup your development
 environment. Here we setup a conda environment to contain the build
@@ -307,8 +308,8 @@ install Go using your system package manager, the <a class="reference external" 
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ conda install -c conda-forge go
 </pre></div>
 </div>
-</div>
-<div class="section" id="install-dependencies-pip">
+</section>
+<section id="install-dependencies-pip">
 <h3>Install Dependencies (Pip)<a class="headerlink" href="#install-dependencies-pip" title="Permalink to this headline">¶</a></h3>
 <p>You can also setup the development environment using <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ pip install <span class="se">\</span>
@@ -321,8 +322,8 @@ install Go using your system package manager, the <a class="reference external" 
 </div>
 <p>Besides the above dependencies, you’ll also need a <a class="reference external" href="https://golang.org/">Go</a> compiler. You can
 install Go using your system package manager or the <a class="reference external" href="https://golang.org/">Go website</a>.</p>
-</div>
-<div class="section" id="build-and-install-dask-gateway">
+</section>
+<section id="build-and-install-dask-gateway">
 <h3>Build and Install Dask-Gateway<a class="headerlink" href="#build-and-install-dask-gateway" title="Permalink to this headline">¶</a></h3>
 <p>Dask-Gateway is composed of two packages, both contained in the same
 repository:</p>
@@ -342,6 +343,13 @@ $ pip install -e ./dask-gateway-server
 $ pip install ./dask-gateway-server
 </pre></div>
 </div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Starting with Go version 1.16 you need to use the environment
+variable <code class="docutils literal notranslate"><span class="pre">GO111MODULE=auto</span></code> during installation. This will be
+fixed in a future release. See
+<a class="reference external" href="https://blog.golang.org/go116-module-changes">https://blog.golang.org/go116-module-changes</a> for more information.</p>
+</div>
 <p><strong>Building dask-gateway</strong></p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build and install dask-gateway as an editable package</span>
 $ pip install -e ./dask-gateway
@@ -350,9 +358,9 @@ $ pip install -e ./dask-gateway
 $ pip install ./dask-gateway
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="running-the-tests">
+</section>
+</section>
+<section id="running-the-tests">
 <h2>Running the Tests<a class="headerlink" href="#running-the-tests" title="Permalink to this headline">¶</a></h2>
 <p>The tests are located in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> subdirectory, and test both packages. To
 run the tests you also need to install <code class="docutils literal notranslate"><span class="pre">pytest</span></code>:</p>
@@ -380,8 +388,8 @@ subdirectory:</p>
 </ul>
 <p>The particularities of each setup differ, please see the <code class="docutils literal notranslate"><span class="pre">.travis.yml</span></code> file
 for the specifics.</p>
-</div>
-<div class="section" id="building-the-documentation">
+</section>
+<section id="building-the-documentation">
 <h2>Building the Documentation<a class="headerlink" href="#building-the-documentation" title="Permalink to this headline">¶</a></h2>
 <p>Dask-Gateway uses <a class="reference external" href="http://www.sphinx-doc.org/">Sphinx</a> for documentation. The source files are located in
 <code class="docutils literal notranslate"><span class="pre">dask-gateway/docs/source</span></code>. To build the documentation locally, first install
@@ -399,7 +407,7 @@ $ make html
 </pre></div>
 </div>
 <p>The resulting HTML files end up in the <code class="docutils literal notranslate"><span class="pre">build/html</span></code> directory.</p>
-<div class="section" id="travis-ci-commit-message-triggers">
+<section id="travis-ci-commit-message-triggers">
 <h3>Travis-CI Commit Message Triggers<a class="headerlink" href="#travis-ci-commit-message-triggers" title="Permalink to this headline">¶</a></h3>
 <p>Our Travis-CI setup allows triggering/skipping specific tests based on special
 directives in the commit messages. This allows avoiding expensive tests for a
@@ -430,9 +438,9 @@ Add a note to the develop.rst docs on how to build only docs.
 #    modified:   docs/source/develop.rst
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

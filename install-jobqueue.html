@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Install on an HPC Job Queue &mdash; Dask Gateway 0.9.0 documentation</title>
@@ -167,13 +168,13 @@
               
             
             
-              <p class="caption"><span class="caption-text">For Users</span></p>
+              <p><span class="caption-text">For Users</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<p><span class="caption-text">Admin - Installation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
@@ -202,14 +203,14 @@
 </ul>
 </li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<p><span class="caption-text">Admin - Customization</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
@@ -278,7 +279,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="install-on-an-hpc-job-queue">
+  <section id="install-on-an-hpc-job-queue">
 <h1>Install on an HPC Job Queue<a class="headerlink" href="#install-on-an-hpc-job-queue" title="Permalink to this headline">¶</a></h1>
 <p>Here we provide instructions for installing and configuring
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a HPC Job Queue system like <a class="reference external" href="https://www.pbspro.org/">PBS</a> or <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a>. Note
@@ -287,7 +288,7 @@ an edge node).</p>
 <p>Currently only <a class="reference external" href="https://www.pbspro.org/">PBS</a> and <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a> are supported, but support for additional
 backends is planned. If this is something you’re interested in, please <a class="reference external" href="https://github.com/dask/dask-gateway/issues">file an
 issue</a>.</p>
-<div class="section" id="create-a-user-account">
+<section id="create-a-user-account">
 <h2>Create a user account<a class="headerlink" href="#create-a-user-account" title="Permalink to this headline">¶</a></h2>
 <p>Before installing anything, you’ll need to create the user account which will
 be used to run the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> process. The name of the user
@@ -295,8 +296,8 @@ doesn’t matter, only the permissions they have. Here we’ll use <code class="
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ adduser dask
 </pre></div>
 </div>
-</div>
-<div class="section" id="create-install-directories">
+</section>
+<section id="create-install-directories">
 <h2>Create install directories<a class="headerlink" href="#create-install-directories" title="Permalink to this headline">¶</a></h2>
 <p>A <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> installation has three types of files which will need
 their own directories created before installation:</p>
@@ -317,8 +318,8 @@ $ mkdir /var/dask-gateway
 $ chown dask /var/dask-gateway
 </pre></div>
 </div>
-</div>
-<div class="section" id="install-a-python-environment">
+</section>
+<section id="install-a-python-environment">
 <h2>Install a python environment<a class="headerlink" href="#install-a-python-environment" title="Permalink to this headline">¶</a></h2>
 <p>To avoid interactions between the system python installation and
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, we’ll install a full Python environment into the
@@ -335,15 +336,15 @@ commands.</p>
 $ <span class="nb">source</span> /root/.bashrc
 </pre></div>
 </div>
-</div>
-<div class="section" id="install-dask-gateway-server">
+</section>
+<section id="install-dask-gateway-server">
 <h2>Install dask-gateway-server<a class="headerlink" href="#install-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>Now we can install <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> and its dependencies.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install -y -c conda-forge dask-gateway-server-jobqueue
 </pre></div>
 </div>
-</div>
-<div class="section" id="enable-permissions-for-the-dask-user">
+</section>
+<section id="enable-permissions-for-the-dask-user">
 <h2>Enable permissions for the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user<a class="headerlink" href="#enable-permissions-for-the-dask-user" title="Permalink to this headline">¶</a></h2>
 <p>For <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to work properly, you’ll need to enable <a class="reference external" href="https://en.wikipedia.org/wiki/Sudo">sudo</a>
 permissions for the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user account. At a minimum, the <code class="docutils literal notranslate"><span class="pre">dask</span></code> account
@@ -366,8 +367,8 @@ Operator:</p>
 </div>
 <p>Operator level permissions are needed in <a class="reference external" href="https://www.pbspro.org/">PBS</a> to allow <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>
 to more efficiently track the status of all users’ jobs.</p>
-</div>
-<div class="section" id="configure-dask-gateway-server">
+</section>
+<section id="configure-dask-gateway-server">
 <h2>Configure dask-gateway-server<a class="headerlink" href="#configure-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>Now we’re ready to configure our <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> installation.
 Configuration is written as a Python file (typically
@@ -377,7 +378,7 @@ use any python syntax/libraries in this file that you want, the only things
 that matter to <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> are the values set on the <code class="docutils literal notranslate"><span class="pre">c</span></code> config
 object.</p>
 <p>Here we’ll walk through a few common configuration options you may want to set.</p>
-<div class="section" id="specify-backend">
+<section id="specify-backend">
 <h3>Specify backend<a class="headerlink" href="#specify-backend" title="Permalink to this headline">¶</a></h3>
 <p>First you’ll need to specify which backend to use by setting
 <a class="reference internal" href="api-server.html#c.DaskGateway.backend_class" title="c.DaskGateway.backend_class"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.backend_class</span></code></a>. You have a few options:</p>
@@ -392,8 +393,8 @@ object.</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="configure-the-server-addresses-optional">
+</section>
+<section id="configure-the-server-addresses-optional">
 <h3>Configure the server addresses (optional)<a class="headerlink" href="#configure-the-server-addresses-optional" title="Permalink to this headline">¶</a></h3>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> will serve all traffic through
 <code class="docutils literal notranslate"><span class="pre">0.0.0.0:8000</span></code>. This includes both HTTP(S) requests (REST api, dashboards,
@@ -411,8 +412,8 @@ serve on port 8001:</p>
 <span class="n">c</span><span class="o">.</span><span class="n">Proxy</span><span class="o">.</span><span class="n">tcp_address</span> <span class="o">=</span> <span class="s1">&#39;:8001&#39;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="specify-user-python-environments">
+</section>
+<section id="specify-user-python-environments">
 <h3>Specify user python environments<a class="headerlink" href="#specify-user-python-environments" title="Permalink to this headline">¶</a></h3>
 <p>Since the Dask workers/schedulers will be running on disparate nodes across the
 cluster, you’ll need to provide a way for Python environments to be available
@@ -423,7 +424,7 @@ on every node. You have a few options here:</p>
 </ul>
 <p>In either case, the Python environment requires at least the <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code>
 package be installed to work properly.</p>
-<div class="section" id="using-a-fixed-environment-path">
+<section id="using-a-fixed-environment-path">
 <h4>Using a fixed environment path<a class="headerlink" href="#using-a-fixed-environment-path" title="Permalink to this headline">¶</a></h4>
 <p>If identical Python environments are available on every node (either local
 disk, or NFS mount), you only need to configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use
@@ -443,8 +444,8 @@ the provided Python. This could be done a few different ways:</p>
 <span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterConfig</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/your/environment/bin/activate&#39;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="user-configurable-python-environments">
+</section>
+<section id="user-configurable-python-environments">
 <h4>User-configurable python environments<a class="headerlink" href="#user-configurable-python-environments" title="Permalink to this headline">¶</a></h4>
 <p>Alternatively, you might want to allow users to provide their own Python
 environments. This can be useful, as it allows users to manage package versions
@@ -472,9 +473,9 @@ more information.</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="additional-configuration-options">
+</section>
+</section>
+<section id="additional-configuration-options">
 <h3>Additional configuration options<a class="headerlink" href="#additional-configuration-options" title="Permalink to this headline">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> has several additional configuration fields. See the
 <a class="reference internal" href="api-server.html"><span class="doc">Configuration Reference</span></a> docs (specifically <a class="reference internal" href="api-server.html#jobqueue-config"><span class="std std-ref">the jobqueue configuration docs</span></a>) for more information on all available options. At a minimum
@@ -491,8 +492,8 @@ also want to increase the cluster/worker timeout values:</p>
 <span class="n">c</span><span class="o">.</span><span class="n">JobQueueClusterBackend</span><span class="o">.</span><span class="n">worker_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="example">
+</section>
+<section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
 <p>In summary, an example <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> configuration for PBS might
 look like:</p>
@@ -515,16 +516,16 @@ look like:</p>
 <span class="n">c</span><span class="o">.</span><span class="n">PBSClusterBackend</span><span class="o">.</span><span class="n">worker_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="open-relevant-ports">
+</section>
+</section>
+<section id="open-relevant-ports">
 <h2>Open relevant ports<a class="headerlink" href="#open-relevant-ports" title="Permalink to this headline">¶</a></h2>
 <p>For users to access the gateway server, they’ll need access to the public
 port(s) set in <a class="reference internal" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a> above (by default
 this is port <code class="docutils literal notranslate"><span class="pre">8000</span></code>). How to expose ports is system specific - cluster
 administrators should determine how best to perform this task.</p>
-</div>
-<div class="section" id="start-dask-gateway-server">
+</section>
+<section id="start-dask-gateway-server">
 <h2>Start dask-gateway-server<a class="headerlink" href="#start-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>At this point you should be able to start the gateway server as the <code class="docutils literal notranslate"><span class="pre">dask</span></code>
 user using your created configuration file. The <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> process
@@ -550,8 +551,8 @@ dask-gateway-server -f /etc/dask-gateway/dask_gateway_config.py
 $ sudo -iu dask /opt/dask-gateway/start-dask-gateway
 </pre></div>
 </div>
-</div>
-<div class="section" id="validate-things-are-working">
+</section>
+<section id="validate-things-are-working">
 <h2>Validate things are working<a class="headerlink" href="#validate-things-are-working" title="Permalink to this headline">¶</a></h2>
 <p>If the server started with no errors, you’ll want to check that things are
 working properly. The easiest way to do this is to try connecting as a user.</p>
@@ -587,8 +588,8 @@ newly created cluster.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

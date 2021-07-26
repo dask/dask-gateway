@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Configuration Reference &mdash; Dask Gateway 0.9.0 documentation</title>
@@ -167,27 +168,27 @@
               
             
             
-              <p class="caption"><span class="caption-text">For Users</span></p>
+              <p><span class="caption-text">For Users</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<p><span class="caption-text">Admin - Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<p><span class="caption-text">Admin - Customization</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Reference</a><ul>
@@ -307,9 +308,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="configuration-reference">
+  <section id="configuration-reference">
 <h1>Configuration Reference<a class="headerlink" href="#configuration-reference" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="gateway-server">
+<section id="gateway-server">
 <h2>Gateway Server<a class="headerlink" href="#gateway-server" title="Permalink to this headline">¶</a></h2>
 <dl class="py data">
 <dt id="c.DaskGateway.address">
@@ -373,10 +374,10 @@
 <dd><p>Instead of starting the Application, dump configuration to stdout (as JSON)</p>
 </dd></dl>
 
-</div>
-<div class="section" id="authentication">
+</section>
+<section id="authentication">
 <h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="kerberosauthenticator">
+<section id="kerberosauthenticator">
 <span id="kerberos-auth-config"></span><h3>KerberosAuthenticator<a class="headerlink" href="#kerberosauthenticator" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
 <dt id="c.KerberosAuthenticator.cache_max_age">
@@ -407,8 +408,8 @@ transparent to the user).</p>
 <p>This is almost always “HTTP” (the default)</p>
 </dd></dl>
 
-</div>
-<div class="section" id="jupyterhubauthenticator">
+</section>
+<section id="jupyterhubauthenticator">
 <span id="jupyterhub-auth-config"></span><h3>JupyterHubAuthenticator<a class="headerlink" href="#jupyterhubauthenticator" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
 <dt id="c.JupyterHubAuthenticator.cache_max_age">
@@ -464,8 +465,8 @@ environment variable.</p>
 <p>When setting this, you should also set tls_cert.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="simpleauthenticator">
+</section>
+<section id="simpleauthenticator">
 <span id="simple-auth-config"></span><h3>SimpleAuthenticator<a class="headerlink" href="#simpleauthenticator" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
 <dt id="c.SimpleAuthenticator.cache_max_age">
@@ -490,13 +491,13 @@ transparent to the user).</p>
 <p>If unset (default), the password field is completely ignored.</p>
 </dd></dl>
 
-</div>
-</div>
-<div class="section" id="cluster-backends">
+</section>
+</section>
+<section id="cluster-backends">
 <span id="cluster-backends-reference"></span><h2>Cluster Backends<a class="headerlink" href="#cluster-backends" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="base-class">
+<section id="base-class">
 <h3>Base Class<a class="headerlink" href="#base-class" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="clusterconfig">
+<section id="clusterconfig">
 <span id="cluster-config"></span><h4>ClusterConfig<a class="headerlink" href="#clusterconfig" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.ClusterConfig.adaptive_period">
@@ -607,8 +608,8 @@ suffixes:</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="backend">
+</section>
+<section id="backend">
 <h4>Backend<a class="headerlink" href="#backend" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.Backend.api_url">
@@ -632,11 +633,11 @@ cluster. See the documentation for more information:</p>
 <p><a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a>.</p>
 </dd></dl>
 
-</div>
-</div>
-<div class="section" id="local-processes">
+</section>
+</section>
+<section id="local-processes">
 <h3>Local Processes<a class="headerlink" href="#local-processes" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="localclusterconfig">
+<section id="localclusterconfig">
 <h4>LocalClusterConfig<a class="headerlink" href="#localclusterconfig" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.LocalClusterConfig.adaptive_period">
@@ -747,8 +748,8 @@ suffixes:</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="localbackend">
+</section>
+<section id="localbackend">
 <h4>LocalBackend<a class="headerlink" href="#localbackend" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.LocalBackend.api_url">
@@ -955,8 +956,8 @@ resources. A larger period will provide slower feedback in the presence
 of failures.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="unsafelocalbackend">
+</section>
+<section id="unsafelocalbackend">
 <h4>UnsafeLocalBackend<a class="headerlink" href="#unsafelocalbackend" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.UnsafeLocalBackend.api_url">
@@ -1163,11 +1164,11 @@ resources. A larger period will provide slower feedback in the presence
 of failures.</p>
 </dd></dl>
 
-</div>
-</div>
-<div class="section" id="yarn">
+</section>
+</section>
+<section id="yarn">
 <h3>YARN<a class="headerlink" href="#yarn" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="yarnclusterconfig">
+<section id="yarnclusterconfig">
 <span id="yarn-config"></span><h4>YarnClusterConfig<a class="headerlink" href="#yarnclusterconfig" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.YarnClusterConfig.adaptive_period">
@@ -1322,8 +1323,8 @@ suffixes:</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="yarnbackend">
+</section>
+<section id="yarnbackend">
 <h4>YarnBackend<a class="headerlink" href="#yarnbackend" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.YarnBackend.api_url">
@@ -1511,11 +1512,11 @@ resources. A larger period will provide slower feedback in the presence
 of failures.</p>
 </dd></dl>
 
-</div>
-</div>
-<div class="section" id="kubernetes">
+</section>
+</section>
+<section id="kubernetes">
 <h3>Kubernetes<a class="headerlink" href="#kubernetes" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="kubeclusterconfig">
+<section id="kubeclusterconfig">
 <span id="kube-cluster-config"></span><h4>KubeClusterConfig<a class="headerlink" href="#kubeclusterconfig" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.KubeClusterConfig.adaptive_period">
@@ -1798,8 +1799,8 @@ following suffixes:</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="kubebackend">
+</section>
+<section id="kubebackend">
 <h4>KubeBackend<a class="headerlink" href="#kubebackend" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.KubeBackend.api_url">
@@ -1854,8 +1855,8 @@ cluster. See the documentation for more information:</p>
 <dd><p>The label selector to use when watching objects managed by the gateway.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="kubecontroller">
+</section>
+<section id="kubecontroller">
 <h4>KubeController<a class="headerlink" href="#kubecontroller" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.KubeController.address">
@@ -2014,11 +2015,11 @@ order of magnitude).</p>
 <dd><p>Instead of starting the Application, dump configuration to stdout (as JSON)</p>
 </dd></dl>
 
-</div>
-</div>
-<div class="section" id="job-queues">
+</section>
+</section>
+<section id="job-queues">
 <span id="jobqueue-config"></span><h3>Job Queues<a class="headerlink" href="#job-queues" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="pbsclusterconfig">
+<section id="pbsclusterconfig">
 <h4>PBSClusterConfig<a class="headerlink" href="#pbsclusterconfig" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.PBSClusterConfig.account">
@@ -2204,8 +2205,8 @@ suffixes:</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="pbsbackend">
+</section>
+<section id="pbsbackend">
 <h4>PBSBackend<a class="headerlink" href="#pbsbackend" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.PBSBackend.api_url">
@@ -2404,8 +2405,8 @@ resources. A larger period will provide slower feedback in the presence
 of failures.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="slurmclusterconfig">
+</section>
+<section id="slurmclusterconfig">
 <h4>SlurmClusterConfig<a class="headerlink" href="#slurmclusterconfig" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.SlurmClusterConfig.account">
@@ -2560,8 +2561,8 @@ suffixes:</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">worker_cores</span></code>.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="slurmbackend">
+</section>
+<section id="slurmbackend">
 <h4>SlurmBackend<a class="headerlink" href="#slurmbackend" title="Permalink to this headline">¶</a></h4>
 <dl class="py data">
 <dt id="c.SlurmBackend.api_url">
@@ -2753,12 +2754,12 @@ resources. A larger period will provide slower feedback in the presence
 of failures.</p>
 </dd></dl>
 
-</div>
-</div>
-</div>
-<div class="section" id="proxy">
+</section>
+</section>
+</section>
+<section id="proxy">
 <h2>Proxy<a class="headerlink" href="#proxy" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id1">
+<section id="id1">
 <h3>Proxy<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <dl class="py data">
 <dt id="c.Proxy.address">
@@ -2856,9 +2857,9 @@ full refesh.</p>
 <p>When setting this, you should also set tls_cert.</p>
 </dd></dl>
 
-</div>
-</div>
-<div class="section" id="cluster-manager-options">
+</section>
+</section>
+<section id="cluster-manager-options">
 <h2>Cluster Manager Options<a class="headerlink" href="#cluster-manager-options" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="dask_gateway_server.options.Options">
@@ -3028,10 +3029,10 @@ valid Python variable name. If not provided, <code class="docutils literal notra
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="models">
+</section>
+<section id="models">
 <h2>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="user">
+<section id="user">
 <h3>User<a class="headerlink" href="#user" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="dask_gateway_server.models.User">
@@ -3048,8 +3049,8 @@ valid Python variable name. If not provided, <code class="docutils literal notra
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="cluster">
+</section>
+<section id="cluster">
 <h3>Cluster<a class="headerlink" href="#cluster" title="Permalink to this headline">¶</a></h3>
 <dl class="py class">
 <dt id="dask_gateway_server.models.Cluster">
@@ -3081,9 +3082,9 @@ or no dashboard is running on the cluster.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Install Locally (Quickstart) &mdash; Dask Gateway 0.9.0 documentation</title>
@@ -167,13 +168,13 @@
               
             
             
-              <p class="caption"><span class="caption-text">For Users</span></p>
+              <p><span class="caption-text">For Users</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<p><span class="caption-text">Admin - Installation</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Install Locally (Quickstart)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
@@ -187,14 +188,14 @@
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<p><span class="caption-text">Admin - Customization</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
@@ -263,14 +264,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="install-locally-quickstart">
+  <section id="install-locally-quickstart">
 <h1>Install Locally (Quickstart)<a class="headerlink" href="#install-locally-quickstart" title="Permalink to this headline">¶</a></h1>
 <p>This page describes how to deploy and interact with a <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>
 locally. This can be useful for testing, demos, and development purposes, but
 is not a normal method of deployment.</p>
 <p>If you’re a user connecting to an existing <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> instance,
 you may want to start at <a class="reference internal" href="usage.html"><span class="doc">Usage</span></a> instead.</p>
-<div class="section" id="installation">
+<section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>Dask-Gateway can be installed with <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">pip</span></code>. It’s composed of two packages:</p>
 <ul class="simple">
@@ -285,8 +286,8 @@ you may want to start at <a class="reference internal" href="usage.html"><span c
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install dask-gateway dask-gateway-server<span class="o">[</span>local<span class="o">]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="start-the-gateway-server">
+</section>
+<section id="start-the-gateway-server">
 <h2>Start the gateway server<a class="headerlink" href="#start-the-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>To start the Gateway server, run:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>dask-gateway-server
@@ -299,8 +300,8 @@ you may want to start at <a class="reference internal" href="usage.html"><span c
 </ul>
 <p><em>Both of these options are insecure and not-advised for any real-world
 deployments.</em> They are perfectly fine for testing and experimentation though.</p>
-</div>
-<div class="section" id="connect-to-the-gateway-server">
+</section>
+<section id="connect-to-the-gateway-server">
 <h2>Connect to the gateway server<a class="headerlink" href="#connect-to-the-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>To connect to the gateway, create a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gateway</span></code></a> client with the URL output
 above. By default this is <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:8000</span></code>.</p>
@@ -316,21 +317,21 @@ existing clusters (should be an empty list).</p>
 <span class="go">[]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="interact-with-the-gateway-server">
+</section>
+<section id="interact-with-the-gateway-server">
 <h2>Interact with the gateway server<a class="headerlink" href="#interact-with-the-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>At this point you can use the <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gateway</span></code></a> client to interact with the
 gateway server. You can use the client to create new clusters and interact with
 existing clusters. We direct you to the <a class="reference internal" href="usage.html"><span class="doc">Usage</span></a> documentation for more
 information, starting from the <a class="reference internal" href="usage.html#usage-create-new-cluster"><span class="std std-ref">Create a new cluster</span></a> section.</p>
-</div>
-<div class="section" id="shutdown-the-gateway-server">
+</section>
+<section id="shutdown-the-gateway-server">
 <h2>Shutdown the gateway server<a class="headerlink" href="#shutdown-the-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>When you’re done with local usage, you’ll want to shutdown the Dask-Gateway
 server. To do this, <code class="docutils literal notranslate"><span class="pre">Ctrl-C</span></code> in the same terminal you started the process in.
 Note that any active clusters will also be shutdown.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

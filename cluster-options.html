@@ -5,7 +5,8 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Exposing Cluster Options &mdash; Dask Gateway 0.9.0 documentation</title>
@@ -167,20 +168,20 @@
               
             
             
-              <p class="caption"><span class="caption-text">For Users</span></p>
+              <p><span class="caption-text">For Users</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Installation</span></p>
+<p><span class="caption-text">Admin - Installation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Admin - Customization</span></p>
+<p><span class="caption-text">Admin - Customization</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
@@ -198,7 +199,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Reference</span></p>
+<p><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
@@ -267,13 +268,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="exposing-cluster-options">
+  <section id="exposing-cluster-options">
 <span id="id1"></span><h1>Exposing Cluster Options<a class="headerlink" href="#exposing-cluster-options" title="Permalink to this headline">¶</a></h1>
 <p>By default cluster configuration (e.g. worker memory, docker image, etc…) is
 set statically by an administrator in the server configuration file. To allow
 users to change certain parameters when creating a new cluster an administrator
 must explicitly expose them in the configuration.</p>
-<div class="section" id="user-experience">
+<section id="user-experience">
 <h2>User Experience<a class="headerlink" href="#user-experience" title="Permalink to this headline">¶</a></h2>
 <p>On the user side, exposing options with allows users to:</p>
 <ul class="simple">
@@ -303,8 +304,8 @@ cluster.</p></li>
 </ul>
 <img alt="Cluster options widget" src="_images/options-widget.png" />
 <p>See <a class="reference internal" href="usage.html#user-cluster-options"><span class="std std-ref">Configure a cluster</span></a> for more information on the user experience.</p>
-</div>
-<div class="section" id="server-configuration">
+</section>
+<section id="server-configuration">
 <h2>Server Configuration<a class="headerlink" href="#server-configuration" title="Permalink to this headline">¶</a></h2>
 <p>Options are exposed to the user by setting <a class="reference internal" href="api-server.html#c.Backend.cluster_options" title="c.Backend.cluster_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.cluster_options</span></code></a>.
 This configuration field takes either:</p>
@@ -391,10 +392,10 @@ an options handler can return overrides for any configuration fields on
 <a class="reference internal" href="api-server.html#kube-cluster-config"><span class="std std-ref">KubeClusterConfig</span></a>. See
 <a class="reference internal" href="api-server.html#cluster-backends-reference"><span class="std std-ref">Cluster Backends</span></a> for information on what cluster configuration
 fields are available for your backend.</p>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="worker-cores-and-memory">
+<section id="worker-cores-and-memory">
 <h3>Worker Cores and Memory<a class="headerlink" href="#worker-cores-and-memory" title="Permalink to this headline">¶</a></h3>
 <p>Here we expose options for users to configure
 <a class="reference internal" href="api-server.html#c.ClusterConfig.worker_cores" title="c.ClusterConfig.worker_cores"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_cores</span></code></a> and <a class="reference internal" href="api-server.html#c.ClusterConfig.worker_memory" title="c.ClusterConfig.worker_memory"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_memory</span></code></a>.
@@ -416,8 +417,8 @@ bytes (as expected by <a class="reference internal" href="api-server.html#c.Clus
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="cluster-profiles">
+</section>
+<section id="cluster-profiles">
 <h3>Cluster Profiles<a class="headerlink" href="#cluster-profiles" title="Permalink to this headline">¶</a></h3>
 <p>Instead of exposing individual options, you may instead wish to expose
 “profiles” - user-friendly names for common groups of options. For example,
@@ -441,13 +442,13 @@ from.</p>
         <span class="p">[</span><span class="s2">&quot;small&quot;</span><span class="p">,</span> <span class="s2">&quot;medium&quot;</span><span class="p">,</span> <span class="s2">&quot;large&quot;</span><span class="p">],</span>
         <span class="n">default</span><span class="o">=</span><span class="s2">&quot;medium&quot;</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Cluster Profile&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="p">),</span>
     <span class="n">handler</span><span class="o">=</span><span class="k">lambda</span> <span class="n">options</span><span class="p">:</span> <span class="n">profiles</span><span class="p">[</span><span class="n">options</span><span class="o">.</span><span class="n">profile</span><span class="p">],</span>
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="different-options-per-user-group">
+</section>
+<section id="different-options-per-user-group">
 <h3>Different Options per User Group<a class="headerlink" href="#different-options-per-user-group" title="Permalink to this headline">¶</a></h3>
 <p>Cluster options may be configured to differ based on the user by providing a
 function for <a class="reference internal" href="api-server.html#c.Backend.cluster_options" title="c.Backend.cluster_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.cluster_options</span></code></a>. This function receives a
@@ -483,8 +484,8 @@ member of the “power-users” group.</p>
 <span class="n">c</span><span class="o">.</span><span class="n">Backend</span><span class="o">.</span><span class="n">cluster_options</span> <span class="o">=</span> <span class="n">generate_options</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="user-specific-configuration">
+</section>
+<section id="user-specific-configuration">
 <h3>User-specific Configuration<a class="headerlink" href="#user-specific-configuration" title="Permalink to this headline">¶</a></h3>
 <p>Since the <code class="docutils literal notranslate"><span class="pre">handler</span></code> function can optionally take in the <code class="docutils literal notranslate"><span class="pre">User</span></code> object, you
 can use this to add user-specific configuration. Note that you don’t have to
@@ -508,9 +509,9 @@ called regardless.</p>
 <span class="n">c</span><span class="o">.</span><span class="n">Backend</span><span class="o">.</span><span class="n">cluster_options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">(</span><span class="n">handler</span><span class="o">=</span><span class="n">options_handler</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
