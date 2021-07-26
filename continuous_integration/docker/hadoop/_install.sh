@@ -6,6 +6,7 @@ set -xe
 cd /working
 
 conda install psutil pykerberos
+conda install -c conda-forge python=3.8
 
 pip install \
     aiohttp \

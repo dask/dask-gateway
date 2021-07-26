@@ -5,6 +5,8 @@ import yaml
 
 import pytest
 
+pytestmark = pytest.mark.kubernetes
+
 try:
     subprocess.check_call(["helm", "version"])
 except Exception:
