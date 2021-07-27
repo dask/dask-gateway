@@ -16,11 +16,11 @@ pip install -U \
     traitlets
 
 pushd dask-gateway
-python setup.py develop
+sudo python setup.py develop
 popd
 
 pushd dask-gateway-server
-python setup.py develop --no-build-proxy
+sudo python setup.py develop --no-build-proxy
 popd
 
 pip list
