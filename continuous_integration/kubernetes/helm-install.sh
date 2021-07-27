@@ -17,7 +17,10 @@ export DASK_GATEWAY_SERVER_IMAGE="daskgateway/dask-gateway-server:$DASK_GATEWAY_
 docker tag $DASK_GATEWAY_SERVER_TAG $DASK_GATEWAY_SERVER_IMAGE
 
 echo "Importing images into k3d"
+echo "DASK_GATEWAY_IMAGE: $DASK_GATEWAY_IMAGE"
+echo "DASK_GATEWAY_SERVER_IMAGE: $DASK_GATEWAY_SERVER_IMAGE"
 k3d image import $DASK_GATEWAY_IMAGE $DASK_GATEWAY_SERVER_IMAGE
+k3d image import $DASK_GATEWAY_SERVER_IMAGE
 
 echo "Installing Helm Chart"
 helm install \
