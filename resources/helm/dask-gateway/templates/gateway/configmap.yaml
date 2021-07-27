@@ -66,6 +66,7 @@ data:
         ("worker_cores_limit", "worker.cores.limit"),
         ("worker_memory", "worker.memory.request"),
         ("worker_memory_limit", "worker.memory.limit"),
+        ("worker_threads", "worker.threads"),
         ("worker_extra_container_config", "worker.extraContainerConfig"),
         ("worker_extra_pod_config", "worker.extraPodConfig"),
         # Additional fields
