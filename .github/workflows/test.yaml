@@ -2,8 +2,10 @@ name: Test
 
 on:
   push:
-    # TODO: Only main
     branches: [ "*" ]
+  pull_request:
+    branches:
+      - main
 
 env:
   commit_msg: ${{ github.event.head_commit.message }}
@@ -75,7 +77,6 @@ jobs:
             --agents 1
             --api-port 6444
             --no-lb
-
       - name: Install tools
         run: |
           export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"

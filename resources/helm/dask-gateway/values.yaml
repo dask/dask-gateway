@@ -126,6 +126,9 @@ gateway:
         request: null
         limit: null
 
+      # Number of threads available for a worker
+      threads: 1
+
   # Settings for nodeSelector, affinity, and tolerations for the gateway pods
   nodeSelector: {}
   affinity: {}
