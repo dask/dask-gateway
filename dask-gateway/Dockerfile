@@ -46,8 +46,8 @@ ENTRYPOINT ["tini", "-g", "--"]
 # ** An image with all of dask-gateway's dependencies **
 FROM miniconda as dependencies
 
-ARG DASK_VERSION=2.30.0
-ARG DISTRIBUTED_VERSION=2.30.1
+ARG DASK_VERSION=2021.7.1
+ARG DISTRIBUTED_VERSION=2021.7.1
 
 # - Installs dask and dependencies
 # - Cleans up conda files
