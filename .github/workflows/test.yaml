@@ -101,9 +101,6 @@ jobs:
         run: |
           kill ${{ env.STERN_PID }}
           cat k8s-logs
-      - name: To enter a SSH debugging session, read these logs
-        if: failure()
-        uses: mxschmitt/action-tmate@v3
 
   pbs-tests:
     runs-on: ubuntu-latest
