@@ -256,7 +256,7 @@ def test_make_ingressroute():
     cluster_name = "c1234"
     namespace = "mynamespace"
 
-    ingress = controller.make_ingressroute(cluster_name, namespace)
+    ingress = controller.make_ingressroute(controller, cluster_name, namespace)
 
     labels = ingress["metadata"]["labels"]
     assert labels["gateway.dask.org/instance"] == "instance-1234"
@@ -278,7 +278,7 @@ def test_make_ingressroutetcp():
     cluster_name = "c1234"
     namespace = "mynamespace"
 
-    ingress = controller.make_ingressroutetcp(cluster_name, namespace)
+    ingress = controller.make_ingressroutetcp(controller, cluster_name, namespace)
 
     labels = ingress["metadata"]["labels"]
     assert labels["gateway.dask.org/instance"] == "instance-1234"
