@@ -347,13 +347,13 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     make_ingressroute = Callable(
         _make_ingressroute,
         help="A callable function to override the default traefik ingressroute resource",
-        config=True
+        config=True,
     )
 
     make_ingressroutetcp = Callable(
         _make_ingressroutetcp,
         help="A callable function to override the default traefik ingressroutetcp resource",
-        config=True
+        config=True,
     )
 
     _log_formatter_cls = LogFormatter
