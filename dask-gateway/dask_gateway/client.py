@@ -15,10 +15,11 @@ from urllib.parse import urlparse
 import aiohttp
 import dask
 import yarl
+from dask.utils import format_bytes
 from distributed import Client
 from distributed.core import rpc
 from distributed.security import Security
-from distributed.utils import LoopRunner, format_bytes
+from distributed.utils import LoopRunner
 
 # Register gateway protocol
 from . import comm
