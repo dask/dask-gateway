@@ -20,8 +20,8 @@ spec:
         app.kubernetes.io/component: controller
       annotations:
         checksum/configmap: {{ include (print .Template.BasePath "/controller/configmap.yaml") . | sha256sum }}
-        {{- if .Values.controller.annotations }}
-        {{- .Values.controller.annotations | toYaml | trimSuffix "\n" | nindent 8 }}
+        {{- with .Values.controller.annotations }}
+        {{- . | toYaml | nindent 8 }}
         {{- end }}
     spec:
       {{- if .Values.rbac.enabled }}
@@ -37,7 +37,7 @@ spec:
             name: {{ include "dask-gateway.controllerName" . }}
       {{- with .Values.controller.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
       containers:
         - name: controller
@@ -48,8 +48,10 @@ spec:
             - kube-controller
             - --config
             - /etc/dask-gateway/dask_gateway_config.py
+          {{- with .Values.controller.resources }}
           resources:
-            {{- .Values.controller.resources | toYaml | trimSuffix "\n" | nindent 12 }}
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - mountPath: /etc/dask-gateway/
               name: configmap
@@ -58,14 +60,14 @@ spec:
               name: api
       {{- with .Values.controller.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
       {{- with .Values.controller.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
       {{- with .Values.controller.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
 {{- end }}

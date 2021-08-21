@@ -1,6 +1,6 @@
 {{- if .Values.controller.enabled -}}
 {{- if .Values.rbac.enabled -}}
-{{- if not .Values.rbac.controller.serviceAccountName }}
+{{- if not .Values.rbac.controller.serviceAccountName -}}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
