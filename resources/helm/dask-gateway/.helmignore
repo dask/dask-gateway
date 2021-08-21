@@ -21,3 +21,7 @@
 .idea/
 *.tmproj
 .vscode/
+
+# Manually added entries
+*.rst
+.gitkeep
