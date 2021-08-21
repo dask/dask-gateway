@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-KUBE_VERSION=1.16.0
-HELM_VERSION=3.1.2
+KUBE_VERSION=1.22.1
+HELM_VERSION=3.6.3
 STERN_VERSION=1.11.0
 
 # Install kubectl
