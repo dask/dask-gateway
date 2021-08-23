@@ -19,8 +19,8 @@ spec:
       annotations:
         checksum/configmap: {{ include (print .Template.BasePath "/gateway/configmap.yaml") . | sha256sum }}
         checksum/secret: {{ include (print .Template.BasePath "/gateway/secret.yaml") . | sha256sum }}
-        {{- if .Values.gateway.annotations }}
-        {{- .Values.gateway.annotations | toYaml | trimSuffix "\n" | nindent 8 }}
+        {{- with .Values.gateway.annotations }}
+        {{- . | toYaml | nindent 8 }}
         {{- end }}
     spec:
       {{- if .Values.rbac.enabled }}
@@ -36,7 +36,7 @@ spec:
             name: {{ include "dask-gateway.apiName" . }}
       {{- with .Values.gateway.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
       containers:
         - name: gateway
@@ -46,8 +46,10 @@ spec:
             - dask-gateway-server
             - --config
             - /etc/dask-gateway/dask_gateway_config.py
+          {{- with .Values.gateway.resources }}
           resources:
-            {{- .Values.gateway.resources | toYaml | trimSuffix "\n" | nindent 12 }}
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - mountPath: /etc/dask-gateway/
               name: configmap
@@ -86,13 +88,13 @@ spec:
           {{- end }}
       {{- with .Values.gateway.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
       {{- with .Values.gateway.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
       {{- with .Values.gateway.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}

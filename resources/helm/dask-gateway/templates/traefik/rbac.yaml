@@ -1,5 +1,5 @@
 {{- if .Values.rbac.enabled -}}
-{{- if not .Values.rbac.traefik.serviceAccountName }}
+{{- if not .Values.rbac.traefik.serviceAccountName -}}
 kind: ServiceAccount
 apiVersion: v1
 metadata:

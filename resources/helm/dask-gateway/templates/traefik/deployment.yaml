@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 spec:
-  replicas: {{ default 1 .Values.traefik.replicas }}
+  replicas: {{ .Values.traefik.replicas }}
   selector:
     matchLabels:
       {{- include "dask-gateway.matchLabels" . | nindent 6 }}
@@ -17,7 +17,7 @@ spec:
         app.kubernetes.io/component: traefik
       {{- with .Values.traefik.annotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
     spec:
       {{- if .Values.rbac.enabled }}
@@ -34,8 +34,10 @@ spec:
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
+          {{- with .Values.traefik.resources }}
           resources:
-            {{- .Values.traefik.resources | toYaml | trimSuffix "\n" | nindent 12 }}
+            {{- . | toYaml | nindent 12 }}
+          {{- end }}
           args:
             - "--global.checknewversion=False"
             - "--global.sendanonymoususage=False"
@@ -85,13 +87,13 @@ spec:
             timeoutSeconds: 2
       {{- with .Values.traefik.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
       {{- with .Values.traefik.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
       {{- with .Values.traefik.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+        {{- . | toYaml | nindent 8 }}
       {{- end }}
