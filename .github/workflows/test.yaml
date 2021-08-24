@@ -87,6 +87,10 @@ jobs:
           k3d --version
           kubectl get nodes
 
+      - name: Helm lint and render templates
+        run: |
+          ./continuous_integration/kubernetes/helm-lint-and-template.sh
+
       - name: Helm Install
         run: |
           stern "" > k8s-logs &
