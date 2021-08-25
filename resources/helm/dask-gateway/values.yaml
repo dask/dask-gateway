@@ -86,7 +86,7 @@ gateway:
     namespace: null
 
     # A mapping of environment variables to set for both schedulers and workers.
-    environment: null
+    environment: {}
 
     scheduler:
       # Any extra configuration for the scheduler pod. Sets
