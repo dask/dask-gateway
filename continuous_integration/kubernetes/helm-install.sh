@@ -26,7 +26,7 @@ echo "Installing Helm Chart"
 helm install \
     test-dask-gateway \
     "${git_root}/resources/helm/dask-gateway" \
-    -f "${git_root}/resources/helm/testing/travis.yaml" \
+    -f "${git_root}/resources/helm/testing/chart-install-values.yaml" \
     --set "gateway.image.tag=$DASK_GATEWAY_SERVER_TAG" \
     --set "gateway.backend.image.tag=$DASK_GATEWAY_TAG" \
     --set "controller.image.tag=$DASK_GATEWAY_SERVER_TAG" \
