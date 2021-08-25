@@ -141,8 +141,8 @@ subdirectory:
 - Slurm Tests: ``continuous_integration/docker/slurm``
 - Kubernetes Tests: ``continuous_integration/kubernetes``
 
-The particularities of each setup differ, please see the ``.travis.yml`` file
-for the specifics.
+The particularities of each setup differ, please see the
+``.github/workflows/test.yaml`` file for the specifics.
 
 
 Building the Documentation
@@ -168,43 +168,6 @@ Then build the documentation with ``make``
     $ make html
 
 The resulting HTML files end up in the ``build/html`` directory.
-
-
-Travis-CI Commit Message Triggers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Our Travis-CI setup allows triggering/skipping specific tests based on special
-directives in the commit messages. This allows avoiding expensive tests for a
-subcomponent (e.g. kubernetes) when they don't need to be run, but triggering
-them if a PR may affect that component.
-
-The commit message directives are as follows:
-
-- ``skip-tests``: Only build the documentation
-- ``test-yarn``: Run the YARN tests
-- ``test-kube``: Run the Kubernetes tests
-- ``test-pbs``: Run the PBS tests
-- ``test-slurm``: Run the Slurm tests
-- ``test-jobqueue``: Run all Jobqueue tests (e.g. PBS, Slurm, ...)
-- ``test-all``: Test all backends
-
-Proper use of these can speed up our build times, while still ensuring that
-things are properly tested.
-
-For example, if your pull-request only contains documentation changes, you can
-tell Travis-CI to skip running the tests (and speed-up our CI process) by
-including the string ``"skip-tests"`` somewhere in your commit message:
-
-.. code-block:: text
-
-    Note how to skip tests on travis-ci [skip-tests]
-
-    Add a note to the develop.rst docs on how to build only docs.
-    # Please enter the commit message for your changes. Lines starting
-    # with '#' will be ignored, and an empty message aborts the commit.
-    # On branch example-branch
-    # Changes to be committed:
-    #    modified:   docs/source/develop.rst
 
 
 .. _Conda: https://conda.io/docs/
