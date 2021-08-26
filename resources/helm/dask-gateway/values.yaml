@@ -218,7 +218,7 @@ traefik:
   # The image to use for the proxy pod
   image:
     name: traefik
-    tag: 2.1.3
+    tag: "2.5"
     pullPolicy: IfNotPresent
   imagePullSecrets: []
 
