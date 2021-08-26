@@ -30,8 +30,11 @@ properties:
       - auth
       - backend
     description: |
-      Configuration related to the `dask-gateway-server` running in the `api`
-      pod.
+      `gateway` nested config relates to the `api` Pod and the
+      `dask-gateway-server` running within it, the k8s Service exposing it, as
+      well as the schedulers (gateway.backend.scheduler) and workers
+      (gateway.backend.worker) created by the controller when a DaskCluster k8s
+      resource is registered.
     properties:
       replicas: &replicas-spec
         type: integer
@@ -232,9 +235,8 @@ properties:
           - scheduler
           - worker
         description: |
-          Backend configuration refers to the scheduler and worker pods being
-          created for individual DaskCluster resources by the DaskGateway
-          controller.
+          `backend` nested configuration relates to the scheduler and worker
+          resources created for DaskCluster k8s resources by the controller.
         properties:
           image:
             type: object
@@ -362,9 +364,9 @@ properties:
       - k8sApiRateLimit
       - k8sApiRateLimitBurst
     description: |
-      Configuration related to the `dask-gateway-server` running in the
-      `controller` pod and acting as the controller of the custom DaskCluster
-      k8s resources.
+      `controller` nested config relates to the `controller` Pod and the
+      `dask-gateway-server` running within it that makes things happen when
+      changes to DaskCluster k8s resources are observed.
     properties:
       enabled:
         type: boolean
@@ -426,8 +428,9 @@ properties:
       - dashboard
       - service
     description: |
-      Configuration for Traefik running in the `traefik` pod, acting as a proxy
-      for traffic towards the gateway or user created DaskCluster resources.
+      `traefik` nested config relates to the `traefik` Pod and Traefik running
+      within it that is acting as a proxy for traffic towards the gateway or
+      user created DaskCluster resources.
     properties:
       replicas: *replicas-spec
       image:
@@ -514,6 +517,9 @@ properties:
       - controller
       - gateway
       - traefik
+    description: |
+      `rbac` nested configuration relates to the choice of creating or replacing
+      resources like (Cluster)Role, (Cluster)RoleBinding, and ServiceAccount.
     properties:
       enabled:
         type: boolean
