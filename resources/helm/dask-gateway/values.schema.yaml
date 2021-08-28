@@ -79,6 +79,13 @@ properties:
         description: |
           A list of references to existing k8s Secrets with credentials to pull
           the image.
+        items:
+          type: object
+          additionalProperties: false
+          required: [name]
+          properties:
+            name:
+              type: string
       annotations: &labels-and-annotations-spec
         type: object
         additionalProperties: false
