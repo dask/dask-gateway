@@ -13,6 +13,9 @@ FIXME: It would be nice to run this as part of our CI pipeline to report if
 
        That kind of complexity is an issue for labels, resources,
        containerSecurityContext, readiness- and livenessProbe's for example.
+
+This script originated from the jupyterhub/zero-to-jupyterhub-k8s project. It is
+not yet extracted to be a standalone package, but may be in the future.
 """
 
 import os

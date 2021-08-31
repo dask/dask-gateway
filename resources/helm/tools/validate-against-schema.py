@@ -2,6 +2,9 @@
 """
 This scripts validates the charts default values against the values.schema.yaml
 file, and optionally also another file against the values.schema.yaml.
+
+This script originated from the jupyterhub/zero-to-jupyterhub-k8s project. It is
+not yet extracted to be a standalone package, but may be in the future.
 """
 
 import jsonschema

@@ -8,6 +8,9 @@ While we can directly generate a values.schema.json from values.schema.yaml, it
 contains a lot of description text we use to generate our configuration
 reference that isn't helpful to ship along the validation schema. Due to that,
 we trim away everything that isn't needed.
+
+This script originated from the jupyterhub/zero-to-jupyterhub-k8s project. It is
+not yet extracted to be a standalone package, but may be in the future.
 """
 
 import json
