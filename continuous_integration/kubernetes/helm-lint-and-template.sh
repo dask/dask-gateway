@@ -4,6 +4,9 @@ set -e
 this_dir="$(dirname "${BASH_SOURCE[0]}")"
 git_root="$(cd "${this_dir}/../.." && pwd)"
 
+echo "Generating Helm Chart's values.schema.json"
+"${git_root}/resources/helm/tools/generate-json-schema.py"
+
 echo "Linting Helm Chart"
 helm lint \
     "${git_root}/resources/helm/dask-gateway" \

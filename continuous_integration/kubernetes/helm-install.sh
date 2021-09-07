@@ -22,6 +22,9 @@ echo "DASK_GATEWAY_SERVER_IMAGE: $DASK_GATEWAY_SERVER_IMAGE"
 k3d image import $DASK_GATEWAY_IMAGE $DASK_GATEWAY_SERVER_IMAGE
 k3d image import $DASK_GATEWAY_SERVER_IMAGE
 
+echo "Generating Helm Chart's values.schema.json"
+"${git_root}/resources/helm/tools/generate-json-schema.py"
+
 echo "Installing Helm Chart"
 helm install \
     test-dask-gateway \

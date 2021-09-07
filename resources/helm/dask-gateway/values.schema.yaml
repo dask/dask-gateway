@@ -1,0 +1,572 @@
+# This is a YAML representation of a values.schema.json file that can be
+# packaged with a Helm chart so that users' chart config can be validated when
+# they use it with `helm template`, `helm install`, or `helm upgrade`.
+#
+# To generate a values.schema.json from this YAML file, run the
+# tools/generate-json-schema.py script. Do this before running tests and
+# packaging this Helm chart!
+#
+$schema": http://json-schema.org/draft-07/schema#
+type: object
+additionalProperties: false
+required:
+  - gateway
+  - controller
+  - traefik
+  - rbac
+  - global
+properties:
+  gateway:
+    type: object
+    additionalProperties: false
+    required:
+      - replicas
+      - image
+      - imagePullSecrets
+      - tolerations
+      - prefix
+      - loglevel
+      - service
+      - auth
+      - backend
+    description: |
+      `gateway` nested config relates to the `api` Pod and the
+      `dask-gateway-server` running within it, the k8s Service exposing it, as
+      well as the schedulers (gateway.backend.scheduler) and workers
+      (gateway.backend.worker) created by the controller when a DaskCluster k8s
+      resource is registered.
+    properties:
+      replicas: &replicas-spec
+        type: integer
+      image:
+        type: object
+        additionalProperties: false
+        required: [name, tag]
+        description: |
+          Set custom image name, tag, pullPolicy, or pullSecrets for the
+          `dask-gateway-server` running in the `api` pod.
+        properties: &image-properties
+          name:
+            type: string
+            description: |
+              The name of the image, without the tag.
+
+              ```
+              # example name
+              gcr.io/my-project/my-image
+              ```
+          tag:
+            type: string
+            description: |
+              The tag of the image to pull. This is the value following `:` in
+              complete image specifications.
+
+              ```
+              # example tags
+              v1.11.1
+              zhy270a
+              ```
+          pullPolicy:
+            enum: [null, "", IfNotPresent, Always, Never]
+            description: |
+              Configures the Pod's `spec.imagePullPolicy`.
+
+              See the [Kubernetes
+              docs](https://kubernetes.io/docs/concepts/containers/images/#updating-images)
+              for more info.
+      imagePullSecrets: &imagePullSecrets-spec
+        type: array
+        description: |
+          A list of references to existing k8s Secrets with credentials to pull
+          the image.
+        items:
+          type: object
+          additionalProperties: false
+          required: [name]
+          properties:
+            name:
+              type: string
+      annotations: &labels-and-annotations-spec
+        type: object
+        additionalProperties: false
+        patternProperties: &labels-and-annotations-patternProperties
+          ".*":
+            type: string
+        description: |
+          Annotations to apply to the associated resource.
+
+          See [the Kubernetes
+          documentation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
+          for more details about annotations.
+      resources: &resources-spec
+        type: object
+        additionalProperties: true
+        description: |
+          A k8s native specification of resources, see [the
+          documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#resourcerequirements-v1-core).
+      livenessProbe: &probe-spec
+        type: object
+        additionalProperties: true
+        required: [enabled]
+        description: |
+          This config option is exactly like the k8s native specification of a
+          container probe, except that it also supports an `enabled` boolean
+          flag.
+
+          See [the k8s
+          documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#probe-v1-core)
+          for more details.
+        properties:
+          enabled:
+            type: boolean
+      readinessProbe: *probe-spec
+      nodeSelector: &nodeSelector-spec
+        type: object
+        additionalProperties: false
+        patternProperties: *labels-and-annotations-patternProperties
+        description: |
+          Node selector labels require a pod to be scheduled on nodes with
+          matching labels.
+
+          See [the Kubernetes
+          documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector)
+          for more details.
+      affinity: &affinity-spec
+        type: object
+        additionalProperties: true
+        description: |
+          See the [Kubernetes
+          docs](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity)
+          for more info.
+      tolerations: &tolerations-spec
+        type: array
+        description: |
+          Tolerations allow a pod to be scheduled on nodes with taints.
+
+          Pass this field an array of
+          [`Toleration`](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#toleration-v1-core)
+          objects.
+
+          See the [Kubernetes
+          docs](https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/)
+          for more info.
+      extraConfig:
+        type: [object, string]
+        additionalProperties: *labels-and-annotations-patternProperties
+        description: |
+          Any extra configuration code to append to the generated
+          `dask_gateway_config.py` file. Can be either a single code-block, or a
+          map of key -> code-block (code-blocks are run in alphabetical order by
+          key, the key value itself is meaningless). The map version is useful
+          as it supports merging multiple `values.yaml` files, but is
+          unnecessary in other cases.
+      prefix:
+        type: string
+        description: |
+          Path prefix to serve dask-gateway api requests under. This prefix will
+      loglevel: &loglevel-spec
+        enum: [ERROR, WARN, INFO, DEBUG]
+
+      service:
+        type: object
+        additionalProperties: false
+        description: |
+          Configuration related to the k8s Service exposing the
+          `dask-gateway-server` running in the `api` pod.
+        properties:
+          annotations: *labels-and-annotations-spec
+
+      auth:
+        type: object
+        additionalProperties: false
+        required:
+          - type
+          - simple
+          - kerberos
+          - jupyterhub
+          - custom
+        properties:
+          type:
+            enum: [simple, kerberos, jupyterhub, custom]
+            description: |
+              The auth type to use.
+          simple:
+            type: object
+            additionalProperties: false
+            properties:
+              password:
+                type: [string, "null"]
+                description: |
+                  A shared password to use for all users.
+          kerberos:
+            type: object
+            additionalProperties: false
+            properties:
+              keytab:
+                type: [string, "null"]
+                description: |
+                  Path to the HTTP keytab for this node.
+          jupyterhub:
+            type: object
+            additionalProperties: false
+            properties:
+              apiToken:
+                type: [string, "null"]
+                description: |
+                  A JupyterHub api token for dask-gateway to use. See
+                  https://gateway.dask.org/install-kube.html#authenticating-with-jupyterhub.
+              apiUrl:
+                type: [string, "null"]
+                description: |
+                  JupyterHub's api url. Inferred from JupyterHub's service name if
+                  running in the same namespace.
+          custom:
+            type: object
+            additionalProperties: false
+            properties:
+              class:
+                type: [string, "null"]
+                description: |
+                  The full authenticator class name.
+              config:
+                type: object
+                additionalProperties: true
+                description: |
+                  Configuration fields to set on the authenticator class.
+
+      backend:
+        type: object
+        additionalProperties: false
+        required:
+          - image
+          - scheduler
+          - worker
+        description: |
+          `backend` nested configuration relates to the scheduler and worker
+          resources created for DaskCluster k8s resources by the controller.
+        properties:
+          image:
+            type: object
+            additionalProperties: false
+            required: [name, tag]
+            description: |
+              Set a custom image name, tag, pullPolicy, or pullSecrets for Dask
+              Cluster's scheduler and worker pods.
+            properties: *image-properties
+          namespace:
+            type: [string, "null"]
+            description: |
+              The namespace to launch dask clusters in. If not specified,
+              defaults to the same namespace the gateway is running in.
+          environment:
+            type: object
+            additionalProperties: false
+            description: |
+              A mapping of environment variables to set for both schedulers and
+              workers.
+            patternProperties:
+              ".*":
+                type: string
+
+          scheduler:
+            type: object
+            additionalProperties: false
+            required:
+              - cores
+              - memory
+            properties:
+              extraPodConfig:
+                type: object
+                additionalProperties: true
+                description: |
+                  Any extra configuration for the scheduler pod. Sets
+                  `c.KubeClusterConfig.scheduler_extra_pod_config`.
+              extraContainerConfig:
+                type: object
+                additionalProperties: true
+                description: |
+                  Any extra configuration for the scheduler container. Sets
+                  `c.KubeClusterConfig.scheduler_extra_container_config`.
+              cores:
+                type: object
+                additionalProperties: false
+                description: |
+                  Cores request/limit for the scheduler.
+                properties:
+                  request:
+                    type: [string, number, "null"]
+                  limit:
+                    type: [string, number, "null"]
+              memory:
+                type: object
+                additionalProperties: false
+                description: |
+                  Memory request/limit for the scheduler.
+                properties:
+                  request:
+                    type: [string, number, "null"]
+                  limit:
+                    type: [string, number, "null"]
+
+          worker:
+            type: object
+            additionalProperties: false
+            required:
+              - cores
+              - memory
+              - threads
+            properties:
+              extraPodConfig:
+                type: object
+                additionalProperties: true
+                description: |
+                  Any extra configuration for the worker pod. Sets
+                  `c.KubeClusterConfig.worker_extra_pod_config`.
+              extraContainerConfig:
+                type: object
+                additionalProperties: true
+                description: |
+                  Any extra configuration for the worker container. Sets
+                  `c.KubeClusterConfig.worker_extra_container_config`.
+              cores:
+                type: object
+                additionalProperties: false
+                description: |
+                  Cores request/limit for each worker.
+                properties:
+                  request:
+                    type: [string, number, "null"]
+                  limit:
+                    type: [string, number, "null"]
+              memory:
+                type: object
+                additionalProperties: false
+                description: |
+                  Memory request/limit for each worker.
+                properties:
+                  request:
+                    type: [string, number, "null"]
+                  limit:
+                    type: [string, number, "null"]
+              threads:
+                type: integer
+                description: |
+                  Number of threads available for a worker
+
+
+
+  controller:
+    type: object
+    additionalProperties: false
+    required:
+      - enabled
+      - image
+      - imagePullSecrets
+      - tolerations
+      - loglevel
+      - completedClusterMaxAge
+      - completedClusterCleanupPeriod
+      - backoffBaseDelay
+      - backoffMaxDelay
+      - k8sApiRateLimit
+      - k8sApiRateLimitBurst
+    description: |
+      `controller` nested config relates to the `controller` Pod and the
+      `dask-gateway-server` running within it that makes things happen when
+      changes to DaskCluster k8s resources are observed.
+    properties:
+      enabled:
+        type: boolean
+        description: |
+          Whether the controller should be deployed. Disabling the controller
+          allows running it locally for development/debugging purposes.
+      image:
+        type: object
+        additionalProperties: false
+        required: [name, tag]
+        description: |
+          Set custom image name, tag, pullPolicy, or pullSecrets for the
+          `dask-gateway-server` running in the `controller` pod.
+        properties: *image-properties
+      imagePullSecrets: *imagePullSecrets-spec
+      annotations: *labels-and-annotations-spec
+      resources: *resources-spec
+      nodeSelector: *nodeSelector-spec
+      affinity: *affinity-spec
+      tolerations: *tolerations-spec
+      loglevel: *loglevel-spec
+      completedClusterMaxAge:
+        type: number
+        description: |
+          Max time (in seconds) to keep around records of completed clusters.
+          Default is 24 hours.
+      completedClusterCleanupPeriod:
+        type: number
+        description: |
+          Time (in seconds) between cleanup tasks removing records of completed
+          clusters. Default is 5 minutes.
+      backoffBaseDelay:
+        type: number
+        description: |
+          Base delay (in seconds) for backoff when retrying after failures.
+      backoffMaxDelay:
+        type: number
+        description: |
+          Max delay (in seconds) for backoff when retrying after failures.
+      k8sApiRateLimit:
+        type: number
+        description: |
+          Limit on the average number of k8s api calls per second.
+      k8sApiRateLimitBurst:
+        type: number
+        description: |
+          Limit on the maximum number of k8s api calls per second.
+
+
+
+  traefik:
+    type: object
+    additionalProperties: false
+    required:
+      - replicas
+      - image
+      - tolerations
+      - loglevel
+      - dashboard
+      - service
+    description: |
+      `traefik` nested config relates to the `traefik` Pod and Traefik running
+      within it that is acting as a proxy for traffic towards the gateway or
+      user created DaskCluster resources.
+    properties:
+      replicas: *replicas-spec
+      image:
+        type: object
+        additionalProperties: false
+        required: [name, tag]
+        description: |
+          Set custom image name, tag, pullPolicy, or pullSecrets for Traefik
+          running in the `traefik` pod.
+        properties: *image-properties
+      annotations: *labels-and-annotations-spec
+      resources: *resources-spec
+      nodeSelector: *nodeSelector-spec
+      affinity: *affinity-spec
+      tolerations: *tolerations-spec
+      additionalArguments:
+        type: array
+        description: |
+          Any additional command line arguments to pass to traefik on startup.
+      loglevel: *loglevel-spec
+      dashboard:
+        type: boolean
+        description: |
+          Whether to expose the dashboard on port 9000 (enable for debugging only!)
+
+      service:
+        type: object
+        additionalProperties: false
+        required:
+          - type
+          - ports
+        description: |
+          Configuration related to the k8s Service exposing Traefik running in the
+          `traefik` pod.
+        properties:
+          type:
+            type: [string, "null"]
+          annotations: *labels-and-annotations-spec
+          spec:
+            type: object
+            additionalProperties: true
+            description: |
+              Additional k8s native configuration to put under the k8s Service's
+              spec field.
+          ports:
+            type: object
+            additionalProperties: false
+            required:
+              - web
+              - tcp
+            properties:
+              web:
+                type: object
+                additionalProperties: false
+                required:
+                  - port
+                properties:
+                  port:
+                    type: [number]
+                    description: |
+                      The port HTTP(s) requests will be served on
+                  nodePort:
+                    type: [number, "null"]
+              tcp:
+                type: object
+                additionalProperties: false
+                required:
+                  - port
+                properties:
+                  port:
+                    type: [string, number]
+                    description: |
+                      The port TCP requests will be served on. Set to `web` to
+                      share the web service port.
+                  nodePort:
+                    type: [number, "null"]
+
+
+
+  rbac:
+    type: object
+    additionalProperties: false
+    required:
+      - controller
+      - gateway
+      - traefik
+    description: |
+      `rbac` nested configuration relates to the choice of creating or replacing
+      resources like (Cluster)Role, (Cluster)RoleBinding, and ServiceAccount.
+    properties:
+      enabled:
+        type: boolean
+        description: |
+          Whether to create RBAC resources.
+      controller:
+        type: object
+        additionalProperties: false
+        properties:
+          serviceAccountName: &serviceAccountName-spec
+            type: [string, "null"]
+            description: |
+              Existing k8s ServiceAccount name to reference if ClusterRoles,
+              ClusterRoleBindings, and ServiceAccounts have already been created
+              by other means.
+
+              Leave this set to `null` to create all required resources.
+      gateway:
+        type: object
+        additionalProperties: false
+        properties:
+          serviceAccountName: *serviceAccountName-spec
+      traefik:
+        type: object
+        additionalProperties: false
+        properties:
+          serviceAccountName: *serviceAccountName-spec
+
+
+
+  global:
+    type: object
+    additionalProperties: true
+
+
+
+  enabled:
+    type: [boolean, "null"]
+    description: |
+      This Helm chart will ignore this setting, but it can be useful to allow
+      this configuration option for a Helm chart that declares this Helm chart
+      as a conditional dependency to install. Then, this value can be that
+      condition.

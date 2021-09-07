@@ -1,3 +1,7 @@
+# gateway nested config relates to the api Pod and the dask-gateway-server
+# running within it, the k8s Service exposing it, as well as the schedulers
+# (gateway.backend.scheduler) and workers gateway.backend.worker) created by the
+# controller when a DaskCluster k8s resource is registered.
 gateway:
   # Number of instances of the gateway-server to run
   replicas: 1
@@ -55,7 +59,7 @@ gateway:
       class: null
 
       # Configuration fields to set on the authenticator class.
-      options: {}
+      config: {}
 
   livenessProbe:
     # Enables the livenessProbe. 
@@ -74,6 +78,8 @@ gateway:
     periodSeconds: 10
     failureThreshold: 3
 
+  # backend nested configuration relates to the scheduler and worker resources
+  # created for DaskCluster k8s resources by the controller.
   backend:
     # The image to use for both schedulers and workers.
     image:
@@ -86,7 +92,7 @@ gateway:
     namespace: null
 
     # A mapping of environment variables to set for both schedulers and workers.
-    environment: null
+    environment: {}
 
     scheduler:
       # Any extra configuration for the scheduler pod. Sets
@@ -141,7 +147,11 @@ gateway:
   # `values.yaml` files, but is unnecessary in other cases.
   extraConfig: {}
 
-# Configuration for the gateway controller
+
+
+# controller nested config relates to the controller Pod and the
+# dask-gateway-server running within it that makes things happen when changes to
+# DaskCluster k8s resources are observed.
 controller:
   # Whether the controller should be deployed. Disabling the controller allows
   # running it locally for development/debugging purposes.
@@ -190,7 +200,11 @@ controller:
   affinity: {}
   tolerations: []
 
-# Configuration for the traefik proxy
+
+
+# traefik nested config relates to the traefik Pod and Traefik running within it
+# that is acting as a proxy for traffic towards the gateway or user created
+# DaskCluster resources.
 traefik:
   # Number of instances of the proxy to run
   replicas: 1
@@ -205,6 +219,7 @@ traefik:
   image:
     name: traefik
     tag: 2.1.3
+    pullPolicy: IfNotPresent
 
   # Any additional arguments to forward to traefik
   additionalArguments: []
@@ -236,6 +251,10 @@ traefik:
   affinity: {}
   tolerations: []
 
+
+
+# rbac nested configuration relates to the choice of creating or replacing
+# resources like (Cluster)Role, (Cluster)RoleBinding, and ServiceAccount.
 rbac:
   # Whether to enable RBAC.
   enabled: true
@@ -251,3 +270,11 @@ rbac:
 
   traefik:
     serviceAccountName: null
+
+
+
+# global nested configuration is accessible by all Helm charts that may depend
+# on each other, but not used by this Helm chart. An entry is created here to
+# validate its use and catch YAML typos via this configurations associated JSON
+# schema.
+global: {}
