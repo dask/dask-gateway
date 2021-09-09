@@ -12,6 +12,4 @@ def reset_logs():
 
 def pytest_configure(config):
     # Adds a marker here, rather than setup.cfg, since the repository has two packages.
-    config.addinivalue_line(
-        "markers", "kubernetes: marks a test as kubernetes-related"
-    )
+    config.addinivalue_line("markers", "kubernetes: marks a test as kubernetes-related")
