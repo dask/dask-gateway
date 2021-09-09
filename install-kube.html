@@ -316,8 +316,8 @@ configured. You are now ready to install Dask-Gateway on your cluster.</p>
 <section id="add-the-helm-chart-repository">
 <h3>Add the Helm Chart Repository<a class="headerlink" href="#add-the-helm-chart-repository" title="Permalink to this headline">¶</a></h3>
 <p>To avoid downloading the chart locally from GitHub, you can use the
-<a class="reference external" href="https://dask.org/dask-gateway-helm-repo/">Dask-Gateway Helm chart repository</a>.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ helm repo add daskgateway https://dask.org/dask-gateway-helm-repo/
+<a class="reference external" href="https://https://helm.dask.org/">Dask-Gateway Helm chart repository</a>.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ helm repo add dask https://helm.dask.org/
 $ helm repo update
 </pre></div>
 </div>
@@ -342,7 +342,7 @@ helm upgrade --install <span class="se">\</span>
     --version <span class="nv">$VERSION</span> <span class="se">\</span>
     --values path/to/your/config.yaml <span class="se">\</span>
     <span class="nv">$RELEASE</span> <span class="se">\</span>
-    daskgateway/dask-gateway
+    dask/dask-gateway
 </pre></div>
 </div>
 <p>where:</p>
@@ -352,7 +352,7 @@ but any release name is fine).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NAMESPACE</span></code> is the <a class="reference external" href="https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/">Kubernetes namespace</a> to install the gateway into (we
 suggest <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code>, but any namespace is fine).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">VERSION</span></code> is the Helm chart version to use. To use the latest published
-version you can omit the <code class="docutils literal notranslate"><span class="pre">--version</span></code> flag entirely. See the <a class="reference external" href="https://dask.org/dask-gateway-helm-repo/">Helm chart
+version you can omit the <code class="docutils literal notranslate"><span class="pre">--version</span></code> flag entirely. See the <a class="reference external" href="https://https://helm.dask.org/">Helm chart
 repository</a> for an index of all available versions.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">path/to/your/config.yaml</span></code> is the path to your <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file created
 above.</p></li>

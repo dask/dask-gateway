@@ -55,7 +55,7 @@ To avoid downloading the chart locally from GitHub, you can use the
 
 .. code-block:: shell
 
-    $ helm repo add daskgateway https://dask.org/dask-gateway-helm-repo/
+    $ helm repo add dask https://helm.dask.org/
     $ helm repo update
 
 
@@ -86,7 +86,7 @@ To install the Dask-Gateway Helm chart, run the following command:
         --version $VERSION \
         --values path/to/your/config.yaml \
         $RELEASE \
-        daskgateway/dask-gateway
+        dask/dask-gateway
 
 where:
 
@@ -380,7 +380,7 @@ here for reference:
 .. _zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/
 .. _guide provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/stable/kubernetes/setup-helm.html
 .. _Helm chart repository:
-.. _dask-gateway helm chart repository: https://dask.org/dask-gateway-helm-repo/
+.. _dask-gateway helm chart repository: https://https://helm.dask.org/
 .. _dask-gateway github repo: https://github.com/dask/dask-gateway/
 .. _resources/helm subdirectory: https://github.com/dask/dask-gateway/tree/main/resources/helm
 .. _default values.yaml file: https://github.com/dask/dask-gateway/blob/main/resources/helm/dask-gateway/values.yaml
