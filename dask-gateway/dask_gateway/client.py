@@ -372,7 +372,7 @@ class Gateway(object):
         self.close()
 
     def __del__(self):
-        if hasattr(self, "_asynchronous") and (
+        if hasattr(self, "asynchronous") and (
             not self.asynchronous
             and hasattr(self, "_loop_runner")
             and not sys.is_finalizing()
