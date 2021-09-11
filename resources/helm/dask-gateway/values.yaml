@@ -220,6 +220,7 @@ traefik:
     name: traefik
     tag: 2.1.3
     pullPolicy: IfNotPresent
+  imagePullSecrets: []
 
   # Any additional arguments to forward to traefik
   additionalArguments: []
