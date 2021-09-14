@@ -40,8 +40,12 @@ rules:
     resources:
       - ingressroutes
       - ingressroutetcps
+      - ingressrouteudps
       - middlewares
+      - middlewaretcps
+      - serverstransports
       - tlsoptions
+      - tlsstores
       - traefikservices
     verbs:
       - get

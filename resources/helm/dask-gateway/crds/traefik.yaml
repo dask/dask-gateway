@@ -365,6 +365,89 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
+  name: ingressrouteudps.traefik.containo.us
+spec:
+  group: traefik.containo.us
+  names:
+    kind: IngressRouteUDP
+    listKind: IngressRouteUDPList
+    plural: ingressrouteudps
+    singular: ingressrouteudp
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: IngressRouteUDP is an Ingress CRD specification.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: IngressRouteUDPSpec is a specification for a IngressRouteUDPSpec
+              resource.
+            properties:
+              entryPoints:
+                items:
+                  type: string
+                type: array
+              routes:
+                items:
+                  description: RouteUDP contains the set of routes.
+                  properties:
+                    services:
+                      items:
+                        description: ServiceUDP defines an upstream to proxy traffic.
+                        properties:
+                          name:
+                            type: string
+                          namespace:
+                            type: string
+                          port:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            x-kubernetes-int-or-string: true
+                          weight:
+                            type: integer
+                        required:
+                        - name
+                        - port
+                        type: object
+                      type: array
+                  type: object
+                type: array
+            required:
+            - routes
+            type: object
+        required:
+        - metadata
+        - spec
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
   name: middlewares.traefik.containo.us
 spec:
   group: traefik.containo.us
@@ -927,6 +1010,164 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.4.1
   creationTimestamp: null
+  name: middlewaretcps.traefik.containo.us
+spec:
+  group: traefik.containo.us
+  names:
+    kind: MiddlewareTCP
+    listKind: MiddlewareTCPList
+    plural: middlewaretcps
+    singular: middlewaretcp
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: MiddlewareTCP is a specification for a MiddlewareTCP resource.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: MiddlewareTCPSpec holds the MiddlewareTCP configuration.
+            properties:
+              ipWhiteList:
+                description: TCPIPWhiteList holds the TCP ip white list configuration.
+                properties:
+                  sourceRange:
+                    items:
+                      type: string
+                    type: array
+                type: object
+            type: object
+        required:
+        - metadata
+        - spec
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: serverstransports.traefik.containo.us
+spec:
+  group: traefik.containo.us
+  names:
+    kind: ServersTransport
+    listKind: ServersTransportList
+    plural: serverstransports
+    singular: serverstransport
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: ServersTransport is a specification for a ServersTransport resource.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ServersTransportSpec options to configure communication between
+              Traefik and the servers.
+            properties:
+              certificatesSecrets:
+                description: Certificates for mTLS.
+                items:
+                  type: string
+                type: array
+              disableHTTP2:
+                description: Disable HTTP/2 for connections with backend servers.
+                type: boolean
+              forwardingTimeouts:
+                description: Timeouts for requests forwarded to the backend servers.
+                properties:
+                  dialTimeout:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: The amount of time to wait until a connection to
+                      a backend server can be established. If zero, no timeout exists.
+                    x-kubernetes-int-or-string: true
+                  idleConnTimeout:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: The maximum period for which an idle HTTP keep-alive
+                      connection will remain open before closing itself.
+                    x-kubernetes-int-or-string: true
+                  responseHeaderTimeout:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    description: The amount of time to wait for a server's response
+                      headers after fully writing the request (including its body,
+                      if any). If zero, no timeout exists.
+                    x-kubernetes-int-or-string: true
+                type: object
+              insecureSkipVerify:
+                description: Disable SSL certificate verification.
+                type: boolean
+              maxIdleConnsPerHost:
+                description: If non-zero, controls the maximum idle (keep-alive) to
+                  keep per-host. If zero, DefaultMaxIdleConnsPerHost is used.
+                type: integer
+              rootCAsSecrets:
+                description: Add cert file for self-signed certificate.
+                items:
+                  type: string
+                type: array
+              serverName:
+                description: ServerName used to contact the server.
+                type: string
+            type: object
+        required:
+        - metadata
+        - spec
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
   name: tlsoptions.traefik.containo.us
 spec:
   group: traefik.containo.us
@@ -993,6 +1234,69 @@ spec:
                 type: boolean
               sniStrict:
                 type: boolean
+            type: object
+        required:
+        - metadata
+        - spec
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: tlsstores.traefik.containo.us
+spec:
+  group: traefik.containo.us
+  names:
+    kind: TLSStore
+    listKind: TLSStoreList
+    plural: tlsstores
+    singular: tlsstore
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: TLSStore is a specification for a TLSStore resource.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: TLSStoreSpec configures a TLSStore resource.
+            properties:
+              defaultCertificate:
+                description: DefaultCertificate holds a secret name for the TLSOption
+                  resource.
+                properties:
+                  secretName:
+                    description: SecretName is the name of the referenced Kubernetes
+                      Secret to specify the certificate details.
+                    type: string
+                required:
+                - secretName
+                type: object
+            required:
+            - defaultCertificate
             type: object
         required:
         - metadata
