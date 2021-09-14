@@ -430,6 +430,7 @@ properties:
     required:
       - replicas
       - image
+      - imagePullSecrets
       - tolerations
       - loglevel
       - dashboard
@@ -448,6 +449,7 @@ properties:
           Set custom image name, tag, pullPolicy, or pullSecrets for Traefik
           running in the `traefik` pod.
         properties: *image-properties
+      imagePullSecrets: *imagePullSecrets-spec
       annotations: *labels-and-annotations-spec
       resources: *resources-spec
       nodeSelector: *nodeSelector-spec
