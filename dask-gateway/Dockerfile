@@ -2,27 +2,34 @@
 FROM debian:buster-slim as miniconda
 LABEL MAINTAINER="Jim Crist-Harif"
 
-ARG CONDA_VERSION=py38_4.8.3
-ARG CONDA_SHA256=879457af6a0bf5b34b48c12de31d4df0ee2f06a8e68768e5758c3293b2daf688
+# List of conda versions: https://repo.anaconda.com/miniconda/
+#
+# Miniconda 4.9.2 has been chosen as it has a aarch64 release and hasn't
+# introduced a bug described in:
+# https://stackoverflow.com/questions/68213186/illegal-instruction-error-when-verifying-anaconda-miniconda-install
+#
+# FIXME: Use micromamba or mambaforge instead, see
+#        https://github.com/mamba-org/mamba for more info
+#
+ARG CONDA_VERSION=py38_4.9.2
 
 # - Create user dask
+RUN useradd -m -U -u 1000 dask
+
 # - Install tini
 # - Install miniconda build dependencies
-# - Download miniconda and check the sha256 checksum
-# - Install miniconda
+RUN apt-get update \
+    && apt-get install -y tini wget bzip2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# - Download and install miniconda
 # - Configure conda to minimize automatic package updates
-# - Remove all conda managed static libraries
 # - Cleanup conda files
 # - Uninstall miniconda build dependencies
-RUN useradd -m -U -u 1000 dask \
-    && apt-get update \
-    && apt-get install -y tini wget bzip2 \
-    && wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-$CONDA_VERSION-Linux-x86_64.sh \
-    && echo "${CONDA_SHA256}  Miniconda3-$CONDA_VERSION-Linux-x86_64.sh" > miniconda.checksum \
-    && if [ $(sha256sum -c miniconda.checksum | awk '{print $2}') != "OK" ] ; then exit 1; fi \
-    && mv Miniconda3-$CONDA_VERSION-Linux-x86_64.sh miniconda.sh \
+RUN ARCH=$(uname -m) \
+    && wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-$CONDA_VERSION-Linux-$ARCH.sh" \
+    && mv "Miniconda3-$CONDA_VERSION-Linux-$ARCH.sh" miniconda.sh \
     && sh ./miniconda.sh -b -p /opt/conda \
-    && rm miniconda.sh miniconda.checksum \
     && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
     && echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/dask/.profile \
     && echo "conda activate base" >> /home/dask/.profile \
@@ -32,10 +39,7 @@ RUN useradd -m -U -u 1000 dask \
     && echo "aggressive_update_packages: []" >> /home/dask/.condarc \
     && find /opt/conda/ -follow -type f -name '*.a' -delete \
     && /opt/conda/bin/conda clean -afy \
-    && chown -R dask:dask /opt/conda \
-    && apt-get autoremove --purge -y wget bzip2 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && chown -R dask:dask /opt/conda
 
 USER 1000:1000
 ENV PATH="/opt/conda/bin:$PATH"
@@ -43,11 +47,13 @@ WORKDIR /home/dask/
 
 ENTRYPOINT ["tini", "-g", "--"]
 
+
+
 # ** An image with all of dask-gateway's dependencies **
 FROM miniconda as dependencies
 
-ARG DASK_VERSION=2021.7.1
-ARG DISTRIBUTED_VERSION=2021.7.1
+ARG DASK_VERSION=2021.8.1
+ARG DISTRIBUTED_VERSION=2021.8.1
 
 # - Installs dask and dependencies
 # - Cleans up conda files
@@ -55,15 +61,17 @@ ARG DISTRIBUTED_VERSION=2021.7.1
 # - Removes unnecessary *.js.map files
 # - Removes unminified bokeh js
 RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
-        aiohttp=3.6.2 \
+        aiohttp=3.7.4 \
         dask==$DASK_VERSION \
         distributed==$DISTRIBUTED_VERSION \
-        numpy==1.19.2 \
-        pandas==1.1.4 \
+        numpy==1.21.2 \
+        pandas==1.3.2 \
     && /opt/conda/bin/conda clean -afy \
     && find /opt/conda/ -follow -type f -name '*.a' -delete \
     && find /opt/conda/ -follow -type f -name '*.js.map' -delete \
     && find /opt/conda/lib/python*/site-packages/bokeh/server/static -follow -type f -name '*.js' ! -name '*.min.js' -delete
+
+
 
 # ** Build dask-gateway from source in a temporary image **
 FROM dependencies AS builder
@@ -73,6 +81,8 @@ RUN mkdir -p /tmp/install-prefix
 COPY . /tmp/workdir/
 WORKDIR /tmp/workdir/
 RUN /opt/conda/bin/pip install . --no-cache-dir --no-deps --prefix /tmp/install-prefix
+
+
 
 # ** The final image **
 FROM dependencies
