@@ -1396,26 +1396,29 @@ class DBBackendBase(Backend):
 
     def get_scheduler_env(self, cluster):
         env = self.get_env(cluster)
-        tls_cert_path, tls_key_path = self.get_tls_paths(cluster)
-        env.update(
-            {
-                "DASK_DISTRIBUTED__COMM__TLS__CA_FILE": tls_cert_path,
-                "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__KEY": tls_key_path,
-                "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__CERT": tls_cert_path,
-            }
-        )
+
+        if cluster.config.cluster_protocol == "tls":
+            tls_cert_path, tls_key_path = self.get_tls_paths(cluster)
+            env.update(
+                {
+                    "DASK_DISTRIBUTED__COMM__TLS__CA_FILE": tls_cert_path,
+                    "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__KEY": tls_key_path,
+                    "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__CERT": tls_cert_path,
+                }
+            )
         return env
 
     def get_worker_env(self, cluster):
         env = self.get_env(cluster)
-        tls_cert_path, tls_key_path = self.get_tls_paths(cluster)
-        env.update(
-            {
-                "DASK_DISTRIBUTED__COMM__TLS__CA_FILE": tls_cert_path,
-                "DASK_DISTRIBUTED__COMM__TLS__WORKER__KEY": tls_key_path,
-                "DASK_DISTRIBUTED__COMM__TLS__WORKER__CERT": tls_cert_path,
-            }
-        )
+        if cluster.config.cluster_protocol == "tls":
+            tls_cert_path, tls_key_path = self.get_tls_paths(cluster)
+            env.update(
+                {
+                    "DASK_DISTRIBUTED__COMM__TLS__CA_FILE": tls_cert_path,
+                    "DASK_DISTRIBUTED__COMM__TLS__WORKER__KEY": tls_key_path,
+                    "DASK_DISTRIBUTED__COMM__TLS__WORKER__CERT": tls_cert_path,
+                }
+            )
         return env
 
     default_host = "0.0.0.0"
@@ -1423,7 +1426,7 @@ class DBBackendBase(Backend):
     def get_scheduler_command(self, cluster):
         return cluster.config.scheduler_cmd + [
             "--protocol",
-            "tls",
+            cluster.config.cluster_protocol,
             "--port",
             "0",
             "--host",

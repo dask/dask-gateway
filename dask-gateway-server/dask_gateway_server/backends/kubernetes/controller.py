@@ -1024,7 +1024,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     def get_scheduler_command(self, namespace, cluster_name, config):
         return config.scheduler_cmd + [
             "--protocol",
-            "tls",
+            config.cluster_protocol,
             "--host",
             "",
             "--port",
@@ -1046,7 +1046,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     def get_worker_command(self, namespace, cluster_name, config):
         service_name = self.make_service_name(cluster_name)
         return config.worker_cmd + [
-            f"tls://{service_name}.{namespace}:8786",
+            f"{config.cluster_protocol}://{service_name}.{namespace}:8786",
             "--dashboard-address",
             ":8787",
             "--name",
@@ -1064,13 +1064,19 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 "DASK_GATEWAY_API_URL": self.api_url,
                 "DASK_GATEWAY_CLUSTER_NAME": f"{namespace}.{cluster_name}",
                 "DASK_GATEWAY_API_TOKEN": "/etc/dask-credentials/api-token",
-                "DASK_DISTRIBUTED__COMM__TLS__CA_FILE": "/etc/dask-credentials/dask.crt",
-                "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__CERT": "/etc/dask-credentials/dask.crt",
-                "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__KEY": "/etc/dask-credentials/dask.pem",
-                "DASK_DISTRIBUTED__COMM__TLS__WORKER__CERT": "/etc/dask-credentials/dask.crt",
-                "DASK_DISTRIBUTED__COMM__TLS__WORKER__KEY": "/etc/dask-credentials/dask.pem",
             }
         )
+        if config.cluster_protocol == "tls":
+            tls_dir = "/etc/dask-credentials"
+            env.update(
+                {
+                    "DASK_DISTRIBUTED__COMM__TLS__CA_FILE": f"{tls_dir}/dask.crt",
+                    "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__CERT": f"{tls_dir}/dask.crt",
+                    "DASK_DISTRIBUTED__COMM__TLS__SCHEDULER__KEY": f"{tls_dir}/dask.pem",
+                    "DASK_DISTRIBUTED__COMM__TLS__WORKER__CERT": f"{tls_dir}/dask.crt",
+                    "DASK_DISTRIBUTED__COMM__TLS__WORKER__KEY": f"{tls_dir}/dask.pem",
+                }
+            )
         return [{"name": k, "value": v} for k, v in env.items()]
 
     def get_labels(self, cluster_name, component=None):
@@ -1192,9 +1198,14 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     def make_secret_name(self, cluster_name):
         return f"dask-credentials-{cluster_name}"
 
-    def make_secret(self, cluster_name):
+    def make_secret(self, cluster_name, config):
         api_token = uuid.uuid4().hex
-        tls_cert, tls_key = new_keypair(cluster_name)
+        data = {"api-token": b64encode(api_token.encode()).decode()}
+
+        if config.cluster_protocol == "tls":
+            tls_cert, tls_key = new_keypair(cluster_name)
+            data["dask.crt"] = b64encode(tls_cert).decode()
+            data["dask.pem"] = b64encode(tls_key).decode()
 
         labels = self.get_labels(cluster_name, "credentials")
 
@@ -1206,11 +1217,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 "annotations": self.common_annotations,
                 "name": self.make_secret_name(cluster_name),
             },
-            "data": {
-                "dask.crt": b64encode(tls_cert).decode(),
-                "dask.pem": b64encode(tls_key).decode(),
-                "api-token": b64encode(api_token.encode()).decode(),
-            },
+            "data": data,
         }
 
     def make_service_name(self, cluster_name):

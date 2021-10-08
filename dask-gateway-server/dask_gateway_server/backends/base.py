@@ -6,6 +6,7 @@ from traitlets import (
     Integer,
     Float,
     Dict,
+    Enum,
     Union,
     Unicode,
     default,
@@ -381,6 +382,15 @@ class ClusterConfig(Configurable):
         """,
         allow_none=True,
         min=0,
+        config=True,
+    )
+
+    cluster_protocol = Enum(
+        help="""
+        The protocol to use for communication between workers and the scheduler.
+        """,
+        values=["tls", "tcp"],
+        default_value="tls",
         config=True,
     )
 

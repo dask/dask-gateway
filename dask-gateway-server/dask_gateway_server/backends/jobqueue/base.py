@@ -171,10 +171,13 @@ class JobQueueBackend(DBBackendBase):
     async def do_start_cluster(self, cluster):
         cmd, env, stdin = self.get_submit_cmd_env_stdin(cluster)
         staging_dir = self.get_staging_directory(cluster)
-        files = {
-            "dask.pem": cluster.tls_key.decode("utf8"),
-            "dask.crt": cluster.tls_cert.decode("utf8"),
-        }
+        if cluster.config.cluster_protocol == "tls":
+            files = {
+                "dask.pem": cluster.tls_key.decode("utf8"),
+                "dask.crt": cluster.tls_cert.decode("utf8"),
+            }
+        else:
+            files = {}
         job_id = await self.start_job(
             cluster.username, cmd, env, stdin, staging_dir=staging_dir, files=files
         )
