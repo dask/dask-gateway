@@ -35,7 +35,10 @@ Network communications happen in the following manner:
 - The ``api`` pods send api requests to the ``scheduler`` pods over port 8788.
 - If using JupyterHub Auth., the ``api`` pod sends requests to the JupyterHub server to authenticate.
 - Depending on the configuration, requests go directly to the JupyterHub pods through service lookup or through the JupyterHub Proxy.
-- The ``worker`` pods communicate between themselves and the ``scheduler`` pod over ports 8786 and 8787.
+- The ``worker`` pods communicate with the ``scheduler`` on port 8786.
+- The ``traefik`` pods proxy ``worker`` communications on port 8787 for the dashboard.
+- The ``worker`` pods listen for incoming communications on a random high port, which the ``scheduler`` opens connections back to.
+- ``worker`` pods also communicate with each other on these random high ports.
 - The ``scheduler`` pods send heartbeat requests to the ``api`` server pods using the ``api`` service DNS name on port 8000.
 - The ``controller`` pod only communicates to the Kubernetes API and receives no inbound traffic.
 
