@@ -1052,7 +1052,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             "--name",
             "$(DASK_GATEWAY_WORKER_NAME)",
             "--nthreads",
-            str(config.worker_threads),
+            str(config.worker_threads or config.worker_cores),
             "--memory-limit",
             str(config.worker_memory_limit),
         ]

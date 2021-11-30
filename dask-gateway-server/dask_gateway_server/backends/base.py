@@ -281,13 +281,15 @@ class ClusterConfig(Configurable):
 
     # Number of threads per worker. Defaults to the number of cores
     worker_threads = Integer(
-        min=1,
+        None,
         help="""
         Number of threads available for a dask worker.
 
         Defaults to ``worker_cores``.
         """,
+        min=1,
         config=True,
+        allow_none=True,
     )
 
     @default("worker_threads")
