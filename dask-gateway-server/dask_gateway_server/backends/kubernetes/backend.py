@@ -80,13 +80,6 @@ class KubeClusterConfig(ClusterConfig):
     def _default_worker_cores_limit(self):
         return self.worker_cores
 
-    @default("worker_threads")
-    def _default_worker_threads(self):
-        # worker_cores can be a float between 0 and 1,
-        # and int rounds to 0, and Dask requires at least 1
-        # thread. So we round down, unless that puts us below 1.
-        return max(int(self.worker_cores), 1)
-
     worker_memory_limit = MemoryLimit(
         help="""
         Maximum number of bytes available for a dask worker. Allows the

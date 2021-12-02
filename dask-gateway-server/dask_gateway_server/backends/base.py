@@ -16,7 +16,7 @@ from traitlets.config import LoggingConfigurable, Configurable
 
 from .. import models
 from ..options import Options
-from ..traitlets import MemoryLimit, Type, Callable, Command, WorkerThreads
+from ..traitlets import MemoryLimit, Type, Callable, Command
 from ..utils import awaitable, format_bytes
 
 
@@ -280,8 +280,7 @@ class ClusterConfig(Configurable):
     )
 
     # Number of threads per worker. Defaults to the number of cores
-    worker_threads = WorkerThreads(
-        None,
+    worker_threads = Integer(
         help="""
         Number of threads available for a dask worker.
 
@@ -294,7 +293,13 @@ class ClusterConfig(Configurable):
 
     @default("worker_threads")
     def _default_worker_threads(self):
-        return self.worker_cores
+        return max(int(self.worker_cores), 1)
+
+    @validate("worker_threads")
+    def _validate_worker_threads(self, proposal):
+        if not proposal.value:
+            return self._default_worker_threads()
+        return proposal.value
 
     scheduler_memory = MemoryLimit(
         "2 G",
