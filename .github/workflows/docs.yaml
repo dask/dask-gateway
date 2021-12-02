@@ -2,7 +2,7 @@ name: Docs
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   commit_msg: ${{ github.event.head_commit.message }}
@@ -21,12 +21,12 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.14'
+          go-version: "1.14"
 
       - name: Setup Node
         uses: actions/setup-node@v2
         with:
-          node-version: '6'
+          node-version: "6"
       - name: Install requirements
         run: |
           go get github.com/stretchr/testify/assert
@@ -35,7 +35,7 @@ jobs:
       - name: Install
         run: |
           source continuous_integration/install.sh
-          pip install kubernetes_asyncio skein sphinx==3.3.1 doctr dask-sphinx-theme sphinx-rtd-theme==0.4.3
+          pip install kubernetes_asyncio skein sphinx==3.3.1 doctr dask-sphinx-theme>=2 sphinx-rtd-theme==0.4.3
       - name: Build docs
         run: |
           pushd docs
