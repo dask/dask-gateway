@@ -380,7 +380,7 @@ here for reference:
 .. _zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/latest/
 .. _guide provided by zero-to-jupyterhub-k8s: https://zero-to-jupyterhub.readthedocs.io/en/stable/kubernetes/setup-helm.html
 .. _Helm chart repository:
-.. _dask-gateway helm chart repository: https://https://helm.dask.org/
+.. _dask-gateway helm chart repository: https://helm.dask.org/
 .. _dask-gateway github repo: https://github.com/dask/dask-gateway/
 .. _resources/helm subdirectory: https://github.com/dask/dask-gateway/tree/main/resources/helm
 .. _default values.yaml file: https://github.com/dask/dask-gateway/blob/main/resources/helm/dask-gateway/values.yaml
