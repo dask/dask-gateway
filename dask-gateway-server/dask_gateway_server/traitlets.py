@@ -52,7 +52,7 @@ class WorkerThreads(Integer):
 
     def _validate(self, obj, value):
         # Same as upstream, but continues validation if the value is None
-        if hasattr(self, 'validate'):
+        if hasattr(self, "validate"):
             value = self.validate(obj, value)
         if obj._cross_validation_lock is False:
             value = self._cross_validate(obj, value)

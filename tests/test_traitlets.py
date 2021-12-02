@@ -37,7 +37,27 @@ def test_worker_threads_kube_cluster():
 
     assert kube_backend.KubeClusterConfig(worker_cores=2.1).worker_threads == 2
     assert kube_backend.KubeClusterConfig(worker_cores_limit=2.1).worker_threads == 1
-    assert kube_backend.KubeClusterConfig(worker_cores=2.1, worker_threads=None).worker_threads == 2
-    assert kube_backend.KubeClusterConfig(worker_cores_limit=2.1, worker_threads=None).worker_threads == 1
-    assert kube_backend.KubeClusterConfig(worker_cores=2.1, worker_threads=1).worker_threads == 1
-    assert kube_backend.KubeClusterConfig(worker_cores_limit=2.1, worker_threads=1).worker_threads == 1
+    assert (
+        kube_backend.KubeClusterConfig(
+            worker_cores=2.1, worker_threads=None
+        ).worker_threads
+        == 2
+    )
+    assert (
+        kube_backend.KubeClusterConfig(
+            worker_cores_limit=2.1, worker_threads=None
+        ).worker_threads
+        == 1
+    )
+    assert (
+        kube_backend.KubeClusterConfig(
+            worker_cores=2.1, worker_threads=1
+        ).worker_threads
+        == 1
+    )
+    assert (
+        kube_backend.KubeClusterConfig(
+            worker_cores_limit=2.1, worker_threads=1
+        ).worker_threads
+        == 1
+    )
