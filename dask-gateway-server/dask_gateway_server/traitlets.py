@@ -44,6 +44,26 @@ class MemoryLimit(Integer):
         return int(float(num) * self.UNIT_SUFFIXES[suffix])
 
 
+class WorkerThreads(Integer):
+    """A specification for the number of threads to use per worker.
+
+    This defaults to ``worker_cores`` specified on the same object.
+    """
+
+    def _validate(self, obj, value):
+        # Same as upstream, but continues validation if the value is None
+        if hasattr(self, 'validate'):
+            value = self.validate(obj, value)
+        if obj._cross_validation_lock is False:
+            value = self._cross_validate(obj, value)
+        return value
+
+    def validate(self, obj, value):
+        if value is None:
+            value = max(int(obj.worker_cores), 1)
+        return super().validate(obj, value)
+
+
 class Callable(TraitType):
     """A trait which is callable"""
 
