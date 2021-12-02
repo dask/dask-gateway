@@ -132,8 +132,9 @@ gateway:
         request: null
         limit: null
 
-      # Number of threads available for a worker
-      threads: 1
+      # Number of threads available for a worker. Sets
+      # `c.KubeClusterConfig.worker_threads`
+      threads: null
 
   # Settings for nodeSelector, affinity, and tolerations for the gateway pods
   nodeSelector: {}
