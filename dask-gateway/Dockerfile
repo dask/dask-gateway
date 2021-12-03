@@ -1,5 +1,5 @@
 # ** A base miniconda image **
-FROM debian:buster-slim as miniconda
+FROM debian:bullseye-slim as miniconda
 LABEL MAINTAINER="Jim Crist-Harif"
 
 # List of conda versions: https://repo.anaconda.com/miniconda/
@@ -11,7 +11,7 @@ LABEL MAINTAINER="Jim Crist-Harif"
 # FIXME: Use micromamba or mambaforge instead, see
 #        https://github.com/mamba-org/mamba for more info
 #
-ARG CONDA_VERSION=py38_4.9.2
+ARG CONDA_VERSION=py39_4.10.3
 
 # - Create user dask
 RUN useradd -m -U -u 1000 dask

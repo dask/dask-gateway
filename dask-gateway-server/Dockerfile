@@ -1,4 +1,4 @@
-FROM python:3.8.11-slim-buster as dependencies
+FROM python:3.9-slim-bullseye as dependencies
 LABEL MAINTAINER="Jim Crist-Harif"
 
 RUN apt-get update \
