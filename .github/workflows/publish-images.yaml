@@ -1,19 +1,12 @@
 name: Create and publish a Docker image
 
-# on:
-#   release:
-#     types:
-#       - created
 on:
   push:
-    branches: [ "*" ]
-  pull_request:
-    branches: [ "*" ]
-
+    tags:
+      - "*"
 
 env:
   REGISTRY: ghcr.io
-
 
 jobs:
   build-and-push-image:
@@ -50,34 +43,6 @@ jobs:
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: ${{ matrix.image }}
-          # push: true
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Set up Python 3.x
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.x"
-
-      - name: Install release dependencies
-        run: |
-          python -m pip install --upgrade build twine
-
-      # - name: Build and publish kbatch
-      #   env:
-      #     TWINE_USERNAME: "__token__"
-      #     TWINE_PASSWORD: ${{ secrets.KBATCH_PYPI_PASSWORD }}
-      #   run: |
-      #     cd kbatch
-      #     python -m build
-      #     twine upload dist/*
-
-      # - name: Build and publish kbatch-proxy
-      #   env:
-      #     TWINE_USERNAME: "__token__"
-      #     TWINE_PASSWORD: ${{ secrets.KBATCH_PROXY_PYPI_PASSWORD }}
-      #   run: |
-      #     cd kbatch-proxy
-      #     python -m build
-      #     twine upload dist/*
-      #     cd ..
