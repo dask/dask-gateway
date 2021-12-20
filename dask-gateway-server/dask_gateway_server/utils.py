@@ -71,11 +71,10 @@ class _cancel_context(object):
     async def __aenter__(self):
         if self.context.cancelled:
             raise asyncio.CancelledError
-        loop = get_running_loop()
         try:
-            self._task = asyncio.current_task(loop=loop)
+            self._task = asyncio.current_task()
         except AttributeError:
-            self._task = asyncio.Task.current_task(loop=loop)
+            self._task = asyncio.Task.current_task()
         self.context._register(self)
         return self
 
@@ -327,9 +326,7 @@ def _cancel_all_tasks(loop):
     for task in to_cancel:
         task.cancel()
 
-    loop.run_until_complete(
-        asyncio.gather(*to_cancel, loop=loop, return_exceptions=True)
-    )
+    loop.run_until_complete(asyncio.gather(*to_cancel, return_exceptions=True))
 
     for task in to_cancel:
         if task.cancelled():

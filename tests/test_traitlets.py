@@ -25,3 +25,39 @@ def test_Command_traitlet():
     assert c.cmd2 == ["default_cmd"]
     c.cmd = "foo bar"
     assert c.cmd == ["foo bar"]
+
+
+def test_worker_threads_kube_cluster():
+    kube_backend = pytest.importorskip("dask_gateway_server.backends.kubernetes")
+    # KubeClusterConfig allows floats, so determining worker_threads is more complex
+    assert kube_backend.KubeClusterConfig().worker_threads == 1
+    assert kube_backend.KubeClusterConfig(worker_threads=None).worker_threads == 1
+    assert kube_backend.KubeClusterConfig(worker_cores=0.1).worker_threads == 1
+    assert kube_backend.KubeClusterConfig(worker_cores_limit=0.1).worker_threads == 1
+
+    assert kube_backend.KubeClusterConfig(worker_cores=2.1).worker_threads == 2
+    assert kube_backend.KubeClusterConfig(worker_cores_limit=2.1).worker_threads == 1
+    assert (
+        kube_backend.KubeClusterConfig(
+            worker_cores=2.1, worker_threads=None
+        ).worker_threads
+        == 2
+    )
+    assert (
+        kube_backend.KubeClusterConfig(
+            worker_cores_limit=2.1, worker_threads=None
+        ).worker_threads
+        == 1
+    )
+    assert (
+        kube_backend.KubeClusterConfig(
+            worker_cores=2.1, worker_threads=1
+        ).worker_threads
+        == 1
+    )
+    assert (
+        kube_backend.KubeClusterConfig(
+            worker_cores_limit=2.1, worker_threads=1
+        ).worker_threads
+        == 1
+    )

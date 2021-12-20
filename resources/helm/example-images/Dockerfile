@@ -12,13 +12,13 @@
 # Note that the version of Python or Python distribution doesn't matter. Here
 # we'll install python via miniconda, then use `conda` to install all
 # dependencies
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 
 # The miniconda version and corresponding SHA256 to use.
 # You can see all available options here:
 # https://docs.conda.io/en/latest/miniconda_hashes.html
-ARG CONDA_VERSION=py38_4.8.3
-ARG CONDA_SHA256=879457af6a0bf5b34b48c12de31d4df0ee2f06a8e68768e5758c3293b2daf688
+ARG CONDA_VERSION=py39_4.10.3
+ARG CONDA_SHA256=1ea2f885b4dbc3098662845560bc64271eb17085387a70c2ba3f29fff6f8d52f
 
 # Does the following in one layer:
 # - Create user dask

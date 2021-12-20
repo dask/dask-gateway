@@ -314,7 +314,6 @@ properties:
             required:
               - cores
               - memory
-              - threads
             properties:
               extraPodConfig:
                 type: object
@@ -349,9 +348,10 @@ properties:
                   limit:
                     type: [string, number, "null"]
               threads:
-                type: integer
+                type: [integer, "null"]
                 description: |
-                  Number of threads available for a worker
+                  Number of threads available for a worker. Sets
+                  `c.KubeClusterConfig.worker_threads`.
 
 
 
