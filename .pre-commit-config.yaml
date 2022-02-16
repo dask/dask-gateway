@@ -1,11 +1,35 @@
+# pre-commit is a tool to perform a predefined set of tasks manually and/or
+# automatically before git commits are made.
+#
+# Config reference: https://pre-commit.com/#pre-commit-configyaml---top-level
+#
+# Common tasks
+#
+#   - Run on all files:   pre-commit run --all-files
+#   - Register git hooks: pre-commit install --install-hooks
+#
+# About pre-commit.ci
+#
+#   pre-commit.ci is a service that is enabled for this repo via
+#   https://github.com/organizations/dask/settings/installations to do the
+#   following:
+#
+#   1. Automatically keep the pinned versions in this file updated by opening PRs.
+#   2. Automatically run a pre-commit test like a GitHub workflow also could do.
+#   3. Automatically add a commit with autoformatting changes to PRs if they have
+#      forgot to run configured autoformatters.
+#
 repos:
--   repo: https://github.com/psf/black
+  # Autoformat: Python code
+  - repo: https://github.com/psf/black
     rev: 21.5b1
     hooks:
-    - id: black
-      language_version: python3
--   repo: https://gitlab.com/pycqa/flake8
+      - id: black
+        language_version: python3
+
+  # Lint: Python code
+  - repo: https://github.com/PyCQA/flake8
     rev: 3.9.2
     hooks:
-    - id: flake8
-      language_version: python3
+      - id: flake8
+        language_version: python3

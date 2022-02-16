@@ -1,11 +1,24 @@
 name: Test
 
 on:
-  push:
-    branches: [ "*" ]
   pull_request:
-    branches:
-      - main
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+      - "**.rst"
+      - ".github/workflows/*"
+      - "!.github/workflows/test.yaml"
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+      - "**.rst"
+      - ".github/workflows/*"
+      - "!.github/workflows/test.yaml"
+    branches-ignore:
+      - "dependabot/**"
+      - "pre-commit-ci-update-config"
+    tags: ["**"]
   workflow_dispatch:
 
 env:
@@ -42,11 +55,6 @@ jobs:
       - name: Run Tests
         run: |
           py.test tests/ -k 'not kubernetes' -v
-
-      - name: Flake8 and Black
-        run: |
-          flake8
-          black . --check
 
       - name: Go Tests
         run: |

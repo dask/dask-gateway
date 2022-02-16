@@ -3,12 +3,10 @@ set -xe
 
 pip install -U \
     aiohttp \
-    black \
     colorlog \
     cryptography \
     dask \
     distributed \
-    flake8 \
     pytest \
     pytest-asyncio==0.12.0 \
     kubernetes-asyncio \
