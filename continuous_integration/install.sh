@@ -4,12 +4,10 @@ npm install -g configurable-http-proxy
 
 pip install -U \
     aiohttp \
-    black \
     colorlog \
     cryptography \
     dask \
     distributed \
-    flake8 \
     ipywidgets \
     jupyterhub \
     notebook \

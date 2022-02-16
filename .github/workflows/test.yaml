@@ -56,11 +56,6 @@ jobs:
         run: |
           py.test tests/ -k 'not kubernetes' -v
 
-      - name: Flake8 and Black
-        run: |
-          flake8
-          black . --check
-
       - name: Go Tests
         run: |
           pushd dask-gateway-server/dask-gateway-proxy
