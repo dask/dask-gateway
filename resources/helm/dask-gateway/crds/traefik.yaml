@@ -1,7 +1,9 @@
 # Don't manually update these CRDs, if needed instead re-import them from
-# https://github.com/traefik/traefik-helm-chart/tree/HEAD/traefik/crds.
+# https://github.com/traefik/traefik-helm-chart/tree/HEAD/traefik/crds and
+# consider the changes since last made via commit history:
+# https://github.com/traefik/traefik-helm-chart/commits/HEAD/traefik/crds
 #
-# The most recent import was made from commit 3a33968.
+# The most recent import was made from commit 693589e.
 #
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -741,6 +743,7 @@ spec:
                       type: string
                     type: object
                   featurePolicy:
+                    description: 'Deprecated: use PermissionsPolicy instead.'
                     type: string
                   forceSTSHeader:
                     type: boolean
@@ -752,6 +755,8 @@ spec:
                     type: array
                   isDevelopment:
                     type: boolean
+                  permissionsPolicy:
+                    type: string
                   publicKey:
                     type: string
                   referrerPolicy:
@@ -1040,6 +1045,13 @@ spec:
           spec:
             description: MiddlewareTCPSpec holds the MiddlewareTCP configuration.
             properties:
+              inFlightConn:
+                description: TCPInFlightConn holds the TCP in flight connection configuration.
+                properties:
+                  amount:
+                    format: int64
+                    type: integer
+                type: object
               ipWhiteList:
                 description: TCPIPWhiteList holds the TCP ip white list configuration.
                 properties:
@@ -1140,6 +1152,10 @@ spec:
                 description: If non-zero, controls the maximum idle (keep-alive) to
                   keep per-host. If zero, DefaultMaxIdleConnsPerHost is used.
                 type: integer
+              peerCertURI:
+                description: Defines the URI used to match against SAN URIs during
+                  the server's certificate verification.
+                type: string
               rootCAsSecrets:
                 description: Add cert file for self-signed certificate.
                 items:
@@ -1198,6 +1214,10 @@ spec:
           spec:
             description: TLSOptionSpec configures TLS for an entry point.
             properties:
+              alpnProtocols:
+                items:
+                  type: string
+                type: array
               cipherSuites:
                 items:
                   type: string
@@ -1212,6 +1232,7 @@ spec:
                     enum:
                     - NoClientCert
                     - RequestClientCert
+                    - RequireAnyClientCert
                     - VerifyClientCertIfGiven
                     - RequireAndVerifyClientCert
                     type: string
