@@ -13,10 +13,10 @@ __all__ = ("PBSBackend", "PBSClusterConfig")
 
 def qsub_format_memory(n):
     """Format memory in bytes for use in qsub resources."""
-    if n >= 10 * (1024 ** 3):
-        return "%dGB" % math.ceil(n / (1024 ** 3))
-    if n >= 10 * (1024 ** 2):
-        return "%dMB" % math.ceil(n / (1024 ** 2))
+    if n >= 10 * (1024**3):
+        return "%dGB" % math.ceil(n / (1024**3))
+    if n >= 10 * (1024**2):
+        return "%dMB" % math.ceil(n / (1024**2))
     if n >= 10 * 1024:
         return "%dkB" % math.ceil(n / 1024)
     return "%dB" % n

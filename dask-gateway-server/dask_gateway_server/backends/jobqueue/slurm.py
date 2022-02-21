@@ -13,10 +13,10 @@ __all__ = ("SlurmBackend", "SlurmClusterConfig")
 
 def slurm_format_memory(n):
     """Format memory in bytes for use with slurm."""
-    if n >= 10 * (1024 ** 3):
-        return "%dG" % math.ceil(n / (1024 ** 3))
-    if n >= 10 * (1024 ** 2):
-        return "%dM" % math.ceil(n / (1024 ** 2))
+    if n >= 10 * (1024**3):
+        return "%dG" % math.ceil(n / (1024**3))
+    if n >= 10 * (1024**2):
+        return "%dM" % math.ceil(n / (1024**2))
     if n >= 10 * 1024:
         return "%dK" % math.ceil(n / 1024)
     return "1K"

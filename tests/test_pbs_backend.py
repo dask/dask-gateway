@@ -116,10 +116,10 @@ async def test_pbs_backend():
 
 def test_qsub_format_memory():
     assert qsub_format_memory(2) == "2B"
-    assert qsub_format_memory(2 ** 10) == "1024B"
-    assert qsub_format_memory(2 ** 20) == "1024kB"
-    assert qsub_format_memory(2 ** 20 + 1) == "1025kB"
-    assert qsub_format_memory(2 ** 30) == "1024MB"
-    assert qsub_format_memory(2 ** 30 + 1) == "1025MB"
-    assert qsub_format_memory(2 ** 40) == "1024GB"
-    assert qsub_format_memory(2 ** 40 + 1) == "1025GB"
+    assert qsub_format_memory(2**10) == "1024B"
+    assert qsub_format_memory(2**20) == "1024kB"
+    assert qsub_format_memory(2**20 + 1) == "1025kB"
+    assert qsub_format_memory(2**30) == "1024MB"
+    assert qsub_format_memory(2**30 + 1) == "1025MB"
+    assert qsub_format_memory(2**40) == "1024GB"
+    assert qsub_format_memory(2**40 + 1) == "1025GB"

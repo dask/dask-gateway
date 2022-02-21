@@ -21,7 +21,7 @@ class MemoryLimit(Integer):
       - T -> Tebibytes
     """
 
-    UNIT_SUFFIXES = {"K": 2 ** 10, "M": 2 ** 20, "G": 2 ** 30, "T": 2 ** 40}
+    UNIT_SUFFIXES = {"K": 2**10, "M": 2**20, "G": 2**30, "T": 2**40}
 
     def validate(self, obj, value):
         if isinstance(value, (int, float)):

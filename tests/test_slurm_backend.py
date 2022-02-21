@@ -124,10 +124,10 @@ async def test_slurm_backend():
 def test_slurm_format_memory():
     # Minimum is 1 K
     assert slurm_format_memory(2) == "1K"
-    assert slurm_format_memory(2 ** 10) == "1K"
-    assert slurm_format_memory(2 ** 20) == "1024K"
-    assert slurm_format_memory(2 ** 20 + 1) == "1025K"
-    assert slurm_format_memory(2 ** 30) == "1024M"
-    assert slurm_format_memory(2 ** 30 + 1) == "1025M"
-    assert slurm_format_memory(2 ** 40) == "1024G"
-    assert slurm_format_memory(2 ** 40 + 1) == "1025G"
+    assert slurm_format_memory(2**10) == "1K"
+    assert slurm_format_memory(2**20) == "1024K"
+    assert slurm_format_memory(2**20 + 1) == "1025K"
+    assert slurm_format_memory(2**30) == "1024M"
+    assert slurm_format_memory(2**30 + 1) == "1025M"
+    assert slurm_format_memory(2**40) == "1024G"
+    assert slurm_format_memory(2**40 + 1) == "1025G"

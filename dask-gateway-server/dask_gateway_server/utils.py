@@ -157,16 +157,16 @@ async def cancel_task(task):
 
 def format_bytes(nbytes):
     """Format ``nbytes`` as a human-readable string with units"""
-    if nbytes > 2 ** 50:
-        return "%0.2f PiB" % (nbytes / 2 ** 50)
-    if nbytes > 2 ** 40:
-        return "%0.2f TiB" % (nbytes / 2 ** 40)
-    if nbytes > 2 ** 30:
-        return "%0.2f GiB" % (nbytes / 2 ** 30)
-    if nbytes > 2 ** 20:
-        return "%0.2f MiB" % (nbytes / 2 ** 20)
-    if nbytes > 2 ** 10:
-        return "%0.2f KiB" % (nbytes / 2 ** 10)
+    if nbytes > 2**50:
+        return "%0.2f PiB" % (nbytes / 2**50)
+    if nbytes > 2**40:
+        return "%0.2f TiB" % (nbytes / 2**40)
+    if nbytes > 2**30:
+        return "%0.2f GiB" % (nbytes / 2**30)
+    if nbytes > 2**20:
+        return "%0.2f MiB" % (nbytes / 2**20)
+    if nbytes > 2**10:
+        return "%0.2f KiB" % (nbytes / 2**10)
     return "%d B" % nbytes
 
 
