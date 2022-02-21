@@ -23,7 +23,6 @@ if sys.version_info[:2] >= (3, 7):
         t = datetime.fromisoformat(ts[:-1])
         return int(t.replace(tzinfo=timezone.utc).timestamp() * 1000)
 
-
 else:
 
     def parse_k8s_timestamp(ts):

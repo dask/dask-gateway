@@ -39,11 +39,11 @@ def test_normalize_address():
 
 def test_format_bytes():
     assert format_bytes(105) == "105 B"
-    assert format_bytes(1.5 * 2 ** 10) == "1.50 KiB"
-    assert format_bytes(1.5 * 2 ** 20) == "1.50 MiB"
-    assert format_bytes(1.5 * 2 ** 30) == "1.50 GiB"
-    assert format_bytes(1.5 * 2 ** 40) == "1.50 TiB"
-    assert format_bytes(1.5 * 2 ** 50) == "1.50 PiB"
+    assert format_bytes(1.5 * 2**10) == "1.50 KiB"
+    assert format_bytes(1.5 * 2**20) == "1.50 MiB"
+    assert format_bytes(1.5 * 2**30) == "1.50 GiB"
+    assert format_bytes(1.5 * 2**40) == "1.50 TiB"
+    assert format_bytes(1.5 * 2**50) == "1.50 PiB"
 
 
 class Foo(object):

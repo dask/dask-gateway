@@ -24,7 +24,7 @@ class Backoff(object):
         """Get the backoff time for an item (in seconds)"""
         exp = self._failures[item]
         self._failures[item] = exp + 1
-        backoff = min(self.base_delay * 2 ** exp, self.max_delay)
+        backoff = min(self.base_delay * 2**exp, self.max_delay)
         return backoff
 
     def failures(self, item):
