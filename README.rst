@@ -14,7 +14,7 @@ New BSD. See the `License File
 
 .. |github-actions-tests| image:: https://github.com/dask/dask-gateway/actions/workflows/test.yaml/badge.svg
    :target: https://github.com/dask/dask-gateway/actions/workflows/test.yaml
-.. |github-actions-docs| image:: https://github.com/dask/dask-gateway/actions/workflows/docs.yaml/badge.svg
+.. |github-actions-docs| image:: https://github.com/dask/dask-gateway/actions/workflows/build-publish-docs.yaml/badge.svg
    :target: https://gateway.dask.org/
 .. |pypi-dask-gateway| image:: https://img.shields.io/pypi/v/dask-gateway.svg?label=dask-gateway
    :target: https://pypi.org/project/dask-gateway/

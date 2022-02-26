@@ -10,14 +10,14 @@ on:
       - "dask-gateway/**"
       - "dask-gateway-server/**"
       - "continuous_integration/install.sh"
-      - "**/test-docs.yaml"
+      - ".github/workflows/build-publish-docs.yaml"
   push:
     paths:
       - "docs/**"
       - "dask-gateway/**"
       - "dask-gateway-server/**"
       - "continuous_integration/install.sh"
-      - "**/test-docs.yaml"
+      - ".github/workflows/build-publish-docs.yaml"
     branches-ignore:
       - "dependabot/**"
       - "pre-commit-ci-update-config"
