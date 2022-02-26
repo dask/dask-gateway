@@ -1,0 +1,127 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+#
+name: Build and publish images
+
+on:
+  pull_request:
+    paths:
+      - "dask-gateway/**"
+      - "dask-gateway-server/**"
+      - ".github/workflows/build-push-images.yaml"
+  push:
+    paths:
+      - "dask-gateway/**"
+      - "dask-gateway-server/**"
+      - ".github/workflows/build-push-images.yaml"
+    branches: ["main"]
+    tags: ["**"]
+  workflow_dispatch:
+
+jobs:
+  build-and-publish-image:
+    name: "Build and publish image: ${{ matrix.image }}"
+    runs-on: ubuntu-latest
+
+    # permissions requested for secrets.github_token in order to push to the
+    # container registry, available for push and workflow_dispatch triggers.
+    permissions:
+      contents: read
+      packages: write
+
+    # Run this job once for each image we maintain.
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - dask-gateway
+          - dask-gateway-server
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # dorny/paths-filter provides information if a specific image has changed,
+      # which we will use to decide if we are to proceed with the job.
+      #
+      - uses: dorny/paths-filter@v2
+        id: has-path-changed
+        with:
+          filters: |
+            image-folder:
+              - "${{ matrix.image.name }}/**"
+
+      # Decide if we should continue the job and if we should push the image we
+      # build. As the workflow has triggered, we know that at least one of the
+      # images relevant paths has changed, or it has been manually triggered.
+      #
+      # The logic to push/continue is the following:
+      #
+      #   - For push or workflow_dispatch triggered workflows, we both continue
+      #     the job and push the built images.
+      #   - For pull_request triggered workflows, we only continue the job if
+      #     changes to the specific image associated with the job has been
+      #     changed.
+      #
+      - name: Decide if the job should continue running
+        id: decision
+        run: |
+          echo ::set-output name=continue-job::${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'pull_request' && steps.has-path-changed.outputs.image-folder == 'true') }}
+          echo ::set-output name=push-image::${{ github.event_name != 'pull_request' }}
+
+      - name: Set up QEMU (for docker buildx)
+        uses: docker/setup-qemu-action@v1
+        if: steps.decision.outputs.continue-job == 'true'
+
+      - name: Set up Docker Buildx (for multi-arch builds)
+        uses: docker/setup-buildx-action@v1
+        if: steps.decision.outputs.continue-job == 'true'
+
+      # This action use its configuration and the GitHub event to output a list
+      # of image tags and image labels that we can pass we build it.
+      #
+      # The labels are useful to couple the container as presented by ghcr.io with this GitHub
+      # repository and describe what commit it was associated with etc. See
+      # https://docs.github.com/en/packages/learn-github-packages/connecting-a-repository-to-a-package#connecting-a-repository-to-a-container-image-using-the-command-line
+      #
+      # For more details see https://github.com/docker/metadata-action
+      #
+      - name: Decide on image tags and image labels
+        uses: docker/metadata-action@v3
+        id: image-tags-and-labels
+        if: steps.decision.outputs.continue-job == 'true'
+        with:
+          images: ghcr.io/dask/${{ matrix.image }}
+          # tags declare what kind of tags we want for the image we build, which
+          # is allowed to vary depending on what triggered this workflow to run
+          # etc.
+          #
+          # If a branch or git tag is pushed, an image tag with their name will
+          # be emitted. If the workflow is triggered by a PR, an image tag like
+          # pr-123 will be emitted. No matter what, a tag like sha-1234abcd will
+          # also be emitted.
+          #
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            type=sha,prefix=sha-,format=short
+          # flavor latest makes us get a latest tag when any tag is pushed. This
+          # will be incorrect to do if we push a tag representing a backport
+          # release though.
+          #
+          flavor: |
+            latest=auto
+
+      - name: Login to container registry
+        if: steps.decision.outputs.continue-job == 'true'
+        run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build image and conditionally push it
+        uses: docker/build-push-action@v2
+        if: steps.decision.outputs.continue-job == 'true'
+        with:
+          context: ${{ matrix.image }}
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.image-tags-and-labels.outputs.tags }}
+          labels: ${{ steps.image-tags-and-labels.outputs.labels }}
+          push: ${{ steps.decision.outputs.push-image }}
