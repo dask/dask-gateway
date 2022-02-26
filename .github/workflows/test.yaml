@@ -1,3 +1,6 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+#
 name: Test
 
 on:
@@ -30,33 +33,30 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: "3.8"
 
-      - name: Setup Go
-        uses: actions/setup-go@v2
+      - uses: actions/setup-go@v2
         with:
-          go-version: '1.14'
+          go-version: "1.14"
 
-      - name: Setup Node
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2
 
       - name: Install requirements
         run: |
           go get github.com/stretchr/testify/assert
           source continuous_integration/install.sh
 
-      - name: List Packages
+      - name: List Python packages
         run: |
           pip freeze
 
-      - name: Run Tests
+      - name: Run Python tests
         run: |
           py.test tests/ -k 'not kubernetes' -v
 
-      - name: Go Tests
+      - name: Run Go tests
         run: |
           pushd dask-gateway-server/dask-gateway-proxy
           go test
@@ -77,6 +77,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
       - uses: AbsaOSS/k3d-action@v1.5.0
         name: "Create k3d Cluster"
         with:
@@ -86,6 +87,7 @@ jobs:
             --agents 1
             --api-port 6444
             --no-lb
+
       - name: Install tools
         run: |
           export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
