@@ -1,8 +1,23 @@
 name: Docs
 
 on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "**.md"
+      - "**.rst"
+      - ".github/workflows/docs.yaml"
   push:
-    branches: ["main"]
+    paths:
+      - "docs/**"
+      - "**.md"
+      - "**.rst"
+      - ".github/workflows/docs.yaml"
+    branches-ignore:
+      - "dependabot/**"
+      - "pre-commit-ci-update-config"
+    tags: ["**"]
+  workflow_dispatch:
 
 env:
   commit_msg: ${{ github.event.head_commit.message }}

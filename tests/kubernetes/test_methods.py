@@ -173,16 +173,16 @@ def test_make_pod(is_worker):
         tolerations = config.worker_extra_pod_config["tolerations"]
         workdir = "/worker"
         resources = {
-            "limits": {"cpu": "3.0", "memory": str(6 * 2 ** 30)},
-            "requests": {"cpu": "2.0", "memory": str(4 * 2 ** 30)},
+            "limits": {"cpu": "3.0", "memory": str(6 * 2**30)},
+            "requests": {"cpu": "2.0", "memory": str(4 * 2**30)},
         }
     else:
         component = "dask-scheduler"
         tolerations = config.scheduler_extra_pod_config["tolerations"]
         workdir = "/scheduler"
         resources = {
-            "limits": {"cpu": "2.0", "memory": str(3 * 2 ** 30)},
-            "requests": {"cpu": "1.0", "memory": str(2 * 2 ** 30)},
+            "limits": {"cpu": "2.0", "memory": str(3 * 2**30)},
+            "requests": {"cpu": "1.0", "memory": str(2 * 2**30)},
         }
 
     labels = pod["metadata"]["labels"]

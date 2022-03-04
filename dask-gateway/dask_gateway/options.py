@@ -257,8 +257,8 @@ class Integer(Number):
         else:
             return ipywidgets.BoundedIntText(
                 value=self.value,
-                min=-(2 ** 63) if self.min is None else self.min,
-                max=(2 ** 63 - 1) if self.max is None else self.max,
+                min=-(2**63) if self.min is None else self.min,
+                max=(2**63 - 1) if self.max is None else self.max,
             )
 
 
