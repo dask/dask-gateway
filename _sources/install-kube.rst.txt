@@ -24,6 +24,24 @@ When running on Kubernetes, Dask Gateway is composed of the following components
 Both the Traefik Proxy deployment and the Gateway API Server deployment can be
 scaled to multiple replicas, for increased availability and scalability.
 
+The Dask Gateway pods running on Kubernetes include the following:
+- ``traefik``: The **Traefik Proxy**
+- ``api``: The **Gateway API Server**
+- ``scheduler`` & ``worker``: User's Dask Scheduler and Worker
+- ``controller``: The Kubernetes **Gateway Controller** for managing Dask-Gateway resources
+
+Network communications happen in the following manner:
+- The ``traefik`` pods proxy connections to the ``api`` pods on port 8000, and ``scheduler`` pods on ports 8786 and 8787.
+- The ``api`` pods send api requests to the ``scheduler`` pods over port 8788.
+- If using JupyterHub Auth., the ``api`` pod sends requests to the JupyterHub server to authenticate.
+- Depending on the configuration, requests go directly to the JupyterHub pods through service lookup or through the JupyterHub Proxy.
+- The ``worker`` pods communicate with the ``scheduler`` on port 8786.
+- The ``traefik`` pods proxy ``worker`` communications on port 8787 for the dashboard.
+- The ``worker`` pods listen for incoming communications on a random high port, which the ``scheduler`` opens connections back to.
+- ``worker`` pods also communicate with each other on these random high ports.
+- The ``scheduler`` pods send heartbeat requests to the ``api`` server pods using the ``api`` service DNS name on port 8000.
+- The ``controller`` pod only communicates to the Kubernetes API and receives no inbound traffic.
+
 Create a Kubernetes Cluster (optional)
 --------------------------------------
 

@@ -517,6 +517,22 @@ cluster (e.g. pods, secrets, etc…).</p></li>
 <a class="reference internal image-reference" href="_images/architecture-k8s.svg"><img alt="Dask-Gateway high-level kubernetes architecture" class="align-center" src="_images/architecture-k8s.svg" width="90%" /></a>
 <p>Both the Traefik Proxy deployment and the Gateway API Server deployment can be
 scaled to multiple replicas, for increased availability and scalability.</p>
+<p>The Dask Gateway pods running on Kubernetes include the following:
+- <code class="docutils literal notranslate"><span class="pre">traefik</span></code>: The <strong>Traefik Proxy</strong>
+- <code class="docutils literal notranslate"><span class="pre">api</span></code>: The <strong>Gateway API Server</strong>
+- <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">worker</span></code>: User’s Dask Scheduler and Worker
+- <code class="docutils literal notranslate"><span class="pre">controller</span></code>: The Kubernetes <strong>Gateway Controller</strong> for managing Dask-Gateway resources</p>
+<p>Network communications happen in the following manner:
+- The <code class="docutils literal notranslate"><span class="pre">traefik</span></code> pods proxy connections to the <code class="docutils literal notranslate"><span class="pre">api</span></code> pods on port 8000, and <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> pods on ports 8786 and 8787.
+- The <code class="docutils literal notranslate"><span class="pre">api</span></code> pods send api requests to the <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> pods over port 8788.
+- If using JupyterHub Auth., the <code class="docutils literal notranslate"><span class="pre">api</span></code> pod sends requests to the JupyterHub server to authenticate.
+- Depending on the configuration, requests go directly to the JupyterHub pods through service lookup or through the JupyterHub Proxy.
+- The <code class="docutils literal notranslate"><span class="pre">worker</span></code> pods communicate with the <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> on port 8786.
+- The <code class="docutils literal notranslate"><span class="pre">traefik</span></code> pods proxy <code class="docutils literal notranslate"><span class="pre">worker</span></code> communications on port 8787 for the dashboard.
+- The <code class="docutils literal notranslate"><span class="pre">worker</span></code> pods listen for incoming communications on a random high port, which the <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> opens connections back to.
+- <code class="docutils literal notranslate"><span class="pre">worker</span></code> pods also communicate with each other on these random high ports.
+- The <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> pods send heartbeat requests to the <code class="docutils literal notranslate"><span class="pre">api</span></code> server pods using the <code class="docutils literal notranslate"><span class="pre">api</span></code> service DNS name on port 8000.
+- The <code class="docutils literal notranslate"><span class="pre">controller</span></code> pod only communicates to the Kubernetes API and receives no inbound traffic.</p>
 </div>
 <div class="section" id="create-a-kubernetes-cluster-optional">
 <h2>Create a Kubernetes Cluster (optional)<a class="headerlink" href="#create-a-kubernetes-cluster-optional" title="Permalink to this headline">¶</a></h2>
@@ -1023,7 +1039,7 @@ here for reference:</p>
 <span class="w">  </span><span class="c1"># The image to use for the proxy pod</span><span class="w"></span>
 <span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik</span><span class="w"></span>
-<span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2.5&quot;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2.6&quot;</span><span class="w"></span>
 <span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span><span class="w"></span>
 <span class="w">  </span><span class="nt">imagePullSecrets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w"></span>
 
