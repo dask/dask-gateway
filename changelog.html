@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Search &#8212; Dask Gateway 0.9.0 documentation</title>
+    <title>Changelog &#8212; Dask Gateway 0.9.0 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet">
   <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -27,25 +27,21 @@
     
   <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
 
-    
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/language_data.js"></script>
     <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
-    <script src="_static/searchtools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="#" />
-  <script src="searchindex.js" defer></script>
-  
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Development" href="develop.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
 
     <!-- Google Analytics -->
     
-
   </head>
   <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
 
@@ -110,7 +106,7 @@
       <h1 class="site-logo" id="site-title">Dask Gateway 0.9.0 documentation</h1>
       
     </a>
-</div><form class="bd-search d-flex align-items-center" action="#" method="get">
+</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
@@ -196,7 +192,7 @@
   Reference
  </span>
 </p>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
  <li class="toctree-l1">
   <a class="reference internal" href="api-client.html">
    Client API
@@ -212,8 +208,8 @@
    Development
   </a>
  </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="changelog.html">
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
    Changelog
   </a>
  </li>
@@ -250,6 +246,23 @@
                 
             </div>
             
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="_sources/changelog.rst.txt"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+                onclick="printPdf(this)" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
             <!-- Source interaction buttons -->
 
             <!-- Full screen (wrap in <a> to have style consistency -->
@@ -266,6 +279,19 @@
         <!-- Table of contents -->
         <div class="d-none d-md-block col-md-2 bd-toc show noprint">
             
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav" aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#id1">
+   0.10.0
+  </a>
+ </li>
+</ul>
+
+            </nav>
         </div>
     </div>
 </div>
@@ -273,44 +299,70 @@
         <div class="col-12 col-md-9 pl-md-3 pr-md-0">
             <!-- Table of contents that is only displayed when printing the page -->
             <div id="jb-print-docs-body" class="onlyprint">
-                <h1></h1>
+                <h1>Changelog</h1>
                 <!-- Table of contents -->
                 <div id="print-main-content">
                     <div id="jb-print-toc">
                         
+                        <div>
+                            <h2> Contents </h2>
+                        </div>
+                        <nav aria-label="Page">
+                            <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#id1">
+   0.10.0
+  </a>
+ </li>
+</ul>
+
+                        </nav>
                     </div>
                 </div>
             </div>
             
               <div>
                 
-  <h1 id="search-documentation">Search</h1>
-  <div id="fallback" class="admonition warning">
-  <script>$('#fallback').hide();</script>
-  <p>
-    Please activate JavaScript to enable the search
-    functionality.
-  </p>
-  </div>
-  <p>
-    Searching for multiple words only shows matches that contain
-    all words.
-  </p>
-  <form action="" method="get">
-    <input type="text" name="q" aria-labelledby="search-documentation" value="" />
-    <input type="submit" value="search" />
-    <span id="search-progress" style="padding-left: 10px"></span>
-  </form>
-  
-  <div id="search-results">
-  
-  </div>
+  <div class="section" id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>0.10.0<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>Released on December 3rd, 2021</p>
+<ul class="simple">
+<li><p>Docker images: Update dependencies to the latest stable versions <a class="reference external" href="https://github.com/dask/dask-gateway/pull/464">PR #464</a></p></li>
+<li><p>Docker images: some refactoring and arm64 support <a class="reference external" href="https://github.com/dask/dask-gateway/pull/423">PR #423</a></p></li>
+<li><p>Fixed unintentional warning when cleaning up <code class="docutils literal notranslate"><span class="pre">Gateway</span></code> objects <a class="reference external" href="https://github.com/dask/dask-gateway/pull/442">PR #442</a></p></li>
+<li><p>Fixed warning from use of the deprecated <code class="docutils literal notranslate"><span class="pre">distributed.format_bytes</span></code> <a class="reference external" href="https://github.com/dask/dask-gateway/pull/416">PR #416</a></p></li>
+<li><p>Move CI to GitHub Actions <a class="reference external" href="https://github.com/dask/dask-gateway/pull/408">PR #408</a></p></li>
+<li><p>Add support for authenticating with JupyterHub service <a class="reference external" href="https://github.com/dask/dask-gateway/pull/410">PR #410</a></p></li>
+<li><p>Add warning about Go version to server installation instructions. <a class="reference external" href="https://github.com/dask/dask-gateway/pull/399">PR #399</a></p></li>
+<li><p>Change default branch from master to main <a class="reference external" href="https://github.com/dask/dask-gateway/pull/372">PR #372</a></p></li>
+<li><p>Add customizable worker_threads <a class="reference external" href="https://github.com/dask/dask-gateway/pull/353">PR #353</a></p></li>
+<li><p>Add label to be allowed direct access to the jupyterhub pod <a class="reference external" href="https://github.com/dask/dask-gateway/pull/352">PR #352</a></p></li>
+<li><p>Helm chart: update deprecated k8s resources no longer supported in k8s 1.22 <a class="reference external" href="https://github.com/dask/dask-gateway/pull/420">PR #420</a></p></li>
+<li><p>Helm chart: refactor to use consistent modern syntax <a class="reference external" href="https://github.com/dask/dask-gateway/pull/425">PR #425</a></p></li>
+<li><p>Helm chart: don’t package a README.rst file <a class="reference external" href="https://github.com/dask/dask-gateway/pull/424">PR #424</a></p></li>
+<li><p>Helm chart: update to traefik v2.5.x <a class="reference external" href="https://github.com/dask/dask-gateway/pull/431">PR #431</a></p></li>
+<li><p>Helm chart: add imagePullSecrets for traefik <a class="reference external" href="https://github.com/dask/dask-gateway/pull/445">PR #445</a></p></li>
+<li><p>Update references from old to new Helm chart registry <a class="reference external" href="https://github.com/dask/dask-gateway/pull/438">PR #438</a></p></li>
+<li><p>Helm chart: add values.schema.yaml and associated maint. scripts <a class="reference external" href="https://github.com/dask/dask-gateway/pull/429">PR #429</a></p></li>
+</ul>
+</div>
+</div>
+
 
               </div>
               
             
                 <!-- Previous / next buttons -->
-<div class='prev-next-area'>
+<div class='prev-next-area'> 
+    <a class='left-prev' id="prev-link" href="develop.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">Development</p>
+        </div>
+    </a>
 </div>
             
         </div>

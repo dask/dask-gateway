@@ -100,6 +100,7 @@ both the cluster backend and the authentication protocol are pluggable.
    api-client
    api-server
    develop
+   changelog
 
 
 .. _Dask: https://dask.org/
