@@ -67,6 +67,16 @@ Besides the above dependencies, you'll also need a Go_ compiler. You can
 install Go using your system package manager or the `Go website`_.
 
 
+Install Dependencies via Conda Environment File
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+You can easily install all dependencies for development with the ``dask-gateway-dev.yaml`` 
+environment file:
+
+.. code-block:: shell
+    
+    $ conda env create --file dask-gateway-dev.yaml
+
+
 Build and Install Dask-Gateway
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
