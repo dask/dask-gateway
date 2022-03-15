@@ -566,7 +566,9 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             service_name = status.get("service")
             if cluster_status == models.ClusterStatus.RUNNING and service_name:
                 namespace = obj["metadata"]["namespace"]
-                scheduler_address = f"tls://{service_name}.{namespace}:8786"
+                scheduler_address = (
+                    f"{config.cluster_protocol}://{service_name}.{namespace}:8786"
+                )
                 dashboard_address = f"http://{service_name}.{namespace}:8787"
                 api_address = f"http://{service_name}.{namespace}:8788"
             else:
@@ -603,8 +605,9 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
                     secret = await self.core_client.read_namespaced_secret(
                         secret_name, namespace
                     )
-                    cluster.tls_cert = b64decode(secret.data["dask.crt"])
-                    cluster.tls_key = b64decode(secret.data["dask.pem"])
+                    if config.cluster_protocol == "tls":
+                        cluster.tls_cert = b64decode(secret.data["dask.crt"])
+                        cluster.tls_key = b64decode(secret.data["dask.pem"])
                     cluster.token = b64decode(secret.data["api-token"]).decode()
 
             self.clusters[cluster.name] = cluster

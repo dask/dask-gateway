@@ -43,11 +43,15 @@ class InProcessBackend(UnsafeLocalBackend):
         workdir = self.setup_working_directory(cluster)
         yield {"workdir": workdir}
 
-        security = self.get_security(cluster)
+        if cluster.config.cluster_protocol == "tls":
+            security = self.get_security(cluster)
+        else:
+            security = None
+
         gateway_client = self.get_gateway_client(cluster)
 
         self.schedulers[cluster.name] = scheduler = Scheduler(
-            protocol="tls",
+            protocol=cluster.config.protocol,
             host="127.0.0.1",
             port=0,
             dashboard_address="127.0.0.1:0",
@@ -81,7 +85,11 @@ class InProcessBackend(UnsafeLocalBackend):
         return self._check_status(clusters, self.schedulers)
 
     async def do_start_worker(self, worker):
-        security = self.get_security(worker.cluster)
+        if worker.cluster.config.cluster_protocol == "tls":
+            security = self.get_security(worker.cluster)
+        else:
+            security = None
+
         workdir = worker.cluster.state["workdir"]
         self.workers[worker.name] = worker = Worker(
             worker.cluster.scheduler_address,

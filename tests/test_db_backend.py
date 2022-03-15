@@ -597,7 +597,10 @@ async def test_worker_start_failure_limit():
 
 
 @pytest.mark.asyncio
-async def test_successful_cluster():
+@pytest.mark.parametrize("protocol", ["tls", "tcp"])
+async def test_successful_cluster(protocol):
+    config = Config()
+    config.InProcessBackend.cluster_protocol = protocol
     async with temp_gateway() as g:
         async with g.gateway_client() as gateway:
             # No currently running clusters

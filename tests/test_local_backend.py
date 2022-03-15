@@ -1,4 +1,5 @@
 import pytest
+from traitlets.config import Config
 
 from .utils_test import (
     LocalTestingBackend,
@@ -9,8 +10,12 @@ from .utils_test import (
 
 
 @pytest.mark.asyncio
-async def test_local_cluster_backend():
-    async with temp_gateway(backend_class=LocalTestingBackend) as g:
+@pytest.mark.parametrize("protocol", ["tls", "tcp"])
+async def test_local_cluster_backend(protocol):
+    config = Config()
+    config.LocalClusterConfig.cluster_protocol = protocol
+
+    async with temp_gateway(backend_class=LocalTestingBackend, config=config) as g:
         async with g.gateway_client() as gateway:
             async with gateway.new_cluster() as cluster:
 
