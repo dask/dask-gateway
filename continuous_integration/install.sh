@@ -12,7 +12,7 @@ pip install -U \
     jupyterhub \
     notebook \
     pytest \
-    pytest-asyncio==0.12.0 \
+    pytest-asyncio \
     sqlalchemy \
     tornado \
     traitlets \
