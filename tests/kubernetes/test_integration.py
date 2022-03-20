@@ -38,19 +38,16 @@ async def core_client():
     await c.api_client.rest_client.pool_manager.close()
 
 
-@pytest.mark.asyncio
 async def test_list_clusters(gateway):
     clusters = await gateway.list_clusters()
     assert clusters == []
 
 
-@pytest.mark.asyncio
 async def test_cluster_options(gateway):
     options = await gateway.cluster_options()
     assert isinstance(options, dask_gateway.Options)
 
 
-@pytest.mark.asyncio
 async def test_cluster_operations(gateway):
     # No currently running clusters
     clusters = await gateway.list_clusters()
@@ -96,7 +93,6 @@ async def test_cluster_operations(gateway):
     await with_retries(test, 20, wait=0.5)
 
 
-@pytest.mark.asyncio
 async def test_deleted_worker_recreated(gateway, core_client):
     async with gateway.new_cluster() as cluster:
         # Scale up, connect, and compute
@@ -129,7 +125,6 @@ async def test_deleted_worker_recreated(gateway, core_client):
         await with_retries(test, 60, wait=0.5)
 
 
-@pytest.mark.asyncio
 async def test_adaptive_scaling(gateway):
     async with gateway.new_cluster() as cluster:
         # Turn on adaptive scaling

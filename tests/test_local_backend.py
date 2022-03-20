@@ -1,5 +1,3 @@
-import pytest
-
 from .utils_test import (
     LocalTestingBackend,
     temp_gateway,
@@ -8,7 +6,6 @@ from .utils_test import (
 )
 
 
-@pytest.mark.asyncio
 async def test_local_cluster_backend():
     async with temp_gateway(backend_class=LocalTestingBackend) as g:
         async with g.gateway_client() as gateway:

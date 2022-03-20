@@ -220,7 +220,6 @@ def test_http_client_proxy_explicit(monkeypatch):
                 assert g._request_kwargs["proxy_auth"] == proxy_auth_sol
 
 
-@pytest.mark.asyncio
 async def test_get_versions():
     from dask_gateway_server import __version__ as server_version
     from dask_gateway import __version__ as client_version
@@ -232,7 +231,6 @@ async def test_get_versions():
             assert versions["server"]["version"] == server_version
 
 
-@pytest.mark.asyncio
 async def test_client_reprs():
     async with temp_gateway() as g:
         async with g.gateway_client() as gateway:
@@ -256,7 +254,6 @@ async def test_client_reprs():
             await cluster.shutdown()
 
 
-@pytest.mark.asyncio
 async def test_cluster_widget():
     pytest.importorskip("ipywidgets")
 
@@ -286,7 +283,6 @@ async def test_cluster_widget():
         await loop.run_in_executor(None, test)
 
 
-@pytest.mark.asyncio
 async def test_dashboard_link_from_public_address():
     pytest.importorskip("bokeh")
 
@@ -309,7 +305,6 @@ async def test_dashboard_link_from_public_address():
                     assert c.dashboard_link.startswith("/services/dask-gateway")
 
 
-@pytest.mark.asyncio
 async def test_create_cluster_with_GatewayCluster_constructor():
     async with temp_gateway() as g:
         async with GatewayCluster(
@@ -335,7 +330,6 @@ async def test_create_cluster_with_GatewayCluster_constructor():
             assert not clusters
 
 
-@pytest.mark.asyncio
 async def test_sync_constructors():
     def test():
         with g.gateway_client(asynchronous=False) as gateway:
@@ -355,7 +349,6 @@ async def test_sync_constructors():
         await loop.run_in_executor(None, test)
 
 
-@pytest.mark.asyncio
 async def test_GatewayCluster_shutdown_on_close():
     async with temp_gateway() as g:
 
@@ -375,7 +368,6 @@ async def test_GatewayCluster_shutdown_on_close():
             assert not clusters
 
 
-@pytest.mark.asyncio
 async def test_GatewayCluster_client_error_doesnt_prevent_cleanup():
     """Check that an error on closing clients doesn't prevent cluster shutdown"""
     async with temp_gateway() as g:
@@ -402,7 +394,6 @@ async def test_GatewayCluster_client_error_doesnt_prevent_cleanup():
             assert not clusters
 
 
-@pytest.mark.asyncio
 async def test_GatewayCluster_cleanup_atexit():
     async with temp_gateway() as g:
 

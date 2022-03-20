@@ -36,14 +36,12 @@ def kdestroy():
     subprocess.check_call(["kdestroy"])
 
 
-@pytest.mark.asyncio
 async def test_basic_auth():
     async with temp_gateway() as g:
         async with g.gateway_client(auth="basic") as gateway:
             await gateway.list_clusters()
 
 
-@pytest.mark.asyncio
 async def test_basic_auth_password():
     config = Config()
     config.DaskGateway.authenticator_class = (
@@ -62,7 +60,6 @@ async def test_basic_auth_password():
             await gateway.list_clusters()
 
 
-@pytest.mark.asyncio
 @requires_kerberos
 async def test_kerberos_auth():
     config = Config()
@@ -125,7 +122,6 @@ def configure_dask_gateway(jhub_api_token, jhub_bind_url):
 
 
 @pytest.mark.skipif(not hub_mocking, reason="JupyterHub not installed")
-@pytest.mark.asyncio
 async def test_jupyterhub_auth_user(monkeypatch):
     from jupyterhub.tests.utils import add_user
 
@@ -168,7 +164,6 @@ async def test_jupyterhub_auth_user(monkeypatch):
 
 
 @pytest.mark.skipif(not hub_mocking, reason="JupyterHub not installed")
-@pytest.mark.asyncio
 async def test_jupyterhub_auth_service(monkeypatch):
     jhub_api_token = uuid.uuid4().hex
     jhub_service_token = uuid.uuid4().hex
