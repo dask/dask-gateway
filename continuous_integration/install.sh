@@ -2,6 +2,8 @@ set -xe
 
 npm install -g configurable-http-proxy
 
+# if you make updates here, please update the 
+# entries in ../dask-gateway-dev.yaml
 pip install -U \
     aiohttp \
     colorlog \
