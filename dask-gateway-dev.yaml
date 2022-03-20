@@ -1,38 +1,56 @@
-# include the environment variable GO111MODULE=auto during installation for 
-# go 1.16 and up
+# OPTIONAL conda environment file to help get setup with
+# dependencies to build + test dask-gateway locally
 name: dask-gateway-dev
 channels:
   - conda-forge
 dependencies:
+  # python and pip
   - python=3.9
   - pip  
-  - pytest
-  - go=1.17.8
-  - go-cgo
-  - compilers
+  
+  # Dependencies to build dask-gateway and dask-gateway-server
+  # see: dask-gateway/setup.py and
+  # dask-gateway-server.setup.py
+  - aiohttp
+  - dask
+  - distributed
   - cryptography
   - tornado
   - traitlets
-  - sqlalchemy
-  - dask
+  - colorlog
+  - sqlalchemy # see: dask-gateway-server/setup.py extras_require
+  - pykerberos # see: dask-gateway-server/setup.py extras_require 
+  - go=1.17.8  # golang version to  build dask-gateway-server/dask-gateway-proxy
+  - go-cgo     # golang associated dependency to assist with local setup
+  - compilers  # golang associated dependency to assist with local setup
+  
+  # Dependencies required to build
+  # the dask-gateway documentation
   - skein
   - sphinx
   - dask-sphinx-theme
-  # dask-gateway/continuous_integration/install.sh
+  
+  # Dependencies used in CI and running tests locally:
+  # dask-gateway/continuous_integration/kubernetes/install.sh
+  - black
+  - colorlog
   - ipywidgets
   - jupyterhub
   - notebook
   - trustme
-  # dask-gateway/continuous_integration/kubernetes/install.sh
-  - aiohttp
-  - black
-  - colorlog
-  - distributed
   - flake8
+  - pytest
   - pytest-asyncio=0.12.0
+  
+  # Useful tooling for local development:
+  # helm and kubectl
   - kubernetes-helm
   - kubernetes-client
+  
   - pip:
-    - kubernetes-asyncio
+    - kubernetes-asyncio # see: dask-gateway-server/setup.py extras_require
+
+# include the environment variable GO111MODULE=auto
+# during installation for go 1.16 and up
 variables:
   GO111MODULE: auto
