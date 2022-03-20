@@ -38,25 +38,25 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: "3.8"
 
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
           go-version: "1.14"
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
-          node-version: "6"
+          node-version: "16"
 
       - name: Install docs requirements
         run: |
           go get github.com/stretchr/testify/assert
           source continuous_integration/install.sh
-          pip install kubernetes_asyncio skein sphinx==3.3.1 doctr dask-sphinx-theme>=2 sphinx-rtd-theme==0.4.3
+          pip install kubernetes_asyncio skein sphinx doctr dask-sphinx-theme sphinx-rtd-theme
 
       - name: Build docs (make html)
         run: |
@@ -64,7 +64,7 @@ jobs:
           make html
 
       - name: Push built docs to gh-pages branch
-        uses: JamesIves/github-pages-deploy-action@4.1.4
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           branch: gh-pages
