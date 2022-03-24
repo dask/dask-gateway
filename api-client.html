@@ -22,16 +22,15 @@
       
 
     
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/css/style.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/css/style.css" />
     
   <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
 
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -112,7 +111,7 @@
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item active">
-        <p class="caption">
+        <p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   For Users
  </span>
@@ -134,7 +133,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Admin - Installation
  </span>
@@ -161,7 +160,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Admin - Customization
  </span>
@@ -188,7 +187,7 @@
   </a>
  </li>
 </ul>
-<p class="caption">
+<p aria-level="2" class="caption" role="heading">
  <span class="caption-text">
   Reference
  </span>
@@ -369,8 +368,8 @@
 <div class="section" id="gateway">
 <h2>Gateway<a class="headerlink" href="#gateway" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="dask_gateway.Gateway">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">Gateway</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proxy_address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">public_address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">auth</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">asynchronous</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">loop</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dask_gateway.</span></span><span class="sig-name descname"><span class="pre">Gateway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxy_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asynchronous</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway" title="Permalink to this definition">¶</a></dt>
 <dd><p>A client for a Dask Gateway Server.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -392,8 +391,8 @@ asynchronous mode, otherwise a background loop is started.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="dask_gateway.Gateway.adapt_cluster">
-<code class="sig-name descname">adapt_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="n">minimum</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">maximum</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">active</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.adapt_cluster" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.adapt_cluster">
+<span class="sig-name descname"><span class="pre">adapt_cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.adapt_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configure adaptive scaling for a cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -409,14 +408,14 @@ asynchronous mode, otherwise a background loop is started.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.Gateway.close">
-<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.close" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close the gateway client</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.Gateway.cluster_options">
-<code class="sig-name descname">cluster_options</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">use_local_defaults</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.cluster_options" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.cluster_options">
+<span class="sig-name descname"><span class="pre">cluster_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_local_defaults</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.cluster_options" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the available cluster configuration options.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -433,8 +432,8 @@ Default is True, set to False to use only the server-side defaults.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.Gateway.connect">
-<code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="n">shutdown_on_close</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.connect" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.connect">
+<span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shutdown_on_close</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.connect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to a submitted cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -454,8 +453,8 @@ Default is False.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.Gateway.get_cluster">
-<code class="sig-name descname">get_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.get_cluster" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.get_cluster">
+<span class="sig-name descname"><span class="pre">get_cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.get_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get information about a specific cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -471,8 +470,8 @@ Default is False.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.Gateway.get_versions">
-<code class="sig-name descname">get_versions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.get_versions" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.get_versions">
+<span class="sig-name descname"><span class="pre">get_versions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.get_versions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return version info for the server and client</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -485,8 +484,8 @@ Default is False.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.Gateway.list_clusters">
-<code class="sig-name descname">list_clusters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">status</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.list_clusters" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.list_clusters">
+<span class="sig-name descname"><span class="pre">list_clusters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.list_clusters" title="Permalink to this definition">¶</a></dt>
 <dd><p>List clusters for this user.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -504,8 +503,8 @@ By default selects active clusters (‘pending’, ‘running’).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.Gateway.new_cluster">
-<code class="sig-name descname">new_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">shutdown_on_close</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.new_cluster">
+<span class="sig-name descname"><span class="pre">new_cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shutdown_on_close</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.new_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a new cluster to the gateway, and wait for it to be started.</p>
 <p>Same as calling <code class="docutils literal notranslate"><span class="pre">submit</span></code> and <code class="docutils literal notranslate"><span class="pre">connect</span></code> in one go.</p>
 <dl class="field-list simple">
@@ -531,8 +530,8 @@ options are specific to each deployment of dask-gateway, see
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.Gateway.scale_cluster">
-<code class="sig-name descname">scale_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.scale_cluster" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.scale_cluster">
+<span class="sig-name descname"><span class="pre">scale_cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.scale_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scale a cluster to n workers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -545,8 +544,8 @@ options are specific to each deployment of dask-gateway, see
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.Gateway.stop_cluster">
-<code class="sig-name descname">stop_cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.stop_cluster" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.stop_cluster">
+<span class="sig-name descname"><span class="pre">stop_cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.stop_cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stop a cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -556,8 +555,8 @@ options are specific to each deployment of dask-gateway, see
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.Gateway.submit">
-<code class="sig-name descname">submit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.submit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.Gateway.submit">
+<span class="sig-name descname"><span class="pre">submit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.Gateway.submit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a new cluster to be started.</p>
 <p>This returns quickly with a <code class="docutils literal notranslate"><span class="pre">cluster_name</span></code>, which can later be used
 to connect to the cluster.</p>
@@ -586,8 +585,8 @@ options are specific to each deployment of dask-gateway, see
 <div class="section" id="gatewaycluster">
 <h2>GatewayCluster<a class="headerlink" href="#gatewaycluster" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="dask_gateway.GatewayCluster">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayCluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proxy_address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">public_address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">auth</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cluster_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">shutdown_on_close</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">asynchronous</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">loop</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.GatewayCluster">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dask_gateway.</span></span><span class="sig-name descname"><span class="pre">GatewayCluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxy_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shutdown_on_close</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asynchronous</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>A dask-gateway cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -615,8 +614,8 @@ are specific to each deployment of dask-gateway, see
 </dd>
 </dl>
 <dl class="py method">
-<dt id="dask_gateway.GatewayCluster.adapt">
-<code class="sig-name descname">adapt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">minimum</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">maximum</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">active</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.adapt" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.GatewayCluster.adapt">
+<span class="sig-name descname"><span class="pre">adapt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minimum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.adapt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configure adaptive scaling for the cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -631,8 +630,8 @@ are specific to each deployment of dask-gateway, see
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.GatewayCluster.close">
-<code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shutdown</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.close" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.GatewayCluster.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shutdown</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close the cluster object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -645,8 +644,8 @@ False to override.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.GatewayCluster.from_name">
-<em class="property">classmethod </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cluster_name</span></em>, <em class="sig-param"><span class="n">shutdown_on_close</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">proxy_address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">public_address</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">auth</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">asynchronous</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">loop</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.from_name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.GatewayCluster.from_name">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shutdown_on_close</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxy_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">public_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">asynchronous</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.from_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to a submitted cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -668,8 +667,8 @@ constructor. See the docstring for more information.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.GatewayCluster.get_client">
-<code class="sig-name descname">get_client</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">set_as_default</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.get_client" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.GatewayCluster.get_client">
+<span class="sig-name descname"><span class="pre">get_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">set_as_default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.get_client" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a <code class="docutils literal notranslate"><span class="pre">Client</span></code> for this cluster.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -682,8 +681,8 @@ constructor. See the docstring for more information.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.GatewayCluster.scale">
-<code class="sig-name descname">scale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.scale" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.GatewayCluster.scale">
+<span class="sig-name descname"><span class="pre">scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scale the cluster to <code class="docutils literal notranslate"><span class="pre">n</span></code> workers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -693,8 +692,8 @@ constructor. See the docstring for more information.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="dask_gateway.GatewayCluster.shutdown">
-<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.shutdown" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.GatewayCluster.shutdown">
+<span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.GatewayCluster.shutdown" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shutdown this cluster. Alias for <code class="docutils literal notranslate"><span class="pre">close(shutdown=True)</span></code>.</p>
 </dd></dl>
 
@@ -704,8 +703,8 @@ constructor. See the docstring for more information.</p></li>
 <div class="section" id="options">
 <h2>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="dask_gateway.options.Options">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.options.</code><code class="sig-name descname">Options</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">fields</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.options.Options" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.options.Options">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dask_gateway.options.</span></span><span class="sig-name descname"><span class="pre">Options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">fields</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.options.Options" title="Permalink to this definition">¶</a></dt>
 <dd><p>Options to submit to dask-gateway.</p>
 <p>A mutable-mapping that describes all cluster options available for user’s
 to set. Options can be modified programatically, or via a widget when using
@@ -741,26 +740,26 @@ out-of-bounds, etc…).</p>
 <div class="section" id="authentication">
 <h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="dask_gateway.auth.GatewayAuth">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.auth.</code><code class="sig-name descname">GatewayAuth</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.GatewayAuth" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.auth.GatewayAuth">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dask_gateway.auth.</span></span><span class="sig-name descname"><span class="pre">GatewayAuth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.GatewayAuth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for authenticating clients in dask-gateway</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="dask_gateway.auth.BasicAuth">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.auth.</code><code class="sig-name descname">BasicAuth</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">username</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">password</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.BasicAuth" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.auth.BasicAuth">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dask_gateway.auth.</span></span><span class="sig-name descname"><span class="pre">BasicAuth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.BasicAuth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Attaches HTTP Basic Authentication to the given Request object.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="dask_gateway.auth.KerberosAuth">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.auth.</code><code class="sig-name descname">KerberosAuth</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.KerberosAuth" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.auth.KerberosAuth">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dask_gateway.auth.</span></span><span class="sig-name descname"><span class="pre">KerberosAuth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.KerberosAuth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Authenticate with kerberos</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="dask_gateway.auth.JupyterHubAuth">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.auth.</code><code class="sig-name descname">JupyterHubAuth</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">api_token</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.JupyterHubAuth" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.auth.JupyterHubAuth">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dask_gateway.auth.</span></span><span class="sig-name descname"><span class="pre">JupyterHubAuth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">api_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dask_gateway.auth.JupyterHubAuth" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uses JupyterHub API tokens to authenticate</p>
 </dd></dl>
 
@@ -768,14 +767,14 @@ out-of-bounds, etc…).</p>
 <div class="section" id="exceptions">
 <h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="dask_gateway.GatewayClusterError">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayClusterError</code><a class="headerlink" href="#dask_gateway.GatewayClusterError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.GatewayClusterError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dask_gateway.</span></span><span class="sig-name descname"><span class="pre">GatewayClusterError</span></span><a class="headerlink" href="#dask_gateway.GatewayClusterError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exception related to starting/stopping/scaling of a gateway cluster</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="dask_gateway.GatewayServerError">
-<em class="property">class </em><code class="sig-prename descclassname">dask_gateway.</code><code class="sig-name descname">GatewayServerError</code><a class="headerlink" href="#dask_gateway.GatewayServerError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="dask_gateway.GatewayServerError">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">dask_gateway.</span></span><span class="sig-name descname"><span class="pre">GatewayServerError</span></span><a class="headerlink" href="#dask_gateway.GatewayServerError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Exception related to the operation of the gateway server.</p>
 <p>Indicates an internal error in the gateway server.</p>
 </dd></dl>
