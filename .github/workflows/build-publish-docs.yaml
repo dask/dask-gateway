@@ -1,0 +1,71 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+#
+name: Build and publish documentation
+
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "dask-gateway/**"
+      - "dask-gateway-server/**"
+      - "continuous_integration/install.sh"
+      - ".github/workflows/build-publish-docs.yaml"
+  push:
+    paths:
+      - "docs/**"
+      - "dask-gateway/**"
+      - "dask-gateway-server/**"
+      - "continuous_integration/install.sh"
+      - ".github/workflows/build-publish-docs.yaml"
+    branches-ignore:
+      - "dependabot/**"
+      - "pre-commit-ci-update-config"
+    tags: ["**"]
+  workflow_dispatch:
+
+env:
+  commit_msg: ${{ github.event.head_commit.message }}
+
+jobs:
+  build-and-publish-docs:
+    name: Build and publish documentation
+    runs-on: ubuntu-latest
+
+    # permissions requested for secrets.github_token in order to push to the
+    # gh-pages branch, available for push and workflow_dispatch triggers.
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "1.14"
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Install docs requirements
+        run: |
+          go get github.com/stretchr/testify/assert
+          source continuous_integration/install.sh
+          pip install kubernetes_asyncio skein sphinx doctr dask-sphinx-theme sphinx-rtd-theme
+
+      - name: Build docs (make html)
+        run: |
+          pushd docs
+          make html
+
+      - name: Push built docs to gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          branch: gh-pages
+          folder: docs/build/html/
