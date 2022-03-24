@@ -17,7 +17,7 @@ pip install \
     traitlets \
     sqlalchemy \
     pytest \
-    pytest-asyncio==0.12.0
+    pytest-asyncio
 
 pushd dask-gateway
 python setup.py develop

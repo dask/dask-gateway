@@ -26,7 +26,6 @@ def test_backoff():
     backoff.reset("bar")
 
 
-@pytest.mark.asyncio
 async def test_workqueue_deduplicates():
     q = WorkQueue()
 
@@ -39,7 +38,6 @@ async def test_workqueue_deduplicates():
     assert q.is_empty()
 
 
-@pytest.mark.asyncio
 async def test_workqueue_no_concurrent_execution():
     q = WorkQueue()
 
@@ -64,7 +62,6 @@ async def test_workqueue_no_concurrent_execution():
     assert res == "foo"
 
 
-@pytest.mark.asyncio
 async def test_workqueue_cancellable():
     q = WorkQueue()
 
@@ -88,7 +85,6 @@ async def test_workqueue_cancellable():
     assert await q.get() == "foo"
 
 
-@pytest.mark.asyncio
 async def test_workqueue_put_after():
     q = WorkQueue()
 
@@ -112,7 +108,6 @@ async def test_workqueue_put_after():
     assert res == "foo"
 
 
-@pytest.mark.asyncio
 async def test_workqueue_put_after_reschedules():
     q = WorkQueue()
     q.put_after("foo", 0.1)
@@ -141,7 +136,6 @@ async def test_workqueue_put_after_reschedules():
     assert await q.get() == "foo"
 
 
-@pytest.mark.asyncio
 async def test_workqueue_put_backoff():
     q = WorkQueue()
     q.put_backoff("foo")
@@ -157,7 +151,6 @@ async def test_workqueue_put_backoff():
     assert q.failures("foo") == 0
 
 
-@pytest.mark.asyncio
 async def test_workqueue_close():
     q = WorkQueue()
     q.put("foo")

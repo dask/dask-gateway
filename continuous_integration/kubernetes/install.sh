@@ -8,7 +8,7 @@ pip install -U \
     dask \
     distributed \
     pytest \
-    pytest-asyncio==0.12.0 \
+    pytest-asyncio \
     kubernetes-asyncio \
     sqlalchemy \
     traitlets

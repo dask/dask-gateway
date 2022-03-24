@@ -54,7 +54,6 @@ def test_classname():
     assert classname(Foo) == f"{Foo.__module__}.Foo"
 
 
-@pytest.mark.asyncio
 async def test_task_pool():
     pool = TaskPool()
 
@@ -83,7 +82,6 @@ async def test_task_pool():
     assert len(pool.tasks) == 0
 
 
-@pytest.mark.asyncio
 async def test_awaitable():
     async def afoo():
         return 1
@@ -119,7 +117,6 @@ def test_lru_cache():
     assert cache.get(7) == 8
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("use_wait", [False, True])
 async def test_flag(use_wait):
     flag = Flag()
@@ -186,7 +183,6 @@ def test_frozenattrdict():
         a.missing = 1
 
 
-@pytest.mark.asyncio
 async def test_cancel_group():
     cg = CancelGroup()
 
@@ -220,7 +216,6 @@ async def test_cancel_group():
         pass
 
 
-@pytest.mark.asyncio
 async def test_rate_limiter():
     rl = RateLimiter(rate=1, burst=2)
     assert rl._delay() == 0

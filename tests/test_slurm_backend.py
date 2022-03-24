@@ -65,7 +65,6 @@ class SlurmTestingBackend(SlurmBackend):
         JOBIDS.discard(job_id)
 
 
-@pytest.mark.asyncio
 async def test_slurm_backend():
     c = Config()
 

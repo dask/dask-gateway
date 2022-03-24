@@ -59,7 +59,6 @@ class PBSTestingBackend(PBSBackend):
         JOBIDS.discard(job_id)
 
 
-@pytest.mark.asyncio
 async def test_pbs_backend():
     c = Config()
     c.PBSClusterConfig.scheduler_cmd = "/opt/miniconda/bin/dask-scheduler"
