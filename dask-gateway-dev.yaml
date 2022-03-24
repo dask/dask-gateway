@@ -42,10 +42,11 @@ dependencies:
   - pytest
   - pytest-asyncio=0.12.0
   
-  # Useful tooling for local development:
+  # Useful tooling for local development (kubernetes):
   # helm and kubectl
   - kubernetes-helm
   - kubernetes-client
+  - minikube
   
   - pip:
     - kubernetes-asyncio # see: dask-gateway-server/setup.py extras_require
