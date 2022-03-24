@@ -1,0 +1,57 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+#
+name: Build and publish Python packages
+
+# Always test build of packages, but only publish to PyPI on pushed tag
+on:
+  pull_request:
+    paths:
+      - "dask-gateway/**"
+      - "dask-gateway-server/**"
+      - ".github/workflows/build-publish-python-packages.yaml"
+  push:
+    paths:
+      - "dask-gateway/**"
+      - "dask-gateway-server/**"
+      - ".github/workflows/build-publish-python-packages.yaml"
+    branches: ["main"]
+    tags: ["**"]
+  workflow_dispatch:
+
+jobs:
+  # FIXME: this is boilerplate but hasn't been tested to work
+  build-publish-python-package:
+    name: "Build and publish Python package: ${{ matrix.package }}"
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - dask-gateway
+          - dask-gateway-server
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+
+      - name: Install build package
+        run: |
+          pip install --upgrade pip
+          pip install build
+          pip freeze
+
+      - name: Build release
+        run: |
+          pushd ${{ matrix.package }}
+          python -m build --sdist --wheel .
+          ls -l dist
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.5.0
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_password }}
+          packages_dir: ${{ matrix.package }}/dist/
