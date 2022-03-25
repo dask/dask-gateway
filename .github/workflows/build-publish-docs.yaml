@@ -69,3 +69,33 @@ jobs:
         with:
           branch: gh-pages
           folder: docs/_build/html/
+
+  linkcheck-docs:
+    name: Test links in docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "1.14"
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Install docs requirements
+        run: |
+          go get github.com/stretchr/testify/assert
+          source continuous_integration/install.sh
+          pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
+
+      - name: Linkcheck docs (make linkcheck)
+        run: |
+          pushd docs
+          make linkcheck SPHINXOPTS='--color -W --keep-going'
