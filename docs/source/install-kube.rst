@@ -260,8 +260,8 @@ anti-affinity for scheduler pods to avoid `preemptible nodes`_:
 
 For information on allowed fields, see the Kubernetes documentation:
 
-- `PodSpec Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core>`__
-- `Container Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__
+- `PodSpec Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#podspec-v1-core>`__
+- `Container Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#container-v1-core>`__
 
 
 Using ``extraConfig``
@@ -409,7 +409,7 @@ here for reference:
 .. _JupyterHub: https://jupyterhub.readthedocs.io/
 .. _notebook: https://jupyter.org/
 .. _JupyterHub Service: https://jupyterhub.readthedocs.io/en/stable/getting-started/services-basics.html
-.. _Kubernetes API: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/
+.. _Kubernetes API: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/
 .. _tolerations: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 .. _node affinities: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 .. _preemptible nodes: https://cloud.google.com/blog/products/containers-kubernetes/cutting-costs-with-google-kubernetes-engine-using-the-cluster-autoscaler-and-preemptible-vms
