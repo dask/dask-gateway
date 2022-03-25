@@ -420,8 +420,8 @@ $ conda install -c conda-forge <span class="se">\</span>
     dask
 </pre></div>
 </div>
-<p>Besides the above dependencies, you’ll also need a <a class="reference external" href="https://golang.org/">Go</a> compiler. You can
-install Go using your system package manager, the <a class="reference external" href="https://golang.org/">Go website</a>, or use Conda:</p>
+<p>Besides the above dependencies, you’ll also need a <a class="reference external" href="https://go.dev/">Go</a> compiler. You can
+install Go using your system package manager, the <a class="reference external" href="https://go.dev/">Go website</a>, or use Conda:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ conda install -c conda-forge go
 </pre></div>
 </div>
@@ -437,8 +437,8 @@ install Go using your system package manager, the <a class="reference external" 
     dask
 </pre></div>
 </div>
-<p>Besides the above dependencies, you’ll also need a <a class="reference external" href="https://golang.org/">Go</a> compiler. You can
-install Go using your system package manager or the <a class="reference external" href="https://golang.org/">Go website</a>.</p>
+<p>Besides the above dependencies, you’ll also need a <a class="reference external" href="https://go.dev/">Go</a> compiler. You can
+install Go using your system package manager or the <a class="reference external" href="https://go.dev/">Go website</a>.</p>
 </div>
 <div class="section" id="build-and-install-dask-gateway">
 <h3>Build and Install Dask-Gateway<a class="headerlink" href="#build-and-install-dask-gateway" title="Permalink to this headline">¶</a></h3>
@@ -503,12 +503,14 @@ subdirectory:</p>
 <h2>Building the Documentation<a class="headerlink" href="#building-the-documentation" title="Permalink to this headline">¶</a></h2>
 <p>Dask-Gateway uses <a class="reference external" href="http://www.sphinx-doc.org/">Sphinx</a> for documentation. The source files are located in
 <code class="docutils literal notranslate"><span class="pre">dask-gateway/docs/source</span></code>. To build the documentation locally, first install
-the documentation build requirements.</p>
+the documentation build requirements. Note that <code class="docutils literal notranslate"><span class="pre">autodoc-traits</span></code> is used to
+inspect the Python source code, which makes us also need the packages listed
+after <code class="docutils literal notranslate"><span class="pre">autodoc-traits</span></code> to generate the full configuration reference.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install docs dependencies with conda</span>
-$ conda install -c conda-forge skein sphinx dask-sphinx-theme
+$ conda install -c conda-forge sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
 
 <span class="c1"># Or install with pip</span>
-$ pip install sphinx skein dask-sphinx-theme
+$ pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
 </pre></div>
 </div>
 <p>Then build the documentation with <code class="docutils literal notranslate"><span class="pre">make</span></code></p>
@@ -516,7 +518,13 @@ $ pip install sphinx skein dask-sphinx-theme
 $ make html
 </pre></div>
 </div>
-<p>The resulting HTML files end up in the <code class="docutils literal notranslate"><span class="pre">build/html</span></code> directory.</p>
+<p>The resulting HTML files end up in the <code class="docutils literal notranslate"><span class="pre">_build/html</span></code> directory.</p>
+<p>Then consider using another <code class="docutils literal notranslate"><span class="pre">make</span></code> command to rebuild the documentation and
+refresh a browser viewing the built documentation.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Running from the dask-gateway/docs folder</span>
+$ make devenv
+</pre></div>
+</div>
 </div>
 </div>
 

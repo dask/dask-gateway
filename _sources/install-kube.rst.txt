@@ -260,8 +260,8 @@ anti-affinity for scheduler pods to avoid `preemptible nodes`_:
 
 For information on allowed fields, see the Kubernetes documentation:
 
-- `PodSpec Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podspec-v1-core>`__
-- `Container Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#container-v1-core>`__
+- `PodSpec Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#podspec-v1-core>`__
+- `Container Configuration <https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#container-v1-core>`__
 
 
 Using ``extraConfig``
@@ -402,16 +402,16 @@ here for reference:
 .. _dask-gateway github repo: https://github.com/dask/dask-gateway/
 .. _resources/helm subdirectory: https://github.com/dask/dask-gateway/tree/main/resources/helm
 .. _default values.yaml file: https://github.com/dask/dask-gateway/blob/main/resources/helm/dask-gateway/values.yaml
-.. _Helm release name: https://docs.helm.sh/glossary/#release
+.. _Helm release name: https://helm.sh/docs/glossary/#release
 .. _Kubernetes namespace: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 .. _Dask Dashboards: https://docs.dask.org/en/latest/diagnostics-distributed.html
 .. _yaml: https://en.wikipedia.org/wiki/YAML
 .. _JupyterHub: https://jupyterhub.readthedocs.io/
 .. _notebook: https://jupyter.org/
 .. _JupyterHub Service: https://jupyterhub.readthedocs.io/en/stable/getting-started/services-basics.html
-.. _Kubernetes API: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/
-.. _tolerations: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-.. _node affinities: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+.. _Kubernetes API: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/
+.. _tolerations: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+.. _node affinities: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
 .. _preemptible nodes: https://cloud.google.com/blog/products/containers-kubernetes/cutting-costs-with-google-kubernetes-engine-using-the-cluster-autoscaler-and-preemptible-vms
 .. _init process: https://en.wikipedia.org/wiki/Init
 .. _tini: https://github.com/krallin/tini

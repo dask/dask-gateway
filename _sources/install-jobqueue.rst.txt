@@ -384,7 +384,7 @@ If everything worked properly, you can shutdown your cluster with
     >>> cluster.shutdown()
 
 
-.. _PBS: https://www.pbspro.org/
+.. _PBS: ttps://www.openpbs.org/
 .. _Slurm: https://slurm.schedmd.com/
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _sudo: https://en.wikipedia.org/wiki/Sudo

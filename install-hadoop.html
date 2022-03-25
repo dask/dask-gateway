@@ -658,9 +658,9 @@ etc…) and dask scheduler traffic.</p>
 <p>If you’d like to serve at a different address, or serve web and scheduler
 traffic on different ports, you can configure the following fields:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="api-server.html#c.Proxy.address" title="c.Proxy.address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.address</span></code></a> - Serves HTTP(S) traffic, defaults to <code class="docutils literal notranslate"><span class="pre">:8000</span></code>.</p></li>
-<li><p><a class="reference internal" href="api-server.html#c.Proxy.tcp_address" title="c.Proxy.tcp_address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code></a> - Serves dask client-to-scheduler tcp traffic,
-defaults to <a class="reference internal" href="api-server.html#c.Proxy.address" title="c.Proxy.address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.address</span></code></a>.</p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.address</span></code> - Serves HTTP(S) traffic, defaults to <code class="docutils literal notranslate"><span class="pre">:8000</span></code>.</p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code> - Serves dask client-to-scheduler tcp traffic,
+defaults to <code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.address</span></code>.</p></li>
 </ul>
 <p>Here we configure web traffic to serve on port 8000 and scheduler traffic to
 serve on port 8001:</p>
@@ -710,13 +710,13 @@ installing anything throughout the cluster, and allows for centrally managing
 user’s Python environments.</p>
 <p>Packaging environments for distribution is usually accomplished using</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://conda.github.io/conda-pack/">conda-pack</a> for <a class="reference external" href="http://conda.io/">conda</a> environments</p></li>
+<li><p><a class="reference external" href="https://conda.github.io/conda-pack/">conda-pack</a> for <a class="reference external" href="https://docs.conda.io/">conda</a> environments</p></li>
 <li><p><a class="reference external" href="https://jcristharif.com/venv-pack/">venv-pack</a>  for virtual environments (both <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">venv</a> and <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">virtualenv</a> supported)</p></li>
 </ul>
 <p>Both are tools for taking an environment and creating an archive of it in a way
 that (most) absolute paths in any libraries or scripts are altered to be
 relocatable. This archive then can be distributed with your application, and
-will be automatically extracted during <a class="reference external" href="https://hortonworks.com/blog/resource-localization-in-yarn-deep-dive/">YARN resource localization</a></p>
+will be automatically extracted during <a class="reference external" href="https://blog.cloudera.com/resource-localization-in-yarn-deep-dive/">YARN resource localization</a></p>
 <p>Below we demonstrate creating and packaging a Conda environment containing
 <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code>, as well as <code class="docutils literal notranslate"><span class="pre">pandas</span></code> and <code class="docutils literal notranslate"><span class="pre">scikit-learn</span></code>. Additional
 packages could be added as needed.</p>
@@ -885,7 +885,7 @@ $ conda create -n dask-gateway -c conda-forge dask-gateway-kerberos
 </div>
 <p>You can connect to the gateway by creating a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>
 object, specifying the public address (note that if you configured
-<a class="reference internal" href="api-server.html#c.Proxy.tcp_address" title="c.Proxy.tcp_address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code></a> you’ll also need to specify the <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).</p>
+<code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code> you’ll also need to specify the <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
 
 <span class="go"># When running without kerberos</span>

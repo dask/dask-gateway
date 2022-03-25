@@ -496,10 +496,10 @@
   <div class="section" id="install-on-an-hpc-job-queue">
 <h1>Install on an HPC Job Queue<a class="headerlink" href="#install-on-an-hpc-job-queue" title="Permalink to this headline">¶</a></h1>
 <p>Here we provide instructions for installing and configuring
-<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a HPC Job Queue system like <a class="reference external" href="https://www.pbspro.org/">PBS</a> or <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a>. Note
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a HPC Job Queue system like <a class="reference external" href="ttps://www.openpbs.org/">PBS</a> or <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a>. Note
 that <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> only needs to be installed on one node (typically
 an edge node).</p>
-<p>Currently only <a class="reference external" href="https://www.pbspro.org/">PBS</a> and <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a> are supported, but support for additional
+<p>Currently only <a class="reference external" href="ttps://www.openpbs.org/">PBS</a> and <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a> are supported, but support for additional
 backends is planned. If this is something you’re interested in, please <a class="reference external" href="https://github.com/dask/dask-gateway/issues">file an
 issue</a>.</p>
 <div class="section" id="create-a-user-account">
@@ -574,12 +574,12 @@ sudo-executed as them for permissions to be transferred appropriately.</p>
 dask ALL=(%dask_users,!root) NOPASSWD:DASK_GATEWAY_JOBQUEUE_LAUNCHER
 </pre></div>
 </div>
-<p>Additionaly, when using <a class="reference external" href="https://www.pbspro.org/">PBS</a> you’ll need to make the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user a PBS
+<p>Additionaly, when using <a class="reference external" href="ttps://www.openpbs.org/">PBS</a> you’ll need to make the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user a PBS
 Operator:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ qmgr -c <span class="s2">&quot;set server operators += dask@pbs&quot;</span>
 </pre></div>
 </div>
-<p>Operator level permissions are needed in <a class="reference external" href="https://www.pbspro.org/">PBS</a> to allow <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>
+<p>Operator level permissions are needed in <a class="reference external" href="ttps://www.openpbs.org/">PBS</a> to allow <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>
 to more efficiently track the status of all users’ jobs.</p>
 </div>
 <div class="section" id="configure-dask-gateway-server">
@@ -595,7 +595,7 @@ object.</p>
 <div class="section" id="specify-backend">
 <h3>Specify backend<a class="headerlink" href="#specify-backend" title="Permalink to this headline">¶</a></h3>
 <p>First you’ll need to specify which backend to use by setting
-<a class="reference internal" href="api-server.html#c.DaskGateway.backend_class" title="c.DaskGateway.backend_class"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.backend_class</span></code></a>. You have a few options:</p>
+<code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.backend_class</span></code>. You have a few options:</p>
 <ul class="simple">
 <li><p>PBS: <code class="docutils literal notranslate"><span class="pre">dask_gateway_server.backends.jobqueue.pbs.PBSBackend</span></code></p></li>
 <li><p>Slurm: <code class="docutils literal notranslate"><span class="pre">dask_gateway_server.backends.jobqueue.slurm.SlurmBackend</span></code></p></li>
@@ -616,9 +616,9 @@ etc…) and dask scheduler traffic.</p>
 <p>If you’d like to serve at a different address, or serve web and scheduler
 traffic on different ports, you can configure the following fields:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="api-server.html#c.Proxy.address" title="c.Proxy.address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.address</span></code></a> - Serves HTTP(S) traffic, defaults to <code class="docutils literal notranslate"><span class="pre">:8000</span></code>.</p></li>
-<li><p><a class="reference internal" href="api-server.html#c.Proxy.tcp_address" title="c.Proxy.tcp_address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code></a> - Serves dask client-to-scheduler tcp traffic,
-defaults to <a class="reference internal" href="api-server.html#c.Proxy.address" title="c.Proxy.address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.address</span></code></a>.</p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.address</span></code> - Serves HTTP(S) traffic, defaults to <code class="docutils literal notranslate"><span class="pre">:8000</span></code>.</p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code> - Serves dask client-to-scheduler tcp traffic,
+defaults to <code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.address</span></code>.</p></li>
 </ul>
 <p>Here we configure web traffic to serve on port 8000 and scheduler traffic to
 serve on port 8001:</p>
@@ -665,7 +665,7 @@ the provided Python. This could be done a few different ways:</p>
 environments. This can be useful, as it allows users to manage package versions
 themselves without needing to contact an admin for support.</p>
 <p>This can be done by exposing an option for Python environment in
-<a class="reference internal" href="api-server.html#c.Backend.cluster_options" title="c.Backend.cluster_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.cluster_options</span></code></a>. Exposing cluster options is
+<code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.cluster_options</span></code>. Exposing cluster options is
 discussed in detail in <a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a> - here we’ll only provide a short
 example of one way of accomplishing this. Please see <a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a> for
 more information.</p>
@@ -777,7 +777,7 @@ $ conda create -n dask-gateway -c conda-forge dask-gateway
 </div>
 <p>You can connect to the gateway by creating a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>
 object, specifying the public address (note that if you configured
-<a class="reference internal" href="api-server.html#c.Proxy.tcp_address" title="c.Proxy.tcp_address"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code></a> you’ll also need to specify the <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).</p>
+<code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code> you’ll also need to specify the <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span><span class="s2">&quot;http://public-address&quot;</span><span class="p">)</span>
 </pre></div>

@@ -382,8 +382,8 @@ enabling this.</p>
 locations in your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file. The relevant configuration
 fields are:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="api-server.html#c.Proxy.tls_cert" title="c.Proxy.tls_cert"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tls_cert</span></code></a></p></li>
-<li><p><a class="reference internal" href="api-server.html#c.Proxy.tls_key" title="c.Proxy.tls_key"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tls_key</span></code></a></p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tls_cert</span></code></p></li>
+<li><p><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tls_key</span></code></p></li>
 </ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">Proxy</span><span class="o">.</span><span class="n">tls_cert</span> <span class="o">=</span> <span class="s2">&quot;/path/to/my.cert&quot;</span>
 <span class="n">c</span><span class="o">.</span><span class="n">Proxy</span><span class="o">.</span><span class="n">tls_key</span> <span class="o">=</span> <span class="s2">&quot;/path/to/my.key&quot;</span>
@@ -415,10 +415,10 @@ file:</p>
 <p>To secure communication between the proxy and the gateway server, a secret
 token is used. By default this token is generated automatically. It’s necessary
 for an admin to configure this explicitly if the proxies are being externally
-managed (i.e. <a class="reference internal" href="api-server.html#c.Proxy.externally_managed" title="c.Proxy.externally_managed"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.externally_managed</span></code></a> is set to true). To do this
+managed (i.e. <code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.externally_managed</span></code> is set to true). To do this
 you have two options:</p>
 <ul class="simple">
-<li><p>Configure <a class="reference internal" href="api-server.html#c.Proxy.api_token" title="c.Proxy.api_token"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.api_token</span></code></a> in your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file.
+<li><p>Configure <code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.api_token</span></code> in your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file.
 Since the token should be kept secret, the config file <em>must</em> be readable
 only by admin users.</p></li>
 <li><p>Set the <code class="docutils literal notranslate"><span class="pre">DASK_GATEWAY_PROXY_TOKEN</span></code> environment variable.  For security

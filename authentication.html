@@ -347,7 +347,7 @@
 <h1>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h1>
 <p>Being a multi-tenant application, <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> needs a method to
 authenticate users. Like backends, authentication is also configurable by
-setting <a class="reference internal" href="api-server.html#c.DaskGateway.authenticator_class" title="c.DaskGateway.authenticator_class"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.authenticator_class</span></code></a>. Here we document a few
+setting <code class="xref py py-data docutils literal notranslate"><span class="pre">c.DaskGateway.authenticator_class</span></code>. Here we document a few
 common implementations.</p>
 <div class="section" id="simple-authentication-for-testing">
 <h2>Simple authentication for testing<a class="headerlink" href="#simple-authentication-for-testing" title="Permalink to this headline">¶</a></h2>
@@ -358,7 +358,7 @@ desired, an optional password can be configured to be shared across all users.
 Note that this only marginally makes things more secure, as users can still
 easily impersonate each other.</p>
 <p>This protocol is the default, and is implemented by
-<code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.auth.SimpleAuthenticator</span></code>. No further configuration
+<a class="reference internal" href="api-server.html#dask_gateway_server.auth.SimpleAuthenticator" title="dask_gateway_server.auth.SimpleAuthenticator"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.auth.SimpleAuthenticator</span></code></a>. No further configuration
 is needed to enable it. If you would like to add a shared password, you can do
 so by adding the following line to your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set a shared password.</span>
@@ -370,7 +370,7 @@ so by adding the following line to your <code class="docutils literal notranslat
 <div class="section" id="kerberos-authentication">
 <h2>Kerberos authentication<a class="headerlink" href="#kerberos-authentication" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://web.mit.edu/kerberos/">Kerberos</a> can be used to authenticate users by enabling the
-<code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.auth.KerberosAuthenticator</span></code>. To do this, you’ll
+<a class="reference internal" href="api-server.html#dask_gateway_server.auth.KerberosAuthenticator" title="dask_gateway_server.auth.KerberosAuthenticator"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.auth.KerberosAuthenticator</span></code></a>. To do this, you’ll
 need to create a <code class="docutils literal notranslate"><span class="pre">HTTP</span></code> service principal and keytab for the host running
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> (if one doesn’t already exist). Keytabs can be created
 on the command-line as:</p>

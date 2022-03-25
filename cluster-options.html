@@ -426,7 +426,7 @@ cluster.</p></li>
 </div>
 <div class="section" id="server-configuration">
 <h2>Server Configuration<a class="headerlink" href="#server-configuration" title="Permalink to this headline">¶</a></h2>
-<p>Options are exposed to the user by setting <a class="reference internal" href="api-server.html#c.Backend.cluster_options" title="c.Backend.cluster_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.cluster_options</span></code></a>.
+<p>Options are exposed to the user by setting <code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.cluster_options</span></code>.
 This configuration field takes either:</p>
 <ul class="simple">
 <li><p>a <a class="reference internal" href="api-server.html#dask_gateway_server.options.Options" title="dask_gateway_server.options.Options"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.options.Options</span></code></a> object, which describes what
@@ -517,10 +517,10 @@ fields are available for your backend.</p>
 <div class="section" id="worker-cores-and-memory">
 <h3>Worker Cores and Memory<a class="headerlink" href="#worker-cores-and-memory" title="Permalink to this headline">¶</a></h3>
 <p>Here we expose options for users to configure
-<a class="reference internal" href="api-server.html#c.ClusterConfig.worker_cores" title="c.ClusterConfig.worker_cores"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_cores</span></code></a> and <a class="reference internal" href="api-server.html#c.ClusterConfig.worker_memory" title="c.ClusterConfig.worker_memory"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_memory</span></code></a>.
+<code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_cores</span></code> and <code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_memory</span></code>.
 We set bounds on each resource to prevent users from requesting too large of a
 worker. The handler is used to convert the user specified memory from GiB to
-bytes (as expected by <a class="reference internal" href="api-server.html#c.ClusterConfig.worker_memory" title="c.ClusterConfig.worker_memory"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_memory</span></code></a>).</p>
+bytes (as expected by <code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_memory</span></code>).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
 
 <span class="k">def</span> <span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
@@ -570,12 +570,12 @@ from.</p>
 <div class="section" id="different-options-per-user-group">
 <h3>Different Options per User Group<a class="headerlink" href="#different-options-per-user-group" title="Permalink to this headline">¶</a></h3>
 <p>Cluster options may be configured to differ based on the user by providing a
-function for <a class="reference internal" href="api-server.html#c.Backend.cluster_options" title="c.Backend.cluster_options"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.cluster_options</span></code></a>. This function receives a
+function for <code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.cluster_options</span></code>. This function receives a
 <a class="reference internal" href="api-server.html#dask_gateway_server.models.User" title="dask_gateway_server.models.User"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.models.User</span></code></a> object and should return a
 <a class="reference internal" href="api-server.html#dask_gateway_server.options.Options" title="dask_gateway_server.options.Options"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway_server.options.Options</span></code></a> object. It may optionally be an
 <code class="docutils literal notranslate"><span class="pre">async</span></code> function.</p>
 <p>Similar to the last examples, here we expose options for users to configure
-<a class="reference internal" href="api-server.html#c.ClusterConfig.worker_cores" title="c.ClusterConfig.worker_cores"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_cores</span></code></a> and <a class="reference internal" href="api-server.html#c.ClusterConfig.worker_memory" title="c.ClusterConfig.worker_memory"><code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_memory</span></code></a>.
+<code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_cores</span></code> and <code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_memory</span></code>.
 However, we offer different ranges depending on whether or not the user is a
 member of the “power-users” group.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
