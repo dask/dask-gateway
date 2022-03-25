@@ -7,7 +7,7 @@ with open(os.path.join(here, "dask_gateway", "_version.py")) as f:
     exec(f.read(), {}, ns)
     VERSION = ns["__version__"]
 
-# NOTE: changes to the dependencies here must also be reflected 
+# NOTE: changes to the dependencies here must also be reflected
 # in ../dask-gateway-dev.yaml
 install_requires = ["aiohttp", "dask>=2.2.0", "distributed>=2.2.0"]
 

@@ -97,7 +97,6 @@ class clean(_clean):
         _clean.run(self)
 
 
-
 # NOTE: changes to the dependencies here must also be reflected
 # in ../dask-gateway-dev.yaml
 install_requires = ["aiohttp", "colorlog", "cryptography", "traitlets"]
