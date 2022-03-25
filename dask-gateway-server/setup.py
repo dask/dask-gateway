@@ -97,8 +97,9 @@ class clean(_clean):
         _clean.run(self)
 
 
-# if you make updates here, please update the entries in
-# ../dask-gateway-dev.yaml
+
+# NOTE: changes to the dependencies here must also be reflected
+# in ../dask-gateway-dev.yaml
 install_requires = ["aiohttp", "colorlog", "cryptography", "traitlets"]
 
 extras_require = {
