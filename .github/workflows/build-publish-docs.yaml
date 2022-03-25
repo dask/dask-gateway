@@ -56,7 +56,7 @@ jobs:
         run: |
           go get github.com/stretchr/testify/assert
           source continuous_integration/install.sh
-          pip install kubernetes_asyncio skein sphinx doctr dask-sphinx-theme sphinx-rtd-theme
+          pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
 
       - name: Build docs (make html)
         run: |

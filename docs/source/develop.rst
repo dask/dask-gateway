@@ -144,15 +144,17 @@ Building the Documentation
 
 Dask-Gateway uses Sphinx_ for documentation. The source files are located in
 ``dask-gateway/docs/source``. To build the documentation locally, first install
-the documentation build requirements.
+the documentation build requirements. Note that ``autodoc-traits`` is used to
+inspect the Python source code, which makes us also need the packages listed
+after ``autodoc-traits`` to generate the full configuration reference.
 
 .. code-block:: shell
 
     # Install docs dependencies with conda
-    $ conda install -c conda-forge skein sphinx dask-sphinx-theme
+    $ conda install -c conda-forge sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
 
     # Or install with pip
-    $ pip install sphinx skein dask-sphinx-theme
+    $ pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
 
 Then build the documentation with ``make``
 
