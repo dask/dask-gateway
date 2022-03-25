@@ -1,8 +1,8 @@
 FROM daskgateway/testing-base:latest
 
-# Install pbspro
+# Install pbspro (now openpbs)
 RUN yum install -y unzip \
-    && curl -L -o /tmp/pbspro.zip https://github.com/PBSPro/pbspro/releases/download/v18.1.4/pbspro_1.8.4.centos7.zip \
+    && curl -L -o /tmp/pbspro.zip https://github.com/openpbs/openpbs/releases/download/v18.1.4/pbspro_1.8.4.centos7.zip \
     && unzip /tmp/pbspro.zip -d /tmp/pbspro \
     && yum install -y sudo /tmp/pbspro/pbspro*/pbspro-server-*.rpm \
     && yum remove -y unzip \

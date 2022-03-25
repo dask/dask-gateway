@@ -56,16 +56,46 @@ jobs:
         run: |
           go get github.com/stretchr/testify/assert
           source continuous_integration/install.sh
-          pip install kubernetes_asyncio skein sphinx doctr dask-sphinx-theme sphinx-rtd-theme
+          pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
 
       - name: Build docs (make html)
         run: |
           pushd docs
-          make html
+          make html SPHINXOPTS='--color -W --keep-going'
 
       - name: Push built docs to gh-pages branch
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           branch: gh-pages
-          folder: docs/build/html/
+          folder: docs/_build/html/
+
+  linkcheck-docs:
+    name: Test links in docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.8"
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "1.14"
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Install docs requirements
+        run: |
+          go get github.com/stretchr/testify/assert
+          source continuous_integration/install.sh
+          pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
+
+      - name: Linkcheck docs (make linkcheck)
+        run: |
+          pushd docs
+          make linkcheck SPHINXOPTS='--color -W --keep-going'
