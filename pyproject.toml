@@ -7,3 +7,8 @@ target-version = ['py35', 'py36', 'py37']
 # to this we explicitly make it do so. This is related to:
 # https://github.com/actions/runner/issues/241
 addopts = '--color=yes'
+
+# asyncio_mode auto makes us not need to decorate our async test functions with
+# @pytest.mark.asyncio, for more details see:
+# https://github.com/pytest-dev/pytest-asyncio#auto-mode
+asyncio_mode = 'auto'

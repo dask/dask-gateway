@@ -1,0 +1,19 @@
+# dependabot.yml reference: https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/configuration-options-for-dependency-updates
+#
+# Notes:
+# - Status and logs from dependabot are provided at
+#   https://github.com/dask/dask-gateway/network/updates.
+# - YAML anchors are not supported here or in GitHub Workflows.
+#
+version: 2
+updates:
+  # Update actions in our workflows to their latest releases
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      time: 05:00
+      timezone: Etc/UTC
+    labels:
+      - ci
+      - dependencies

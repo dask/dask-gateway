@@ -216,7 +216,6 @@ def test_resume_clusters_forbid_in_memory_db():
     assert "stop_clusters_on_shutdown" in str(exc.value)
 
 
-@pytest.mark.asyncio
 async def test_encryption(tmpdir):
     db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
     encrypt_keys = [Fernet.generate_key() for i in range(3)]
@@ -308,7 +307,6 @@ def check_db_consistency(db):
         assert set(cluster.workers) == expected
 
 
-@pytest.mark.asyncio
 async def test_cleanup_expired_clusters(monkeypatch):
     db = DataManager()
 
@@ -379,7 +377,6 @@ async def test_cleanup_expired_clusters(monkeypatch):
     check_db_consistency(db)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("start_timeout,state", [(0.1, 1), (0.4, 2)])
 async def test_slow_cluster_start(start_timeout, state):
     config = Config()
@@ -400,7 +397,6 @@ async def test_slow_cluster_start(start_timeout, state):
             assert g.gateway.backend.stop_cluster_state == {"state": state}
 
 
-@pytest.mark.asyncio
 async def test_slow_cluster_connect():
     config = Config()
     config.DaskGateway.backend_class = ClusterSlowToStart
@@ -422,7 +418,6 @@ async def test_slow_cluster_connect():
             assert g.gateway.backend.stop_cluster_state == {"state": 3}
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("fail_stage", [0, 1])
 async def test_cluster_fails_during_start(fail_stage):
 
@@ -444,7 +439,6 @@ async def test_cluster_fails_during_start(fail_stage):
             assert g.gateway.backend.stop_cluster_state == res
 
 
-@pytest.mark.asyncio
 async def test_cluster_fails_between_start_and_connect():
     config = Config()
     config.DaskGateway.backend_class = ClusterFailsBetweenStartAndConnect
@@ -464,7 +458,6 @@ async def test_cluster_fails_between_start_and_connect():
             assert g.gateway.backend.status == "stopped"
 
 
-@pytest.mark.asyncio
 async def test_cluster_fails_after_connect():
     config = Config()
     config.DaskGateway.backend_class = ClusterFailsAfterConnect
@@ -485,7 +478,6 @@ async def test_cluster_fails_after_connect():
                 await asyncio.wait_for(g.gateway.backend.stop_cluster_called, 5)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("start_timeout,state", [(0.1, 0), (0.25, 1)])
 async def test_slow_worker_start(start_timeout, state):
     config = Config()
@@ -505,7 +497,6 @@ async def test_slow_worker_start(start_timeout, state):
                 assert g.gateway.backend.stop_worker_state == {"i": state}
 
 
-@pytest.mark.asyncio
 async def test_slow_worker_connect():
     config = Config()
     config.DaskGateway.backend_class = WorkerSlowToStart
@@ -525,7 +516,6 @@ async def test_slow_worker_connect():
                 assert g.gateway.backend.stop_worker_state == {"i": 2}
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("fail_stage", [0, 1])
 async def test_worker_fails_during_start(fail_stage):
     config = Config()
@@ -545,7 +535,6 @@ async def test_worker_fails_during_start(fail_stage):
                 assert g.gateway.backend.stop_worker_state == res
 
 
-@pytest.mark.asyncio
 async def test_worker_fails_between_start_and_connect():
     config = Config()
     config.DaskGateway.backend_class = WorkerFailsBetweenStartAndConnect
@@ -562,7 +551,6 @@ async def test_worker_fails_between_start_and_connect():
                 assert g.gateway.backend.stop_worker_state == {"state": 1}
 
 
-@pytest.mark.asyncio
 async def test_worker_fails_after_connect():
     config = Config()
     config.DaskGateway.backend_class = TracksStopWorkerCalls
@@ -582,7 +570,6 @@ async def test_worker_fails_after_connect():
                 await asyncio.wait_for(g.gateway.backend.stop_worker_called, 30)
 
 
-@pytest.mark.asyncio
 async def test_worker_start_failure_limit():
     config = Config()
     config.DaskGateway.backend_class = WorkerFailsDuringStart
@@ -596,7 +583,6 @@ async def test_worker_start_failure_limit():
                 await asyncio.wait_for(g.gateway.backend.stop_cluster_called, 10)
 
 
-@pytest.mark.asyncio
 async def test_successful_cluster():
     async with temp_gateway() as g:
         async with g.gateway_client() as gateway:
@@ -636,7 +622,6 @@ class MyClusterConfig(ClusterConfig):
     option_one_b = Integer(config=True)
 
 
-@pytest.mark.asyncio
 async def test_cluster_options():
     config = Config()
     config.InProcessBackend.cluster_config_class = MyClusterConfig
@@ -672,7 +657,6 @@ async def test_cluster_options():
             assert "option_two" in str(exc.value)
 
 
-@pytest.mark.asyncio
 async def test_cluster_options_client_config(monkeypatch):
     monkeypatch.setenv("TEST_OPTION_TWO", "large")
 
@@ -722,7 +706,6 @@ async def test_cluster_options_client_config(monkeypatch):
                     assert report.options == {"option_one": 3, "option_two": "small"}
 
 
-@pytest.mark.asyncio
 async def test_gateway_stop_clusters_on_shutdown():
     async with temp_gateway() as g:
         async with g.gateway_client() as gateway:
@@ -734,7 +717,6 @@ async def test_gateway_stop_clusters_on_shutdown():
     assert not list(g.gateway.backend.db.active_clusters())
 
 
-@pytest.mark.asyncio
 async def test_gateway_resume_clusters_after_shutdown(tmpdir):
     db_url = "sqlite:///%s" % tmpdir.join("dask_gateway.sqlite")
     db_encrypt_keys = [Fernet.generate_key()]
@@ -806,7 +788,6 @@ async def test_gateway_resume_clusters_after_shutdown(tmpdir):
                     assert res == 2
 
 
-@pytest.mark.asyncio
 async def test_scaling():
     async with temp_gateway() as g:
         async with g.gateway_client() as gateway:
@@ -818,7 +799,6 @@ async def test_scaling():
                 await wait_for_workers(cluster, exact=1)
 
 
-@pytest.mark.asyncio
 async def test_adaptive_scaling():
     # XXX: we should be able to use `InProcessClusterManager` here, but due to
     # https://github.com/dask/distributed/issues/3251 this results in periodic
@@ -909,7 +889,6 @@ def test_cluster_config_resource_limits_less_than_scheduler_usage(opts):
         ClusterConfig(**opts)
 
 
-@pytest.mark.asyncio
 async def test_cluster_resource_limits():
     config = Config()
     config.ClusterConfig.cluster_max_workers = 2
@@ -933,7 +912,6 @@ async def test_cluster_resource_limits():
                     await cluster.adapt(minimum=3, maximum=4)
 
 
-@pytest.mark.asyncio
 async def test_idle_timeout():
     config = Config()
     config.ClusterConfig.idle_timeout = 2

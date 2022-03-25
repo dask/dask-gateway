@@ -95,7 +95,6 @@ async def hello(request):
     return web.Response(text="Hello world")
 
 
-@pytest.mark.asyncio
 async def test_web_proxy(proxy):
     async with ClientSession() as client, aiohttp_server(hello_routes) as server:
         # Add a route
@@ -125,7 +124,6 @@ async def test_web_proxy(proxy):
         await with_retries(test_fails, 5)
 
 
-@pytest.mark.asyncio
 async def test_web_proxy_bad_target(proxy):
     async with ClientSession() as client:
         # Add a bad route
@@ -160,7 +158,6 @@ async def ca_and_tls_proxy(request, tmpdir_factory):
         yield ca, proxy
 
 
-@pytest.mark.asyncio
 async def test_web_proxy_public_tls(ca_and_tls_proxy):
     ca, proxy = ca_and_tls_proxy
 
@@ -195,7 +192,6 @@ async def test_web_proxy_public_tls(ca_and_tls_proxy):
         await with_retries(test_fails, 5)
 
 
-@pytest.mark.asyncio
 async def test_scheduler_proxy(proxy, cluster_and_security):
     cluster, security = cluster_and_security
 
@@ -217,7 +213,6 @@ async def test_scheduler_proxy(proxy, cluster_and_security):
     await proxy.remove_route(kind="SNI", sni="temp")
 
 
-@pytest.mark.asyncio
 async def test_resilient_to_proxy_death(proxy):
     async with ClientSession() as client, aiohttp_server(hello_routes) as server:
         # Add a route

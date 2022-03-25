@@ -48,7 +48,6 @@ class YarnTestingBackend(YarnBackend):
         _APPIDS.discard(appid)
 
 
-@pytest.mark.asyncio
 async def test_yarn_backend():
 
     c = Config()

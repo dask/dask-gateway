@@ -1,3 +1,6 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+#
 name: Test
 
 on:
@@ -28,35 +31,32 @@ jobs:
   main-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version: "3.8"
 
-      - name: Setup Go
-        uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: '1.14'
+          go-version: "1.14"
 
-      - name: Setup Node
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
 
       - name: Install requirements
         run: |
           go get github.com/stretchr/testify/assert
           source continuous_integration/install.sh
 
-      - name: List Packages
+      - name: List Python packages
         run: |
           pip freeze
 
-      - name: Run Tests
+      - name: Run Python tests
         run: |
           py.test tests/ -k 'not kubernetes' -v
 
-      - name: Go Tests
+      - name: Run Go tests
         run: |
           pushd dask-gateway-server/dask-gateway-proxy
           go test
@@ -65,7 +65,7 @@ jobs:
   hadoop-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Hadoop Install/Start
         if: ${{ env.commit_msg != 'skip-tests' }}
         run: |
@@ -76,16 +76,18 @@ jobs:
   kubernetes-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: AbsaOSS/k3d-action@v1.5.0
+      - uses: actions/checkout@v3
+
+      - uses: AbsaOSS/k3d-action@v2
         name: "Create k3d Cluster"
         with:
           cluster-name: "k3s-default"
           args: >-
-            -p "30200:30200@agent[0]"
+            --port "30200:30200@agent:0:direct"
             --agents 1
             --api-port 6444
             --no-lb
+
       - name: Install tools
         run: |
           export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
@@ -120,7 +122,7 @@ jobs:
   pbs-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: PBS Tests
         if: ${{ env.commit_msg != 'skip-tests' }}
         run: |
@@ -131,7 +133,7 @@ jobs:
   slurm-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Slurm Tests
         if: ${{ env.commit_msg != 'skip-tests' }}
         run: |
