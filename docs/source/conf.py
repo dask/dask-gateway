@@ -23,7 +23,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
     "sphinx.ext.napoleon",
-    "autodoc_traitlets",
+    "autodoc_traits",
 ]
 
 extlinks = {
