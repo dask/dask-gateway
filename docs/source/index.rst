@@ -107,6 +107,6 @@ both the cluster backend and the authentication protocol are pluggable.
 .. _traitlets: https://traitlets.readthedocs.io/en/stable/
 .. _Jupyter: https://jupyter.org/
 .. _Hadoop/YARN: https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html
-.. _PBS: https://www.pbspro.org/
+.. _PBS: ttps://www.openpbs.org/
 .. _Slurm: https://slurm.schedmd.com/
 .. _Kubernetes: https://kubernetes.io/

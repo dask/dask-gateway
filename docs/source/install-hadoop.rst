@@ -523,12 +523,12 @@ If everything worked properly, you can shutdown your cluster with
 .. _miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _proxy-user: https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/Superusers.html
 .. _conda-pack: https://conda.github.io/conda-pack/
-.. _conda: http://conda.io/
+.. _conda: https://docs.conda.io/
 .. _venv:
 .. _virtualenv: https://virtualenv.pypa.io/en/stable/
 .. _venv-pack documentation:
 .. _venv-pack: https://jcristharif.com/venv-pack/
-.. _YARN resource localization: https://hortonworks.com/blog/resource-localization-in-yarn-deep-dive/
+.. _YARN resource localization: https://blog.cloudera.com/resource-localization-in-yarn-deep-dive/
 .. _Skein documentation on distributing files: https://jcristharif.com/skein/distributing-files.html
 .. _Kerberos: https://web.mit.edu/kerberos/
 .. _fully qualified domain name: https://en.wikipedia.org/wiki/Fully_qualified_domain_name

@@ -176,5 +176,5 @@ refresh a browser viewing the built documentation.
 
 .. _Conda: https://conda.io/docs/
 .. _Go:
-.. _Go Website: https://golang.org/
+.. _Go Website: https://go.dev/
 .. _Sphinx: http://www.sphinx-doc.org/
