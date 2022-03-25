@@ -9,8 +9,9 @@ dependencies:
   - pip  
   
   # Dependencies to build dask-gateway and dask-gateway-server
-  # see: dask-gateway/setup.py and
-  # dask-gateway-server.setup.py
+  # NOTE: changes to this block must also be reflected in the following files 
+  # - dask-gateway/setup.py
+  # - dask-gateway-server/setup.py
   - aiohttp
   - dask
   - distributed
@@ -40,7 +41,7 @@ dependencies:
   - trustme
   - flake8
   - pytest
-  - pytest-asyncio=0.12.0
+  - pytest-asyncio
   
   # Useful tooling for local development (kubernetes):
   # helm and kubectl
