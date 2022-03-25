@@ -61,7 +61,7 @@ jobs:
       - name: Build docs (make html)
         run: |
           pushd docs
-          make html
+          make html SPHINXOPTS='--color -W --keep-going'
 
       - name: Push built docs to gh-pages branch
         uses: JamesIves/github-pages-deploy-action@v4.2.5
