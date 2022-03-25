@@ -68,4 +68,4 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           branch: gh-pages
-          folder: docs/build/html/
+          folder: docs/_build/html/

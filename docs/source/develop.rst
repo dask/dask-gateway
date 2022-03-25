@@ -161,7 +161,15 @@ Then build the documentation with ``make``
     # Running from the dask-gateway/docs folder
     $ make html
 
-The resulting HTML files end up in the ``build/html`` directory.
+The resulting HTML files end up in the ``_build/html`` directory.
+
+Then consider using another ``make`` command to rebuild the documentation and
+refresh a browser viewing the built documentation.
+
+.. code-block:: shell
+
+    # Running from the dask-gateway/docs folder
+    $ make devenv
 
 
 .. _Conda: https://conda.io/docs/

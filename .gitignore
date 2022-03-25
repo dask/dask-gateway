@@ -1,5 +1,5 @@
 values.schema.json
-docs/build/
+docs/_build/
 .coverage
 htmlcov/
 *.pyc
