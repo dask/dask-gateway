@@ -1,9 +1,10 @@
 [tool.black]
 line-length = 88
-target-version = ['py35', 'py36', 'py37']
+# target-version should be all supported versions
+target-version = ['py37', 'py38', 'py39', 'py310']
 
 [tool.pytest.ini_options]
-# GitHub Actions make it hard for pytest to conlcude it should use colors, due
+# GitHub Actions make it hard for pytest to conclude it should use colors, due
 # to this we explicitly make it do so. This is related to:
 # https://github.com/actions/runner/issues/241
 addopts = '--color=yes'
