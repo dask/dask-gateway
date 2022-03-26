@@ -1,7 +1,6 @@
 import asyncio
 import functools
 import json
-import sys
 from datetime import datetime, timezone
 
 from traitlets import Dict, Unicode, Any, Int
@@ -17,17 +16,9 @@ from ...utils import cancel_task
 client.rest.RESTClientObject.__del__ = lambda self: None
 
 
-if sys.version_info[:2] >= (3, 7):
-
-    def parse_k8s_timestamp(ts):
-        t = datetime.fromisoformat(ts[:-1])
-        return int(t.replace(tzinfo=timezone.utc).timestamp() * 1000)
-
-else:
-
-    def parse_k8s_timestamp(ts):
-        t = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ")
-        return int(t.replace(tzinfo=timezone.utc).timestamp() * 1000)
+def parse_k8s_timestamp(ts):
+    t = datetime.fromisoformat(ts[:-1])
+    return int(t.replace(tzinfo=timezone.utc).timestamp() * 1000)
 
 
 def k8s_timestamp():

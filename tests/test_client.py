@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 import aiohttp
@@ -6,7 +7,6 @@ import pytest
 import dask
 from dask_gateway.auth import get_auth, BasicAuth, KerberosAuth, JupyterHubAuth
 from dask_gateway.client import Gateway, GatewayCluster, cleanup_lingering_clusters
-from dask_gateway_server.compat import get_running_loop
 
 from .utils_test import temp_gateway
 
@@ -279,7 +279,7 @@ async def test_cluster_widget():
             assert (template % 1) in cluster._widget_status()
 
     async with temp_gateway() as g:
-        loop = get_running_loop()
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, test)
 
 
@@ -345,7 +345,7 @@ async def test_sync_constructors():
                     assert res == 2
 
     async with temp_gateway() as g:
-        loop = get_running_loop()
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, test)
 
 
@@ -357,7 +357,7 @@ async def test_GatewayCluster_shutdown_on_close():
             assert cluster.shutdown_on_close
             assert cluster in GatewayCluster._instances
 
-        loop = get_running_loop()
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, test)
 
         assert len(GatewayCluster._instances) == 0
@@ -383,7 +383,7 @@ async def test_GatewayCluster_client_error_doesnt_prevent_cleanup():
             )
             assert cluster in GatewayCluster._instances
 
-        loop = get_running_loop()
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, test)
 
         assert len(GatewayCluster._instances) == 0
@@ -400,7 +400,7 @@ async def test_GatewayCluster_cleanup_atexit():
         def test():
             return GatewayCluster(address=g.address, proxy_address=g.proxy_address)
 
-        loop = get_running_loop()
+        loop = asyncio.get_running_loop()
         cluster = await loop.run_in_executor(None, test)
 
         assert len(GatewayCluster._instances) == 1

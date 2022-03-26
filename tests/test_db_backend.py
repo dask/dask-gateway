@@ -22,7 +22,6 @@ from dask_gateway_server.backends.db_base import (
     DataManager,
 )
 from dask_gateway_server.backends.inprocess import InProcessBackend
-from dask_gateway_server.compat import get_running_loop
 from dask_gateway_server.utils import random_port
 from dask_gateway_server import options
 
@@ -98,7 +97,7 @@ class ClusterFailsBetweenStartAndConnect(InProcessBackend):
 class ClusterFailsAfterConnect(InProcessBackend):
     async def do_setup(self):
         await super().do_setup()
-        loop = get_running_loop()
+        loop = asyncio.get_running_loop()
         self.stop_cluster_called = loop.create_future()
 
     async def do_stop_cluster(self, cluster):
@@ -109,7 +108,7 @@ class ClusterFailsAfterConnect(InProcessBackend):
 class TracksStopWorkerCalls(InProcessBackend):
     async def do_setup(self):
         await super().do_setup()
-        loop = get_running_loop()
+        loop = asyncio.get_running_loop()
         self.stop_worker_called = loop.create_future()
         self.stop_worker_state = None
 
@@ -133,7 +132,7 @@ class WorkerFailsDuringStart(TracksStopWorkerCalls):
 
     async def do_setup(self):
         await super().do_setup()
-        loop = get_running_loop()
+        loop = asyncio.get_running_loop()
         self.stop_cluster_called = loop.create_future()
 
     async def do_start_worker(self, worker):

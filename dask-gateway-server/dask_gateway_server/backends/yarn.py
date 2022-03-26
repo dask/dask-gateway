@@ -1,3 +1,4 @@
+from asyncio import get_running_loop
 from collections import defaultdict
 from tempfile import NamedTemporaryFile
 
@@ -17,7 +18,6 @@ from traitlets import Unicode, Dict, Integer
 
 from .base import ClusterConfig
 from .db_base import DBBackendBase
-from ..compat import get_running_loop
 from ..traitlets import Type
 from ..utils import LRUCache
 
