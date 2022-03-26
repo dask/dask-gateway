@@ -305,6 +305,11 @@
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#optional-install-dependencies-via-conda-environment-file">
+     (Optional) Install Dependencies via Conda Environment File
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#build-and-install-dask-gateway">
      Build and Install Dask-Gateway
     </a>
@@ -359,6 +364,11 @@
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#install-dependencies-pip">
      Install Dependencies (Pip)
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#optional-install-dependencies-via-conda-environment-file">
+     (Optional) Install Dependencies via Conda Environment File
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
@@ -439,6 +449,14 @@ install Go using your system package manager, the <a class="reference external" 
 </div>
 <p>Besides the above dependencies, you’ll also need a <a class="reference external" href="https://go.dev/">Go</a> compiler. You can
 install Go using your system package manager or the <a class="reference external" href="https://go.dev/">Go website</a>.</p>
+</div>
+<div class="section" id="optional-install-dependencies-via-conda-environment-file">
+<h3>(Optional) Install Dependencies via Conda Environment File<a class="headerlink" href="#optional-install-dependencies-via-conda-environment-file" title="Permalink to this headline">¶</a></h3>
+<p>You can easily install all dependencies needed for local development with the <code class="docutils literal notranslate"><span class="pre">dev-environment.yaml</span></code>
+environment file:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ conda env create --file dev-environment.yaml
+</pre></div>
+</div>
 </div>
 <div class="section" id="build-and-install-dask-gateway">
 <h3>Build and Install Dask-Gateway<a class="headerlink" href="#build-and-install-dask-gateway" title="Permalink to this headline">¶</a></h3>
