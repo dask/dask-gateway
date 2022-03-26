@@ -113,6 +113,11 @@ jobs:
 
   kubernetes-tests:
     runs-on: ubuntu-latest
+    # timeout-minutes is configured for this job to avoid an intermittent
+    # failure documented in https://github.com/dask/dask-gateway/issues/511.
+    # This test typically completes in 6-8 minutes.
+    #
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
 
