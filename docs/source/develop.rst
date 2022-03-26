@@ -69,12 +69,12 @@ install Go using your system package manager or the `Go website`_.
 
 (Optional) Install Dependencies via Conda Environment File
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-You can easily install all dependencies needed for local development with the ``dask-gateway-dev.yaml`` 
+You can easily install all dependencies needed for local development with the ``dev-environment.yaml`` 
 environment file:
 
 .. code-block:: shell
     
-    $ conda env create --file dask-gateway-dev.yaml
+    $ conda env create --file dev-environment.yaml
 
 
 Build and Install Dask-Gateway
