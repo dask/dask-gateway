@@ -2,7 +2,7 @@ set -xe
 
 npm install -g configurable-http-proxy
 
-# if you make updates here, please update the 
+# if you make updates here, please update the
 # entries in ../dev-environment.yaml
 pip install -U \
     aiohttp \

@@ -62,9 +62,9 @@ gateway:
       config: {}
 
   livenessProbe:
-    # Enables the livenessProbe. 
+    # Enables the livenessProbe.
     enabled: true
-    # Configures the livenessProbe. 
+    # Configures the livenessProbe.
     initialDelaySeconds: 5
     timeoutSeconds: 2
     periodSeconds: 10

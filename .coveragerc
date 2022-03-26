@@ -3,6 +3,6 @@ omit =
     tests/*.py
     */_version.py
     dask-gateway-server/dask_gateway_server/managers/jobqueue/launcher.py
-source = 
+source =
     dask-gateway-server/dask_gateway_server
     dask-gateway/dask_gateway

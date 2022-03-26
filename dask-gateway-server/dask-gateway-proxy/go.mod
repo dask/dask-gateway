@@ -1,3 +1,3 @@
-module gateway.dask.org/main 
+module gateway.dask.org/main
 
 go 1.12
