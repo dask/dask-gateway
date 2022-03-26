@@ -55,7 +55,7 @@ dependencies:
   - minikube
   
   - pip:
-    - kubernetes-asyncio # see: dask-gateway-server/setup.py extras_require
+    - autodoc-traits # not available on conda-forge, part of the docs requirements
 
 # include the environment variable GO111MODULE=auto
 # during installation for go 1.16 and up
