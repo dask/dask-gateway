@@ -12,8 +12,8 @@ from dask_gateway_server.backends.kubernetes.backend import (
 from dask_gateway_server.backends.kubernetes.controller import (
     KubeController,
     ClusterInfo,
-    get_container_state,
-    get_container_status,
+    _get_container_state,
+    _get_container_status,
 )
 from dask_gateway_server.backends.kubernetes.utils import merge_json_objects
 
@@ -41,24 +41,24 @@ def test_merge_json_objects(a, b, sol):
     assert b == b_orig
 
 
-def test_get_container_status():
+def test__get_container_status():
     c1_status = {"name": "c1"}
     c2_status = {"name": "c2"}
     pod = {"status": {"containerStatuses": [c1_status, c2_status]}}
-    assert get_container_status(pod, "c1") == c1_status
-    assert get_container_status(pod, "c2") == c2_status
-    assert get_container_status(pod, "c3") is None
+    assert _get_container_status(pod, "c1") == c1_status
+    assert _get_container_status(pod, "c2") == c2_status
+    assert _get_container_status(pod, "c3") is None
 
 
-def test_get_container_state():
+def test__get_container_state():
     c1_status = {"name": "c1", "state": {"running": {}}}
     c2_status = {"name": "c2", "state": {"terminated": {}}}
     pod = {"status": {"phase": "Running", "containerStatuses": [c1_status, c2_status]}}
-    assert get_container_state(pod, "c1") == "running"
-    assert get_container_state(pod, "c2") == "terminated"
-    assert get_container_state(pod, "c3") == "unknown"
+    assert _get_container_state(pod, "c1") == "running"
+    assert _get_container_state(pod, "c2") == "terminated"
+    assert _get_container_state(pod, "c3") == "unknown"
     pod["status"]["phase"] = "Pending"
-    assert get_container_state(pod, "c1") == "waiting"
+    assert _get_container_state(pod, "c1") == "waiting"
 
 
 def test_cluster_info():
