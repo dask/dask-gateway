@@ -184,7 +184,7 @@ clean everything up. You can do this with ``helm delete``:
 
 .. code-block:: shell
 
-    $ helm delete --purge $RELEASE
+    $ helm delete $RELEASE
 
 
 Additional configuration
