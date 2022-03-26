@@ -10,8 +10,6 @@ from keyword import iskeyword
 import aiohttp.abc
 from colorlog import ColoredFormatter
 
-from .compat import get_running_loop, all_tasks
-
 
 def timestamp():
     """An integer timestamp represented as milliseconds since the epoch UTC"""
@@ -278,7 +276,7 @@ class Flag(object):
     """A simpler version of asyncio.Event"""
 
     def __init__(self):
-        self._future = get_running_loop().create_future()
+        self._future = asyncio.get_running_loop().create_future()
 
     def set(self):
         if not self._future.done():
@@ -319,7 +317,7 @@ def run_main(main):
 
 
 def _cancel_all_tasks(loop):
-    to_cancel = all_tasks(loop)
+    to_cancel = asyncio.all_tasks(loop)
     if not to_cancel:
         return
 
