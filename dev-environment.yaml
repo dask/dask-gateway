@@ -6,10 +6,10 @@ channels:
 dependencies:
   # python and pip
   - python=3.10
-  - pip  
-  
+  - pip
+
   # Dependencies to build dask-gateway and dask-gateway-server
-  # NOTE: changes to this block must also be reflected in the following files 
+  # NOTE: changes to this block must also be reflected in the following files
   # - dask-gateway/setup.py
   # - dask-gateway-server/setup.py
   - aiohttp # dask-gateway, dask-gateway-server
@@ -26,19 +26,19 @@ dependencies:
   - go=1.17.8  # golang version to  build dask-gateway-server/dask-gateway-proxy
   - go-cgo     # golang associated dependency to assist with local setup
   - compilers  # golang associated dependency to assist with local setup
-  
+
   # Dependencies required to build the projects documentation
   # NOTE: changes to this block must also be reflected in the following files:
   # - .github/workflows/build-publish-docs.yaml
   # - docs/source/develop.rst
   # NOTE: also the `extras_require` entries in dask-gateway-server/setup.py
-  # are required to build the configuration reference properly with autodoc-traits, 
+  # are required to build the configuration reference properly with autodoc-traits,
   # but they are imported above
   - sphinx
   - dask-sphinx-theme
   - sphinx-autobuild
   # - autodoc-traits (installed via pip below, not available on conda-forge)
-  
+
   # Dependencies used in CI and running tests locally:
   # dask-gateway/continuous_integration/kubernetes/install.sh
   - ipywidgets
@@ -46,14 +46,14 @@ dependencies:
   - notebook
   - trustme
   - pytest
-  - pytest-asyncio  
-  
+  - pytest-asyncio
+
   # Useful tooling for local development (kubernetes):
   # helm and kubectl
   - kubernetes-helm
   - kubernetes-client
   - minikube
-  
+
   - pip:
     - autodoc-traits # not available on conda-forge, part of the docs requirements
 
