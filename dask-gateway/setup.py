@@ -7,7 +7,9 @@ with open(os.path.join(here, "dask_gateway", "_version.py")) as f:
     exec(f.read(), {}, ns)
     VERSION = ns["__version__"]
 
-install_requires = ["aiohttp", "dask>=2.2.0", "distributed>=2.2.0"]
+# NOTE: changes to the dependencies here must also be reflected
+# in ../dev-environment.yaml
+install_requires = ["aiohttp", "dask>=2.2.0", "distributed>=2.2.0", "tornado"]
 
 extras_require = {
     "kerberos": [
