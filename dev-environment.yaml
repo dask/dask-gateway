@@ -22,7 +22,7 @@ dependencies:
   - pykerberos # see: dask-gateway-server/setup.py extras_require
   - sqlalchemy # see: dask-gateway-server/setup.py extras_require
   - skein # see: dask-gateway-server/setup.py extras_require
-  - kubernetes-asyncio # see: dask-gateway-server/setup.py extras_require
+  - kubernetes_asyncio # see: dask-gateway-server/setup.py extras_require
   - go=1.17.8  # golang version to  build dask-gateway-server/dask-gateway-proxy
   - go-cgo     # golang associated dependency to assist with local setup
   - compilers  # golang associated dependency to assist with local setup
