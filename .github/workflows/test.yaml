@@ -52,26 +52,18 @@ jobs:
           #   We could for example choose to test against the versions that
           #   hasn't reached end of life yet: https://endoflife.date/go.
           #
-          #   FIXME: Golang 1.16 and above fails because our "go get" isn't
-          #          functioning as before. Golang 1.12 and below fails because
-          #          the stretchr/testify/assert library doesn't support golang
-          #          1.12 and below.
-          #
-          #          About GO111MODULE: https://maelvls.dev/go111module-everywhere/#go-run-knows-about-version-finally
-          #          About go.mod:      https://go.dev/doc/modules/gomod-ref
-          #
           # - Node is a dependency for JupyterHub's configurable-http-proxy that
           #   we test integration with. We can test against only one version and
           #   that would be fine.
           #
           - python-version: "3.7"
-            go-version: "1.14"
+            go-version: "1.15"
           - python-version: "3.8"
-            go-version: "1.15"
+            go-version: "1.16"
           - python-version: "3.9"
-            go-version: "1.15"
+            go-version: "1.17"
           - python-version: "3.10"
-            go-version: "1.15"
+            go-version: "1.18"
 
     steps:
       - uses: actions/checkout@v3
@@ -86,9 +78,8 @@ jobs:
 
       - uses: actions/setup-node@v3
 
-      - name: Install requirements
+      - name: Install Python test requirements
         run: |
-          go get github.com/stretchr/testify/assert
           source continuous_integration/install.sh
 
       - name: List Python packages
@@ -99,11 +90,15 @@ jobs:
         run: |
           py.test tests/ -k 'not kubernetes' -v
 
+      - name: Install Go test requirements
+        run: |
+          cd dask-gateway-server/dask-gateway-proxy
+          go get github.com/stretchr/testify/assert
+
       - name: Run Go tests
         run: |
-          pushd dask-gateway-server/dask-gateway-proxy
+          cd dask-gateway-server/dask-gateway-proxy
           go test
-          popd
 
   hadoop-tests:
     runs-on: ubuntu-latest
