@@ -97,10 +97,9 @@ class clean(_clean):
         _clean.run(self)
 
 
-
 # NOTE: changes to the dependencies here must also be reflected
-# in ../dask-gateway-dev.yaml
-install_requires = ["aiohttp", "colorlog", "cryptography", "traitlets"]
+# in ../dev-environment.yaml
+install_requires = ["aiohttp", "colorlog", "cryptography", "tornado", "traitlets"]
 
 extras_require = {
     "kerberos": ["pykerberos"],
