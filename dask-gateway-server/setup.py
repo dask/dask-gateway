@@ -136,8 +136,10 @@ setup(
         "Topic :: System :: Distributed Computing",
         "Topic :: System :: Systems Administration",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
     keywords="dask hadoop kubernetes HPC distributed cluster",
     description=(
@@ -157,7 +159,7 @@ setup(
     package_data=package_data,
     install_requires=install_requires,
     extras_require=extras_require,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     entry_points={
         "console_scripts": [
             "dask-gateway-server = dask_gateway_server.app:main",

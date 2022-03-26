@@ -30,16 +30,59 @@ env:
 jobs:
   main-tests:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # We test against different versions of Python and Golang, but not
+          # against different versions of Node.
+          #
+          # - The Python version installed where dask-gateway and
+          #   dask-gateway-proxy is run by the end user matters, so we test
+          #   against all the versions we intend to support.
+          #
+          #   We could for example choose to test against the versions that
+          #   hasn't reached end of life yet: https://endoflife.date/python.
+          #
+          # - The Golang version that compiles
+          #   dask-gateway-server/dask-gateway-proxy bundled for the
+          #   dask-gateway-server Python package is the only thing that matters.
+          #   Due to that, we can test fewer versions of Golang.
+          #
+          #   We could for example choose to test against the versions that
+          #   hasn't reached end of life yet: https://endoflife.date/go.
+          #
+          #   FIXME: Golang 1.16 and above fails because our "go get" isn't
+          #          functioning as before. Golang 1.12 and below fails because
+          #          the stretchr/testify/assert library doesn't support golang
+          #          1.12 and below.
+          #
+          #          About GO111MODULE: https://maelvls.dev/go111module-everywhere/#go-run-knows-about-version-finally
+          #          About go.mod:      https://go.dev/doc/modules/gomod-ref
+          #
+          # - Node is a dependency for JupyterHub's configurable-http-proxy that
+          #   we test integration with. We can test against only one version and
+          #   that would be fine.
+          #
+          - python-version: "3.7"
+            go-version: "1.14"
+          - python-version: "3.8"
+            go-version: "1.15"
+          - python-version: "3.9"
+            go-version: "1.15"
+          - python-version: "3.10"
+            go-version: "1.15"
+
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v3
         with:
-          python-version: "3.8"
+          python-version: "${{ matrix.python-version }}"
 
       - uses: actions/setup-go@v3
         with:
-          go-version: "1.14"
+          go-version: "${{ matrix.go-version }}"
 
       - uses: actions/setup-node@v3
 
