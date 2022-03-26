@@ -41,15 +41,12 @@ dependencies:
   
   # Dependencies used in CI and running tests locally:
   # dask-gateway/continuous_integration/kubernetes/install.sh
-  - black
-  - colorlog
   - ipywidgets
   - jupyterhub
   - notebook
   - trustme
-  - flake8
   - pytest
-  - pytest-asyncio
+  - pytest-asyncio  
   
   # Useful tooling for local development (kubernetes):
   # helm and kubectl
