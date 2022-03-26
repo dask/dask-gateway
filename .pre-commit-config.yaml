@@ -27,6 +27,14 @@ repos:
       - id: black
         language_version: python3
 
+  # Autoformat: general small fixes
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+      - id: end-of-file-fixer
+        exclude_types: ["svg"]
+      - id: trailing-whitespace
+
   # Lint: Python code
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
