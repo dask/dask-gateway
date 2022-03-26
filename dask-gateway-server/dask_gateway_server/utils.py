@@ -18,7 +18,7 @@ def timestamp():
     return int(time.time() * 1000)
 
 
-class TaskPool(object):
+class TaskPool:
     def __init__(self):
         self.tasks = weakref.WeakSet()
         self.closed = False
@@ -37,7 +37,7 @@ class TaskPool(object):
         self.tasks.clear()
 
 
-class CancelGroup(object):
+class CancelGroup:
     def __init__(self):
         self.tasks = set()
         self.cancelled = False
@@ -63,7 +63,7 @@ class CancelGroup(object):
         self.tasks.discard(it)
 
 
-class _cancel_context(object):
+class _cancel_context:
     def __init__(self, context):
         self.context = context
         self._task = None
@@ -83,7 +83,7 @@ class _cancel_context(object):
         self._task = None
 
 
-class RateLimiter(object):
+class RateLimiter:
     """A token-bucket based rate limiter.
 
     The bucket starts out with ``burst`` tokens, and is replenished at ``rate``
@@ -245,7 +245,7 @@ class FrozenAttrDict(Mapping):
         return list(out)
 
 
-class LRUCache(object):
+class LRUCache:
     """A LRU cache"""
 
     def __init__(self, max_size):
@@ -274,7 +274,7 @@ class LRUCache(object):
             pass
 
 
-class Flag(object):
+class Flag:
     """A simpler version of asyncio.Event"""
 
     def __init__(self):

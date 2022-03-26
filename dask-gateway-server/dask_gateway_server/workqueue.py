@@ -5,7 +5,7 @@ import collections
 __all__ = ("Backoff", "WorkQueue", "WorkQueueClosed")
 
 
-class Backoff(object):
+class Backoff:
     """Manages backoffs for items in the work queue.
 
     An items backoff is calculated as:
@@ -42,7 +42,7 @@ class WorkQueueClosed(Exception):
     pass
 
 
-class WorkQueue(object):
+class WorkQueue:
     """An asynchronous work queue.
 
     This work queue is designed with the following design:

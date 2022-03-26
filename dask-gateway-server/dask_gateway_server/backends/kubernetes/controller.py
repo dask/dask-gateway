@@ -71,7 +71,7 @@ def get_cluster_key(obj):
         return None
 
 
-class ClusterInfo(object):
+class ClusterInfo:
     """Stores in-memory state about a given cluster.
 
     State can be reconstructed from k8s, this just provides fast access in the

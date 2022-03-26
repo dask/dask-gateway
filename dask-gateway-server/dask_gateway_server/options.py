@@ -10,7 +10,7 @@ from .utils import FrozenAttrDict
 __all__ = ("Options", "String", "Bool", "Integer", "Float", "Select", "Mapping")
 
 
-class Options(object):
+class Options:
     """A declarative specification of exposed cluster options.
 
     Parameters
@@ -139,7 +139,7 @@ def field_doc(description, params):
     return inner
 
 
-class Field(object):
+class Field:
     def __init__(self, field, default=None, target=None, label=None):
         self.field = field
         # Validate the default
@@ -188,7 +188,7 @@ class String(Field):
 
     def validate(self, x):
         if not isinstance(x, str):
-            raise TypeError("%s must be a string, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be a string, got {x!r}")
         return x
 
     def json_type_spec(self):
@@ -208,7 +208,7 @@ class Bool(Field):
 
     def validate(self, x):
         if not isinstance(x, bool):
-            raise TypeError("%s must be a bool, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be a bool, got {x!r}")
         return x
 
     def json_type_spec(self):
@@ -227,9 +227,9 @@ class Number(Field):
 
     def validate(self, x):
         if self.min is not None and x < self.min:
-            raise ValueError("%s must be >= %f, got %s" % (self.field, self.min, x))
+            raise ValueError(f"{self.field} must be >= {self.min:f}, got {x}")
         if self.max is not None and x > self.max:
-            raise ValueError("%s must be <= %f, got %s" % (self.field, self.max, x))
+            raise ValueError(f"{self.field} must be <= {self.max:f}, got {x}")
         return x
 
 
@@ -247,7 +247,7 @@ class Number(Field):
 class Integer(Number):
     def validate(self, x):
         if not isinstance(x, int):
-            raise TypeError("%s must be an integer, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be an integer, got {x!r}")
         return super().validate(x)
 
     def json_type_spec(self):
@@ -270,7 +270,7 @@ class Float(Number):
         if isinstance(x, int):
             x = float(x)
         if not isinstance(x, float):
-            raise TypeError("%s must be a float, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be a float, got {x!r}")
         return super().validate(x)
 
     def json_type_spec(self):
@@ -312,9 +312,9 @@ class Select(Field):
 
     def validate(self, x):
         if not isinstance(x, str):
-            raise TypeError("%s must be a string, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be a string, got {x!r}")
         if x not in self.options:
-            raise ValueError("%r is not a valid option for %s" % (x, self.field))
+            raise ValueError(f"{x!r} is not a valid option for {self.field}")
         return x
 
     def transform(self, x):
@@ -340,7 +340,7 @@ class Mapping(Field):
 
     def validate(self, x):
         if not isinstance(x, dict):
-            raise TypeError("%s must be a mapping, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be a mapping, got {x!r}")
         return x
 
     def get_default(self):

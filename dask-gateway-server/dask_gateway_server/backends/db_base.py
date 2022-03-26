@@ -84,7 +84,7 @@ class JobStatus(models.IntEnum):
     FAILED = 6
 
 
-class Cluster(object):
+class Cluster:
     """Information on a cluster.
 
     Not all attributes on this object are publically accessible. When writing a
@@ -219,7 +219,7 @@ class Cluster(object):
         )
 
 
-class Worker(object):
+class Worker:
     """Information on a worker.
 
     Not all attributes on this object are publically accessible. When writing a
@@ -301,7 +301,7 @@ workers = sa.Table(
 )
 
 
-class DataManager(object):
+class DataManager:
     """Holds the internal state for a single Dask Gateway.
 
     Keeps the memory representation in-sync with the database.

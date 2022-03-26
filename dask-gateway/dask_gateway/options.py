@@ -142,7 +142,7 @@ def register_field_type(name):
     return inner
 
 
-class Field(object):
+class Field:
     """A single option field"""
 
     _field_types = {}
@@ -198,7 +198,7 @@ class String(Field):
 
     def validate(self, x):
         if not isinstance(x, str):
-            raise TypeError("%s must be a string, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be a string, got {x!r}")
         return x
 
     def _widget(self):
@@ -213,7 +213,7 @@ class Bool(Field):
 
     def validate(self, x):
         if not isinstance(x, bool):
-            raise TypeError("%s must be a bool, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be a bool, got {x!r}")
         return x
 
     def _widget(self):
@@ -234,9 +234,9 @@ class Number(Field):
 
     def validate(self, x):
         if self.min is not None and x < self.min:
-            raise ValueError("%s must be >= %f, got %s" % (self.field, self.min, x))
+            raise ValueError(f"{self.field} must be >= {self.min:f}, got {x}")
         if self.max is not None and x > self.max:
-            raise ValueError("%s must be <= %f, got %s" % (self.field, self.max, x))
+            raise ValueError(f"{self.field} must be <= {self.max:f}, got {x}")
         return x
 
 
@@ -246,7 +246,7 @@ class Integer(Number):
 
     def validate(self, x):
         if not isinstance(x, int):
-            raise TypeError("%s must be an integer, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be an integer, got {x!r}")
         return super().validate(x)
 
     def _widget(self):
@@ -270,7 +270,7 @@ class Float(Number):
         if isinstance(x, int):
             x = float(x)
         if not isinstance(x, float):
-            raise TypeError("%s must be a float, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be a float, got {x!r}")
         return super().validate(x)
 
     def _widget(self):
@@ -304,9 +304,9 @@ class Select(Field):
 
     def validate(self, x):
         if not isinstance(x, str):
-            raise TypeError("%s must be a string, got %r" % (self.field, x))
+            raise TypeError(f"{self.field} must be a string, got {x!r}")
         if x not in self._options_set:
-            raise ValueError("%r is not a valid option for %s" % (x, self.field))
+            raise ValueError(f"{x!r} is not a valid option for {self.field}")
         return x
 
     def _widget(self):
@@ -321,9 +321,7 @@ class Mapping(Field):
 
     def validate(self, x):
         if not isinstance(x, dict):
-            raise TypeError(
-                "%s must be a dict, got %r" % (self.field, type(x).__name__)
-            )
+            raise TypeError(f"{self.field} must be a dict, got {type(x).__name__!r}")
         return x
 
     def transform(self, value):

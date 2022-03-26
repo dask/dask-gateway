@@ -94,7 +94,7 @@ class _IntEnum(enum.IntEnum):
             return cls[name.upper()]
         except KeyError:
             pass
-        raise ValueError("%r is not a valid %s" % (name, cls.__name__))
+        raise ValueError(f"{name!r} is not a valid {cls.__name__}")
 
 
 class ClusterStatus(_IntEnum):
@@ -122,7 +122,7 @@ class ClusterStatus(_IntEnum):
     FAILED = 5
 
 
-class ClusterReport(object):
+class ClusterReport:
     """A report on a cluster's state.
 
     Attributes
@@ -184,7 +184,7 @@ class ClusterReport(object):
         self.tls_key = tls_key
 
     def __repr__(self):
-        return "ClusterReport<name=%s, status=%s>" % (self.name, self.status.name)
+        return f"ClusterReport<name={self.name}, status={self.status.name}>"
 
     @property
     def security(self):
@@ -205,12 +205,12 @@ class ClusterReport(object):
         name = msg.pop("name")
         status = ClusterStatus._create(msg.pop("status"))
         scheduler_address = (
-            "%s/%s" % (proxy_address, name) if status == ClusterStatus.RUNNING else None
+            f"{proxy_address}/{name}" if status == ClusterStatus.RUNNING else None
         )
 
         dashboard_route = msg.pop("dashboard_route")
         dashboard_link = (
-            "%s%s" % (public_address, dashboard_route) if dashboard_route else None
+            f"{public_address}{dashboard_route}" if dashboard_route else None
         )
 
         return cls(
@@ -241,7 +241,7 @@ def _get_default_request_kwargs(scheme):
     return {"proxy": proxy, "proxy_auth": proxy_auth}
 
 
-class Gateway(object):
+class Gateway:
     """A client for a Dask Gateway Server.
 
     Parameters
@@ -431,7 +431,7 @@ class Gateway(object):
         else:
             query = ""
 
-        url = "%s/api/v1/clusters/%s" % (self.address, query)
+        url = f"{self.address}/api/v1/clusters/{query}"
         resp = await self._request("GET", url)
         data = await resp.json()
         return [
@@ -562,7 +562,7 @@ class Gateway(object):
 
     async def _cluster_report(self, cluster_name, wait=False):
         params = "?wait" if wait else ""
-        url = "%s/api/v1/clusters/%s%s" % (self.address, cluster_name, params)
+        url = f"{self.address}/api/v1/clusters/{cluster_name}{params}"
         resp = await self._request("GET", url)
         data = await resp.json()
         return ClusterReport._from_json(self._public_address, self.proxy_address, data)
@@ -650,7 +650,7 @@ class Gateway(object):
         )
 
     async def _stop_cluster(self, cluster_name):
-        url = "%s/api/v1/clusters/%s" % (self.address, cluster_name)
+        url = f"{self.address}/api/v1/clusters/{cluster_name}"
         await self._request("DELETE", url)
 
     def stop_cluster(self, cluster_name, **kwargs):
@@ -664,7 +664,7 @@ class Gateway(object):
         return self.sync(self._stop_cluster, cluster_name, **kwargs)
 
     async def _scale_cluster(self, cluster_name, n):
-        url = "%s/api/v1/clusters/%s/scale" % (self.address, cluster_name)
+        url = f"{self.address}/api/v1/clusters/{cluster_name}/scale"
         resp = await self._request("POST", url, json={"count": n})
         try:
             msg = await resp.json()
@@ -690,7 +690,7 @@ class Gateway(object):
     ):
         resp = await self._request(
             "POST",
-            "%s/api/v1/clusters/%s/adapt" % (self.address, cluster_name),
+            f"{self.address}/api/v1/clusters/{cluster_name}/adapt",
             json={"minimum": minimum, "maximum": maximum, "active": active},
         )
         try:
@@ -763,7 +763,7 @@ def cleanup_lingering_clusters():
             warnings.warn("".join(lines))
 
 
-class GatewayCluster(object):
+class GatewayCluster:
     """A dask-gateway cluster.
 
     Parameters
@@ -1067,7 +1067,7 @@ class GatewayCluster(object):
             self.close()
 
     def __repr__(self):
-        return "GatewayCluster<%s, status=%s>" % (self.name, self.status)
+        return f"GatewayCluster<{self.name}, status={self.status}>"
 
     def get_client(self, set_as_default=True):
         """Get a ``Client`` for this cluster.
@@ -1203,7 +1203,7 @@ class GatewayCluster(object):
         def adapt_cb(b):
             self.adapt(minimum=minimum.value, maximum=maximum.value)
 
-        name = HTML("<p><b>Name: </b>{0}</p>".format(self.name))
+        name = HTML(f"<p><b>Name: </b>{self.name}</p>")
 
         elements = [title, HBox([status, accordion]), name]
 
