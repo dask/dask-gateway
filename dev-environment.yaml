@@ -5,7 +5,7 @@ channels:
   - conda-forge
 dependencies:
   # python and pip
-  - python=3.9
+  - python=3.10
   - pip  
   
   # Dependencies to build dask-gateway and dask-gateway-server
