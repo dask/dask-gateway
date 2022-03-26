@@ -20,6 +20,14 @@
 #      forgot to run configured autoformatters.
 #
 repos:
+  # Autoformat: Python code, syntax patterns are modernized
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.31.1
+    hooks:
+      - id: pyupgrade
+        args:
+          - --py37-plus
+
   # Autoformat: Python code
   - repo: https://github.com/psf/black
     rev: 22.1.0
