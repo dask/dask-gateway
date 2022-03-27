@@ -24,4 +24,4 @@ traefik:
   service:
     ports:
       web:
-        port: 30200
+        nodePort: 30200
