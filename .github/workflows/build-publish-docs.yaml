@@ -55,7 +55,7 @@ jobs:
       - name: Install docs requirements
         run: |
           go get github.com/stretchr/testify/assert
-          source continuous_integration/install.sh
+          continuous_integration/install.sh
           pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
 
       - name: Build docs (make html)
@@ -92,7 +92,7 @@ jobs:
       - name: Install docs requirements
         run: |
           go get github.com/stretchr/testify/assert
-          source continuous_integration/install.sh
+          continuous_integration/install.sh
           pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
 
       - name: Linkcheck docs (make linkcheck)

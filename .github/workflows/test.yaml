@@ -80,7 +80,7 @@ jobs:
 
       - name: Install Python test requirements
         run: |
-          source continuous_integration/install.sh
+          continuous_integration/install.sh
 
       - name: List Python packages
         run: |
