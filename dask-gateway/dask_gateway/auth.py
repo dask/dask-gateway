@@ -57,7 +57,7 @@ def get_auth(auth=None):
     return out
 
 
-class GatewayAuth(object):
+class GatewayAuth:
     """Base class for authenticating clients in dask-gateway"""
 
     def __init__(self, **kwargs):

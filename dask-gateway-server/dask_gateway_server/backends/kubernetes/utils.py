@@ -26,7 +26,7 @@ def k8s_timestamp():
     return t.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-class RateLimitedClient(object):
+class RateLimitedClient:
     """A rate limited wrapper around a kubernetes client"""
 
     def __init__(self, client, rate_limiter):

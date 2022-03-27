@@ -19,7 +19,7 @@ __all__ = (
 )
 
 
-class UserCache(object):
+class UserCache:
     def __init__(self, max_age):
         self.max_age = max_age
         self.name_to_cookie = {}
@@ -376,7 +376,7 @@ class JupyterHubAuthenticator(Authenticator):
         if token is None:
             raise unauthorized("jupyterhub")
 
-        url = "%s/authorizations/token/%s" % (
+        url = "{}/authorizations/token/{}".format(
             self.jupyterhub_api_url,
             quote(token, safe=""),
         )

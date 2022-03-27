@@ -128,7 +128,7 @@ class PBSBackend(JobQueueBackend):
 
         if cluster.config.use_stagein:
             staging_dir = self.get_staging_directory(cluster)
-            cmd.append("-Wstagein=.@%s:%s/*" % (self.gateway_hostname, staging_dir))
+            cmd.append(f"-Wstagein=.@{self.gateway_hostname}:{staging_dir}/*")
 
         if worker:
             resources = format_resource_list(

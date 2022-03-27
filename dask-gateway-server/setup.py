@@ -58,7 +58,7 @@ class build_proxy(Command):
             sys.exit(code)
 
 
-class mixin(object):
+class mixin:
     def initialize_options(self):
         self.no_build_proxy = False
         super().initialize_options()

@@ -29,7 +29,7 @@ def kill_job(job_id):
         )
     except subprocess.CalledProcessError as exc:
         if b"Job has finished" not in exc.output:
-            print("Failed to stop %s, output: %s" % (job_id, exc.output.decode()))
+            print(f"Failed to stop {job_id}, output: {exc.output.decode()}")
 
 
 def is_job_running(job_id):

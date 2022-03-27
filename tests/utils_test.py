@@ -14,7 +14,7 @@ from dask_gateway_server.utils import random_port
 from dask_gateway import Gateway
 
 
-class aiohttp_server(object):
+class aiohttp_server:
     def __init__(self, routes=None, app=None, host="localhost", port=None):
         self.app = app or web.Application()
         if routes is not None:
@@ -37,7 +37,7 @@ class aiohttp_server(object):
         await self.runner.cleanup()
 
 
-class temp_gateway(object):
+class temp_gateway:
     def __init__(self, **kwargs):
         c = Config()
         c.DaskGateway.backend_class = InProcessBackend

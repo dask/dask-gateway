@@ -46,7 +46,7 @@ def test_format_bytes():
     assert format_bytes(1.5 * 2**50) == "1.50 PiB"
 
 
-class Foo(object):
+class Foo:
     pass
 
 

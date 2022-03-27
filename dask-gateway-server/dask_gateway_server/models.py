@@ -11,7 +11,7 @@ class IntEnum(enum.IntEnum):
             return cls[name.upper()]
         except KeyError:
             pass
-        raise ValueError("%r is not a valid %s" % (name, cls.__name__))
+        raise ValueError(f"{name!r} is not a valid {cls.__name__}")
 
 
 class ClusterStatus(IntEnum):
@@ -38,7 +38,7 @@ class ClusterStatus(IntEnum):
     FAILED = 5
 
 
-class User(object):
+class User:
     """A user record.
 
     Parameters
@@ -61,7 +61,7 @@ class User(object):
         return self.name == cluster.username
 
 
-class Cluster(object):
+class Cluster:
     """A cluster record.
 
     Parameters

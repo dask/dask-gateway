@@ -46,7 +46,7 @@ def start(cmd, env, stdin=None, staging_dir=None, files=None):
         except Exception as exc:
             finish(
                 ok=False,
-                error="Error setting up staging directory %s: %s" % (staging_dir, exc),
+                error=f"Error setting up staging directory {staging_dir}: {exc}",
             )
             return
     run_command(cmd, env, stdin=stdin)
@@ -61,7 +61,7 @@ def stop(cmd, env, staging_dir=None):
         except Exception as exc:
             finish(
                 ok=False,
-                error="Error removing staging directory %s: %s" % (staging_dir, exc),
+                error=f"Error removing staging directory {staging_dir}: {exc}",
             )
             return
     run_command(cmd, env)

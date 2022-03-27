@@ -1,5 +1,3 @@
-from __future__ import print_function, division, absolute_import
-
 import click
 
 import asyncio
@@ -25,7 +23,7 @@ logger.propagate = True
 logger.parent = scheduler_logger
 
 
-class Waiter(object):
+class Waiter:
     def __init__(self):
         self.task = None
         self.timer = None
@@ -119,7 +117,7 @@ class GatewayPlugin(SchedulerPlugin):
         self.service.worker_removed(worker)
 
 
-class GatewaySchedulerService(object):
+class GatewaySchedulerService:
     def __init__(
         self,
         scheduler,
@@ -356,7 +354,7 @@ class GatewaySchedulerService(object):
             await asyncio.sleep(self.adaptive_period)
 
 
-class GatewayClient(object):
+class GatewayClient:
     def __init__(self, cluster_name, api_token, api_url):
         self.cluster_name = cluster_name
         self.token = api_token

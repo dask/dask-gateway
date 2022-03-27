@@ -15,7 +15,7 @@ from dask_gateway_server.utils import random_port
 from .utils_test import aiohttp_server, with_retries
 
 
-class temp_proxy(object):
+class temp_proxy:
     def __init__(self, **kwargs):
         self._port = random_port()
         self.proxy = Proxy(

@@ -83,7 +83,7 @@ async def test_kerberos_auth():
             kdestroy()
 
 
-class temp_hub(object):
+class temp_hub:
     def __init__(self, hub):
         self.hub = hub
 
