@@ -42,20 +42,36 @@ jobs:
 
       - uses: actions/setup-python@v3
         with:
-          python-version: "3.8"
+          python-version: "3.10"
 
+      # FIXME: go is used to compile dask-gateway-server/dask-gateway-proxy, but
+      #        that isn't relevant for us when building documentation, but, we
+      #        end up doing it anyhow currently because we re-use a course
+      #        installation script.
+      #
+      #        If this is fixed, also update the job below.
+      #
       - uses: actions/setup-go@v3
         with:
-          go-version: "1.14"
+          go-version: "1.18"
 
+      # FIXME: node is used to install configurable-http-proxy, used by
+      #        JupyterHub when started for us to run tests. As we don't need
+      #        this to setup docs, we can get rid of this if we update our
+      #        installation of dependencies to be a bit more scoped.
+      #
+      #        If this is fixed, also update the job below.
+      #
       - uses: actions/setup-node@v3
         with:
           node-version: "16"
 
       - name: Install docs requirements
         run: |
+          pushd dask-gateway-server/dask-gateway-proxy
           go get github.com/stretchr/testify/assert
-          source continuous_integration/install.sh
+          popd
+          continuous_integration/install.sh
           pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
 
       - name: Build docs (make html)
@@ -79,11 +95,11 @@ jobs:
 
       - uses: actions/setup-python@v3
         with:
-          python-version: "3.8"
+          python-version: "3.10"
 
       - uses: actions/setup-go@v3
         with:
-          go-version: "1.14"
+          go-version: "1.18"
 
       - uses: actions/setup-node@v3
         with:
@@ -91,8 +107,10 @@ jobs:
 
       - name: Install docs requirements
         run: |
+          pushd dask-gateway-server/dask-gateway-proxy
           go get github.com/stretchr/testify/assert
-          source continuous_integration/install.sh
+          popd
+          continuous_integration/install.sh
           pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
 
       - name: Linkcheck docs (make linkcheck)
