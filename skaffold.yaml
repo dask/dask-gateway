@@ -1,3 +1,17 @@
+# "skaffold" is a command line tool we can use to rebuild images for a Helm
+# chart and even do some "live reload" of parts of an installation of a Helm
+# chart.
+#
+# skaffolds purpose in this project is to be of assistance for local
+# development, while we use the tool "chartpress" for testing and publishing of
+# the Helm chart in our GitHub Workflows.
+#
+# Skaffold configuration reference: https://skaffold.dev/docs/references/yaml/
+#
+# FIXME:
+# - Add notes on how to use skaffold
+# - Update the skaffold/v2alpha3 configuration to a modern one
+#
 apiVersion: skaffold/v2alpha3
 kind: Config
 
@@ -6,11 +20,11 @@ build:
     push: false
     useBuildkit: true
   artifacts:
-  - image: daskgateway/dask-gateway-server
+  - image: ghcr.io/dask/dask-gateway-server
     context: ./dask-gateway-server
     docker:
       dockerfile: Dockerfile
-  - image: daskgateway/dask-gateway
+  - image: ghcr.io/dask/dask-gateway
     context: ./dask-gateway
     docker:
       dockerfile: Dockerfile
@@ -24,9 +38,9 @@ deploy:
       imageStrategy:
         helm: {}
       values:
-        gateway.image: daskgateway/dask-gateway-server
-        gateway.backend.image: daskgateway/dask-gateway
-        controller.image: daskgateway/dask-gateway-server
+        gateway.image: ghcr.io/dask/dask-gateway-server
+        gateway.backend.image: ghcr.io/dask/dask-gateway
+        controller.image: ghcr.io/dask/dask-gateway-server
       valuesFiles:
         - resources/helm/testing/skaffold.yaml
     flags:
