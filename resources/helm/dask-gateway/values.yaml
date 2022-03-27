@@ -20,10 +20,10 @@ gateway:
   # The gateway server log level
   loglevel: INFO
 
-  # The image to use for the gateway-server pod.
+  # The image to use for the dask-gateway-server pod (api pod)
   image:
-    name: daskgateway/dask-gateway-server
-    tag: 0.9.0
+    name: ghcr.io/dask/dask-gateway-server
+    tag: "set-by-chartpress"
     pullPolicy: IfNotPresent
 
   # Image pull secrets for gateway-server pod
