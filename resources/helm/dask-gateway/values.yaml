@@ -39,24 +39,24 @@ gateway:
 
     simple:
       # A shared password to use for all users.
-      password: null
+      password:
 
     kerberos:
       # Path to the HTTP keytab for this node.
-      keytab: null
+      keytab:
 
     jupyterhub:
       # A JupyterHub api token for dask-gateway to use. See
       # https://gateway.dask.org/install-kube.html#authenticating-with-jupyterhub.
-      apiToken: null
+      apiToken:
 
       # JupyterHub's api url. Inferred from JupyterHub's service name if running
       # in the same namespace.
-      apiUrl: null
+      apiUrl:
 
     custom:
       # The full authenticator class name.
-      class: null
+      class:
 
       # Configuration fields to set on the authenticator class.
       config: {}
@@ -83,13 +83,13 @@ gateway:
   backend:
     # The image to use for both schedulers and workers.
     image:
-      name: daskgateway/dask-gateway
-      tag: 0.9.0
+      name: ghcr.io/dask/dask-gateway
+      tag: "set-by-chartpress"
       pullPolicy: IfNotPresent
 
     # The namespace to launch dask clusters in. If not specified, defaults to
     # the same namespace the gateway is running in.
-    namespace: null
+    namespace:
 
     # A mapping of environment variables to set for both schedulers and workers.
     environment: {}
@@ -105,13 +105,13 @@ gateway:
 
       # Cores request/limit for the scheduler.
       cores:
-        request: null
-        limit: null
+        request:
+        limit:
 
       # Memory request/limit for the scheduler.
       memory:
-        request: null
-        limit: null
+        request:
+        limit:
 
     worker:
       # Any extra configuration for the worker pod. Sets
@@ -124,17 +124,17 @@ gateway:
 
       # Cores request/limit for each worker.
       cores:
-        request: null
-        limit: null
+        request:
+        limit:
 
       # Memory request/limit for each worker.
       memory:
-        request: null
-        limit: null
+        request:
+        limit:
 
       # Number of threads available for a worker. Sets
       # `c.KubeClusterConfig.worker_threads`
-      threads: null
+      threads:
 
   # Settings for nodeSelector, affinity, and tolerations for the gateway pods
   nodeSelector: {}
@@ -192,8 +192,8 @@ controller:
 
   # The image to use for the controller pod.
   image:
-    name: daskgateway/dask-gateway-server
-    tag: 0.9.0
+    name: ghcr.io/dask/dask-gateway-server
+    tag: "set-by-chartpress"
     pullPolicy: IfNotPresent
 
   # Settings for nodeSelector, affinity, and tolerations for the controller pods
@@ -241,12 +241,12 @@ traefik:
       web:
         # The port HTTP(s) requests will be served on
         port: 80
-        nodePort: null
+        nodePort:
       tcp:
         # The port TCP requests will be served on. Set to `web` to share the
         # web service port
         port: web
-        nodePort: null
+        nodePort:
 
   # Settings for nodeSelector, affinity, and tolerations for the traefik pods
   nodeSelector: {}
@@ -265,13 +265,13 @@ rbac:
   # ServiceAccounts have already been created by other means (leave set to
   # `null` to create all required roles at install time)
   controller:
-    serviceAccountName: null
+    serviceAccountName:
 
   gateway:
-    serviceAccountName: null
+    serviceAccountName:
 
   traefik:
-    serviceAccountName: null
+    serviceAccountName:
 
 
 
