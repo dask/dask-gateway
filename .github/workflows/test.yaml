@@ -113,33 +113,35 @@ jobs:
 
   kubernetes-tests:
     runs-on: ubuntu-latest
-    # timeout-minutes is configured for this job to avoid an intermittent
-    # failure documented in https://github.com/dask/dask-gateway/issues/511.
-    # This test typically completes in 6-8 minutes.
-    #
-    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # We run this job multiple times with different parameterization
+        # specified below, these parameters have no meaning on their own and
+        # gain meaning on how job steps use them.
+        #
+        # k3s-version: https://github.com/rancher/k3s/tags
+        # k3s-channel: https://update.k3s.io/v1-release/channels
+        #
+        include:
+          - k3s-channel: v1.20
+          - k3s-channel: v1.21
+          - k3s-channel: v1.22
+          - k3s-channel: v1.23
     steps:
       - uses: actions/checkout@v3
 
-      - uses: AbsaOSS/k3d-action@v2
-        name: "Create k3d Cluster"
+      # Starts a k8s cluster with NetworkPolicy enforcement and installs both
+      # kubectl and helm
+      #
+      # ref: https://github.com/jupyterhub/action-k3s-helm/
+      #
+      - uses: jupyterhub/action-k3s-helm@v1
         with:
-          cluster-name: "k3s-default"
-          args: >-
-            --port "30200:30200@agent:0:direct"
-            --agents 1
-            --api-port 6444
-            --no-lb
-
-      - name: Install tools
-        run: |
-          export KUBECONFIG="$(k3d get-kubeconfig --name='k3s-default')"
-          ./continuous_integration/kubernetes/install-tools.sh
-
-      - name: Check k3d
-        run: |
-          k3d --version
-          kubectl get nodes
+          k3s-channel: ${{ matrix.k3s-channel }}
+          metrics-enabled: false
+          traefik-enabled: false
+          docker-enabled: true
 
       - name: Helm lint and render templates
         run: |
@@ -147,8 +149,6 @@ jobs:
 
       - name: Helm Install
         run: |
-          stern "" > k8s-logs &
-          echo "STERN_PID=$!" >> $GITHUB_ENV
           ./continuous_integration/kubernetes/helm-install.sh
           ./continuous_integration/kubernetes/install.sh
 
@@ -156,11 +156,15 @@ jobs:
         run: |
           ./continuous_integration/kubernetes/script.sh
 
-      - name: Kubernetes log
-        if: ${{ always() }}
-        run: |
-          kill ${{ env.STERN_PID }}
-          cat k8s-logs
+      # ref: https://github.com/jupyterhub/action-k8s-namespace-report
+      - name: Kubernetes namespace report
+        uses: jupyterhub/action-k8s-namespace-report@v1
+        if: always()
+        with:
+          important-workloads: >-
+            deploy/api-test-dask-gateway
+            deploy/controller-test-dask-gateway
+            deploy/traefik-test-dask-gateway
 
   pbs-tests:
     runs-on: ubuntu-latest

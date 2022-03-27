@@ -16,12 +16,6 @@ DASK_GATEWAY_SERVER_TAG="${fullname#'sha256:'}"
 export DASK_GATEWAY_SERVER_IMAGE="daskgateway/dask-gateway-server:$DASK_GATEWAY_SERVER_TAG"
 docker tag $DASK_GATEWAY_SERVER_TAG $DASK_GATEWAY_SERVER_IMAGE
 
-echo "Importing images into k3d"
-echo "DASK_GATEWAY_IMAGE: $DASK_GATEWAY_IMAGE"
-echo "DASK_GATEWAY_SERVER_IMAGE: $DASK_GATEWAY_SERVER_IMAGE"
-k3d image import $DASK_GATEWAY_IMAGE $DASK_GATEWAY_SERVER_IMAGE
-k3d image import $DASK_GATEWAY_SERVER_IMAGE
-
 echo "Generating Helm Chart's values.schema.json"
 "${git_root}/resources/helm/tools/generate-json-schema.py"
 
