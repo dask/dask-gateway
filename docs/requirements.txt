@@ -1,0 +1,25 @@
+# This file describes the requirements to build the documentation, which you can
+# do by the following commands:
+#
+#   pip install -r requirements.txt
+#   make html
+#
+sphinx
+dask-sphinx-theme
+
+# sphinx-autobuild enables the "make devenv" command defined in the Makefile to
+# automatically rebuild the documentation on changes and update live-reload a
+# browser.
+sphinx-autobuild
+
+# autodoc-traits will inspect the dask-gateway and dask-gateway-server's Python
+# code to generate reference documentation. It will omit files if ImportErrors
+# are thrown so we install these packages with all dependencies to avoid that.
+#
+# Note that we don't have to install pykerberos for autodoc-traits inspection of
+# dask-gateway. This is because .py files can be loaded without errors as
+# "import kerberos" statements only show up within functions.
+#
+autodoc-traits
+--editable="../dask-gateway"
+--editable="../dask-gateway-server[all_backends]" --install-option="--no-build-proxy"

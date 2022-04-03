@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -ex
 
 PBS_CONF_FILE=/etc/pbs.conf
 MOM_CONF_FILE=/var/spool/pbs/mom_priv/config

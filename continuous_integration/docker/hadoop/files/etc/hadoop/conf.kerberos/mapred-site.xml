@@ -5,6 +5,7 @@
         <value>yarn</value>
     </property>
 
+    <!-- networking -->
     <property>
         <name>mapreduce.jobhistory.address</name>
         <value>master.example.com:10020</value>
@@ -15,9 +16,10 @@
         <value>master.example.com:19888</value>
     </property>
 
+    <!-- Kerberos authentication -->
     <property>
         <name>mapreduce.jobhistory.keytab</name>
-        <value>/etc/hadoop/conf/master-keytabs/mapred.keytab</value>
+        <value>/opt/hadoop/etc/hadoop/master-keytabs/mapred.keytab</value>
     </property>
 
     <property>

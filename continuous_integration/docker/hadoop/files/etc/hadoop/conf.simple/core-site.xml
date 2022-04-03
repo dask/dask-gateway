@@ -42,7 +42,7 @@
 
     <property>
         <name>hadoop.http.authentication.signature.secret.file</name>
-        <value>/etc/hadoop/conf/http-secret-file</value>
+        <value>/opt/hadoop/etc/hadoop/http-secret-file</value>
     </property>
 
     <property>

@@ -132,7 +132,7 @@ The tests can then be run as:
 .. code-block:: shell
 
     # Run the test suite
-    $ py.test tests -vv
+    $ pytest -v tests
 
 
 In addition to the main tests, additional tests for the various backends are

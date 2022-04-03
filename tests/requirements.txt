@@ -1,0 +1,65 @@
+# This file describes the requirements to test the Python code in dask-gateway
+# and dask-gateway server.
+#
+# This is how you would install and run most tests:
+#
+#   pip install -r requirements.txt
+#   pytest
+#
+#
+# FIXME:
+# - Make kubernetes test like other backend tests, something you opt into rather
+#   than out out of.
+#
+pytest
+pytest-asyncio
+
+# dask-gateway and dask-gateway-server and all their dependencies are assumed to
+# be installed.
+--editable="../dask-gateway"
+--editable="../dask-gateway-server[all_backends]" --install-option="--no-build-proxy"
+
+# ipython and ipywidget is optional integrations allowing for fancy rendering of
+# end user provided configuration options. Tests in test_options.py will be
+# skipped without this installed.
+ipython
+ipywidgets
+
+# bokeh needs to be installed for test_dashboard_link_from_public_address to not
+# be skipped.
+#
+# FIXME: clarify why bokeh is needed for this test.
+#
+bokeh
+
+# trustme is a utility used in the code of the test ca_and_tls_proxy in
+# test_proxies.py.
+trustme
+
+# IMPORTANT: These environment variables indicating tests should be run with
+#            integration against external dask cluster providers (backends).
+#
+#            For this to work, there needs to be various things running in the
+#            background.
+#
+# TEST_DASK_GATEWAY_YARN  - test_yarn_backend.py, and test_kerberos_auth in test_auth.py
+# TEST_DASK_GATEWAY_PBS   - test_pbs_backend.py
+# TEST_DASK_GATEWAY_SLURM - test_slurm_backend.py
+# TEST_DASK_GATEWAY_KUBE  - kubernetes/test_integration.py
+#
+# TEST_DASK_GATEWAY_KUBE_ADDRESS is also used to describe how to reach the
+# traefik pod used as a proxy to access dask-gateway-server running in the api
+# pod.
+#
+
+# IMPORTANT: Not installed Python packages with system dependencies
+#
+# - To run tests related to KerberosAuthenticator, you need to install
+#   pykerberos which is tricky to install with pip but easy with conda. For
+#   example, to install pykerberos with pip on ubunutu, you need to first
+#   install the apt package libkrb5-dev.
+# - To run tests related to JupyterHubAuthenticator, you need to install
+#   jupyterhub and the Node npm package configurable-http-proxy that JupyterHub
+#   depends on to route traffic.
+# - To run tests related to the Helm chart, you need to install the helm CLI.
+#

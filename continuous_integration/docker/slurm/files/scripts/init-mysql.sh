@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-yum install -y psmisc
-
 if [ ! -f "/var/lib/mysql/ibdata1" ]; then
     echo "- Initializing database"
     /usr/bin/mysql_install_db &> /dev/null
@@ -35,7 +33,7 @@ if [ ! -d "/var/lib/mysql/slurm_acct_db" ]; then
     mysql -NBe "GRANT ALL PRIVILEGES on slurm_acct_db.* to 'slurm'@'localhost'"
     mysql -NBe "FLUSH PRIVILEGES"
     echo "- Slurm acct database created. Stopping MariaDB"
-    killall mysqld
+    pkill mysqld
     for count in {30..0}; do
         if echo "SELECT 1" | mysql &> /dev/null; then
             sleep 1
@@ -48,6 +46,3 @@ if [ ! -d "/var/lib/mysql/slurm_acct_db" ]; then
         exit 1
     fi
 fi
-
-yum remove -y psmisc
-rm -rf /var/cache/yum

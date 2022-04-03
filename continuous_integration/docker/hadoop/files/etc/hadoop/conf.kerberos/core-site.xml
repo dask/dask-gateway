@@ -45,24 +45,4 @@
         <value>org.apache.hadoop.security.AuthenticationFilterInitializer</value>
     </property>
 
-    <property>
-        <name>hadoop.http.authentication.type</name>
-        <value>simple</value>
-    </property>
-
-    <property>
-        <name>hadoop.http.authentication.signature.secret.file</name>
-        <value>/etc/hadoop/conf/http-secret-file</value>
-    </property>
-
-    <property>
-        <name>hadoop.http.authentication.cookie.domain</name>
-        <value>.example.com</value>
-    </property>
-
-    <property>
-        <name>hadoop.http.authentication.simple.anonymous.allowed</name>
-        <value>true</value>
-    </property>
-
 </configuration>

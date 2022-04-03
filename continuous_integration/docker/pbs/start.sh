@@ -13,4 +13,4 @@ docker run --rm -d \
     -p 8786:8786 \
     -p 8088:8088 \
     --cap-add=SYS_RESOURCE \
-    daskgateway/testing-pbs
+    ghcr.io/dask/dask-gateway-ci-pbs
