@@ -1,5 +1,5 @@
 # ** A base miniconda image **
-FROM debian:bullseye-slim as miniconda
+FROM debian:11.2-slim as miniconda
 LABEL MAINTAINER="Jim Crist-Harif"
 
 # List of conda versions: https://repo.anaconda.com/miniconda/
