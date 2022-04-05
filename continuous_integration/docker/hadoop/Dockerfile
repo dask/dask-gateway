@@ -22,15 +22,12 @@ RUN groupadd --system hadoop \
 #
 # - Java 8+ (java-1.8.0-openjdk, java-11-openjdk)
 #
-#   But, we make it java-1.8.0-openjdk-devel so that we have whats needed to
-#   build skein's .jar file from scratch.
-#
 # - OpenSSL 1.1 (openssl 1.0 comes with centos:7, found via epel-release repo)
 #
 RUN yum install -y \
         epel-release \
  && yum install -y \
-        java-1.8.0-openjdk-devel \
+        java-1.8.0-openjdk \
         openssl11-libs \
  && yum clean all \
  && rm -rf /var/cache/yum
@@ -149,16 +146,3 @@ COPY ./files/etc/supervisord.conf /etc/
 # 4. Configure the container to start supervisord with our configuration.
 #
 ENTRYPOINT ["/usr/bin/supervisord", "--configuration", "/etc/supervisord.conf"]
-
-# For now let's build skein from scratch with misc bugfixes, if
-# https://github.com/jcrist/skein/issues/245 is resolved we can remove this.
-#
-# 0. We have installed -devel version of openjdk
-# 1. We install maven as a build dependency for skein
-# 2. We install a fork of skein with fixes to make it successfully build from
-#    sdist and not have a corrupt CLASSPATH set.
-# 3. We uninstall maven to avoid getting multiple versions of java or similar.
-#
-RUN mamba install -y maven \
- && pip install https://github.com/consideratio/skein/archive/master.zip \
- && mamba uninstall -y maven
