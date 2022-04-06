@@ -7,6 +7,7 @@ npm install -g configurable-http-proxy
 # entries in ../dev-environment.yaml
 pip install -U \
     aiohttp \
+    "click<8.1.0" \
     colorlog \
     cryptography \
     dask \

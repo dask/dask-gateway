@@ -64,11 +64,12 @@ ARG DISTRIBUTED_VERSION=2022.02.0
 # - Removes unnecessary *.js.map files
 # - Removes unminified bokeh js
 RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
-        aiohttp=3.8.1 \
-        dask==$DASK_VERSION \
-        distributed==$DISTRIBUTED_VERSION \
-        numpy==1.21.4 \
-        pandas==1.3.4 \
+        "aiohttp==3.8.1" \
+        "click<8.1.0" \
+        "dask==$DASK_VERSION" \
+        "distributed==$DISTRIBUTED_VERSION" \
+        "numpy==1.21.4" \
+        "pandas==1.3.4" \
     && /opt/conda/bin/conda clean -afy \
     && find /opt/conda/ -follow -type f -name '*.a' -delete \
     && find /opt/conda/ -follow -type f -name '*.js.map' -delete \

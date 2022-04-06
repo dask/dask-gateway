@@ -13,6 +13,7 @@ dependencies:
   # - dask-gateway/setup.py
   # - dask-gateway-server/setup.py
   - aiohttp # dask-gateway, dask-gateway-server
+  - click<8.1.0 # dask-gateway
   - dask # dask-gateway
   - distributed # dask-gateway
   - tornado # dask-gateway, dask-gateway-server
