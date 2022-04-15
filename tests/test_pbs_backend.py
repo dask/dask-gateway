@@ -63,8 +63,8 @@ async def test_pbs_backend():
     c = Config()
     c.PBSClusterConfig.scheduler_cmd = "/opt/python/bin/dask-scheduler"
     c.PBSClusterConfig.worker_cmd = "/opt/python/bin/dask-worker"
-    c.PBSClusterConfig.scheduler_memory = "256M"
-    c.PBSClusterConfig.worker_memory = "256M"
+    c.PBSClusterConfig.scheduler_memory = "128M"
+    c.PBSClusterConfig.worker_memory = "128M"
     c.PBSClusterConfig.scheduler_cores = 1
     c.PBSClusterConfig.worker_cores = 1
     c.DaskGateway.backend_class = PBSTestingBackend
