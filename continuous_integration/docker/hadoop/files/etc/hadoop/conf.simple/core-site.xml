@@ -11,16 +11,6 @@
     </property>
 
     <property>
-        <name>hadoop.proxyuser.mapred.hosts</name>
-        <value>*</value>
-    </property>
-
-    <property>
-        <name>hadoop.proxyuser.mapred.groups</name>
-        <value>*</value>
-    </property>
-
-    <property>
         <name>hadoop.security.authentication</name>
         <value>simple</value>
     </property>
