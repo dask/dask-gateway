@@ -66,16 +66,6 @@
         <value>${yarn.scheduler.minimum-allocation-mb}</value>
     </property>
 
-    <property>
-        <name>yarn.nodemanager.resource.memory-mb</name>
-        <value>4096</value>
-    </property>
-
-    <property>
-        <name>yarn.nodemanager.resource.cpu-vcores</name>
-        <value>2</value>
-    </property>
-
     <!-- Kerberos authentication -->
     <property>
         <name>yarn.resourcemanager.keytab</name>
