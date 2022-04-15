@@ -9,6 +9,12 @@ set -ex
 #   - kdb5_util:    https://web.mit.edu/kerberos/krb5-1.12/doc/admin/admin_commands/kdb5_util.html
 #
 
+# Copy a key generated in setup-hadoop.sh to avoid a warning. Note that this
+# auth may be relevant when running a yarn backend test rather then a kerberos
+# auth test.
+#
+cp /etc/hadoop/conf.simple/http-secret-file /etc/hadoop/conf.kerberos/http-secret-file
+
 # Tweak file system permissions and switch to new hadoop config at
 # /etc/hadoop/conf.kerberos.
 #
