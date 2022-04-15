@@ -71,9 +71,12 @@ ENV PATH=/opt/hadoop/sbin:/opt/hadoop/bin:$PATH
 #
 # 6. Copy our hadoop configurations
 #
-#    The permissions are important for function!
+#    The permissions are important for function! As we copy additional files to
+#    these folders later and want them to have root:hadoop ownership for
+#    readability, we "chmod ug+s" as well on the folder.
 #
 COPY --chown=root:hadoop ./files/etc/hadoop /etc/hadoop/
+RUN chmod -R ug+s /etc/hadoop/
 #
 # 7. Copy our setup script and run it
 #
