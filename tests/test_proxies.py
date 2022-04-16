@@ -34,7 +34,7 @@ class temp_proxy:
         await self.runner.setup()
         self.site = web.TCPSite(self.runner, "127.0.0.1", self._port)
         await self.site.start()
-        await self.proxy._proxy_contacted
+        await self.proxy._proxy_routes_initialized
         return self.proxy
 
     async def __aexit__(self, *args):

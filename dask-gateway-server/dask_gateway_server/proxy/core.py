@@ -270,7 +270,7 @@ class Proxy(LoggingConfigurable):
         self.cg = CancelGroup()
         self.task_pool = TaskPool()
         # Exposed for testing
-        self._proxy_contacted = Flag()
+        self._proxy_routes_initialized = Flag()
         if not self.externally_managed:
             self.start_proxy_process()
             self.task_pool.spawn(self.monitor_proxy_process())
@@ -285,6 +285,9 @@ class Proxy(LoggingConfigurable):
         app.on_shutdown.append(self._on_shutdown)
 
         app.add_routes([web.get("/api/v1/routes", self.routes_handler)])
+        app.add_routes(
+            [web.get("/api/v1/routes_initialized", self.routes_initialized_handler)]
+        )
 
         # Proxy through the gateway application
         await self.add_route(kind="PATH", path="/", target=self.gateway_url)
@@ -367,7 +370,6 @@ class Proxy(LoggingConfigurable):
             return None
 
     async def routes_handler(self, request):
-        self._proxy_contacted.set()
         # Authenticate the api request
         auth_header = request.headers.get("Authorization")
         if not auth_header:
@@ -416,6 +418,28 @@ class Proxy(LoggingConfigurable):
         else:
             msg = {"routes": list(self.routes.values()), "id": self._next_id - 1}
             return web.json_response(msg)
+
+    async def routes_initialized_handler(self, request):
+        """
+        This is an endpoint setup for our test suite to allow the standalone
+        proxy process to report that routes has been initialized. It helps us
+        avoid progressing with tests before the standalone proxy process is
+        configured with relevant routes to avoid intermittent "404 NOT FOUND"
+        responses.
+        """
+        # Authenticate the api request
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
+
+        auth_type, auth_token = auth_header.split(" ", 1)
+        if auth_type != "token" or auth_token != self.api_token:
+            raise web.HTTPUnauthorized(headers={"WWW-Authenticate": "token"})
+
+        self._proxy_routes_initialized.set()
+
+        msg = {}
+        return web.json_response(msg)
 
 
 class ProxyApp(Application):

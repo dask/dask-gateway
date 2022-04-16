@@ -254,6 +254,32 @@ func (c *apiClient) getRoutingTable() (*RoutesMsg, error) {
 	return &msg, err
 }
 
+// reportRoutesInitialized helps us communicate to the dask-gateway-server that
+// we have acquired an initial set of routes and can from now on act based on
+// them without responding with 404 NOT FOUND.
+func (c *apiClient) reportRoutesInitialized() (*RoutesMsg, error) {
+	req, err := http.NewRequest("GET", c.apiURL+"_initialized", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", "token "+c.apiToken)
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return nil, errors.New(resp.Status)
+	}
+
+	var msg RoutesMsg
+	err = json.NewDecoder(resp.Body).Decode(&msg)
+	return &msg, err
+}
+
 type evIter struct {
 	body    io.ReadCloser
 	scanner *bufio.Scanner
@@ -335,6 +361,8 @@ func (p *Proxy) watchRoutes(apiURL, apiToken string, maxBackoff time.Duration) {
 		backoff = initialBackoff
 	}
 
+	reportRoutesInitializedAttempted := false
+
 	client := NewApiClient(apiURL, apiToken)
 	for {
 		msg, err := client.getRoutingTable()
@@ -345,6 +373,14 @@ func (p *Proxy) watchRoutes(apiURL, apiToken string, maxBackoff time.Duration) {
 		resetBackoff()
 
 		p.UpdateFromRoutes(msg.Routes)
+
+		if !reportRoutesInitializedAttempted {
+			reportRoutesInitializedAttempted = true
+			_, err := client.reportRoutesInitialized()
+			if err != nil {
+				p.logger.Warnf("Failed to report routes as initialized, this may influence tests.")
+			}
+		}
 
 		last_id := msg.Id
 

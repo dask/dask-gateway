@@ -60,7 +60,7 @@ class temp_gateway:
         self.gateway = DaskGateway(config=self.config)
         self.gateway.initialize([])
         await self.gateway.setup()
-        await self.gateway.backend.proxy._proxy_contacted
+        await self.gateway.backend.proxy._proxy_routes_initialized
         self.address = f"http://{self.gateway.backend.proxy.address}"
         self.proxy_address = f"gateway://{self.gateway.backend.proxy.tcp_address}"
         return self
