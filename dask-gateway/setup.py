@@ -7,21 +7,8 @@ with open(os.path.join(here, "dask_gateway", "_version.py")) as f:
     exec(f.read(), {}, ns)
     VERSION = ns["__version__"]
 
-# NOTE: changes to the dependencies here must also be reflected
-# in ../dev-environment.yaml
-install_requires = [
-    "aiohttp",
-    # FIXME: click 8.0.4 works, but 8.1.0-8.1.2 has found to cause failures for
-    #        currently unknown reasons.
-    #
-    #        This is tracked in https://github.com/dask/dask-gateway/issues/522.
-    #
-    "click<8.1.0",
-    "dask>=2.2.0",
-    "distributed>=2021.01.1",
-    "pyyaml",
-    "tornado",
-]
+with open("requirements.txt") as f:
+    install_requires = [l for l in f.readlines() if not l.startswith("#")]
 
 extras_require = {
     "kerberos": [

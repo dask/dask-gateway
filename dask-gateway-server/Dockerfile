@@ -1,45 +1,41 @@
-FROM python:3.9-slim-bullseye as dependencies
-LABEL MAINTAINER="Jim Crist-Harif"
+# This Dockerfile and image, ghcr.io/dask/dask-gateway-server, is used by the
+# dask-gateway Helm chart, by the api pod and the controller pod.
+#
+# The pods are started with different commands:
+#
+# - api pod command:        dask-gateway-server ...
+# - controller pod command: dask-gateway-server kube-controller ...
+#
+FROM python:3.10-slim-bullseye
 
+# Install tini and upgrade linux packages are updated to patch known
+# vulnerabilities.
 RUN apt-get update \
-    && apt-get install -y tini \
-    && rm -rf /var/lib/apt/lists/*
+ && apt-get upgrade -y \
+ && apt-get install -y \
+        tini \
+ && rm -rf /var/lib/apt/lists/*
 
+# Create a non-root user to run as
+RUN useradd --create-home --user-group --uid 1000 dask
+USER dask:dask
+ENV PATH=/home/dask/.local/bin:$PATH
+WORKDIR /home/dask/
+
+# Install dask-gateway-server
+#
+# The Golang proxy binary isn't built as the dask-gateway Helm chart relies on
+# Traefik as a proxy instead to run in its dedicated pod.
+#
+COPY --chown=dask:dask . /srv/dask-gateway-server
+# The requirements are installed first as passing the --install-option flag
+# makes pip not use wheels when installing dependencies.
+#
 RUN pip install --no-cache-dir \
-    aiohttp==3.8.1 \
-    colorlog \
-    cryptography \
-    traitlets==5.1.1 \
-    pyyaml \
-    kubernetes-asyncio==18.20.0
-
-
-
-# Build dask-gateway-server from source in a builder stage
-FROM dependencies AS builder
-
-RUN mkdir -p /tmp/workdir
-RUN mkdir -p /tmp/install-prefix
-COPY . /tmp/workdir/
-WORKDIR /tmp/workdir/
-RUN python setup.py install \
-    --no-build-proxy \
-    --single-version-externally-managed \
-    --record=record.txt \
-    --prefix /tmp/install-prefix
-
-
-
-# Final image - merge dependencies and built dask-gateway
-FROM dependencies
-
-COPY --from=builder /tmp/install-prefix/bin/dask-gateway-server /usr/local/bin/
-COPY --from=builder /tmp/install-prefix/lib /usr/local/lib/
-
-# Create non-root user and working directory
-WORKDIR /srv/dask-gateway
-RUN useradd -m -U -u 1000 dask && chown dask:dask /srv/dask-gateway
-USER 1000:1000
+        --requirement=/srv/dask-gateway-server/requirements.txt \
+        kubernetes-asyncio \
+ && pip install --no-cache-dir --no-deps \
+        /srv/dask-gateway-server --install-option="--no-build-proxy"
 
 ENTRYPOINT ["tini", "-g", "--"]
 CMD ["dask-gateway-server", "--config", "/etc/dask-gateway/dask_gateway_config.py"]
