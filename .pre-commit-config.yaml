@@ -39,7 +39,6 @@ repos:
     rev: "5.10.1"
     hooks:
       - id: isort
-        language_version: python3
 
   # Autoformat: general small fixes
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -54,4 +53,3 @@ repos:
     rev: "4.0.1"
     hooks:
       - id: flake8
-        language_version: python3
