@@ -18,7 +18,7 @@ install_requires = [
     #
     "click<8.1.0",
     "dask>=2.2.0",
-    "distributed>=2.2.0",
+    "distributed>=2021.01.1",
     "pyyaml",
     "tornado",
 ]
