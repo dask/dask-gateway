@@ -19,6 +19,7 @@ install_requires = [
     "click<8.1.0",
     "dask>=2.2.0",
     "distributed>=2.2.0",
+    "pyyaml",
     "tornado",
 ]
 
@@ -26,7 +27,7 @@ extras_require = {
     "kerberos": [
         'pykerberos;platform_system!="Windows"',
         'winkerberos;platform_system=="Windows"',
-    ]
+    ],
 }
 
 setup(

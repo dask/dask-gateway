@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-docker exec master /working/continuous_integration/docker/hadoop/_install.sh
+docker exec hadoop /working/continuous_integration/docker/hadoop/_install.sh

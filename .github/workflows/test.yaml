@@ -30,6 +30,7 @@ env:
 jobs:
   main-tests:
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
@@ -67,20 +68,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/setup-python@v3
         with:
           python-version: "${{ matrix.python-version }}"
-
       - uses: actions/setup-go@v3
         with:
           go-version: "${{ matrix.go-version }}"
-
       - uses: actions/setup-node@v3
+
+      # jupyterhub will when being mock started as part of running tests depend
+      # on the Node npm package configurable-http-proxy.
+      #
+      - name: Install jupyterhub with system dependencies
+        run: |
+          npm install -g configurable-http-proxy
+          pip install jupyterhub
 
       - name: Install Python test requirements
         run: |
-          continuous_integration/install.sh
+          cd tests
+          pip install -r requirements.txt
 
       - name: List Python packages
         run: |
@@ -88,7 +95,7 @@ jobs:
 
       - name: Run Python tests
         run: |
-          py.test tests/ -k 'not kubernetes' -v
+          pytest -v tests/ -k 'not kubernetes'
 
       - name: Install Go test requirements
         run: |
@@ -100,19 +107,9 @@ jobs:
           cd dask-gateway-server/dask-gateway-proxy
           go test
 
-  hadoop-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Hadoop Install/Start
-        if: ${{ env.commit_msg != 'skip-tests' }}
-        run: |
-          ./continuous_integration/docker/hadoop/start.sh
-          ./continuous_integration/docker/hadoop/install.sh
-          ./continuous_integration/docker/hadoop/script.sh
-
   kubernetes-tests:
     runs-on: ubuntu-latest
+
     strategy:
       fail-fast: false
       matrix:
@@ -150,11 +147,21 @@ jobs:
       - name: Helm Install
         run: |
           ./continuous_integration/kubernetes/helm-install.sh
-          ./continuous_integration/kubernetes/install.sh
+
+      - name: Install Python test requirements
+        run: |
+          cd tests
+          pip install -r requirements.txt
+
+      - name: List Python packages
+        run: |
+          pip list
 
       - name: Kubernetes Tests
         run: |
-          ./continuous_integration/kubernetes/script.sh
+          TEST_DASK_GATEWAY_KUBE=true \
+          TEST_DASK_GATEWAY_KUBE_ADDRESS=http://localhost:30200/services/dask-gateway/ \
+          pytest -v tests/kubernetes/
 
       # ref: https://github.com/jupyterhub/action-k8s-namespace-report
       - name: Kubernetes namespace report
@@ -166,24 +173,89 @@ jobs:
             deploy/controller-test-dask-gateway
             deploy/traefik-test-dask-gateway
 
+  # The tests run in this job rely on by setting up a development environment in
+  # a pre-built container.
+  #
+  hadoop-tests:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to ghcr.io read access to CI image
+        run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Start Hadoop Yarn container and mount local git repo
+        run: ./continuous_integration/docker/hadoop/start.sh
+
+      - name: Install test requirements (inside container)
+        run: ./continuous_integration/docker/hadoop/install.sh
+
+      - name: Run tests (inside container)
+        run: ./continuous_integration/docker/hadoop/test.sh
+
+      - name: Print logs for debugging
+        if: always()
+        run: ./continuous_integration/docker/hadoop/print_logs.sh
+
+  # The tests run in this job rely on by setting up a development environment in
+  # a pre-built container.
+  #
   pbs-tests:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+
     steps:
       - uses: actions/checkout@v3
-      - name: PBS Tests
-        if: ${{ env.commit_msg != 'skip-tests' }}
-        run: |
-          ./continuous_integration/docker/pbs/start.sh
-          ./continuous_integration/docker/pbs/install.sh
-          ./continuous_integration/docker/pbs/script.sh
 
+      - name: Login to ghcr.io read access to CI image
+        run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Start PBS container and mount local git repo
+        run: ./continuous_integration/docker/pbs/start.sh
+
+      - name: Install test requirements (inside container)
+        run: ./continuous_integration/docker/pbs/install.sh
+
+      - name: Run tests (inside container)
+        run: ./continuous_integration/docker/pbs/test.sh
+
+      - name: Print logs for debugging
+        if: always()
+        run: ./continuous_integration/docker/pbs/print_logs.sh
+
+  # The tests run in this job rely on by setting up a development environment in
+  # a pre-built container.
+  #
   slurm-tests:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+
     steps:
       - uses: actions/checkout@v3
-      - name: Slurm Tests
-        if: ${{ env.commit_msg != 'skip-tests' }}
-        run: |
-          ./continuous_integration/docker/slurm/start.sh
-          ./continuous_integration/docker/slurm/install.sh
-          ./continuous_integration/docker/slurm/script.sh
+
+      - name: Login to ghcr.io read access to CI image
+        run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Start Slurm container and mount local git repo
+        run: ./continuous_integration/docker/slurm/start.sh
+
+      - name: Install test requirements (inside container)
+        run: ./continuous_integration/docker/slurm/install.sh
+
+      - name: Run tests (inside container)
+        run: ./continuous_integration/docker/slurm/test.sh
+
+      - name: Print logs for debugging
+        if: always()
+        run: ./continuous_integration/docker/slurm/print_logs.sh

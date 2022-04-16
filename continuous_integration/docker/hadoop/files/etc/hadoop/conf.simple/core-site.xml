@@ -11,16 +11,6 @@
     </property>
 
     <property>
-        <name>hadoop.proxyuser.mapred.hosts</name>
-        <value>*</value>
-    </property>
-
-    <property>
-        <name>hadoop.proxyuser.mapred.groups</name>
-        <value>*</value>
-    </property>
-
-    <property>
         <name>hadoop.security.authentication</name>
         <value>simple</value>
     </property>
@@ -42,7 +32,7 @@
 
     <property>
         <name>hadoop.http.authentication.signature.secret.file</name>
-        <value>/etc/hadoop/conf/http-secret-file</value>
+        <value>/opt/hadoop/etc/hadoop/http-secret-file</value>
     </property>
 
     <property>

@@ -1,0 +1,24 @@
+# This config ensures that the PATH environment variable this only-for-testing
+# container is started with is preserved when changing to other users with sudo.
+#
+# NOTES:
+#
+# - `sudo` is used to execute commands as other users. What then happens to the
+#   environment will be determined by configuration in /etc/sudoers and
+#   /etc/sudoers.d/* as well as flags we pass to the sudo command. The behavior
+#   can be inspected with `sudo -V` run as root.
+#
+#   ref: `man sudo`    https://linux.die.net/man/8/sudo
+#   ref: `man sudoers` https://www.sudo.ws/man/1.8.15/sudoers.man.html
+#
+# - We disable the `secure_path` which is set by default in /etc/sudoers as it
+#   would override the PATH variable.
+Defaults !secure_path
+#
+# - We can use the `-E` or `--preserve-env` flag to pass through most
+#   environment variables, but understand that exceptions are caused by the
+#   sudoers configuration: `env_delete`, `env_check`, and `secure_path`.
+#
+# - We reduce the `env_delete` list of default variables to be deleted. It has
+#   higher priority than the `--preserve-env` flag and `env_keep` configuration.
+Defaults env_delete -= "PATH"

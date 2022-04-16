@@ -1,5 +1,6 @@
 <configuration>
 
+    <!-- misc -->
     <property>
         <name>dfs.replication</name>
         <value>1</value>
@@ -20,9 +21,10 @@
         <value>true</value>
     </property>
 
+    <!-- Kerberos authentication -->
     <property>
         <name>dfs.namenode.keytab.file</name>
-        <value>/etc/hadoop/conf/master-keytabs/hdfs.keytab</value>
+        <value>/opt/hadoop/etc/hadoop/master-keytabs/hdfs.keytab</value>
     </property>
 
     <property>
@@ -37,7 +39,7 @@
 
     <property>
         <name>dfs.datanode.keytab.file</name>
-        <value>/etc/hadoop/conf/master-keytabs/hdfs.keytab</value>
+        <value>/opt/hadoop/etc/hadoop/master-keytabs/hdfs.keytab</value>
     </property>
 
     <property>
@@ -52,9 +54,10 @@
 
     <property>
         <name>dfs.web.authentication.kerberos.keytab</name>
-        <value>/etc/hadoop/conf/master-keytabs/HTTP.keytab</value>
+        <value>/opt/hadoop/etc/hadoop/master-keytabs/HTTP.keytab</value>
     </property>
 
+    <!-- networking -->
     <property>
         <name>ignore.secure.ports.for.testing</name>
         <value>true</value>

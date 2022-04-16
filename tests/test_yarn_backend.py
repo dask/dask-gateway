@@ -51,10 +51,10 @@ class YarnTestingBackend(YarnBackend):
 async def test_yarn_backend():
 
     c = Config()
-    c.YarnClusterConfig.scheduler_cmd = "/opt/miniconda/bin/dask-scheduler"
-    c.YarnClusterConfig.worker_cmd = "/opt/miniconda/bin/dask-worker"
-    c.YarnClusterConfig.scheduler_memory = "512M"
-    c.YarnClusterConfig.worker_memory = "512M"
+    c.YarnClusterConfig.scheduler_cmd = "/opt/python/bin/dask-scheduler"
+    c.YarnClusterConfig.worker_cmd = "/opt/python/bin/dask-worker"
+    c.YarnClusterConfig.scheduler_memory = "128M"
+    c.YarnClusterConfig.worker_memory = "128M"
     c.YarnClusterConfig.scheduler_cores = 1
     c.YarnClusterConfig.worker_cores = 1
 

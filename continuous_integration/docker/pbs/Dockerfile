@@ -1,20 +1,46 @@
-FROM daskgateway/testing-base:latest
-
-# Install pbspro (now openpbs)
-RUN yum install -y unzip \
-    && curl -L -o /tmp/pbspro.zip https://github.com/openpbs/openpbs/releases/download/v18.1.4/pbspro_1.8.4.centos7.zip \
-    && unzip /tmp/pbspro.zip -d /tmp/pbspro \
-    && yum install -y sudo /tmp/pbspro/pbspro*/pbspro-server-*.rpm \
-    && yum remove -y unzip \
-    && yum clean all \
-    && rm -rf /var/cache/yum
+# See continuous_integration/docker/README.md for details about this and other
+# Dockerfiles under the continuous_integration/docker folder on their purpose
+# and how to work with them.
+#
+FROM ghcr.io/dask/dask-gateway-ci-base:latest
 
 # Notify dask-gateway tests that PBS is available
 ENV TEST_DASK_GATEWAY_PBS true
-ENV PBS_MASTER pbs_master
+
+# Install openpbs
+#
+# 1. Download and install .rpm
+#
+#    OpenPBS versions: https://github.com/openpbs/openpbs/releases
+#
+#    We use an old version because there isn't a modern one pre-built for
+#    centos:7 as used in the base image. The old version was called propbs, so
+#    there is a change needed in the download url related to that if switching
+#    to a newwer version.
+#
+RUN INSTALL_OPENPBS_VERSION=19.1.3 \
+ && yum install -y unzip \
+  \
+ && curl -sL -o /tmp/openpbs.zip https://github.com/openpbs/openpbs/releases/download/v${INSTALL_OPENPBS_VERSION}/pbspro_${INSTALL_OPENPBS_VERSION}.centos_7.zip \
+ && unzip /tmp/openpbs.zip -d /opt/openpbs \
+ && rm /tmp/openpbs.zip \
+ && yum install -y \
+        /opt/openpbs/*pbs*/*-server-*.rpm \
+  \
+ && yum remove -y unzip \
+ && yum clean all \
+ && rm -rf /var/cache/yum
+#
+# 2. Update PATH environment variable
+#
+#    Note that this PATH environment will be preserved when sudo is used to
+#    switch to other users thanks to changes to /etc/sudoers.d/preserve_path,
+#    which is configured in the base Dockerfile.
+#
+ENV PATH=/opt/pbs/bin:$PATH
 
 # Copy over files
 COPY ./files /
 
-ENTRYPOINT ["/opt/miniconda/bin/tini", "-g", "--"]
-CMD ["/root/start.sh"]
+ENTRYPOINT ["/opt/python/bin/tini", "-g", "--"]
+CMD ["/scripts/start.sh"]

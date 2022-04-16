@@ -1,30 +1,30 @@
 <configuration>
 
+    <!-- networking -->
     <property>
         <name>yarn.resourcemanager.hostname</name>
         <value>master.example.com</value>
     </property>
 
-    <property>
-        <name>yarn.nodemanager.aux-services</name>
-        <value>mapreduce_shuffle</value>
-    </property>
+    <!--
+        classpath
 
+        Reference: https://github.com/naver/hadoop/blob/9e1123d0a983297d48ec53f786731e52c498d6b4/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-api/src/main/java/org/apache/hadoop/yarn/conf/YarnConfiguration.java#L1375-L1388
+    -->
     <property>
         <name>yarn.application.classpath</name>
         <value>
         $HADOOP_CONF_DIR,
-        $HADOOP_COMMON_HOME/*,
-        $HADOOP_COMMON_HOME/lib/*,
-        $HADOOP_HDFS_HOME/*,
-        $HADOOP_HDFS_HOME/lib/*,
-        $HADOOP_MAPRED_HOME/*,
-        $HADOOP_MAPRED_HOME/lib/*,
-        $HADOOP_YARN_HOME/*,
-        $HADOOP_YARN_HOME/lib/*
+        $HADOOP_COMMON_HOME/share/hadoop/common/*,
+        $HADOOP_COMMON_HOME/share/hadoop/common/lib/*,
+        $HADOOP_HDFS_HOME/share/hadoop/hdfs/*,
+        $HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*,
+        $HADOOP_YARN_HOME/share/hadoop/yarn/*,
+        $HADOOP_YARN_HOME/share/hadoop/yarn/lib/*
         </value>
     </property>
 
+    <!-- logging -->
     <property>
         <name>yarn.nodemanager.local-dirs</name>
         <value>file:///var/tmp/hadoop-yarn/local</value>
@@ -32,7 +32,7 @@
 
     <property>
         <name>yarn.nodemanager.log-dirs</name>
-        <value>file:///var/tmp/hadoop-yarn/logs</value>
+        <value>file:///var/tmp/hadoop-yarn/log</value>
     </property>
 
     <property>
@@ -43,6 +43,12 @@
     <property>
         <name>yarn.nodemanager.remote-app-log-dir</name>
         <value>hdfs://master.example.com:9000/var/log/hadoop-yarn/apps</value>
+    </property>
+
+    <!-- scheduling and resources -->
+    <property>
+      <name>yarn.resourcemanager.scheduler.class</name>
+      <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value>
     </property>
 
     <property>
@@ -60,19 +66,10 @@
         <value>${yarn.scheduler.minimum-allocation-mb}</value>
     </property>
 
-    <property>
-        <name>yarn.nodemanager.resource.cpu-vcores</name>
-        <value>16</value>
-    </property>
-
-    <property>
-      <name>yarn.resourcemanager.scheduler.class</name>
-      <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value>
-    </property>
-
+    <!-- Kerberos authentication -->
     <property>
         <name>yarn.resourcemanager.keytab</name>
-        <value>/etc/hadoop/conf/master-keytabs/yarn.keytab</value>
+        <value>/opt/hadoop/etc/hadoop/master-keytabs/yarn.keytab</value>
     </property>
 
     <property>
@@ -82,7 +79,7 @@
 
     <property>
         <name>yarn.nodemanager.keytab</name>
-        <value>/etc/hadoop/conf/master-keytabs/yarn.keytab</value>
+        <value>/opt/hadoop/etc/hadoop/master-keytabs/yarn.keytab</value>
     </property>
 
     <property>
@@ -90,6 +87,7 @@
         <value>yarn/master.example.com@EXAMPLE.COM</value>
     </property>
 
+    <!-- container executor -->
     <property>
         <name>yarn.nodemanager.container-executor.class</name>
         <value>org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor</value>
@@ -97,7 +95,7 @@
 
     <property>
         <name>yarn.nodemanager.linux-container-executor.path</name>
-        <value>/usr/lib/hadoop-yarn/bin/container-executor</value>
+        <value>/opt/hadoop/bin/container-executor</value>
     </property>
 
     <property>

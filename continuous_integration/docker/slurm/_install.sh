@@ -1,30 +1,17 @@
 #!/usr/bin/env bash
-source ~/.bashrc
-
 set -xe
 
 cd /working
 
-conda install psutil
-conda install -c conda-forge python=3.8
-
-pip install \
-    aiohttp \
-    colorlog \
-    dask \
-    distributed \
-    cryptography \
-    traitlets \
-    sqlalchemy \
-    pytest \
-    pytest-asyncio
-
-pushd dask-gateway
-python setup.py develop
+# This installs everything besides compiling
+# dask-gateway-server/dask-gateway-proxy
+pushd tests
+pip install -r requirements.txt
 popd
 
-pushd dask-gateway-server
-python setup.py develop
-popd
+# This ensures we also have a compiled dask-gateway-server/dask-gateway-proxy
+# bundled with dask-gateway-proxy, something that we may not always want to do
+# as part of installing the tests/requirements.txt.
+pip install --editable dask-gateway-server
 
 pip list

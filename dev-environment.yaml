@@ -16,6 +16,7 @@ dependencies:
   - click<8.1.0 # dask-gateway
   - dask # dask-gateway
   - distributed # dask-gateway
+  - pyyaml # dask-gateway
   - tornado # dask-gateway, dask-gateway-server
   - colorlog # dask-gateway-server
   - cryptography # dask-gateway-server

@@ -9,14 +9,12 @@ on:
       - "docs/**"
       - "dask-gateway/**"
       - "dask-gateway-server/**"
-      - "continuous_integration/install.sh"
       - ".github/workflows/build-publish-docs.yaml"
   push:
     paths:
       - "docs/**"
       - "dask-gateway/**"
       - "dask-gateway-server/**"
-      - "continuous_integration/install.sh"
       - ".github/workflows/build-publish-docs.yaml"
     branches-ignore:
       - "dependabot/**"
@@ -39,44 +37,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/setup-python@v3
         with:
           python-version: "3.10"
 
-      # FIXME: go is used to compile dask-gateway-server/dask-gateway-proxy, but
-      #        that isn't relevant for us when building documentation, but, we
-      #        end up doing it anyhow currently because we re-use a course
-      #        installation script.
-      #
-      #        If this is fixed, also update the job below.
-      #
-      - uses: actions/setup-go@v3
-        with:
-          go-version: "1.18"
-
-      # FIXME: node is used to install configurable-http-proxy, used by
-      #        JupyterHub when started for us to run tests. As we don't need
-      #        this to setup docs, we can get rid of this if we update our
-      #        installation of dependencies to be a bit more scoped.
-      #
-      #        If this is fixed, also update the job below.
-      #
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "16"
-
-      - name: Install docs requirements
+      - name: Install Python docs requirements
         run: |
-          pushd dask-gateway-server/dask-gateway-proxy
-          go get github.com/stretchr/testify/assert
-          popd
-          continuous_integration/install.sh
-          pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
+          cd docs
+          pip install -r requirements.txt
 
       - name: Build docs (make html)
         run: |
-          pushd docs
+          cd docs
           make html SPHINXOPTS='--color -W --keep-going'
 
       - name: Push built docs to gh-pages branch
@@ -92,28 +64,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/setup-python@v3
         with:
           python-version: "3.10"
 
-      - uses: actions/setup-go@v3
-        with:
-          go-version: "1.18"
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "16"
-
-      - name: Install docs requirements
+      - name: Install Python docs requirements
         run: |
-          pushd dask-gateway-server/dask-gateway-proxy
-          go get github.com/stretchr/testify/assert
-          popd
-          continuous_integration/install.sh
-          pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
+          cd docs
+          pip install -r requirements.txt
 
       - name: Linkcheck docs (make linkcheck)
         run: |
-          pushd docs
+          cd docs
           make linkcheck SPHINXOPTS='--color -W --keep-going'

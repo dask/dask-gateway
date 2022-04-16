@@ -1,4 +1,5 @@
-#! /bin/bash
+#!/bin/bash
+set -x
 
 # Exponential backoff on testing hdfs status, then run init script
 echo "Waiting to connect to HDFS"

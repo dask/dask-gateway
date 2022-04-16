@@ -99,14 +99,27 @@ class clean(_clean):
 
 # NOTE: changes to the dependencies here must also be reflected
 # in ../dev-environment.yaml
-install_requires = ["aiohttp", "colorlog", "cryptography", "tornado", "traitlets"]
+install_requires = [
+    "aiohttp",
+    "colorlog",
+    "cryptography",
+    "tornado",
+    "traitlets",
+]
 
 extras_require = {
+    # pykerberos is tricky to install and requires a system package to
+    # successfully compile some C code, on ubuntu this is libkrb5-dev.
     "kerberos": ["pykerberos"],
     "jobqueue": ["sqlalchemy"],
     "local": ["sqlalchemy"],
     "yarn": ["sqlalchemy", "skein >= 0.7.3"],
     "kubernetes": ["kubernetes_asyncio"],
+    "all_backends": [
+        "sqlalchemy",
+        "skein >= 0.7.3",
+        "kubernetes_asyncio",
+    ],
 }
 
 # Due to quirks in setuptools/distutils dependency ordering, to get the go

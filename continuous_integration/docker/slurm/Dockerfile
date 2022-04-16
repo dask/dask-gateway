@@ -1,66 +1,93 @@
-FROM daskgateway/testing-base:latest
-
-# Build and install slurm
-RUN yum install -y epel-release \
-    && yum install -y \
-        bzip2 \
-        epel-release \
-        gcc \
-        man2html \
-        mariadb-server \
-        mariadb-devel \
-        munge \
-        munge-devel \
-        ncurses-devel \
-        openssl \
-        openssl-devel \
-        perl \
-        readline-devel \
-    && curl -L https://download.schedmd.com/slurm/slurm-19.05.0.tar.bz2 -o /tmp/slurm.tar.bz2 \
-    && cd /tmp \
-    && tar -jxf /tmp/slurm.tar.bz2 \
-    && cd slurm-19.05.0 \
-    && ./configure --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
-    && make install \
-    && cd .. \
-    && rm -rf slurm-19.05.0 \
-    && rm -r slurm.tar.bz2 \
-    && yum remove -y \
-        bzip2 \
-        gcc \
-        mariadb-devel \
-        munge-devel \
-        ncurses-devel \
-        openssl-devel \
-        readline-devel \
-    && yum clean all \
-    && rm -rf /var/cache/yum
-
-# Install supervisor and sudo
-RUN yum install -y supervisor sudo \
-    && yum clean all \
-    && rm -rf /var/cache/yum
-
-# Setup Slurm
-RUN groupadd -r slurm  \
-    && useradd -r -g slurm slurm \
-    && mkdir /etc/sysconfig/slurm \
-        /var/spool/slurmd \
-        /var/run/slurmd \
-        /var/lib/slurmd \
-        /var/log/slurm \
-    && chown slurm:slurm /var/spool/slurmd \
-        /var/run/slurmd \
-        /var/lib/slurmd \
-        /var/log/slurm \
-    && /sbin/create-munge-key
-
-# Copy over files
-COPY ./files /
-
-RUN /root/init-mysql.sh
+# See continuous_integration/docker/README.md for details about this and other
+# Dockerfiles under the continuous_integration/docker folder on their purpose
+# and how to work with them.
+#
+FROM ghcr.io/dask/dask-gateway-ci-base:latest
 
 # Notify dask-gateway tests that Slurm is available
 ENV TEST_DASK_GATEWAY_SLURM true
 
-CMD ["/usr/bin/supervisord", "--configuration", "/etc/supervisord.conf"]
+# Install Slurm
+#
+# 1. Download and compile slurm
+#
+#    Slurm versions:      https://download.schedmd.com/slurm/
+#    Slurm release notes: https://github.com/SchedMD/slurm/blame/HEAD/RELEASE_NOTES
+#
+RUN INSTALL_SLURM_VERSION=21.08.6 \
+ && yum install -y \
+        # required to install supervisor (and more?)
+        epel-release \
+ && yum install -y \
+        # temporary installation dependencies later uninstalled
+        bzip2 \
+        gcc \
+        mariadb-devel \
+        munge-devel \
+        ncurses-devel \
+        openssl-devel \
+        readline-devel \
+        # persistent installation dependencies
+        man2html \
+        mariadb-server \
+        munge \
+        openssl \
+        perl \
+        supervisor \
+  \
+ && curl -sL https://download.schedmd.com/slurm/slurm-${INSTALL_SLURM_VERSION}.tar.bz2 \
+  | tar --extract --verbose --bzip2 --directory=/tmp \
+ && cd /tmp/slurm-* \
+ && ./configure \
+        --sysconfdir=/etc/slurm \
+        --with-mysql_config=/usr/bin \
+        --libdir=/usr/lib64 \
+ && make install \
+ && rm -rf /tmp/slurm-* \
+  \
+ && yum remove -y \
+        bzip2 \
+        gcc \
+        mariadb-devel \
+        munge-devel \
+        ncurses-devel \
+        openssl-devel \
+        readline-devel \
+ && yum clean all \
+ && rm -rf /var/cache/yum
+#
+# 2. Setup Slurm
+#
+RUN groupadd --system slurm  \
+ && useradd --system --gid slurm slurm \
+ && mkdir \
+        /etc/sysconfig/slurm \
+        /var/lib/slurmd \
+        /var/log/slurm \
+        /var/run/slurmd \
+        /var/spool/slurmd \
+ && chown slurm:slurm \
+        /var/lib/slurmd \
+        /var/log/slurm \
+        /var/run/slurmd \
+        /var/spool/slurmd \
+ && /sbin/create-munge-key
+#
+# 3. Copy misc configuration files
+#
+COPY --chown=slurm:slurm ./files/etc/slurm /etc/slurm/
+COPY ./files/etc/sudoers.d /etc/sudoers.d/
+COPY ./files/etc/supervisord.conf /etc/
+COPY ./files/etc/supervisord.d /etc/supervisord.d/
+RUN chmod 644 /etc/slurm/slurm.conf \
+ && chmod 600 /etc/slurm/slurmdbd.conf \
+ && chmod 440 /etc/sudoers.d/dask \
+ && chmod 644 /etc/supervisord.conf \
+ && chmod 644 /etc/supervisord.d/*
+#
+# 4. Initialize a Slurm database
+#
+COPY ./files/scripts /scripts/
+RUN /scripts/init-mysql.sh
+
+ENTRYPOINT ["/usr/bin/supervisord", "--configuration", "/etc/supervisord.conf"]
