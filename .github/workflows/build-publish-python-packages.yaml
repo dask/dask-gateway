@@ -21,37 +21,78 @@ on:
 
 jobs:
   # FIXME: this is boilerplate but hasn't been tested to work
-  build-publish-python-package:
-    name: "Build and publish Python package: ${{ matrix.package }}"
-    runs-on: ubuntu-latest
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }} for ${{ matrix.package }}
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        package:
-          - dask-gateway
-          - dask-gateway-server
+        # os environments available:
+        # https://github.com/actions/virtual-environments#available-environments
+        #
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        package: [dask-gateway, dask-gateway-server]
+        excludes:
+          - package: dask-gateway-server
+            os: windows-latest
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
       - uses: actions/setup-python@v3
 
-      - name: Install build package
-        run: |
-          pip install --upgrade pip
-          pip install build
-          pip freeze
+      - name: Install cibuildwheel
+        run: pip install cibuildwheel
 
-      - name: Build release
-        run: |
-          pushd ${{ matrix.package }}
-          python -m build --sdist --wheel .
-          ls -l dist
+      - name: Run cibuildwheel
+        run: cibuildwheel --output-dir=wheelhouse ./${{ matrix.package }}
 
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.5.0
-        if: startsWith(github.ref, 'refs/tags/')
+      - uses: actions/upload-artifact@v2
         with:
-          user: __token__
-          password: ${{ secrets.pypi_password }}
-          packages_dir: ${{ matrix.package }}/dist/
+          name: artifacts
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build source distribution for ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [dask-gateway, dask-gateway-server]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+      - uses: actions/setup-python@v3
+
+      - name: Install build
+        run: pip install build
+
+      - name: Build sdist
+        run: python -m build --sdist ./${{ matrix.package }}
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: dist/*.tar.gz
+
+  upload_pypi:
+    name: Upload to PyPI
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    # upload to PyPI on every tag
+    # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - run: |
+          ls -alh dist
+
+      # - uses: pypa/gh-action-pypi-publish@v1.5.0
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.pypi_password }}
