@@ -3,6 +3,9 @@ line-length = 88
 # target-version should be all supported versions
 target-version = ['py38', 'py39', 'py310']
 
+[tool.isort]
+profile = "black"
+
 [tool.pytest.ini_options]
 # GitHub Actions make it hard for pytest to conclude it should use colors, due
 # to this we explicitly make it do so. This is related to:
