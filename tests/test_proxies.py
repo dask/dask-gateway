@@ -35,6 +35,11 @@ class temp_proxy:
         self.site = web.TCPSite(self.runner, "127.0.0.1", self._port)
         await self.site.start()
         await self.proxy._proxy_contacted
+        # Awaiting _proxy_contacted isn't failsafe and can lead to "ValueError,
+        # 404 NOT FOUND" if not complemented with a sufficiently long sleep
+        # following it. See https://github.com/dask/dask-gateway/pull/529 for a
+        # discussion on this.
+        await asyncio.sleep(0.25)
         return self.proxy
 
     async def __aexit__(self, *args):
