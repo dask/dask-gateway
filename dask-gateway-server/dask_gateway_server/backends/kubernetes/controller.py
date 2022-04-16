@@ -9,7 +9,7 @@ import uuid
 from base64 import b64encode
 
 from aiohttp import web
-from traitlets import Unicode, Integer, Float, List, validate
+from traitlets import Unicode, Integer, Float, List, Dict, validate
 from traitlets.config import catch_config_error
 
 from kubernetes_asyncio import client, config
@@ -285,6 +285,17 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         config=True,
     )
 
+    proxy_web_tls_domains = Dict(
+        help="""The traefik TLS domains to use when creating IngressRoute.
+
+        This is only required when the web entrypoint is `websecure` i.e.
+        the dashboard is hosted via https.
+
+        Example:
+        { 'main': 'my.secure.domain.com' }
+        """,
+        config=True,
+    )
     _log_formatter_cls = LogFormatter
 
     # Fail if the config file errors
@@ -1240,7 +1251,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     def make_ingressroute(self, cluster_name, namespace):
         route = f"{self.proxy_prefix}/clusters/{namespace}.{cluster_name}/"
-        return {
+        route_resource = {
             "apiVersion": "traefik.containo.us/v1alpha1",
             "kind": "IngressRoute",
             "metadata": {
@@ -1266,6 +1277,13 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 ],
             },
         }
+
+        if self.proxy_web_tls_domains:
+            route_resource["spec"]["tls"] = {
+                "options": {"domains": self.proxy_web_tls_domains}
+            }
+
+        return route_resource
 
     def make_ingressroutetcp(self, cluster_name, namespace):
         return {
