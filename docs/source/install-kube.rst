@@ -216,9 +216,9 @@ There are no other requirements for images, any image that meets the above
 should work fine. You may install any additional libraries or dependencies you
 require.
 
-To develop your own image, you may either base it on a compatible version of
-``daskgateway/dask-gateway``, or use our `example dockerfile`_ as a reference
-and develop your own.
+We encourage you to maintain your own image for scheduler and worker pods as
+this project only provides a `minimal image`_ for testing purposes which can be
+used as inspiration, but isn't recommended to be used as a base image.
 
 Using ``extraPodConfig``/``extraContainerConfig``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -415,4 +415,4 @@ here for reference:
 .. _preemptible nodes: https://cloud.google.com/blog/products/containers-kubernetes/cutting-costs-with-google-kubernetes-engine-using-the-cluster-autoscaler-and-preemptible-vms
 .. _init process: https://en.wikipedia.org/wiki/Init
 .. _tini: https://github.com/krallin/tini
-.. _example dockerfile: https://github.com/dask/dask-gateway/blob/main/resources/helm/example-images/Dockerfile
+.. _minimal image: https://github.com/dask/dask-gateway/blob/main/dask-gateway/Dockerfile
