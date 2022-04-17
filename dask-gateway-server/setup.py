@@ -103,7 +103,6 @@ install_requires = [
     "aiohttp",
     "colorlog",
     "cryptography",
-    "tornado",
     "traitlets",
 ]
 

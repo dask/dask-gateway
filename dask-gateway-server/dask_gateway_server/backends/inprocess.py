@@ -1,7 +1,7 @@
 from dask_gateway.scheduler_preload import make_gateway_client, GatewaySchedulerService
 from distributed import Security, Scheduler, Worker
 from distributed.core import Status
-from tornado import gen
+from distributed.utils import TimeoutError
 
 from .local import UnsafeLocalBackend
 
@@ -100,7 +100,7 @@ class InProcessBackend(UnsafeLocalBackend):
             return
         try:
             await worker.close(timeout=1)
-        except gen.TimeoutError:
+        except TimeoutError:
             pass
 
     async def do_check_workers(self, workers):

@@ -15,9 +15,9 @@ dependencies:
   - aiohttp # dask-gateway, dask-gateway-server
   - click<8.1.0 # dask-gateway
   - dask # dask-gateway
-  - distributed # dask-gateway
+  - distributed>=2021.01.1 # dask-gateway
   - pyyaml # dask-gateway
-  - tornado # dask-gateway, dask-gateway-server
+  - tornado # dask-gateway
   - colorlog # dask-gateway-server
   - cryptography # dask-gateway-server
   - traitlets # dask-gateway-server
