@@ -20,33 +20,110 @@ on:
   workflow_dispatch:
 
 jobs:
-  # FIXME: this is boilerplate but hasn't been tested to work
-  build-publish-python-package:
-    name: "Build and publish Python package: ${{ matrix.package }}"
+  build:
+    name: "Build ${{ matrix.package }} (${{ matrix.platform_tag }})"
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        package:
-          - dask-gateway
-          - dask-gateway-server
+        # GOOS and GOARCH options available:
+        # https://go.dev/doc/install/source#environment
+        #
+        includes:
+          - package: dask-gateway
+            upload_sdist: true
+            platform_tag: any
+            env: {}
+
+          - package: dask-gateway-server
+            upload_sdist: true
+            platform_tag: linux_x86_64
+            env:
+              GOOS: linux
+              GOARCH: amd64
+
+          - package: dask-gateway-server
+            upload_sdist: false
+            platform_tag: linux_aarch64
+            env:
+              GOOS: linux
+              GOARCH: arm64
+
+          - package: dask-gateway-server
+            upload_sdist: false
+            platform_tag: darwin_amd64
+            env:
+              GOOS: darwin
+              GOARCH: amd64
+
+          - package: dask-gateway-server
+            upload_sdist: false
+            platform_tag: darwin_arm64
+            env:
+              GOOS: darwin
+              GOARCH: arm64
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
       - uses: actions/setup-python@v3
 
       - name: Install build package
         run: |
-          pip install --upgrade pip
           pip install build
-          pip freeze
+          pip list
 
-      - name: Build release
+      - name: Build sdist and wheel
+        env:
+          GOOS: ${{ matrix.env.GOOS }}
+          GOARCH: ${{ matrix.env.GOARCH }}
         run: |
-          pushd ${{ matrix.package }}
-          python -m build --sdist --wheel .
-          ls -l dist
+          python -m build --sdist --wheel ./${{ matrix.package }}
+
+      - name: Upload sdist artifact
+        if: matrix.upload_sdist
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ matrix.package }}/dist/*.tar.gz
+          if-no-files-found: error
+
+      - name: Set platform tag on wheel
+        if: matrix.package == 'dask-gateway-server'
+        env:
+          GOOS: ${{ matrix.env.GOOS }}
+          GOARCH: ${{ matrix.env.GOARCH }}
+        shell: python
+        run: |
+          import glob
+          import shutil
+
+          any_wheel = glob.glob("dist/*.whl")[0]
+          plat_wheel = any_wheel.replace("any.whl", "${{ matrix.platform_tag }}.whl")
+
+          shutil.move(any_wheel, plat_wheel)
+
+      - name: Upload wheel artifact
+        if: matrix.package == 'dask-gateway-server'
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ matrix.package }}/dist/*.whl
+          if-no-files-found: error
+
+  upload:
+    name: Upload to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download built artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: dist
+
+      - name: Inspect built artifacts
+        run: |
+          ls -alh dist
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.5.0
@@ -54,4 +131,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}
-          packages_dir: ${{ matrix.package }}/dist/
+          packages_dir: dist/

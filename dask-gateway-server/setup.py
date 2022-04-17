@@ -2,6 +2,10 @@ import errno
 import os
 import subprocess
 import sys
+import sysconfig
+
+# distutils is deprecated but we need to keep using these imports, see
+# https://github.com/pypa/setuptools/issues/2928
 from distutils.command.build import build as _build
 from distutils.command.clean import clean as _clean
 
@@ -14,35 +18,48 @@ PROXY_SRC_DIR = os.path.join(ROOT_DIR, "dask-gateway-proxy")
 PROXY_TGT_DIR = os.path.join(ROOT_DIR, "dask_gateway_server", "proxy")
 PROXY_TGT_EXE = os.path.join(PROXY_TGT_DIR, "dask-gateway-proxy")
 
+# determine version from _version.py
 ns = {}
 with open(os.path.join(ROOT_DIR, "dask_gateway_server", "_version.py")) as f:
     exec(f.read(), {}, ns)
     VERSION = ns["__version__"]
 
-NO_PROXY = "--no-build-proxy" in sys.argv
-if NO_PROXY:
-    package_data = {}
+# package_data may be reset to {} by the passing of the --no-build-proxy option
+package_data = {"dask_gateway_server": ["proxy/dask-gateway-proxy"]}
+
+platforms = []
+if os.environ.get("GOOS") and os.environ.get("GOARCH"):
+    platform_tag = f"{os.environ['GOOS']}_{os.environ['GOARCH']}"
 else:
-    package_data = {"dask_gateway_server": ["proxy/dask-gateway-proxy"]}
+    platform_tag = sysconfig.get_platform()
+platforms.append(platform_tag)
 
 
 class build_proxy(Command):
-    description = "build go artifacts"
+    """
+    A command the compile the golang code in ./dask-gateway-proxy and copy the
+    executable binary to dask_gateway_server/proxy/dask-gateway-proxy to be
+    picked up via package_data.
 
+    setuptools.Command derived classes are required to implement
+    initialize_options, finalize_options, and run.
+    """
+
+    description = "build go artifact"
     user_options = []
 
     def initialize_options(self):
         pass
 
-    finalize_options = initialize_options
+    def finalize_options(self):
+        pass
 
     def run(self):
-        # Compile the go code and copy the executable to dask_gateway_server/proxy/
-        # This will be picked up as package_data later
         self.mkpath(PROXY_TGT_DIR)
         try:
             code = subprocess.call(
-                ["go", "build", "-o", PROXY_TGT_EXE], cwd=PROXY_SRC_DIR
+                ["go", "build", "-o", PROXY_TGT_EXE],
+                cwd=PROXY_SRC_DIR,
             )
         except OSError as exc:
             if exc.errno == errno.ENOENT:
@@ -50,7 +67,7 @@ class build_proxy(Command):
                     "Building dask-gateway-server requires a go compiler, "
                     "which wasn't found in your environment. Please install "
                     "go using a package manager (e.g. apt, brew, conda, etc...), "
-                    "or download from https://golang.org/dl/."
+                    "or download from https://go.dev/dl/."
                 )
                 sys.exit(1)
             raise
@@ -58,43 +75,67 @@ class build_proxy(Command):
             sys.exit(code)
 
 
-class mixin:
+class build_proxy_mixin:
+    """
+    _no_build_proxy_sticky retains memory if this flag has been passed. This is
+    needed as running "python setup.py install" leads to both install and build
+    commands are executed but only the install command is passed the flag.
+    """
+
+    _no_build_proxy_option = (
+        "no-build-proxy",
+        None,
+        "Don't build the dask-gateway-proxy executable from its Golang source code",
+    )
+    _no_build_proxy_sticky = False
+
     def initialize_options(self):
         self.no_build_proxy = False
         super().initialize_options()
 
     def run(self):
-        global NO_PROXY
         if self.no_build_proxy:
-            NO_PROXY = True
-        if not getattr(self, "uninstall", False):
-            if not NO_PROXY and not os.path.exists(PROXY_TGT_EXE):
+            __class__._no_build_proxy_sticky = True
+        if not __class__._no_build_proxy_sticky:
+            if not getattr(self, "uninstall", False) and not os.path.exists(
+                PROXY_TGT_EXE
+            ):
                 self.run_command("build_proxy")
+        else:
+            package_data.pop("dask_gateway_server", None)
         super().run()
 
 
-class build(mixin, _build):
+class build(build_proxy_mixin, _build):
     user_options = list(_build.user_options)
-    user_options.append(("no-build-proxy", None, "Don't build the proxy source"))
+    user_options.append(build_proxy_mixin._no_build_proxy_option)
 
 
-class install(mixin, _install):
+class install(build_proxy_mixin, _install):
     user_options = list(_install.user_options)
-    user_options.append(("no-build-proxy", None, "Don't build the proxy source"))
+    user_options.append(build_proxy_mixin._no_build_proxy_option)
 
 
-class develop(mixin, _develop):
+class develop(build_proxy_mixin, _develop):
     user_options = list(_develop.user_options)
-    user_options.append(("no-build-proxy", None, "Don't build the proxy source"))
+    user_options.append(build_proxy_mixin._no_build_proxy_option)
 
 
 class clean(_clean):
     def run(self):
         if self.all:
-            for f in [PROXY_TGT_EXE]:
-                if os.path.exists(f):
-                    os.unlink(f)
+            if os.path.exists(PROXY_TGT_EXE):
+                os.remove(PROXY_TGT_EXE)
         _clean.run(self)
+
+
+cmdclass = {
+    "build_proxy": build_proxy,  # directly build the proxy source
+    "build": build,  # bdist_wheel or pip install .
+    "install": install,  # python setup.py install
+    "develop": develop,  # python setup.py develop
+    "clean": clean,
+}
 
 
 # NOTE: changes to the dependencies here must also be reflected
@@ -121,22 +162,15 @@ extras_require = {
     ],
 }
 
-# Due to quirks in setuptools/distutils dependency ordering, to get the go
-# source to build automatically in most cases, we need to check in multiple
-# locations. This is unfortunate, but seems necessary.
-cmdclass = {
-    "build_proxy": build_proxy,  # directly build the proxy source
-    "build": build,  # bdist_wheel or pip install .
-    "install": install,  # python setup.py install
-    "develop": develop,  # python setup.py develop
-    "clean": clean,
-}
 
-
+# setup's keyword reference:
+# https://setuptools.pypa.io/en/latest/references/keywords.html
+#
 setup(
     name="dask-gateway-server",
     version=VERSION,
     cmdclass=cmdclass,
+    platforms=platforms,
     maintainer="Jim Crist-Harif",
     maintainer_email="jcristharif@gmail.com",
     license="BSD",
@@ -159,9 +193,7 @@ setup(
         "A multi-tenant server for securely deploying and managing "
         "multiple Dask clusters."
     ),
-    long_description=(
-        open("README.rst").read() if os.path.exists("README.rst") else ""
-    ),
+    long_description=open("README.rst").read(),
     url="https://gateway.dask.org/",
     project_urls={
         "Documentation": "https://gateway.dask.org/",
