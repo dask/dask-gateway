@@ -61,6 +61,11 @@ class temp_gateway:
         self.gateway.initialize([])
         await self.gateway.setup()
         await self.gateway.backend.proxy._proxy_contacted
+        # Awaiting _proxy_contacted isn't failsafe and can lead to "ValueError,
+        # 404 NOT FOUND" if not complemented with a sufficiently long sleep
+        # following it. See https://github.com/dask/dask-gateway/pull/529 for a
+        # discussion on this.
+        await asyncio.sleep(0.25)
         self.address = f"http://{self.gateway.backend.proxy.address}"
         self.proxy_address = f"gateway://{self.gateway.backend.proxy.tcp_address}"
         return self
