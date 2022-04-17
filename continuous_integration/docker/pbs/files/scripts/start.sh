@@ -32,4 +32,9 @@ echo "PBS_COMM_THREADS=2" >> $PBS_CONF_FILE
 /opt/pbs/bin/qmgr -c "set node pbs queue=workq"
 /opt/pbs/bin/qmgr -c "set server operators += dask@pbs"
 
+# "Entering sleep" can be used as a signal in logs that we have passed the
+# initialization phase where the memory needs may peak and expose us to the
+# OOMKiller and 137 exit codes.
+#
+echo "Entering sleep"
 sleep infinity
