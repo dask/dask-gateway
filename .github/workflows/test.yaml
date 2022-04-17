@@ -57,8 +57,6 @@ jobs:
           #   we test integration with. We can test against only one version and
           #   that would be fine.
           #
-          - python-version: "3.7"
-            go-version: "1.15"
           - python-version: "3.8"
             go-version: "1.16"
           - python-version: "3.9"

@@ -44,7 +44,6 @@ setup(
         "Topic :: Scientific/Engineering",
         "Topic :: System :: Distributed Computing",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
@@ -64,6 +63,6 @@ setup(
     package_data={"dask_gateway": ["*.yaml"]},
     install_requires=install_requires,
     extras_require=extras_require,
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     zip_safe=False,
 )

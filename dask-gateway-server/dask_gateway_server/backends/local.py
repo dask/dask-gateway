@@ -54,7 +54,7 @@ async def wait_is_shutdown(pid, timeout=10):
     return False
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def getpwnam(username):
     return pwd.getpwnam(username)
 
