@@ -3,10 +3,9 @@ import subprocess
 import uuid
 
 import pytest
-from traitlets.config import Config
-
 from dask_gateway.auth import BasicAuth, JupyterHubAuth
 from dask_gateway_server.utils import random_port
+from traitlets.config import Config
 
 from .utils_test import temp_gateway
 
@@ -93,7 +92,8 @@ class temp_hub:
 
         # alembic turns off all logs, reenable them for the tests
         import logging
-        from tornado.log import app_log, access_log, gen_log
+
+        from tornado.log import access_log, app_log, gen_log
 
         logs = [app_log, access_log, gen_log, logging.getLogger("DaskGateway")]
         for log in logs:

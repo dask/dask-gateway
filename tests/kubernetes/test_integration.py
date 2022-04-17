@@ -1,9 +1,8 @@
 import os
 
+import dask_gateway
 import pytest
 from async_timeout import timeout
-
-import dask_gateway
 
 from ..utils_test import wait_for_workers, with_retries
 

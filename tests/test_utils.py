@@ -3,19 +3,18 @@ import socket
 import time
 
 import pytest
-
 from dask_gateway_server.utils import (
-    format_bytes,
-    classname,
-    normalize_address,
-    awaitable,
-    cancel_task,
-    TaskPool,
-    LRUCache,
+    CancelGroup,
     Flag,
     FrozenAttrDict,
-    CancelGroup,
+    LRUCache,
     RateLimiter,
+    TaskPool,
+    awaitable,
+    cancel_task,
+    classname,
+    format_bytes,
+    normalize_address,
 )
 
 

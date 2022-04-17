@@ -15,7 +15,6 @@ not yet extracted to be a standalone package, but may be in the future.
 
 import json
 import os
-
 from collections.abc import MutableMapping
 
 import yaml

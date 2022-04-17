@@ -9,12 +9,11 @@ import signal
 import sys
 import tempfile
 
-from traitlets import List, Unicode, Integer
+from traitlets import Integer, List, Unicode
 
+from ..traitlets import Type
 from .base import ClusterConfig
 from .db_base import DBBackendBase
-from ..traitlets import Type
-
 
 __all__ = ("LocalClusterConfig", "LocalBackend", "UnsafeLocalBackend")
 

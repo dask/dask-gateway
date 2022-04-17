@@ -14,13 +14,12 @@ except ImportError:
     )
 
 
-from traitlets import Unicode, Dict, Integer
+from traitlets import Dict, Integer, Unicode
 
-from .base import ClusterConfig
-from .db_base import DBBackendBase
 from ..traitlets import Type
 from ..utils import LRUCache
-
+from .base import ClusterConfig
+from .db_base import DBBackendBase
 
 __all__ = ("YarnClusterConfig", "YarnBackend")
 

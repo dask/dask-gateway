@@ -9,34 +9,33 @@ import uuid
 from base64 import b64encode
 
 from aiohttp import web
-from traitlets import Unicode, Integer, Float, List, validate
-from traitlets.config import catch_config_error
-
 from kubernetes_asyncio import client, config
 from kubernetes_asyncio.client.rest import ApiException
+from traitlets import Float, Integer, List, Unicode, validate
+from traitlets.config import catch_config_error
 
 from ... import __version__ as VERSION
+from ...tls import new_keypair
+from ...traitlets import Application
 from ...utils import (
     AccessLogger,
-    LogFormatter,
-    normalize_address,
-    run_main,
     FrozenAttrDict,
+    LogFormatter,
     RateLimiter,
     TaskPool,
+    normalize_address,
+    run_main,
     timestamp,
 )
-from ...traitlets import Application
-from ...tls import new_keypair
-from ...workqueue import WorkQueue, Backoff, WorkQueueClosed
+from ...workqueue import Backoff, WorkQueue, WorkQueueClosed
+from .backend import KubeBackendAndControllerMixin
 from .utils import (
     Informer,
-    merge_json_objects,
-    k8s_timestamp,
-    parse_k8s_timestamp,
     RateLimitedClient,
+    k8s_timestamp,
+    merge_json_objects,
+    parse_k8s_timestamp,
 )
-from .backend import KubeBackendAndControllerMixin
 
 
 def get_container_status(pod, name):

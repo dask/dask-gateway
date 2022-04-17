@@ -1,6 +1,6 @@
 import os
-import pytest
 
+import pytest
 from traitlets.config import Config
 
 skein = pytest.importorskip("skein")
@@ -12,7 +12,6 @@ from dask_gateway.auth import BasicAuth
 from dask_gateway_server.backends.yarn import YarnBackend
 
 from .utils_test import temp_gateway, wait_for_workers, with_retries
-
 
 pytestmark = pytest.mark.usefixtures("cleanup_applications")
 

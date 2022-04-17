@@ -1,9 +1,9 @@
 import os
 import subprocess
 import tempfile
-import yaml
 
 import pytest
+import yaml
 
 pytestmark = pytest.mark.kubernetes
 

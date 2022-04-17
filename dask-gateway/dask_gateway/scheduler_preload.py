@@ -1,5 +1,3 @@
-import click
-
 import asyncio
 import collections
 import json
@@ -8,14 +6,13 @@ import os
 import sys
 from urllib.parse import urlparse
 
+import click
+from distributed.diagnostics.plugin import SchedulerPlugin
+from distributed.scheduler import logger as scheduler_logger
 from tornado import web
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
 
-from distributed.diagnostics.plugin import SchedulerPlugin
-from distributed.scheduler import logger as scheduler_logger
-
 from .utils import cancel_task
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

@@ -9,7 +9,6 @@ from traitlets import Unicode, default
 from ..base import ClusterConfig
 from ..db_base import DBBackendBase
 
-
 __all__ = ("JobQueueClusterConfig", "JobQueueBackend")
 
 

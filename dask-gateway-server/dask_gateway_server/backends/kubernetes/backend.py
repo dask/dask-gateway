@@ -4,10 +4,10 @@ import uuid
 from base64 import b64decode
 from collections import defaultdict
 
-from traitlets import Float, Dict, Unicode, default
-from traitlets.config import LoggingConfigurable
 from kubernetes_asyncio import client, config
 from kubernetes_asyncio.client.rest import ApiException
+from traitlets import Dict, Float, Unicode, default
+from traitlets.config import LoggingConfigurable
 
 from ... import __version__ as VERSION
 from ... import models
@@ -16,7 +16,6 @@ from ...utils import Flag
 from ...workqueue import WorkQueue, WorkQueueClosed
 from ..base import Backend, ClusterConfig
 from .utils import Informer, parse_k8s_timestamp
-
 
 __all__ = ("KubeClusterConfig", "KubeBackend", "KubeBackendAndControllerMixin")
 

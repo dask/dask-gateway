@@ -12,7 +12,6 @@ from dask_gateway_server.backends.jobqueue.pbs import PBSBackend, qsub_format_me
 
 from .utils_test import temp_gateway, wait_for_workers, with_retries
 
-
 pytestmark = pytest.mark.usefixtures("cleanup_jobs")
 
 

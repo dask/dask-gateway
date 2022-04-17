@@ -6,7 +6,6 @@ from collections.abc import Sequence
 
 from .utils import FrozenAttrDict
 
-
 __all__ = ("Options", "String", "Bool", "Integer", "Float", "Select", "Mapping")
 
 

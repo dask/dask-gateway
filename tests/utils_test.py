@@ -5,13 +5,12 @@ import signal
 import time
 
 from aiohttp import web
-from traitlets.config import Config
-
+from dask_gateway import Gateway
 from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.backends.inprocess import InProcessBackend
 from dask_gateway_server.backends.local import UnsafeLocalBackend
 from dask_gateway_server.utils import random_port
-from dask_gateway import Gateway
+from traitlets.config import Config
 
 
 class aiohttp_server:
