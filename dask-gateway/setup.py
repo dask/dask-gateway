@@ -38,9 +38,8 @@ setup(
     ],
     keywords="dask hadoop kubernetes HPC distributed cluster",
     description="A client library for interacting with a dask-gateway server",
-    long_description=(
-        open("README.rst").read() if os.path.exists("README.rst") else ""
-    ),
+    long_description=open("README.rst").read(),
+    long_description_content_type="text/x-rst",
     url="https://gateway.dask.org/",
     project_urls={
         "Documentation": "https://gateway.dask.org/",

@@ -153,9 +153,8 @@ setup(
         "A multi-tenant server for securely deploying and managing "
         "multiple Dask clusters."
     ),
-    long_description=(
-        open("README.rst").read() if os.path.exists("README.rst") else ""
-    ),
+    long_description=open("README.rst").read(),
+    long_description_content_type="text/x-rst",
     url="https://gateway.dask.org/",
     project_urls={
         "Documentation": "https://gateway.dask.org/",
