@@ -1,7 +1,12 @@
-recursive-include dask_gateway_server *.py
-graft dask-gateway-proxy
-exclude dask-gateway-proxy/dask-gateway-proxy
-
-include setup.py
-include README.rst
+# MANIFEST.in declares final tweaks on what to include in a packaged source
+# distribution (.tar.gz).
+#
+# MANIFEST.in reference documentation:
+# https://packaging.python.org/en/latest/guides/using-manifest-in/
+#
 include LICENSE
+
+# Include the Golang source code directory, but exclude any compiled binary
+# built to a destination defined by PROXY_TGT_EXE in setup.py.
+graft dask-gateway-proxy
+exclude dask_gateway_server/proxy/dask-gateway-proxy
