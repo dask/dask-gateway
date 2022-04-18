@@ -13,8 +13,7 @@
 #
 FROM python:3.10-slim-bullseye
 
-# Install tini and upgrade linux packages are updated to patch known
-# vulnerabilities.
+# Install tini and update linux packages to patch known vulnerabilities.
 RUN apt-get update \
  && apt-get upgrade -y \
  && apt-get install -y \
