@@ -141,8 +141,8 @@ jobs:
 
       - name: Inspect built source distributions and wheels
         run: |
-          ls -alh dist
-          sha256sum dist/* | tee SHA256SUMS
+          ls -alh ${{ matrix.package }}/dist
+          sha256sum ${{ matrix.package }}/dist/* | tee SHA256SUMS
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.5.0
