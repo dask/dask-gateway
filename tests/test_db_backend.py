@@ -5,27 +5,26 @@ import signal
 import time
 from collections import defaultdict
 
+import dask
 import pytest
 from cryptography.fernet import Fernet
-from traitlets import Integer, Float
-from traitlets.config import Config
-
-import dask
 from dask_gateway import GatewayCluster, GatewayClusterError, GatewayWarning
+from dask_gateway_server import options
 from dask_gateway_server.app import DaskGateway
 from dask_gateway_server.backends import db_base
 from dask_gateway_server.backends.base import ClusterConfig
 from dask_gateway_server.backends.db_base import (
-    DBBackendBase,
-    timestamp,
-    JobStatus,
     DataManager,
+    DBBackendBase,
+    JobStatus,
+    timestamp,
 )
 from dask_gateway_server.backends.inprocess import InProcessBackend
 from dask_gateway_server.utils import random_port
-from dask_gateway_server import options
+from traitlets import Float, Integer
+from traitlets.config import Config
 
-from .utils_test import temp_gateway, LocalTestingBackend, wait_for_workers
+from .utils_test import LocalTestingBackend, temp_gateway, wait_for_workers
 
 
 @pytest.fixture(autouse=True)

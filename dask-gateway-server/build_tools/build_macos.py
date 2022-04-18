@@ -5,7 +5,6 @@ import subprocess
 import sys
 import tempfile
 
-
 PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST_DIR = os.path.join(PACKAGE_DIR, "dist")
 

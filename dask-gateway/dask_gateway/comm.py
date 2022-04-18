@@ -2,19 +2,18 @@ import ssl
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
 
-from tornado.tcpclient import TCPClient
-from tornado.iostream import StreamClosedError
-from tornado import netutil
-
 from distributed.comm.core import Connector
 from distributed.comm.registry import Backend, backends
 from distributed.comm.tcp import (
-    TLS,
     MAX_BUFFER_SIZE,
-    get_stream_address,
+    TLS,
     convert_stream_closed_error,
+    get_stream_address,
 )
 from distributed.utils import ensure_ip, get_ip
+from tornado import netutil
+from tornado.iostream import StreamClosedError
+from tornado.tcpclient import TCPClient
 
 
 def parse_gateway_address(address):

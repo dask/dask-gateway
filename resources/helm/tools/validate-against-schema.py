@@ -7,8 +7,9 @@ This script originated from the jupyterhub/zero-to-jupyterhub-k8s project. It is
 not yet extracted to be a standalone package, but may be in the future.
 """
 
-import jsonschema
 import os
+
+import jsonschema
 import yaml
 
 here_dir = os.path.abspath(os.path.dirname(__file__))

@@ -4,9 +4,8 @@ import shutil
 
 from traitlets import Unicode, default
 
-from .base import JobQueueBackend, JobQueueClusterConfig
 from ...traitlets import Type
-
+from .base import JobQueueBackend, JobQueueClusterConfig
 
 __all__ = ("SlurmBackend", "SlurmClusterConfig")
 

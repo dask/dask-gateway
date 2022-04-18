@@ -25,7 +25,7 @@ from distributed.utils import LoopRunner
 from . import comm
 from .auth import get_auth
 from .options import Options
-from .utils import format_template, cancel_task
+from .utils import cancel_task, format_template
 
 del comm
 
@@ -1166,7 +1166,7 @@ class GatewayCluster:
             return None
 
         try:
-            from ipywidgets import Layout, VBox, HBox, IntText, Button, HTML, Accordion
+            from ipywidgets import HTML, Accordion, Button, HBox, IntText, Layout, VBox
         except ImportError:
             self._cached_widget = None
             return None

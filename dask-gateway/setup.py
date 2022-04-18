@@ -1,5 +1,6 @@
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 ns = {}
 here = os.path.abspath(os.path.dirname(__file__))

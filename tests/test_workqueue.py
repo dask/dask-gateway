@@ -1,9 +1,8 @@
 import asyncio
 
 import pytest
-
-from dask_gateway_server.workqueue import WorkQueue, Backoff, WorkQueueClosed
 from dask_gateway_server.utils import cancel_task
+from dask_gateway_server.workqueue import Backoff, WorkQueue, WorkQueueClosed
 
 
 def test_backoff():

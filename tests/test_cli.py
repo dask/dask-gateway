@@ -1,8 +1,8 @@
 import os
-import pytest
 
+import pytest
 from dask_gateway_server.app import DaskGateway
-from dask_gateway_server.proxy.core import ProxyApp, _PROXY_EXE
+from dask_gateway_server.proxy.core import _PROXY_EXE, ProxyApp
 
 
 def test_generate_config(tmpdir, capfd):

@@ -8,16 +8,15 @@ from itertools import chain, islice
 
 import sqlalchemy as sa
 from async_timeout import timeout
-from traitlets import Unicode, Bool, List, Integer, Float, validate, default
-from cryptography.fernet import MultiFernet, Fernet
+from cryptography.fernet import Fernet, MultiFernet
+from traitlets import Bool, Float, Integer, List, Unicode, default, validate
 
-from .base import Backend
 from .. import models
 from ..proxy import Proxy
 from ..tls import new_keypair
-from ..workqueue import WorkQueue, Backoff, WorkQueueClosed
-from ..utils import FrozenAttrDict, TaskPool, Flag, normalize_address, timestamp
-
+from ..utils import Flag, FrozenAttrDict, TaskPool, normalize_address, timestamp
+from ..workqueue import Backoff, WorkQueue, WorkQueueClosed
+from .base import Backend
 
 __all__ = ("DBBackendBase", "Cluster", "Worker")
 

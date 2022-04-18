@@ -5,15 +5,15 @@ import signal
 import sys
 
 from aiohttp import web
-from traitlets import Unicode, Bool, List, validate, default
+from traitlets import Bool, List, Unicode, default, validate
 from traitlets.config import catch_config_error
 
 from . import __version__ as VERSION
 from .auth import Authenticator
 from .backends import Backend
 from .routes import default_routes
-from .traitlets import Type, Application
-from .utils import classname, AccessLogger, LogFormatter, normalize_address, run_main
+from .traitlets import Application, Type
+from .utils import AccessLogger, LogFormatter, classname, normalize_address, run_main
 
 
 class GenerateConfig(Application):

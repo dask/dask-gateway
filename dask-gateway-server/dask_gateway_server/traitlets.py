@@ -1,6 +1,7 @@
-from traitlets import TraitError, TraitType, Integer, List, Unicode, Type as _Type
+from traitlets import Integer, List, TraitError, TraitType
+from traitlets import Type as _Type
+from traitlets import Unicode
 from traitlets.config import Application
-
 
 # Override default values for logging
 Application.log_level.default_value = "INFO"

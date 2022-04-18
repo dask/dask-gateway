@@ -2,10 +2,10 @@ import asyncio
 import time
 
 import aiohttp
-import yarl
-import pytest
 import dask
-from dask_gateway.auth import get_auth, BasicAuth, KerberosAuth, JupyterHubAuth
+import pytest
+import yarl
+from dask_gateway.auth import BasicAuth, JupyterHubAuth, KerberosAuth, get_auth
 from dask_gateway.client import Gateway, GatewayCluster, cleanup_lingering_clusters
 
 from .utils_test import temp_gateway
@@ -221,8 +221,8 @@ def test_http_client_proxy_explicit(monkeypatch):
 
 
 async def test_get_versions():
-    from dask_gateway_server import __version__ as server_version
     from dask_gateway import __version__ as client_version
+    from dask_gateway_server import __version__ as server_version
 
     async with temp_gateway() as g:
         async with g.gateway_client() as gateway:

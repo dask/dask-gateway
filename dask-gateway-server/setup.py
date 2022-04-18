@@ -5,7 +5,7 @@ import sys
 from distutils.command.build import build as _build
 from distutils.command.clean import clean as _clean
 
-from setuptools import setup, find_packages, Command
+from setuptools import Command, find_packages, setup
 from setuptools.command.develop import develop as _develop
 from setuptools.command.install import install as _install
 

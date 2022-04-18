@@ -1,10 +1,9 @@
-import pytest
-import yaml
-
 import dask_gateway.options as client_options
 import dask_gateway_server.options as server_options
-from dask_gateway_server.options import FrozenAttrDict
+import pytest
+import yaml
 from dask_gateway_server.models import User
+from dask_gateway_server.options import FrozenAttrDict
 
 
 def test_string():

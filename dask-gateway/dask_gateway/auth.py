@@ -7,7 +7,6 @@ import dask
 
 from .utils import format_template
 
-
 __all__ = ("GatewayAuth", "BasicAuth", "KerberosAuth", "JupyterHubAuth", "get_auth")
 
 

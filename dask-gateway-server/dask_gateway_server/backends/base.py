@@ -2,23 +2,22 @@ import asyncio
 
 import aiohttp
 from traitlets import (
+    Dict,
+    Float,
     Instance,
     Integer,
-    Float,
-    Dict,
-    Union,
     Unicode,
+    Union,
     default,
-    validate,
     observe,
+    validate,
 )
-from traitlets.config import LoggingConfigurable, Configurable
+from traitlets.config import Configurable, LoggingConfigurable
 
 from .. import models
 from ..options import Options
-from ..traitlets import MemoryLimit, Type, Callable, Command
+from ..traitlets import Callable, Command, MemoryLimit, Type
 from ..utils import awaitable, format_bytes
-
 
 __all__ = ("Backend", "ClusterConfig")
 

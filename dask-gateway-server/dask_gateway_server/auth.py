@@ -1,12 +1,12 @@
-import os
 import base64
+import os
 import time
 import uuid
 from urllib.parse import quote
 
 import aiohttp
 from aiohttp import web
-from traitlets import Unicode, Integer, default, Instance
+from traitlets import Instance, Integer, Unicode, default
 from traitlets.config import LoggingConfigurable
 
 from .models import User

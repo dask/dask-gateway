@@ -1,7 +1,6 @@
 import pytest
-from traitlets import HasTraits, TraitError
-
 from dask_gateway_server.traitlets import Command, Type
+from traitlets import HasTraits, TraitError
 
 
 def test_Type_traitlet():

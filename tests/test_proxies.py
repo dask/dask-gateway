@@ -2,15 +2,14 @@ import asyncio
 import ssl
 
 import pytest
-from aiohttp import web, ClientSession
-from distributed import Client
-from distributed.security import Security
-from distributed.deploy.local import LocalCluster
-
+from aiohttp import ClientSession, web
 from dask_gateway.client import GatewaySecurity
 from dask_gateway_server.proxy import Proxy
 from dask_gateway_server.tls import new_keypair
 from dask_gateway_server.utils import random_port
+from distributed import Client
+from distributed.deploy.local import LocalCluster
+from distributed.security import Security
 
 from .utils_test import aiohttp_server, with_retries
 

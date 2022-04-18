@@ -5,21 +5,20 @@ import subprocess
 import uuid
 
 from aiohttp import web
-from traitlets.config import LoggingConfigurable, Application, catch_config_error
 from traitlets import (
-    default,
-    Unicode,
-    CaselessStrEnum,
     Bool,
-    Integer,
+    CaselessStrEnum,
     Float,
+    Integer,
     List,
+    Unicode,
+    default,
     validate,
 )
+from traitlets.config import Application, LoggingConfigurable, catch_config_error
 
 from .. import __version__ as VERSION
-from ..utils import TaskPool, Flag, normalize_address, CancelGroup
-
+from ..utils import CancelGroup, Flag, TaskPool, normalize_address
 
 __all__ = ("Proxy", "ProxyApp")
 

@@ -1,7 +1,6 @@
 import asyncio
 import collections
 
-
 __all__ = ("Backoff", "WorkQueue", "WorkQueueClosed")
 
 

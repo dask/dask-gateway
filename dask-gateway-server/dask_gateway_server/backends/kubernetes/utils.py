@@ -3,14 +3,12 @@ import functools
 import json
 from datetime import datetime, timezone
 
-from traitlets import Dict, Unicode, Any, Int
-from traitlets.config import LoggingConfigurable
-
 from kubernetes_asyncio import client
+from traitlets import Any, Dict, Int, Unicode
+from traitlets.config import LoggingConfigurable
 
 from ...traitlets import Callable
 from ...utils import cancel_task
-
 
 # Monkeypatch kubernetes_asyncio to cleanup resources better
 client.rest.RESTClientObject.__del__ = lambda self: None

@@ -5,7 +5,6 @@ from keyword import iskeyword
 
 import yaml
 
-
 __all__ = ("Options",)
 
 
