@@ -22,4 +22,4 @@ sphinx-autobuild
 #
 autodoc-traits
 --editable="../dask-gateway"
---editable="../dask-gateway-server[all_backends]" --install-option="--no-build-proxy"
+--editable="../dask-gateway-server[all_backends]"

@@ -147,7 +147,7 @@ jobs:
       - name: Install Python test requirements
         run: |
           cd tests
-          pip install -r requirements.txt
+          DASK_GATEWAY_SERVER__NO_PROXY=true pip install -r requirements.txt
 
       - name: List Python packages
         run: |

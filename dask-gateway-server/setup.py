@@ -34,16 +34,6 @@ with open(os.path.join(ROOT_DIR, "dask_gateway_server", "_version.py")) as f:
     VERSION = ns["__version__"]
 
 
-# FIXME: Does it make sense to put the binary next to the source code
-#        (proxy/dask-gateway-proxy)? If we build a wheel now we get a folder in
-#        the wheel called purelib that includes this and it seems contradictory.
-#
-#        An action point to resolve this would be to investigate how other
-#        projects have bundled compiled binaries.
-#
-package_data = {"dask_gateway_server": ["proxy/dask-gateway-proxy"]}
-
-
 class build_proxy(Command):
     """
     A command the compile the golang code in ./dask-gateway-proxy and copy the
@@ -86,30 +76,13 @@ class build_proxy(Command):
 
 class build_proxy_mixin:
     """
-    _no_build_proxy_sticky retains memory if this flag has been passed. This is
-    needed as running "python setup.py install" leads to both install and build
-    commands are executed but only the install command is passed the flag.
+    This mixin class helps us ensure that we build the dask-gateway-proxy
+    executable binary independent of if we run the install, build, develop.
     """
-
-    _no_build_proxy_option = (
-        "no-build-proxy",
-        None,
-        "Don't build the dask-gateway-proxy executable from its Golang source code",
-    )
-    _no_build_proxy_sticky = "--no-build-proxy" in sys.argv
-
-    def initialize_options(self):
-        super().initialize_options()
-        self.no_build_proxy = False
-
-    def finalize_options(self):
-        super().finalize_options()
-        if self.no_build_proxy:
-            __class__._no_build_proxy_sticky = True
 
     def run(self):
         if (
-            not __class__._no_build_proxy_sticky
+            not os.environ.get("DASK_GATEWAY_SERVER__NO_PROXY")
             and not getattr(self, "uninstall", False)
             and not os.path.exists(PROXY_TGT_EXE)
         ):
@@ -117,25 +90,29 @@ class build_proxy_mixin:
         super().run()
 
 
-if build_proxy_mixin._no_build_proxy_sticky:
+if os.environ.get("DASK_GATEWAY_SERVER__NO_PROXY"):
     package_data = {}
 else:
+    # FIXME: Does it make sense to put the binary next to the source code
+    #        (proxy/dask-gateway-proxy)? If we build a wheel now we get a folder in
+    #        the wheel called purelib that includes this and it seems contradictory.
+    #
+    #        An action point to resolve this would be to investigate how other
+    #        projects have bundled compiled binaries.
+    #
     package_data = {"dask_gateway_server": ["proxy/dask-gateway-proxy"]}
 
 
 class build(build_proxy_mixin, _build):
-    user_options = list(_build.user_options)
-    user_options.append(build_proxy_mixin._no_build_proxy_option)
+    pass
 
 
 class install(build_proxy_mixin, _install):
-    user_options = list(_install.user_options)
-    user_options.append(build_proxy_mixin._no_build_proxy_option)
+    pass
 
 
 class develop(build_proxy_mixin, _develop):
-    user_options = list(_develop.user_options)
-    user_options.append(build_proxy_mixin._no_build_proxy_option)
+    pass
 
 
 class clean(_clean):
@@ -150,26 +127,35 @@ try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
     class bdist_wheel(build_proxy_mixin, _bdist_wheel):
-        user_options = list(_bdist_wheel.user_options)
-        user_options.append(build_proxy_mixin._no_build_proxy_option)
+        """
+        When we build wheels, they are without this override named
+        "<something>-py3-none-any.whl" which is incorrect as we have a platform
+        dependency.
+
+        By overriding the `root_is_pure` option and the `get_tag` we can declare
+        a dependency to the Golang compiled executable binary.
+
+        This is based on https://stackoverflow.com/a/45150383/2220152.
+        """
 
         def finalize_options(self):
             super().finalize_options()
-            self.root_is_pure = False
+            # Cleanup binaries ahead of time to avoid packaging an existing
+            # binary with the wheel that shouldn't be packaged.
+            if os.path.exists(PROXY_TGT_EXE):
+                os.remove(PROXY_TGT_EXE)
+
+            if os.environ.get("DASK_GATEWAY_SERVER__NO_PROXY"):
+                self.root_is_pure = True
+            else:
+                self.root_is_pure = False
 
         def get_tag(self):
-            """
-            We build a Python package with a platform dependency as indicated by
-            setting root_is_pure to False, but the `get_tag` implementation
-            assumes it relates to "cpython abi components" which is incorrect.
-            The platform dependency is a Golang compiled executable binary
-            specific to the operating system and CPU architecture.
-
-            This adjustment was based on
-            https://stackoverflow.com/a/45150383/2220152.
-            """
             python, abi, plat = super().get_tag()
             python, abi = "py3", "none"
+
+            if os.environ.get("DASK_GATEWAY_SERVER__NO_PROXY"):
+                return python, abi, "any"
 
             # If GOOS or GOARCH are set, we are probably cross compiling. For
             # some limited know configurations, lets support building the wheel

@@ -34,14 +34,9 @@ WORKDIR /home/dask/
 # Traefik as a proxy instead to run in its dedicated pod.
 #
 COPY --chown=dask:dask . /srv/dask-gateway-server
-# The requirements are installed first as passing the --install-option flag
-# makes pip not use wheels when installing dependencies.
-#
-RUN pip install --no-cache-dir \
-        --requirement=/srv/dask-gateway-server/requirements.txt \
-        kubernetes-asyncio \
- && pip install --no-cache-dir --no-deps \
-        /srv/dask-gateway-server --install-option="--no-build-proxy"
+
+RUN DASK_GATEWAY_SERVER__NO_PROXY=true pip install --no-cache-dir \
+        "/srv/dask-gateway-server[kubernetes]"
 
 ENTRYPOINT ["tini", "-g", "--"]
 CMD ["dask-gateway-server", "--config", "/etc/dask-gateway/dask_gateway_config.py"]
