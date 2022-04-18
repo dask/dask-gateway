@@ -102,9 +102,6 @@ jobs:
 
       - name: Set platform tag on wheel
         if: matrix.package == 'dask-gateway-server'
-        env:
-          GOOS: ${{ matrix.env.GOOS }}
-          GOARCH: ${{ matrix.env.GOARCH }}
         shell: python
         run: |
           import glob
