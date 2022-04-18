@@ -42,7 +42,7 @@ spec:
         - name: gateway
           image: {{ .Values.gateway.image.name }}:{{ .Values.gateway.image.tag }}
           imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
-          command:
+          args:
             - dask-gateway-server
             - --config
             - /etc/dask-gateway/dask_gateway_config.py
