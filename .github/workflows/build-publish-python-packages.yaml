@@ -20,14 +20,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  # This project includes the dask-gateway and dask-gateway-server Python
-  # packages, and the latter includes Golang source code to build the
-  # dask-gateway-proxy binary to be shipped in the wheel distribution of
-  # dask-gateway-server.
+  # Builds sdist (.tar.gz) and wheels (.whl) for the Python packages.
   #
-  # dask-gateway's wheel is platform (linux/mac/windows, amd64/arm64)
-  # independent, while the dask-gateway-server's wheel will be platform
-  # dependent (linux/mac, amd64/arm64), based on the Golang compilation.
+  # - dask-gateway's wheel is platform and CPU architecture independent
+  # - dask-gateway-server's wheel is platform dependent (linux/mac) and CPU
+  #   architecture dependent (amd64/arm64) because of the compiled Golang
+  #   binary.
+  #
+  # Golang cross platform (GOOS env) and cross architecture (GOARCH env)
+  # compilation is used to produce different artifacts independent of the job's
+  # platform and CPU architecture.
   #
   build:
     name: "Build ${{ matrix.package }} (${{ matrix.platform_tag }})"
@@ -36,9 +38,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # GOOS and GOARCH are used to cross compile from the ubuntu linux
-        # environment to different platforms and CPU architectures.
-        #
         # GOOS and GOARCH options available:
         # https://go.dev/doc/install/source#environment
         #
@@ -97,6 +96,7 @@ jobs:
         if: matrix.upload_sdist
         uses: actions/upload-artifact@v3
         with:
+          name: ${{ matrix.package }}/dist
           path: ${{ matrix.package }}/dist/*.tar.gz
           if-no-files-found: error
 
@@ -116,19 +116,27 @@ jobs:
         if: matrix.package == 'dask-gateway-server'
         uses: actions/upload-artifact@v3
         with:
+          name: ${{ matrix.package }}/dist
           path: ${{ matrix.package }}/dist/*.whl
           if-no-files-found: error
 
-  upload:
-    name: Upload to PyPI
+  publish:
+    name: "Publish ${{ matrix.package }} to to PyPI"
     needs: build
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - dask-gateway
+          - dask-gateway-server
+
     steps:
       - name: Download built source distributions and wheels
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
-          path: dist
+          name: ${{ matrix.package }}/dist
 
       - name: Inspect built source distributions and wheels
         run: |
@@ -140,5 +148,5 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           user: __token__
-          password: ${{ secrets.pypi_password }}
-          packages_dir: dist/
+          password: "${{ secrets.pypi_password }}"
+          packages_dir: ${{ matrix.package }}/dist/
