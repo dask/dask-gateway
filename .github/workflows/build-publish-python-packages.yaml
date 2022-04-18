@@ -20,6 +20,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  # This project includes the dask-gateway and dask-gateway-server Python
+  # packages, and the latter includes Golang source code to build the
+  # dask-gateway-proxy binary to be shipped in the wheel distribution of
+  # dask-gateway-server.
+  #
+  # dask-gateway's wheel is platform (linux/mac/windows, amd64/arm64)
+  # independent, while the dask-gateway-server's wheel will be platform
+  # dependent (linux/mac, amd64/arm64), based on the Golang compilation.
+  #
   build:
     name: "Build ${{ matrix.package }} (${{ matrix.platform_tag }})"
     runs-on: ubuntu-latest
@@ -27,10 +36,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # GOOS and GOARCH are used to cross compile from the ubuntu linux
+        # environment to different platforms and CPU architectures.
+        #
         # GOOS and GOARCH options available:
         # https://go.dev/doc/install/source#environment
         #
-        includes:
+        include:
           - package: dask-gateway
             upload_sdist: true
             platform_tag: any
@@ -76,8 +88,8 @@ jobs:
 
       - name: Build sdist and wheel
         env:
-          GOOS: ${{ matrix.env.GOOS }}
-          GOARCH: ${{ matrix.env.GOARCH }}
+          GOOS: "${{ matrix.env.GOOS }}"
+          GOARCH: "${{ matrix.env.GOARCH }}"
         run: |
           python -m build --sdist --wheel ./${{ matrix.package }}
 
@@ -116,14 +128,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download built artifacts
+      - name: Download built source distributions and wheels
         uses: actions/download-artifact@v2
         with:
           path: dist
 
-      - name: Inspect built artifacts
+      - name: Inspect built source distributions and wheels
         run: |
           ls -alh dist
+          sha256sum dist/* | tee SHA256SUMS
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.5.0
