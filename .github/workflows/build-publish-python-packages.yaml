@@ -96,7 +96,7 @@ jobs:
         if: matrix.upload_sdist
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.package }}/dist
+          name: ${{ matrix.package }}
           path: ${{ matrix.package }}/dist/*.tar.gz
           if-no-files-found: error
 
@@ -116,7 +116,7 @@ jobs:
         if: matrix.package == 'dask-gateway-server'
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.package }}/dist
+          name: ${{ matrix.package }}
           path: ${{ matrix.package }}/dist/*.whl
           if-no-files-found: error
 
@@ -136,7 +136,8 @@ jobs:
       - name: Download built source distributions and wheels
         uses: actions/download-artifact@v3
         with:
-          name: ${{ matrix.package }}/dist
+          name: ${{ matrix.package }}
+          path: ${{ matrix.package }}/dist
 
       - name: Inspect built source distributions and wheels
         run: |
@@ -149,4 +150,4 @@ jobs:
         with:
           user: __token__
           password: "${{ secrets.pypi_password }}"
-          packages_dir: ${{ matrix.package }}/dist/
+          packages_dir: ${{ matrix.package }}/dist
