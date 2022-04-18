@@ -18,9 +18,7 @@ on:
       - "**.rst"
       - ".github/workflows/*"
       - "!.github/workflows/test.yaml"
-    branches-ignore:
-      - "dependabot/**"
-      - "pre-commit-ci-update-config"
+    branches: ["main"]
     tags: ["**"]
   workflow_dispatch:
 

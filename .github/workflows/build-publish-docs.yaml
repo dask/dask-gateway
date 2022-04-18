@@ -16,9 +16,7 @@ on:
       - "dask-gateway/**"
       - "dask-gateway-server/**"
       - ".github/workflows/build-publish-docs.yaml"
-    branches-ignore:
-      - "dependabot/**"
-      - "pre-commit-ci-update-config"
+    branches: ["main"]
     tags: ["**"]
   workflow_dispatch:
 
