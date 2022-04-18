@@ -2,6 +2,7 @@ import os
 
 from setuptools import find_packages, setup
 
+# determine version from _version.py
 ns = {}
 here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, "dask_gateway", "_version.py")) as f:
