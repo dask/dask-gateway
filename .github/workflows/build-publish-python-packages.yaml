@@ -107,7 +107,7 @@ jobs:
           import glob
           import shutil
 
-          any_wheel = glob.glob("dist/*.whl")[0]
+          any_wheel = glob.glob("${{ matrix.package }}/dist/*.whl")[0]
           plat_wheel = any_wheel.replace("any.whl", "${{ matrix.platform_tag }}.whl")
 
           shutil.move(any_wheel, plat_wheel)
