@@ -30,6 +30,5 @@ WORKDIR /home/dask/
 COPY --chown=dask:dask . /opt/dask-gateway
 RUN pip install --no-cache-dir /opt/dask-gateway
 
+# Only set ENTRYPOINT, CMD is configured at runtime by dask-gateway-server
 ENTRYPOINT ["tini", "-g", "--"]
-# CMD is not set by default in the image as it will depend based on if this
-# image is started as a scheduler or worker.
