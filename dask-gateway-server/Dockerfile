@@ -8,6 +8,12 @@
 #
 FROM python:3.10-slim-bullseye
 
+# Set labels based on the Open Containers Initiative (OCI):
+# https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
+#
+LABEL org.opencontainers.image.source="https://github.com/dask/dask-gateway"
+LABEL org.opencontainers.image.url="https://github.com/dask/dask-gateway/blob/HEAD/dask-gateway-server/Dockerfile"
+
 # Install tini and upgrade linux packages are updated to patch known
 # vulnerabilities.
 RUN apt-get update \

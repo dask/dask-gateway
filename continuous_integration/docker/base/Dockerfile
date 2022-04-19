@@ -10,7 +10,11 @@ FROM centos:7
 ARG python_version="3.10"
 ARG go_version="1.18"
 
-LABEL org.opencontainers.image.source="https://github.com/dask-gateway"
+# Set labels based on the Open Containers Initiative (OCI):
+# https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
+#
+LABEL org.opencontainers.image.source="https://github.com/dask/dask-gateway"
+LABEL org.opencontainers.image.url="https://github.com/dask/dask-gateway/blob/HEAD/continuous_integration/docker/base/Dockerfile"
 
 # Configure yum to error on missing packages
 RUN echo "skip_missing_names_on_install=False" >> /etc/yum.conf
