@@ -1,95 +1,40 @@
-# ** A base miniconda image **
-FROM debian:bullseye-slim as miniconda
-LABEL MAINTAINER="Jim Crist-Harif"
-
-# List of conda versions: https://repo.anaconda.com/miniconda/
+# PURPOSE:
 #
-# Miniconda 4.9.2 has been chosen as it has a aarch64 release and hasn't
-# introduced a bug described in:
-# https://stackoverflow.com/questions/68213186/illegal-instruction-error-when-verifying-anaconda-miniconda-install
+# This Dockerfile and image, ghcr.io/dask/dask-gateway, is used by the
+# dask-gateway Helm chart. It acts as the sample image for scheduler and workers
+# in Dask Clusters created by end users.
 #
-# FIXME: Use micromamba or mambaforge instead, see
-#        https://github.com/mamba-org/mamba for more info
+# The admin installing the dask-gateway Helm chart or its end users are meant to
+# specify an image for the scheduler and worker pods to use that meets their
+# needs for the Dask clusters they startup. Please build your own according to
+# the documentation if this very limited image doesn't meet your needs.
 #
-ARG CONDA_VERSION=py39_4.10.3
+# See https://gateway.dask.org/install-kube.html#using-a-custom-image.
+#
+FROM python:3.10-slim-bullseye
 
-# - Create user dask
-RUN useradd -m -U -u 1000 dask
+# Set labels based on the Open Containers Initiative (OCI):
+# https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
+#
+LABEL org.opencontainers.image.source="https://github.com/dask/dask-gateway"
+LABEL org.opencontainers.image.url="https://github.com/dask/dask-gateway/blob/HEAD/dask-gateway/Dockerfile"
 
-# - Install tini
-# - Install miniconda build dependencies
+# Install tini and update linux packages to patch known vulnerabilities.
 RUN apt-get update \
-    && apt-get install -y tini wget bzip2 \
-    && rm -rf /var/lib/apt/lists/*
+ && apt-get upgrade -y \
+ && apt-get install -y \
+        tini \
+ && rm -rf /var/lib/apt/lists/*
 
-# - Download and install miniconda
-# - Configure conda to minimize automatic package updates
-# - Cleanup conda files
-# - Uninstall miniconda build dependencies
-RUN ARCH=$(uname -m) \
-    && wget --quiet "https://repo.anaconda.com/miniconda/Miniconda3-$CONDA_VERSION-Linux-$ARCH.sh" \
-    && mv "Miniconda3-$CONDA_VERSION-Linux-$ARCH.sh" miniconda.sh \
-    && sh ./miniconda.sh -b -p /opt/conda \
-    && ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
-    && echo ". /opt/conda/etc/profile.d/conda.sh" >> /home/dask/.profile \
-    && echo "conda activate base" >> /home/dask/.profile \
-    && echo "always_yes: true" >> /home/dask/.condarc \
-    && echo "changeps1: false" >> /home/dask/.condarc \
-    && echo "auto_update_conda: false" >> /home/dask/.condarc \
-    && echo "aggressive_update_packages: []" >> /home/dask/.condarc \
-    && find /opt/conda/ -follow -type f -name '*.a' -delete \
-    && /opt/conda/bin/conda clean -afy \
-    && chown -R dask:dask /opt/conda
-
-USER 1000:1000
-ENV PATH="/opt/conda/bin:$PATH"
+# Create a non-root user to run as
+RUN useradd --create-home --user-group --uid 1000 dask
+USER dask:dask
+ENV PATH=/home/dask/.local/bin:$PATH
 WORKDIR /home/dask/
 
+# Install dask-gateway
+COPY --chown=dask:dask . /opt/dask-gateway
+RUN pip install --no-cache-dir /opt/dask-gateway
+
+# Only set ENTRYPOINT, CMD is configured at runtime by dask-gateway-server
 ENTRYPOINT ["tini", "-g", "--"]
-
-
-
-# ** An image with all of dask-gateway's dependencies **
-FROM miniconda as dependencies
-
-# Latest versions can be found at:
-# - dask:           https://anaconda.org/conda-forge/dask
-# - distributed:    https://anaconda.org/conda-forge/distributed
-ARG DASK_VERSION=2022.02.0
-ARG DISTRIBUTED_VERSION=2022.02.0
-
-# - Installs dask and dependencies
-# - Cleans up conda files
-# - Removes unnecessary static libraries
-# - Removes unnecessary *.js.map files
-# - Removes unminified bokeh js
-RUN /opt/conda/bin/conda install -c conda-forge --freeze-installed -y \
-        "aiohttp==3.8.1" \
-        "click<8.1.0" \
-        "dask==$DASK_VERSION" \
-        "distributed==$DISTRIBUTED_VERSION" \
-        "numpy==1.21.4" \
-        "pandas==1.3.4" \
-    && /opt/conda/bin/conda clean -afy \
-    && find /opt/conda/ -follow -type f -name '*.a' -delete \
-    && find /opt/conda/ -follow -type f -name '*.js.map' -delete \
-    && find /opt/conda/lib/python*/site-packages/bokeh/server/static -follow -type f -name '*.js' ! -name '*.min.js' -delete
-
-
-
-# ** Build dask-gateway from source in a temporary image **
-FROM dependencies AS builder
-
-RUN mkdir -p /tmp/workdir
-RUN mkdir -p /tmp/install-prefix
-COPY . /tmp/workdir/
-WORKDIR /tmp/workdir/
-RUN /opt/conda/bin/pip install . --no-cache-dir --no-deps --prefix /tmp/install-prefix
-
-
-
-# ** The final image **
-FROM dependencies
-
-# Copy over the built dask-gateway
-COPY --from=builder /tmp/install-prefix /opt/conda/

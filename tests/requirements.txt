@@ -17,6 +17,10 @@ pytest-asyncio
 # dask-gateway and dask-gateway-server and all their dependencies are assumed to
 # be installed.
 --editable="../dask-gateway"
+# The requirements of dask-gateway-server is first installed as passing the
+# --install-option flag later makes pip not use wheels when installing the
+# dependencies which slows things down.
+--requirement=../dask-gateway-server/requirements.txt
 --editable="../dask-gateway-server[all_backends]" --install-option="--no-build-proxy"
 
 # ipython and ipywidget is optional integrations allowing for fancy rendering of

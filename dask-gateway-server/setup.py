@@ -97,14 +97,8 @@ class clean(_clean):
         _clean.run(self)
 
 
-# NOTE: changes to the dependencies here must also be reflected
-# in ../dev-environment.yaml
-install_requires = [
-    "aiohttp",
-    "colorlog",
-    "cryptography",
-    "traitlets",
-]
+with open("requirements.txt") as f:
+    install_requires = [l for l in f.readlines() if not l.startswith("#")]
 
 extras_require = {
     # pykerberos is tricky to install and requires a system package to

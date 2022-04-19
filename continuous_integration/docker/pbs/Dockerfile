@@ -4,6 +4,11 @@
 #
 FROM ghcr.io/dask/dask-gateway-ci-base:latest
 
+# Set labels based on the Open Containers Initiative (OCI):
+# https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
+#
+LABEL org.opencontainers.image.url="https://github.com/dask/dask-gateway/blob/HEAD/continuous_integration/docker/pbs/Dockerfile"
+
 # Notify dask-gateway tests that PBS is available
 ENV TEST_DASK_GATEWAY_PBS true
 
