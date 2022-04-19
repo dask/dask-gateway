@@ -11,6 +11,14 @@
 # - Make kubernetes test like other backend tests, something you opt into rather
 #   than out out of.
 #
+
+# chartpress helps update the Helm chart's Chart.yaml and values.yaml with
+# tagged images etc.
+chartpress
+
+# pyyaml is used by our generate-json-schema.py script.
+pyyaml
+
 pytest
 pytest-asyncio
 

@@ -1,19 +1,36 @@
-# This is the configuration for chartpress, a CLI for Helm chart management.
+# This is configuration for chartpress, a CLI for Helm chart management.
 #
-# chartpress can be used to:
-# - Build images
+# chartpress is used to test, package, and publish the dask-gateway Helm chart
+# to the gh-pages based Helm chart repository at https://helm.dask.org and
+# https://github.com/dask/helm-chart respectively. Note that a Helm chart
+# repository is just a website that can serve a "index.yaml" file pointing to
+# packaged Helm charts that can be downloaded.
+#
+# chartpress is used to:
+# - Build images for multiple CPU architectures
 # - Update Chart.yaml (version) and values.yaml (image tags)
 # - Package and publish Helm charts to a GitHub based Helm chart repository
 #
-# Currently, this project is configured to use the skaffold CLI to build images
-# and update the image tags in values.yaml, but chartpress is still used to
-# publish the Helm chart to the gh-pages branch of dask/helm-chart.
-#
-# For more information about chartpress, see the projects README.md file:
-# https://github.com/jupyterhub/chartpress
+# Configuration reference:
+# https://github.com/jupyterhub/chartpress#configuration
 #
 charts:
   - name: dask-gateway
+    imagePrefix: ghcr.io/dask/
     repo:
       git: dask/helm-chart
       published: https://helm.dask.org
+    images:
+      # Used for clusters' scheduler and workers pods by default
+      dask-gateway:
+        imageName: ghcr.io/dask/dask-gateway
+        contextPath: ../../dask-gateway
+        valuesPath:
+          - gateway.backend.image
+      # Used for the api and controller pods
+      dask-gateway-server:
+        imageName: ghcr.io/dask/dask-gateway-server
+        contextPath: ../../dask-gateway-server
+        valuesPath:
+          - gateway.image
+          - controller.image

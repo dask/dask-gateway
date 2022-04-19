@@ -1,0 +1,65 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+#
+name: Build and publish Helm chart
+
+on:
+  push:
+    tags: ["**"]
+  workflow_dispatch:
+
+jobs:
+  build-publish-helm-chart:
+    name: "Build and publish Helm chart"
+    runs-on: ubuntu-latest
+
+    # permissions requested for secrets.github_token in order to push to the
+    # container registry, available for push and workflow_dispatch triggers.
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # chartpress requires git history to set chart version and image tags
+          # correctly
+          fetch-depth: 0
+      - uses: actions/setup-python@v3
+
+      - name: Install chart publishing dependencies (chartpress, pyyaml, helm)
+        run: |
+          pip install chartpress pyyaml
+          pip list
+
+          echo "Helm is already installed"
+          helm version
+
+      - name: Set up QEMU (for docker buildx)
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx (for multi-arch builds)
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to container registry
+        run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      # chartpress pushes a packages Helm chart to dask/helm-chart's gh-pages
+      # branch, so we need to have a git user.email and user.name configured
+      - name: Configure a git user
+        run: |
+          git config --global user.email "github-actions@example.local"
+          git config --global user.name "GitHub Actions user"
+
+      - name: Generate values.schema.json from YAML equivalent
+        run: resources/helm/tools/generate-json-schema.py
+
+      - name: Build and publish Helm chart with chartpress
+        env:
+          # chartpress can make use of a personal access token by setting these
+          # environment variables like this, for details see:
+          # https://github.com/jupyterhub/chartpress/blob/d4e2346d50f0724f6bee387f4f8aebc108afb648/chartpress.py#L118-L128
+          #
+          GITHUB_ACTOR: ""
+          GITHUB_TOKEN: "${{ secrets.dask_bot_token }}"
+        run: continuous_integration/kubernetes/build-publish-helm-chart.sh

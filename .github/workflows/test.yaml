@@ -84,10 +84,7 @@ jobs:
         run: |
           cd tests
           pip install -r requirements.txt
-
-      - name: List Python packages
-        run: |
-          pip freeze
+          pip list
 
       - name: Run Python tests
         run: |
@@ -121,43 +118,64 @@ jobs:
           - k3s-channel: v1.21
           - k3s-channel: v1.22
           - k3s-channel: v1.23
+
     steps:
       - uses: actions/checkout@v3
+        with:
+          # chartpress requires git history to set chart version and image tags
+          # correctly
+          fetch-depth: 0
+      - uses: actions/setup-python@v3
 
       # Starts a k8s cluster with NetworkPolicy enforcement and installs both
       # kubectl and helm
       #
       # ref: https://github.com/jupyterhub/action-k3s-helm/
       #
-      - uses: jupyterhub/action-k3s-helm@v1
+      - uses: jupyterhub/action-k3s-helm@v2
         with:
           k3s-channel: ${{ matrix.k3s-channel }}
           metrics-enabled: false
           traefik-enabled: false
           docker-enabled: true
 
-      - name: Helm lint and render templates
-        run: |
-          ./continuous_integration/kubernetes/helm-lint-and-template.sh
-
-      - name: Helm Install
-        run: |
-          ./continuous_integration/kubernetes/helm-install.sh
-
       - name: Install Python test requirements
         run: |
           cd tests
           DASK_GATEWAY_SERVER__NO_PROXY=true pip install -r requirements.txt
-
-      - name: List Python packages
-        run: |
           pip list
 
-      - name: Kubernetes Tests
+      - name: Generate values.schema.json from YAML equivalent
+        run: resources/helm/tools/generate-json-schema.py
+
+      - name: helm lint
+        run: |
+          helm lint resources/helm/dask-gateway \
+              --values=resources/helm/testing/chart-install-values.yaml
+
+      - name: helm template
+        run: |
+          helm template test-dask-gateway resources/helm/dask-gateway \
+              --include-crds \
+              --values=resources/helm/testing/chart-install-values.yaml
+
+      - working-directory: resources/helm
+        run: chartpress
+
+      - name: helm install
+        run: |
+          helm install \
+              test-dask-gateway \
+              resources/helm/dask-gateway \
+              --values=resources/helm/testing/chart-install-values.yaml \
+              --wait \
+              --timeout 3m0s
+
+      - name: pytest
         run: |
           TEST_DASK_GATEWAY_KUBE=true \
           TEST_DASK_GATEWAY_KUBE_ADDRESS=http://localhost:30200/services/dask-gateway/ \
-          pytest -v tests/kubernetes/
+          pytest -v tests/kubernetes
 
       # ref: https://github.com/jupyterhub/action-k8s-namespace-report
       - name: Kubernetes namespace report
