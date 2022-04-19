@@ -675,9 +675,8 @@ behaviors. We recommend using <a class="reference external" href="https://github
 <p>There are no other requirements for images, any image that meets the above
 should work fine. You may install any additional libraries or dependencies you
 require.</p>
-<p>To develop your own image, you may either base it on a compatible version of
-<code class="docutils literal notranslate"><span class="pre">daskgateway/dask-gateway</span></code>, or use our <a class="reference external" href="https://github.com/dask/dask-gateway/blob/main/resources/helm/example-images/Dockerfile">example dockerfile</a> as a reference
-and develop your own.</p>
+<p>We encourage you to maintain your own image for scheduler and worker pods as
+this project only provides a <a class="reference external" href="https://github.com/dask/dask-gateway/blob/main/dask-gateway/Dockerfile">minimal image</a> for testing purposes.</p>
 </div>
 <div class="section" id="using-extrapodconfig-extracontainerconfig">
 <h3>Using <code class="docutils literal notranslate"><span class="pre">extraPodConfig</span></code>/<code class="docutils literal notranslate"><span class="pre">extraContainerConfig</span></code><a class="headerlink" href="#using-extrapodconfig-extracontainerconfig" title="Permalink to this headline">¶</a></h3>
