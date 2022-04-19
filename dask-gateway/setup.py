@@ -2,6 +2,7 @@ import os
 
 from setuptools import find_packages, setup
 
+# determine version from _version.py
 ns = {}
 here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, "dask_gateway", "_version.py")) as f:
@@ -38,9 +39,8 @@ setup(
     ],
     keywords="dask hadoop kubernetes HPC distributed cluster",
     description="A client library for interacting with a dask-gateway server",
-    long_description=(
-        open("README.rst").read() if os.path.exists("README.rst") else ""
-    ),
+    long_description=open("README.rst").read(),
+    long_description_content_type="text/x-rst",
     url="https://gateway.dask.org/",
     project_urls={
         "Documentation": "https://gateway.dask.org/",
