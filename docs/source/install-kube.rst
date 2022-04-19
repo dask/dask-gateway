@@ -217,8 +217,7 @@ should work fine. You may install any additional libraries or dependencies you
 require.
 
 We encourage you to maintain your own image for scheduler and worker pods as
-this project only provides a `minimal image`_ for testing purposes which can be
-used as inspiration, but isn't recommended to be used as a base image.
+this project only provides a `minimal image`_ for testing purposes.
 
 Using ``extraPodConfig``/``extraContainerConfig``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
