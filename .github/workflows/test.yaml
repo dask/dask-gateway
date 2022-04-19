@@ -132,7 +132,7 @@ jobs:
       #
       # ref: https://github.com/jupyterhub/action-k3s-helm/
       #
-      - uses: jupyterhub/action-k3s-helm@v1
+      - uses: jupyterhub/action-k3s-helm@v2
         with:
           k3s-channel: ${{ matrix.k3s-channel }}
           metrics-enabled: false
