@@ -6,6 +6,7 @@ name: Build and publish Helm chart
 on:
   push:
     tags: ["**"]
+  workflow_dispatch:
 
 jobs:
   build-publish-helm-chart:
@@ -54,4 +55,11 @@ jobs:
         run: resources/helm/tools/generate-json-schema.py
 
       - name: Build and publish Helm chart with chartpress
+        env:
+          # chartpress can make use of a personal access token by setting these
+          # environment variables like this, for details see:
+          # https://github.com/jupyterhub/chartpress/blob/d4e2346d50f0724f6bee387f4f8aebc108afb648/chartpress.py#L118-L128
+          #
+          GITHUB_ACTOR: ""
+          GITHUB_TOKEN: "${{ secrets.dask_bot_token }}"
         run: continuous_integration/kubernetes/build-publish-helm-chart.sh
