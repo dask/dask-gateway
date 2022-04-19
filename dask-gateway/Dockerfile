@@ -1,4 +1,4 @@
-# USAGE DISCLAIMER:
+# PURPOSE:
 #
 # This Dockerfile and image, ghcr.io/dask/dask-gateway, is used by the
 # dask-gateway Helm chart. It acts as the sample image for scheduler and workers
