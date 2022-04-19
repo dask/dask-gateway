@@ -8,4 +8,4 @@ home: https://gateway.dask.org/
 sources:
   - https://github.com/dask/dask-gateway/
 icon: https://docs.dask.org/en/latest/_images/dask_icon_no_pad.svg
-kubeVersion: ">=1.16.0-0"
+kubeVersion: ">=1.20.0-0"
