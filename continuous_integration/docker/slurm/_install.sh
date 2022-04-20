@@ -4,8 +4,6 @@ set -xe
 cd /working
 
 # This installs everything we need for tests
-pushd tests
-pip install -r requirements.txt
-popd
+pip install -r tests/requirements.txt
 
 pip list

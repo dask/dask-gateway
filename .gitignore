@@ -4,6 +4,9 @@
 values.schema.json
 dask_gateway_config.py
 
+# a folder created when running tests
+dask-worker-space/
+
 *.pyc
 .DS_Store
 .vscode

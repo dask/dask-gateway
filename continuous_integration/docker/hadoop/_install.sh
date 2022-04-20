@@ -8,8 +8,6 @@ cd /working
 mamba install pykerberos
 
 # This installs everything else we need for tests
-pushd tests
-pip install -r requirements.txt
-popd
+pip install -r tests/requirements.txt
 
 pip list
