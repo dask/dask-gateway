@@ -24,6 +24,7 @@
     
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/css/style.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     
   <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
 
@@ -31,6 +32,8 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/clipboard.min.js"></script>
+    <script src="_static/copybutton.js"></script>
     <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -843,10 +846,10 @@ here for reference:</p>
 <span class="w">  </span><span class="c1"># The gateway server log level</span><span class="w"></span>
 <span class="w">  </span><span class="nt">loglevel</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INFO</span><span class="w"></span>
 
-<span class="w">  </span><span class="c1"># The image to use for the gateway-server pod.</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># The image to use for the dask-gateway-server pod (api pod)</span><span class="w"></span>
 <span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span><span class="w"></span>
-<span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.9.0</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/dask/dask-gateway-server</span><span class="w"></span>
+<span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;set-by-chartpress&quot;</span><span class="w"></span>
 <span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span><span class="w"></span>
 
 <span class="w">  </span><span class="c1"># Image pull secrets for gateway-server pod</span><span class="w"></span>
@@ -862,24 +865,24 @@ here for reference:</p>
 
 <span class="w">    </span><span class="nt">simple</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># A shared password to use for all users.</span><span class="w"></span>
-<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">      </span><span class="nt">password</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">    </span><span class="nt">kerberos</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># Path to the HTTP keytab for this node.</span><span class="w"></span>
-<span class="w">      </span><span class="nt">keytab</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">      </span><span class="nt">keytab</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">    </span><span class="nt">jupyterhub</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># A JupyterHub api token for dask-gateway to use. See</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># https://gateway.dask.org/install-kube.html#authenticating-with-jupyterhub.</span><span class="w"></span>
-<span class="w">      </span><span class="nt">apiToken</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">      </span><span class="nt">apiToken</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">      </span><span class="c1"># JupyterHub&#39;s api url. Inferred from JupyterHub&#39;s service name if running</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># in the same namespace.</span><span class="w"></span>
-<span class="w">      </span><span class="nt">apiUrl</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">      </span><span class="nt">apiUrl</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">    </span><span class="nt">custom</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># The full authenticator class name.</span><span class="w"></span>
-<span class="w">      </span><span class="nt">class</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">      </span><span class="nt">class</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">      </span><span class="c1"># Configuration fields to set on the authenticator class.</span><span class="w"></span>
 <span class="w">      </span><span class="nt">config</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
@@ -906,13 +909,13 @@ here for reference:</p>
 <span class="w">  </span><span class="nt">backend</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="c1"># The image to use for both schedulers and workers.</span><span class="w"></span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway</span><span class="w"></span>
-<span class="w">      </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.9.0</span><span class="w"></span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/dask/dask-gateway</span><span class="w"></span>
+<span class="w">      </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;set-by-chartpress&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1"># The namespace to launch dask clusters in. If not specified, defaults to</span><span class="w"></span>
 <span class="w">    </span><span class="c1"># the same namespace the gateway is running in.</span><span class="w"></span>
-<span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1"># A mapping of environment variables to set for both schedulers and workers.</span><span class="w"></span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
@@ -928,13 +931,13 @@ here for reference:</p>
 
 <span class="w">      </span><span class="c1"># Cores request/limit for the scheduler.</span><span class="w"></span>
 <span class="w">      </span><span class="nt">cores</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="nt">request</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
-<span class="w">        </span><span class="nt">limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">        </span><span class="nt">request</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">limit</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">      </span><span class="c1"># Memory request/limit for the scheduler.</span><span class="w"></span>
 <span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="nt">request</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
-<span class="w">        </span><span class="nt">limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">        </span><span class="nt">request</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">limit</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">    </span><span class="nt">worker</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># Any extra configuration for the worker pod. Sets</span><span class="w"></span>
@@ -947,17 +950,17 @@ here for reference:</p>
 
 <span class="w">      </span><span class="c1"># Cores request/limit for each worker.</span><span class="w"></span>
 <span class="w">      </span><span class="nt">cores</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="nt">request</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
-<span class="w">        </span><span class="nt">limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">        </span><span class="nt">request</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">limit</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">      </span><span class="c1"># Memory request/limit for each worker.</span><span class="w"></span>
 <span class="w">      </span><span class="nt">memory</span><span class="p">:</span><span class="w"></span>
-<span class="w">        </span><span class="nt">request</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
-<span class="w">        </span><span class="nt">limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">        </span><span class="nt">request</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">limit</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">      </span><span class="c1"># Number of threads available for a worker. Sets</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># `c.KubeClusterConfig.worker_threads`</span><span class="w"></span>
-<span class="w">      </span><span class="nt">threads</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">      </span><span class="nt">threads</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">  </span><span class="c1"># Settings for nodeSelector, affinity, and tolerations for the gateway pods</span><span class="w"></span>
 <span class="w">  </span><span class="nt">nodeSelector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
@@ -1015,8 +1018,8 @@ here for reference:</p>
 
 <span class="w">  </span><span class="c1"># The image to use for the controller pod.</span><span class="w"></span>
 <span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">daskgateway/dask-gateway-server</span><span class="w"></span>
-<span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.9.0</span><span class="w"></span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/dask/dask-gateway-server</span><span class="w"></span>
+<span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;set-by-chartpress&quot;</span><span class="w"></span>
 <span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span><span class="w"></span>
 
 <span class="w">  </span><span class="c1"># Settings for nodeSelector, affinity, and tolerations for the controller pods</span><span class="w"></span>
@@ -1064,12 +1067,12 @@ here for reference:</p>
 <span class="w">      </span><span class="nt">web</span><span class="p">:</span><span class="w"></span>
 <span class="w">        </span><span class="c1"># The port HTTP(s) requests will be served on</span><span class="w"></span>
 <span class="w">        </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w"></span>
-<span class="w">        </span><span class="nt">nodePort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nodePort</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">tcp</span><span class="p">:</span><span class="w"></span>
 <span class="w">        </span><span class="c1"># The port TCP requests will be served on. Set to `web` to share the</span><span class="w"></span>
 <span class="w">        </span><span class="c1"># web service port</span><span class="w"></span>
 <span class="w">        </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">web</span><span class="w"></span>
-<span class="w">        </span><span class="nt">nodePort</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">        </span><span class="nt">nodePort</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">  </span><span class="c1"># Settings for nodeSelector, affinity, and tolerations for the traefik pods</span><span class="w"></span>
 <span class="w">  </span><span class="nt">nodeSelector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
@@ -1088,13 +1091,13 @@ here for reference:</p>
 <span class="w">  </span><span class="c1"># ServiceAccounts have already been created by other means (leave set to</span><span class="w"></span>
 <span class="w">  </span><span class="c1"># `null` to create all required roles at install time)</span><span class="w"></span>
 <span class="w">  </span><span class="nt">controller</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">serviceAccountName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">    </span><span class="nt">serviceAccountName</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">gateway</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">serviceAccountName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">    </span><span class="nt">serviceAccountName</span><span class="p">:</span><span class="w"></span>
 
 <span class="w">  </span><span class="nt">traefik</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">serviceAccountName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w"></span>
+<span class="w">    </span><span class="nt">serviceAccountName</span><span class="p">:</span><span class="w"></span>
 
 
 
