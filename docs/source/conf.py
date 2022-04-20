@@ -9,8 +9,8 @@ copyright = "2021, Jim Crist-Harif"
 author = "Jim Crist-Harif"
 release = version = dask_gateway_server.__version__
 
-source_suffix = ".rst"
-master_doc = "index"
+source_suffix = [".rst", ".md"]
+root_doc = master_doc = "index"
 language = None
 pygments_style = "sphinx"
 exclude_patterns = []
@@ -19,11 +19,13 @@ exclude_patterns = []
 docs = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(docs, "sphinxext"))
 extensions = [
+    "autodoc_traits",
+    "myst_parser",
+    "sphinx_copybutton",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
     "sphinx.ext.napoleon",
-    "autodoc_traits",
 ]
 
 extlinks = {
