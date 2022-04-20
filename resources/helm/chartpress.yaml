@@ -27,6 +27,11 @@ charts:
         contextPath: ../../dask-gateway
         valuesPath:
           - gateway.backend.image
+        # FIXME: psutils, a dependency of distributed, currently doesn't have wheels
+        #        for arm64 and requires `gcc` and `python3-dev` of a compatible version
+        #        of python (python 3.9 for debian bullseye).
+        skipPlatforms:
+          - linux/arm64
       # Used for the api and controller pods
       dask-gateway-server:
         imageName: ghcr.io/dask/dask-gateway-server
