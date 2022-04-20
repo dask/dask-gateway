@@ -1,65 +1,33 @@
-# OPTIONAL conda environment file to help get setup with
-# dependencies to build + test dask-gateway locally
+# A conda environment file to help setup dependencies to build and test
+# dask-gateway locally.
+#
+# Install:
+#
+#   export DASK_GATEWAY_SERVER__NO_PROXY=true
+#
+#   conda env create -f dev-environment.yaml
+#   conda activate dask-gateway-dev
+#
+#   unset DASK_GATEWAY_SERVER__NO_PROXY
+#
+# Cleanup:
+#
+#   conda deactivate
+#   conda env remove -n dask-gateway-dev
+#
 name: dask-gateway-dev
 channels:
   - conda-forge
 dependencies:
-  # python and pip
   - python=3.10
   - pip
 
-  # Dependencies to build dask-gateway and dask-gateway-server
-  # NOTE: changes to this block must also be reflected in the following files
-  # - dask-gateway/setup.py
-  # - dask-gateway-server/setup.py
-  - aiohttp # dask-gateway, dask-gateway-server
-  - click<8.1.0 # dask-gateway
-  - dask # dask-gateway
-  - distributed>=2021.01.1 # dask-gateway
-  - pyyaml # dask-gateway
-  - tornado # dask-gateway
-  - colorlog # dask-gateway-server
-  - cryptography # dask-gateway-server
-  - traitlets # dask-gateway-server
-  - pykerberos # see: dask-gateway-server/setup.py extras_require
-  - sqlalchemy # see: dask-gateway-server/setup.py extras_require
-  - skein # see: dask-gateway-server/setup.py extras_require
-  - kubernetes_asyncio # see: dask-gateway-server/setup.py extras_require
-  - go=1.17.8  # golang version to  build dask-gateway-server/dask-gateway-proxy
-  - go-cgo     # golang associated dependency to assist with local setup
-  - compilers  # golang associated dependency to assist with local setup
-
-  # Dependencies required to build the projects documentation
-  # NOTE: changes to this block must also be reflected in the following files:
-  # - .github/workflows/build-publish-docs.yaml
-  # - docs/source/develop.rst
-  # NOTE: also the `extras_require` entries in dask-gateway-server/setup.py
-  # are required to build the configuration reference properly with autodoc-traits,
-  # but they are imported above
-  - sphinx
-  - dask-sphinx-theme
-  - sphinx-autobuild
-  # - autodoc-traits (installed via pip below, not available on conda-forge)
-
-  # Dependencies used in CI and running tests locally:
-  # dask-gateway/continuous_integration/kubernetes/install.sh
-  - ipywidgets
-  - jupyterhub
-  - notebook
-  - trustme
-  - pytest
-  - pytest-asyncio
-
-  # Useful tooling for local development (kubernetes):
-  # helm and kubectl
-  - kubernetes-helm
-  - kubernetes-client
-  - minikube
+  # Golang with compiler is required to compile dask-gateway-server's bundled
+  # dask-gateway-proxy executable binary.
+  - go
+  - go-cgo
 
   - pip:
-    - autodoc-traits # not available on conda-forge, part of the docs requirements
-
-# include the environment variable GO111MODULE=auto
-# during installation for go 1.16 and up
-variables:
-  GO111MODULE: auto
+    - pre-commit
+    - --requirement=docs/requirements.txt
+    - --requirement=tests/requirements.txt
