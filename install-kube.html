@@ -298,20 +298,15 @@
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-helm-optional">
-   Install Helm (optional)
+  <a class="reference internal nav-link" href="#install-helm">
+   Install Helm
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-dask-gateway">
-   Install Dask-Gateway
+  <a class="reference internal nav-link" href="#install-the-dask-gateway-helm-chart">
+   Install the Dask-Gateway Helm chart
   </a>
   <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#add-the-helm-chart-repository">
-     Add the Helm Chart Repository
-    </a>
-   </li>
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#configuration">
      Configuration
@@ -413,20 +408,15 @@
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-helm-optional">
-   Install Helm (optional)
+  <a class="reference internal nav-link" href="#install-helm">
+   Install Helm
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-dask-gateway">
-   Install Dask-Gateway
+  <a class="reference internal nav-link" href="#install-the-dask-gateway-helm-chart">
+   Install the Dask-Gateway Helm chart
   </a>
   <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#add-the-helm-chart-repository">
-     Add the Helm Chart Repository
-    </a>
-   </li>
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#configuration">
      Configuration
@@ -525,10 +515,10 @@ cluster (e.g. pods, secrets, etc…).</p></li>
 <p>Both the Traefik Proxy deployment and the Gateway API Server deployment can be
 scaled to multiple replicas, for increased availability and scalability.</p>
 <p>The Dask Gateway pods running on Kubernetes include the following:
-- <code class="docutils literal notranslate"><span class="pre">traefik</span></code>: The <strong>Traefik Proxy</strong>
 - <code class="docutils literal notranslate"><span class="pre">api</span></code>: The <strong>Gateway API Server</strong>
-- <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">worker</span></code>: User’s Dask Scheduler and Worker
-- <code class="docutils literal notranslate"><span class="pre">controller</span></code>: The Kubernetes <strong>Gateway Controller</strong> for managing Dask-Gateway resources</p>
+- <code class="docutils literal notranslate"><span class="pre">traefik</span></code>: The <strong>Traefik Proxy</strong>
+- <code class="docutils literal notranslate"><span class="pre">controller</span></code>: The Kubernetes <strong>Gateway Controller</strong> for managing Dask-Gateway resources
+- <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> &amp; <code class="docutils literal notranslate"><span class="pre">worker</span></code>: User’s Dask Scheduler and Worker</p>
 <p>Network communications happen in the following manner:
 - The <code class="docutils literal notranslate"><span class="pre">traefik</span></code> pods proxy connections to the <code class="docutils literal notranslate"><span class="pre">api</span></code> pods on port 8000, and <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> pods on ports 8786 and 8787.
 - The <code class="docutils literal notranslate"><span class="pre">api</span></code> pods send api requests to the <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> pods over port 8788.
@@ -547,29 +537,20 @@ scaled to multiple replicas, for increased availability and scalability.</p>
 are plenty of guides online for how to do this. We recommend following the
 excellent <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/create-k8s-cluster.html">documentation provided by zero-to-jupyterhub-k8s</a>.</p>
 </div>
-<div class="section" id="install-helm-optional">
-<h2>Install Helm (optional)<a class="headerlink" href="#install-helm-optional" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="install-helm">
+<h2>Install Helm<a class="headerlink" href="#install-helm" title="Permalink to this headline">¶</a></h2>
 <p>If you don’t already have <a class="reference external" href="https://helm.sh/">Helm</a> installed, you’ll need to install it locally.
 As with above, there are plenty of instructional materials online for doing
 this. We recommend following the <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/stable/kubernetes/setup-helm.html">guide provided by zero-to-jupyterhub-k8s</a>.</p>
 </div>
-<div class="section" id="install-dask-gateway">
-<h2>Install Dask-Gateway<a class="headerlink" href="#install-dask-gateway" title="Permalink to this headline">¶</a></h2>
-<p>At this point you should have a Kubernetes cluster with Helm installed and
-configured. You are now ready to install Dask-Gateway on your cluster.</p>
-<div class="section" id="add-the-helm-chart-repository">
-<h3>Add the Helm Chart Repository<a class="headerlink" href="#add-the-helm-chart-repository" title="Permalink to this headline">¶</a></h3>
-<p>To avoid downloading the chart locally from GitHub, you can use the
-<a class="reference external" href="https://helm.dask.org/">Dask-Gateway Helm chart repository</a>.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ helm repo add dask https://helm.dask.org/
-$ helm repo update
-</pre></div>
-</div>
-</div>
+<div class="section" id="install-the-dask-gateway-helm-chart">
+<h2>Install the Dask-Gateway Helm chart<a class="headerlink" href="#install-the-dask-gateway-helm-chart" title="Permalink to this headline">¶</a></h2>
+<p>At this point you should have a Kubernetes cluster. You are now ready to install
+the Dask-Gateway Helm chart on your cluster.</p>
 <div class="section" id="configuration">
 <h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
 <p>The Helm chart provides access to configure most aspects of the
-<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. These are provided via a configuration <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file (the
+<code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. These are provided via a configuration YAML file (the
 name of this file doesn’t matter, we’ll use <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>).</p>
 <p>The Helm chart exposes many configuration values, see the <a class="reference external" href="https://github.com/dask/dask-gateway/blob/main/resources/helm/dask-gateway/values.yaml">default
 values.yaml file</a> for more information.</p>
@@ -579,14 +560,12 @@ values.yaml file</a> for more information.</p>
 <p>To install the Dask-Gateway Helm chart, run the following command:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">RELEASE</span><span class="o">=</span>dask-gateway
 <span class="nv">NAMESPACE</span><span class="o">=</span>dask-gateway
-<span class="nv">VERSION</span><span class="o">=</span><span class="m">0</span>.9.0
 
-helm upgrade --install <span class="se">\</span>
+helm upgrade <span class="nv">$RELEASE</span> dask-gateway <span class="se">\</span>
+    --repo<span class="o">=</span>https://helm.dask.org <span class="se">\</span>
+    --install <span class="se">\</span>
     --namespace <span class="nv">$NAMESPACE</span> <span class="se">\</span>
-    --version <span class="nv">$VERSION</span> <span class="se">\</span>
-    --values path/to/your/config.yaml <span class="se">\</span>
-    <span class="nv">$RELEASE</span> <span class="se">\</span>
-    dask/dask-gateway
+    --values path/to/your/config.yaml
 </pre></div>
 </div>
 <p>where:</p>
@@ -595,9 +574,6 @@ helm upgrade --install <span class="se">\</span>
 but any release name is fine).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">NAMESPACE</span></code> is the <a class="reference external" href="https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/">Kubernetes namespace</a> to install the gateway into (we
 suggest <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code>, but any namespace is fine).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">VERSION</span></code> is the Helm chart version to use. To use the latest published
-version you can omit the <code class="docutils literal notranslate"><span class="pre">--version</span></code> flag entirely. See the <a class="reference external" href="https://helm.dask.org/">Helm chart
-repository</a> for an index of all available versions.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">path/to/your/config.yaml</span></code> is the path to your <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file created
 above.</p></li>
 </ul>
@@ -605,14 +581,16 @@ above.</p></li>
 are downloaded. When everything is ready, running the following command will
 show the <code class="docutils literal notranslate"><span class="pre">EXTERNAL-IP</span></code> addresses for the <code class="docutils literal notranslate"><span class="pre">LoadBalancer</span></code> service (highlighted
 below).</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ kubectl get service --namespace dask-gateway
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>kubectl get service --namespace dask-gateway
+
 NAME                              TYPE           CLUSTER-IP      EXTERNAL-IP      PORT<span class="o">(</span>S<span class="o">)</span>          AGE
-api-&lt;RELEASE&gt;-dask-gateway        ClusterIP      <span class="m">10</span>.51.245.233   &lt;none&gt;           <span class="m">8000</span>/TCP         6m54s
-<span class="hll">traefik-&lt;RELEASE&gt;-dask-gateway    LoadBalancer   <span class="m">10</span>.51.247.160   <span class="m">146</span>.148.58.187   <span class="m">80</span>:30304/TCP     6m54s
-</span></pre></div>
+<span class="hll">api-&lt;RELEASE&gt;-dask-gateway        ClusterIP      <span class="m">10</span>.51.245.233   &lt;none&gt;           <span class="m">8000</span>/TCP         6m54s
+</span>traefik-&lt;RELEASE&gt;-dask-gateway    LoadBalancer   <span class="m">10</span>.51.247.160   <span class="m">146</span>.148.58.187   <span class="m">80</span>:30304/TCP     6m54s
+</pre></div>
 </div>
 <p>You can also check to make sure the <cite>daskcluster</cite> CRD has been installed successfully:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ kubectl get daskcluster -o yaml
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>kubectl get daskcluster -o yaml
+
 apiVersion: v1
 items: <span class="o">[]</span>
 kind: List
@@ -634,25 +612,24 @@ scheduler traffic over a separate port, see the <a class="reference internal" hr
 <p>To connect, create a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a> object, specifying the both
 addresses (the second <code class="docutils literal notranslate"><span class="pre">traefik-*</span></code> port goes under <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code> if using
 separate ports). Using the same values as above:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="s2">&quot;http://146.148.58.187&quot;</span><span class="p">,</span>
-<span class="gp">... </span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
+<span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span>
+    <span class="s2">&quot;http://146.148.58.187&quot;</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>You should now be able to use the gateway client to make API calls. To verify
 this, call <a class="reference internal" href="api-client.html#dask_gateway.Gateway.list_clusters" title="dask_gateway.Gateway.list_clusters"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dask_gateway.Gateway.list_clusters()</span></code></a>. This should return an
 empty list as you have no clusters running yet.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span><span class="o">.</span><span class="n">list_clusters</span><span class="p">()</span>
-<span class="go">[]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gateway</span><span class="o">.</span><span class="n">list_clusters</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="shutting-everything-down">
 <h2>Shutting everything down<a class="headerlink" href="#shutting-everything-down" title="Permalink to this headline">¶</a></h2>
-<p>When you’re done with the gateway, you’ll want to delete your deployment and
+<p>If you’re done with the gateway, you’ll want to delete your deployment and
 clean everything up. You can do this with <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">delete</span></code>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ helm delete <span class="nv">$RELEASE</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>helm delete <span class="nv">$RELEASE</span>
 </pre></div>
 </div>
 </div>
@@ -773,7 +750,7 @@ authentication. To do this, we register <code class="docutils literal notranslat
 Service</a>.</p>
 <p>First we need to generate an API Token - this is commonly done using
 <code class="docutils literal notranslate"><span class="pre">openssl</span></code>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -hex <span class="m">32</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>openssl rand -hex <span class="m">32</span>
 </pre></div>
 </div>
 <p>Then add the following lines to your <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file:</p>
@@ -811,11 +788,11 @@ JupyterHub Helm Chart.</p>
 between users and the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. Note that users will need to add
 <code class="docutils literal notranslate"><span class="pre">auth=&quot;jupyterhub&quot;</span></code> when they create a Gateway <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>
 object.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="s2">&quot;http://146.148.58.187&quot;</span><span class="p">,</span>
-<span class="gp">... </span>    <span class="n">auth</span><span class="o">=</span><span class="s2">&quot;jupyterhub&quot;</span><span class="p">,</span>
-<span class="gp">... </span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
+<span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span>
+    <span class="s2">&quot;http://146.148.58.187&quot;</span><span class="p">,</span>
+    <span class="n">auth</span><span class="o">=</span><span class="s2">&quot;jupyterhub&quot;</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>

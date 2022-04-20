@@ -25,10 +25,10 @@ Both the Traefik Proxy deployment and the Gateway API Server deployment can be
 scaled to multiple replicas, for increased availability and scalability.
 
 The Dask Gateway pods running on Kubernetes include the following:
-- ``traefik``: The **Traefik Proxy**
 - ``api``: The **Gateway API Server**
-- ``scheduler`` & ``worker``: User's Dask Scheduler and Worker
+- ``traefik``: The **Traefik Proxy**
 - ``controller``: The Kubernetes **Gateway Controller** for managing Dask-Gateway resources
+- ``scheduler`` & ``worker``: User's Dask Scheduler and Worker
 
 Network communications happen in the following manner:
 - The ``traefik`` pods proxy connections to the ``api`` pods on port 8000, and ``scheduler`` pods on ports 8786 and 8787.
@@ -50,38 +50,26 @@ are plenty of guides online for how to do this. We recommend following the
 excellent `documentation provided by zero-to-jupyterhub-k8s`_.
 
 
-Install Helm (optional)
------------------------
+Install Helm
+------------
 
 If you don't already have Helm_ installed, you'll need to install it locally.
 As with above, there are plenty of instructional materials online for doing
 this. We recommend following the `guide provided by zero-to-jupyterhub-k8s`_.
 
 
-Install Dask-Gateway
---------------------
+Install the Dask-Gateway Helm chart
+-----------------------------------
 
-At this point you should have a Kubernetes cluster with Helm installed and
-configured. You are now ready to install Dask-Gateway on your cluster.
-
-
-Add the Helm Chart Repository
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-To avoid downloading the chart locally from GitHub, you can use the
-`Dask-Gateway Helm chart repository`_.
-
-.. code-block:: shell
-
-    $ helm repo add dask https://helm.dask.org/
-    $ helm repo update
+At this point you should have a Kubernetes cluster. You are now ready to install
+the Dask-Gateway Helm chart on your cluster.
 
 
 Configuration
 ~~~~~~~~~~~~~
 
 The Helm chart provides access to configure most aspects of the
-``dask-gateway-server``. These are provided via a configuration YAML_ file (the
+``dask-gateway-server``. These are provided via a configuration YAML file (the
 name of this file doesn't matter, we'll use ``config.yaml``).
 
 The Helm chart exposes many configuration values, see the `default
@@ -95,16 +83,14 @@ To install the Dask-Gateway Helm chart, run the following command:
 
 .. code-block:: shell
 
-    RELEASE=dask-gateway
-    NAMESPACE=dask-gateway
-    VERSION=0.9.0
+   RELEASE=dask-gateway
+   NAMESPACE=dask-gateway
 
-    helm upgrade --install \
-        --namespace $NAMESPACE \
-        --version $VERSION \
-        --values path/to/your/config.yaml \
-        $RELEASE \
-        dask/dask-gateway
+   helm upgrade $RELEASE dask-gateway \
+       --repo=https://helm.dask.org \
+       --install \
+       --namespace $NAMESPACE \
+       --values path/to/your/config.yaml
 
 where:
 
@@ -112,9 +98,6 @@ where:
   but any release name is fine).
 - ``NAMESPACE`` is the `Kubernetes namespace`_ to install the gateway into (we
   suggest ``dask-gateway``, but any namespace is fine).
-- ``VERSION`` is the Helm chart version to use. To use the latest published
-  version you can omit the ``--version`` flag entirely. See the `Helm chart
-  repository`_ for an index of all available versions.
 - ``path/to/your/config.yaml`` is the path to your ``config.yaml`` file created
   above.
 
@@ -126,7 +109,8 @@ below).
 .. code-block:: shell
     :emphasize-lines: 4
 
-    $ kubectl get service --namespace dask-gateway
+    kubectl get service --namespace dask-gateway
+
     NAME                              TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE
     api-<RELEASE>-dask-gateway        ClusterIP      10.51.245.233   <none>           8000/TCP         6m54s
     traefik-<RELEASE>-dask-gateway    LoadBalancer   10.51.247.160   146.148.58.187   80:30304/TCP     6m54s
@@ -135,7 +119,8 @@ You can also check to make sure the `daskcluster` CRD has been installed success
 
 .. code-block:: shell
 
-   $ kubectl get daskcluster -o yaml
+   kubectl get daskcluster -o yaml
+
    apiVersion: v1
    items: []
    kind: List
@@ -161,10 +146,10 @@ separate ports). Using the same values as above:
 
 .. code-block:: python
 
-    >>> from dask_gateway import Gateway
-    >>> gateway = Gateway(
-    ...     "http://146.148.58.187",
-    ... )
+   from dask_gateway import Gateway
+   gateway = Gateway(
+       "http://146.148.58.187",
+   )
 
 You should now be able to use the gateway client to make API calls. To verify
 this, call :meth:`dask_gateway.Gateway.list_clusters`. This should return an
@@ -172,19 +157,18 @@ empty list as you have no clusters running yet.
 
 .. code-block:: python
 
-    >>> gateway.list_clusters()
-    []
+   gateway.list_clusters()
 
 
 Shutting everything down
 ------------------------
 
-When you're done with the gateway, you'll want to delete your deployment and
+If you're done with the gateway, you'll want to delete your deployment and
 clean everything up. You can do this with ``helm delete``:
 
 .. code-block:: shell
 
-    $ helm delete $RELEASE
+   helm delete $RELEASE
 
 
 Additional configuration
@@ -245,17 +229,17 @@ anti-affinity for scheduler pods to avoid `preemptible nodes`_:
 
 .. code-block:: yaml
 
-  gateway:
-    backend:
-      scheduler:
-        extraPodConfig:
-          affinity:
-            nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                  - matchExpressions:
-                    - key: cloud.google.com/gke-preemptible
-                      operator: DoesNotExist
+   gateway:
+     backend:
+       scheduler:
+         extraPodConfig:
+           affinity:
+             nodeAffinity:
+               requiredDuringSchedulingIgnoredDuringExecution:
+                 nodeSelectorTerms:
+                   - matchExpressions:
+                     - key: cloud.google.com/gke-preemptible
+                       operator: DoesNotExist
 
 For information on allowed fields, see the Kubernetes documentation:
 
@@ -283,26 +267,26 @@ resources and image (see :doc:`cluster-options` for more information).
 
 .. code-block:: yaml
 
-    gateway:
-      extraConfig:
-        # Note that the key name here doesn't matter. Values in the
-        # `extraConfig` map are concatenated, sorted by key name.
-        clusteroptions: |
-            from dask_gateway_server.options import Options, Integer, Float, String
+   gateway:
+     extraConfig:
+       # Note that the key name here doesn't matter. Values in the
+       # `extraConfig` map are concatenated, sorted by key name.
+       clusteroptions: |
+           from dask_gateway_server.options import Options, Integer, Float, String
 
-            def option_handler(options):
-                return {
-                    "worker_cores": options.worker_cores,
-                    "worker_memory": "%fG" % options.worker_memory,
-                    "image": options.image,
-                }
+           def option_handler(options):
+               return {
+                   "worker_cores": options.worker_cores,
+                   "worker_memory": "%fG" % options.worker_memory,
+                   "image": options.image,
+               }
 
-            c.Backend.cluster_options = Options(
-                Integer("worker_cores", 2, min=1, max=4, label="Worker Cores"),
-                Float("worker_memory", 4, min=1, max=8, label="Worker Memory (GiB)"),
-                String("image", default="daskgateway/dask-gateway:latest", label="Image"),
-                handler=option_handler,
-            )
+           c.Backend.cluster_options = Options(
+               Integer("worker_cores", 2, min=1, max=4, label="Worker Cores"),
+               Float("worker_memory", 4, min=1, max=8, label="Worker Memory (GiB)"),
+               String("image", default="daskgateway/dask-gateway:latest", label="Image"),
+               handler=option_handler,
+           )
 
 For information on all available configuration options, see the
 :doc:`api-server` (in particular, the :ref:`kube-cluster-config`
@@ -324,17 +308,17 @@ First we need to generate an API Token - this is commonly done using
 
 .. code-block:: shell
 
-    $ openssl rand -hex 32
+   openssl rand -hex 32
 
 Then add the following lines to your ``config.yaml`` file:
 
 .. code-block:: yaml
 
-    gateway:
-      auth:
-        type: jupyterhub
-        jupyterhub:
-          apiToken: "<API TOKEN>"
+   gateway:
+     auth:
+       type: jupyterhub
+       jupyterhub:
+         apiToken: "<API TOKEN>"
 
 replacing ``<API TOKEN>`` with the output from above.
 
@@ -346,22 +330,22 @@ this configuration key, the address will be inferred automatically.
 
 .. code-block:: yaml
 
-    gateway:
-      auth:
-        type: jupyterhub
-        jupyterhub:
-          apiToken: "<API TOKEN>"
-          apiUrl: "<API URL>"
+   gateway:
+     auth:
+       type: jupyterhub
+       jupyterhub:
+         apiToken: "<API TOKEN>"
+         apiUrl: "<API URL>"
 
 You'll also need to add the following to the ``config.yaml`` file for your
 JupyterHub Helm Chart.
 
 .. code-block:: yaml
 
-    hub:
-      services:
-        dask-gateway:
-          apiToken: "<API TOKEN>"
+   hub:
+     services:
+       dask-gateway:
+         apiToken: "<API TOKEN>"
 
 again, replacing ``<API TOKEN>`` with the output from above.
 
@@ -372,11 +356,11 @@ object.
 
 .. code-block:: python
 
-    >>> from dask_gateway import Gateway
-    >>> gateway = Gateway(
-    ...     "http://146.148.58.187",
-    ...     auth="jupyterhub",
-    ... )
+   from dask_gateway import Gateway
+   gateway = Gateway(
+       "http://146.148.58.187",
+       auth="jupyterhub",
+   )
 
 
 .. _helm-chart-reference:
