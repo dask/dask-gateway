@@ -185,15 +185,26 @@ jobs:
             deploy/controller-test-dask-gateway
             deploy/traefik-test-dask-gateway
 
-  # The tests run in this job rely on by setting up a development environment in
-  # a pre-built container.
+  # These tests starts a container with a specific backend (that can start
+  # schedulers/workers somehow), and installing test dependencies and running
+  # tests from within the container.
   #
-  hadoop-tests:
+  containerized-backend-tests:
+    name: "Test ${{ matrix.backend }} backend"
     runs-on: ubuntu-latest
 
+    # packages read access is required for pull to the backend containers
     permissions:
       contents: read
       packages: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        backend:
+          - hadoop
+          - pbs
+          - slurm
 
     steps:
       - uses: actions/checkout@v3
@@ -201,73 +212,15 @@ jobs:
       - name: Login to ghcr.io read access to CI image
         run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
 
-      - name: Start Hadoop Yarn container and mount local git repo
-        run: ./continuous_integration/docker/hadoop/start.sh
+      - name: Start container and mount local git repo
+        run: ./continuous_integration/docker/${{ matrix.backend }}/start.sh
 
       - name: Install test requirements (inside container)
-        run: ./continuous_integration/docker/hadoop/install.sh
+        run: ./continuous_integration/docker/${{ matrix.backend }}/install.sh
 
       - name: Run tests (inside container)
-        run: ./continuous_integration/docker/hadoop/test.sh
+        run: ./continuous_integration/docker/${{ matrix.backend }}/test.sh
 
       - name: Print logs for debugging
         if: always()
-        run: ./continuous_integration/docker/hadoop/print_logs.sh
-
-  # The tests run in this job rely on by setting up a development environment in
-  # a pre-built container.
-  #
-  pbs-tests:
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: read
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Login to ghcr.io read access to CI image
-        run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
-
-      - name: Start PBS container and mount local git repo
-        run: ./continuous_integration/docker/pbs/start.sh
-
-      - name: Install test requirements (inside container)
-        run: ./continuous_integration/docker/pbs/install.sh
-
-      - name: Run tests (inside container)
-        run: ./continuous_integration/docker/pbs/test.sh
-
-      - name: Print logs for debugging
-        if: always()
-        run: ./continuous_integration/docker/pbs/print_logs.sh
-
-  # The tests run in this job rely on by setting up a development environment in
-  # a pre-built container.
-  #
-  slurm-tests:
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: read
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Login to ghcr.io read access to CI image
-        run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
-
-      - name: Start Slurm container and mount local git repo
-        run: ./continuous_integration/docker/slurm/start.sh
-
-      - name: Install test requirements (inside container)
-        run: ./continuous_integration/docker/slurm/install.sh
-
-      - name: Run tests (inside container)
-        run: ./continuous_integration/docker/slurm/test.sh
-
-      - name: Print logs for debugging
-        if: always()
-        run: ./continuous_integration/docker/slurm/print_logs.sh
+        run: ./continuous_integration/docker/${{ matrix.backend }}/print_logs.sh
