@@ -1,7 +1,9 @@
 # This file describes the requirements to build the documentation, which you can
 # do by the following commands:
 #
-#   pip install -r requirements.txt
+#   pip install -r docs/requirements.txt
+#
+#   cd docs
 #   make html
 #
 dask-sphinx-theme
@@ -25,5 +27,5 @@ sphinx-copybutton
 # "import kerberos" statements only show up within functions.
 #
 autodoc-traits
---editable="../dask-gateway"
---editable="../dask-gateway-server[all_backends]"
+--editable="./dask-gateway"
+--editable="./dask-gateway-server[all_backends]"

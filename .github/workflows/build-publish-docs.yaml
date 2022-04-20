@@ -41,8 +41,7 @@ jobs:
 
       - name: Install Python docs requirements
         run: |
-          cd docs
-          DASK_GATEWAY_SERVER__NO_PROXY=true pip install -r requirements.txt
+          DASK_GATEWAY_SERVER__NO_PROXY=true pip install -r docs/requirements.txt
 
       - name: Build docs (make html)
         run: |
@@ -68,8 +67,7 @@ jobs:
 
       - name: Install Python docs requirements
         run: |
-          cd docs
-          DASK_GATEWAY_SERVER__NO_PROXY=true pip install -r requirements.txt
+          DASK_GATEWAY_SERVER__NO_PROXY=true pip install -r docs/requirements.txt
 
       - name: Linkcheck docs (make linkcheck)
         run: |

@@ -3,7 +3,7 @@
 #
 # This is how you would install and run most tests:
 #
-#   pip install -r requirements.txt
+#   pip install -r tests/requirements.txt
 #   pytest
 #
 #
@@ -24,8 +24,8 @@ pytest-asyncio
 
 # dask-gateway and dask-gateway-server and all their dependencies are assumed to
 # be installed.
---editable="../dask-gateway"
---editable="../dask-gateway-server[all_backends]"
+--editable="./dask-gateway"
+--editable="./dask-gateway-server[all_backends]"
 
 # ipython and ipywidget is optional integrations allowing for fancy rendering of
 # end user provided configuration options. Tests in test_options.py will be
