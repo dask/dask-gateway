@@ -100,6 +100,7 @@ jobs:
           go test
 
   kubernetes-tests:
+    name: "Test k8s backend and Helm chart"
     runs-on: ubuntu-latest
 
     strategy:
@@ -114,6 +115,7 @@ jobs:
         #
         include:
           - k3s-channel: v1.20
+            upgrade-from: "0.9.0"
           - k3s-channel: v1.21
           - k3s-channel: v1.22
           - k3s-channel: v1.23
@@ -157,17 +159,45 @@ jobs:
               --include-crds \
               --values=resources/helm/testing/chart-install-values.yaml
 
+      - name: helm install previous version ${{ matrix.upgrade-from }}
+        if: matrix.upgrade-from != ''
+        run: |
+          # relocate to a directory where there isn't a folder named
+          # dask-gateway to avoid making helm think we mean a local folder
+          cd resources/helm/testing
+
+          helm install \
+              test-dask-gateway \
+              dask-gateway \
+              --repo=https://helm.dask.org \
+              --version=${{ matrix.upgrade-from }} \
+              --values=chart-install-values.yaml \
+              --wait \
+              --timeout 1m0s
+
       - working-directory: resources/helm
         run: chartpress
 
-      - name: helm install
+      # If the Helm chart's CRDs have changed, helm won't upgrade them when
+      # running helm upgrade.
+      #
+      # See https://github.com/dask/dask-gateway/issues/553.
+      #
+      - name: Manual upgrade of CRDs
+        if: matrix.upgrade-from != ''
         run: |
-          helm install \
+          kubectl apply -f resources/helm/dask-gateway/crds/daskclusters.yaml
+          kubectl apply -f resources/helm/dask-gateway/crds/traefik.yaml
+
+      - name: helm install (or upgrade)
+        run: |
+          helm upgrade \
               test-dask-gateway \
               resources/helm/dask-gateway \
+              --install \
               --values=resources/helm/testing/chart-install-values.yaml \
               --wait \
-              --timeout 3m0s
+              --timeout 1m0s
 
       - name: pytest
         run: |
