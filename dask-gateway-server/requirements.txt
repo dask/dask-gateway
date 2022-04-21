@@ -1,8 +1,5 @@
 # These are dependencies for installing the dask-gateway-server package.
 #
-# NOTE: changes to the dependencies here must also be reflected in
-#       ../dev-environment.yaml
-#
 aiohttp
 colorlog
 cryptography
