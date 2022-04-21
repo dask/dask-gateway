@@ -17,6 +17,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+    "github.com/dask/dask-gateway/dask-gateway-proxy/internal/logging"
 )
 
 type RoutesMsg struct {
@@ -541,6 +543,7 @@ func (p *Proxy) runTCP(ln net.Listener, forwarder *Forwarder) {
 	}
 }
 
+//TODO: make this a skinny main?
 func main() {
 	var (
 		address        string

@@ -2,7 +2,7 @@
 //
 // Provides common log levels, and quick functions for formatting and writing
 // output at those levels.
-package main
+package logging
 
 import (
 	"fmt"
