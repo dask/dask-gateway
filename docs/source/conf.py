@@ -21,7 +21,6 @@ sys.path.insert(0, os.path.join(docs, "sphinxext"))
 extensions = [
     "autodoc_traits",
     "myst_parser",
-    "sphinx_copybutton",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",

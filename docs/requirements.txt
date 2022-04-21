@@ -15,9 +15,6 @@ sphinx
 # browser.
 sphinx-autobuild
 
-# sphinx-copybutton provides code segments with a copy button.
-sphinx-copybutton
-
 # autodoc-traits will inspect the dask-gateway and dask-gateway-server's Python
 # code to generate reference documentation. It will omit files if ImportErrors
 # are thrown so we install these packages with all dependencies to avoid that.
