@@ -4,12 +4,7 @@
 #       ../dev-environment.yaml
 #
 aiohttp
-# FIXME: click 8.0.4 works, but 8.1.0-8.1.2 has found to cause failures for
-#        currently unknown reasons.
-#
-#        This is tracked in https://github.com/dask/dask-gateway/issues/522.
-#
-click<8.1.0
+click
 dask>=2.2.0
 distributed>=2021.01.1
 pyyaml
