@@ -44,7 +44,7 @@ type readonly struct {
 func (c readonly) Read(p []byte) (int, error) { return c.r.Read(p) }
 func (readonly) Write(p []byte) (int, error)  { return 0, io.EOF }
 
-func readSNI(inConn *net.TCPConn) (string, bool, TcpConn, error) {
+func ReadSNI(inConn *net.TCPConn) (string, bool, TcpConn, error) {
 	br := bufio.NewReader(inConn)
 	hdr, err := br.Peek(1)
 	if err != nil {

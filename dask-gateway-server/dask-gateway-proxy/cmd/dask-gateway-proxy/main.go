@@ -101,9 +101,9 @@ type Proxy struct {
 
 func NewProxy(logLevel logging.LogLevel) *Proxy {
 	out := Proxy{
-		logger:    NewLogger("Proxy", logLevel),
+		logger:    logging.NewLogger("Proxy", logLevel),
 		sniRoutes: make(map[string]string),
-		router:    NewRouter(),
+		router:    router.NewRouter(),
 	}
 	out.proxy = &httputil.ReverseProxy{
 		Director:      out.director,
@@ -161,7 +161,7 @@ func (p *Proxy) run(address, tcpAddress, apiURL, apiToken, tlsCert, tlsKey strin
 func (p *Proxy) clearRoutes() {
 	p.logger.Infof("Resetting routing table")
 	p.sniRoutes = make(map[string]string)
-	p.router = NewRouter()
+	p.router = router.NewRouter()
 }
 
 func (p *Proxy) putRoute(route *Route) {
@@ -391,7 +391,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	p.routesLock.RUnlock()
 
 	var uri string
-	if p.logger.level >= DEBUG {
+    if *p.logger.level >= logging.DEBUG {
 		uri = req.URL.RequestURI()
 	}
 
@@ -477,7 +477,7 @@ func (h *Forwarder) Accept() (net.Conn, error) {
 func (p *Proxy) handleConnection(inConn *net.TCPConn, forwarder *Forwarder) {
 	var err error
 
-	sni, isTLS, pInConn, err := readSNI(inConn)
+	sni, isTLS, pInConn, err := sni.ReadSNI(inConn)
 	if err != nil {
 		p.logger.Debugf("Error extracting SNI: %s", err)
 		inConn.Close()
@@ -575,7 +575,7 @@ func main() {
 		panic("DASK_GATEWAY_PROXY_TOKEN environment variable not set")
 	}
 
-	logLevel := ParseLevel(logLevelString)
+	logLevel := logging.ParseLevel(logLevelString)
 
 	if (tlsCert == "") != (tlsKey == "") {
 		panic("Both -tls-cert and -tls-key must be set to use HTTPS")
