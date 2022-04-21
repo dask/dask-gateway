@@ -19,6 +19,7 @@ import (
 	"time"
 
     "github.com/dask/dask-gateway/dask-gateway-proxy/internal/logging"
+    "github.com/dask/dask-gateway/dask-gateway-proxy/pkg/router"
 )
 
 type RoutesMsg struct {
@@ -90,14 +91,14 @@ func (r *Route) Validate(full bool) error {
 }
 
 type Proxy struct {
-	logger     *Logger
+	logger     *logging.Logger
 	sniRoutes  map[string]string
-	router     *Router
+	router     *router.Router
 	routesLock sync.RWMutex
 	proxy      *httputil.ReverseProxy
 }
 
-func NewProxy(logLevel LogLevel) *Proxy {
+func NewProxy(logLevel logging.LogLevel) *Proxy {
 	out := Proxy{
 		logger:    NewLogger("Proxy", logLevel),
 		sniRoutes: make(map[string]string),
