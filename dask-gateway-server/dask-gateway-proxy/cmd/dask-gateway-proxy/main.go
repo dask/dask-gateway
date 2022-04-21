@@ -391,9 +391,10 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	p.routesLock.RUnlock()
 
 	var uri string
-    if *p.logger.level >= logging.DEBUG {
-		uri = req.URL.RequestURI()
-	}
+    /*logger := p.logger
+    if p.logger.level >= logging.DEBUG {
+	    uri = req.URL.RequestURI()
+	}*/
 
 	if target != nil {
 		targetQuery := target.RawQuery

@@ -50,7 +50,7 @@ class build_proxy(Command):
         self.mkpath(PROXY_TGT_DIR)
         try:
             code = subprocess.call(
-                ["go", "build", "-o", PROXY_TGT_EXE],
+                ["go", "build", "-o", PROXY_TGT_EXE, "./cmd/dask-gateway-proxy"],
                 cwd=PROXY_SRC_DIR,
             )
         except OSError as exc:
