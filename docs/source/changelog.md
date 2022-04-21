@@ -7,7 +7,8 @@ improvements in documentation and automation to make it easier to cut releases
 going onwards.
 
 The project now adopts [CalVer](https://calver.org/) versioning with a
-`YYYY.MM.MICRO` format like many other Dask organization projects.
+`YYYY.MM.MICRO` format similar to other Dask organization projects using the
+slightly different `YYYY.0M.MICRO` format with a leading zero on the month.
 
 ### Breaking changes
 
