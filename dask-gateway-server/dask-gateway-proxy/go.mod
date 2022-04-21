@@ -1,3 +1,3 @@
-module gateway.dask.org/main
+module github.com/dask/dask-gateway/dask-gateway-proxy
 
-go 1.12
+go 1.18
