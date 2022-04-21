@@ -20,6 +20,7 @@ import (
 
     "github.com/dask/dask-gateway/dask-gateway-proxy/internal/logging"
     "github.com/dask/dask-gateway/dask-gateway-proxy/pkg/router"
+    "github.com/dask/dask-gateway/dask-gateway-proxy/pkg/sni"
 )
 
 type RoutesMsg struct {
@@ -524,7 +525,7 @@ func (p *Proxy) handleConnection(inConn *net.TCPConn, forwarder *Forwarder) {
 	wg.Wait()
 }
 
-func (p *Proxy) proxyConnections(wg *sync.WaitGroup, in, out tcpConn) {
+func (p *Proxy) proxyConnections(wg *sync.WaitGroup, in, out sni.TcpConn) {
 	defer wg.Done()
 	if _, err := io.Copy(in, out); err != nil {
 		p.logger.Debugf("Error proxying %q -> %q: %s", in.RemoteAddr(), out.RemoteAddr(), err)
