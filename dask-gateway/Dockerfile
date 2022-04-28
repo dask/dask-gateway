@@ -34,7 +34,7 @@ WORKDIR /home/dask/
 
 # Install dask-gateway
 COPY --chown=dask:dask . /opt/dask-gateway
-RUN pip install --no-cache-dir numpy /opt/dask-gateway
+RUN pip install --no-cache-dir numpy pandas bokeh /opt/dask-gateway
 
 # Only set ENTRYPOINT, CMD is configured at runtime by dask-gateway-server
 ENTRYPOINT ["tini", "-g", "--"]
