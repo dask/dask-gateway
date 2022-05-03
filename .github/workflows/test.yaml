@@ -99,7 +99,7 @@ jobs:
         run: |
           cd dask-gateway-server/dask-gateway-proxy
           go test ./pkg/router
-      
+
       - name: Run Go Tests: pkg/sni
         run: |
           cd dask-gateway-server/dask-gateway-proxy
