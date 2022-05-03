@@ -104,18 +104,12 @@ jobs:
         run: |
           cd dask-gateway-server/dask-gateway-proxy
           go test ./pkg/sni
-      
+
       # logging framework tests
       - name: Run Go Tests - internal/logging
         run: |
           cd dask-gateway-server/dask-gateway-proxy
           go test ./internal/logging
-
-      # integration tests
-      #- name: Run Go Integration Tests
-      #  run: | 
-      #    cd dask-gateway-server/dask-gateway-proxy
-      #    go test ./test
 
   kubernetes-tests:
     name: "Test k8s backend and Helm chart"
