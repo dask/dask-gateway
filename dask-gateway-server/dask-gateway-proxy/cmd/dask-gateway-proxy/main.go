@@ -18,9 +18,9 @@ import (
 	"sync"
 	"time"
 
-    "github.com/dask/dask-gateway/dask-gateway-proxy/internal/logging"
-    "github.com/dask/dask-gateway/dask-gateway-proxy/pkg/router"
-    "github.com/dask/dask-gateway/dask-gateway-proxy/pkg/sni"
+	"github.com/dask/dask-gateway/dask-gateway-proxy/internal/logging"
+	"github.com/dask/dask-gateway/dask-gateway-proxy/pkg/router"
+	"github.com/dask/dask-gateway/dask-gateway-proxy/pkg/sni"
 )
 
 type RoutesMsg struct {
@@ -391,10 +391,9 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	p.routesLock.RUnlock()
 
 	var uri string
-    /*logger := p.logger
-    if p.logger.level >= logging.DEBUG {
-	    uri = req.URL.RequestURI()
-	}*/
+	if p.logger.Level >= logging.DEBUG {
+		uri = req.URL.RequestURI()
+	}
 
 	if target != nil {
 		targetQuery := target.RawQuery

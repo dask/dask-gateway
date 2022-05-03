@@ -51,37 +51,37 @@ func (l LogLevel) Char() byte {
 
 type Logger struct {
 	sync.Mutex
-	name  string
-	level LogLevel
-	out   io.Writer
-	buf   []byte
+	Name  string
+	Level LogLevel
+	Out   io.Writer
+	Buf   []byte
 }
 
 func NewLogger(name string, level LogLevel) *Logger {
-	return &Logger{name: name, level: level, out: os.Stderr}
+	return &Logger{Name: name, Level: level, Out: os.Stderr}
 }
 
 func (l *Logger) logMsg(level LogLevel, msg string) {
-	if l.level >= level {
+	if l.Level >= level {
 		now := time.Now() // get this early.
 		l.Lock()
 		defer l.Unlock()
-		l.buf = l.buf[:0]
-		l.buf = append(l.buf, '[')
-		l.buf = append(l.buf, level.Char())
-		l.buf = append(l.buf, ' ')
-		l.buf = now.AppendFormat(l.buf, "2006-01-02 15:04:05.000")
-		l.buf = append(l.buf, ' ')
-		l.buf = append(l.buf, l.name...)
-		l.buf = append(l.buf, "] "...)
-		l.buf = append(l.buf, msg...)
-		l.buf = append(l.buf, '\n')
-		l.out.Write(l.buf)
+		l.Buf = l.Buf[:0]
+		l.Buf = append(l.Buf, '[')
+		l.Buf = append(l.Buf, level.Char())
+		l.Buf = append(l.Buf, ' ')
+		l.Buf = now.AppendFormat(l.Buf, "2006-01-02 15:04:05.000")
+		l.Buf = append(l.Buf, ' ')
+		l.Buf = append(l.Buf, l.Name...)
+		l.Buf = append(l.Buf, "] "...)
+		l.Buf = append(l.Buf, msg...)
+		l.Buf = append(l.Buf, '\n')
+		l.Out.Write(l.Buf)
 	}
 }
 
 func (l *Logger) logF(level LogLevel, format string, args ...interface{}) {
-	if l.level >= level {
+	if l.Level >= level {
 		l.logMsg(level, fmt.Sprintf(format, args...))
 	}
 }
