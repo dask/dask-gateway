@@ -94,10 +94,21 @@ jobs:
           cd dask-gateway-server/dask-gateway-proxy
           go get github.com/stretchr/testify/assert
 
-      - name: Run Go tests
+      # pkg level tests
+      - name: Run Go Tests: pkg/router
         run: |
           cd dask-gateway-server/dask-gateway-proxy
-          go test
+          go test ./pkg/router
+      - name: Run Go Tests: pkg/sni
+        run: |
+          cd dask-gateway-server/dask-gateway-proxy
+          go test ./pkg/sni
+      
+      # logging framework tests
+      - name: Run Go Tests: internal/logging
+        run: |
+          cd dask-gateway-server/dask-gateway-proxy
+          go test ./internal/logging
 
   kubernetes-tests:
     name: "Test k8s backend and Helm chart"
