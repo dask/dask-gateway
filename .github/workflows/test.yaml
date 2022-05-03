@@ -95,24 +95,24 @@ jobs:
           go get github.com/stretchr/testify/assert
 
       # pkg level tests
-      - name: Run Go Tests: pkg/router
+      - name: Run Go Tests - pkg/router
         run: |
           cd dask-gateway-server/dask-gateway-proxy
           go test ./pkg/router
 
-      - name: Run Go Tests: pkg/sni
+      - name: Run Go Tests - pkg/sni
         run: |
           cd dask-gateway-server/dask-gateway-proxy
           go test ./pkg/sni
       
       # logging framework tests
-      - name: Run Go Tests: internal/logging
+      - name: Run Go Tests - internal/logging
         run: |
           cd dask-gateway-server/dask-gateway-proxy
           go test ./internal/logging
 
       # integration tests
-      #- name: Run Go Integration Tests:
+      #- name: Run Go Integration Tests
       #  run: | 
       #    cd dask-gateway-server/dask-gateway-proxy
       #    go test ./test
