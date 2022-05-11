@@ -348,7 +348,7 @@ JupyterHub Helm Chart.
          apiToken: "<API TOKEN>"
          display: false
 
-again, replacing ``<API TOKEN>`` with the output from above. The `display`
+again, replacing ``<API TOKEN>`` with the output from above. The ``display``
 attribute hides dask-gateway from the 'Services' dropdown in the hub home
 page, as dask-gateway doesn't offer any useful UI features.
 
