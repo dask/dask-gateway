@@ -346,8 +346,11 @@ JupyterHub Helm Chart.
      services:
        dask-gateway:
          apiToken: "<API TOKEN>"
+         display: false
 
-again, replacing ``<API TOKEN>`` with the output from above.
+again, replacing ``<API TOKEN>`` with the output from above. The ``display``
+attribute hides dask-gateway from the 'Services' dropdown in the hub home
+page, as dask-gateway doesn't offer any useful UI features.
 
 With this configuration, JupyterHub will be used to authenticate requests
 between users and the ``dask-gateway-server``. Note that users will need to add
