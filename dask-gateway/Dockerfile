@@ -34,7 +34,28 @@ WORKDIR /home/dask/
 
 # Install dask-gateway
 COPY --chown=dask:dask . /opt/dask-gateway
-RUN pip install --no-cache-dir numpy pandas bokeh /opt/dask-gateway
+# Install dask-gateway, which is the only thing needed for our CI test suite.
+#
+# We also install the bare minimum to provide end users with a primitive
+# end-to-end demonstrative test doing work in the worker pods and accessing the
+# scheduler dashboard without changing the image.
+#
+# - bokeh is required by the scheduler pod to present dashbaords.
+# - numpy and pandas are required for the demonstrative test doing work in the
+#   worker pods.
+#
+# This is the test that we should support:
+#
+#   FIXME: declare a test here or provide a link to documentation that does
+#          provide a test.
+#
+COPY --chown=dask:dask . /opt/dask-gateway
+RUN pip install --no-cache-dir
+        /opt/dask-gateway \
+ && pip install --no-cache-dir \
+        bokeh \
+        numpy \
+        pandas
 
 # Only set ENTRYPOINT, CMD is configured at runtime by dask-gateway-server
 ENTRYPOINT ["tini", "-g", "--"]
