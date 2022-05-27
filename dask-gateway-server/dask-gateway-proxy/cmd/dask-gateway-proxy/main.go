@@ -545,7 +545,6 @@ func (p *Proxy) runTCP(ln net.Listener, forwarder *Forwarder) {
 	}
 }
 
-//TODO: make this a skinny main?
 func main() {
 	var (
 		address        string
