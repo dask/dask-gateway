@@ -44,6 +44,7 @@ spec:
             - "--global.sendanonymoususage=False"
             - "--ping=true"
             - "--providers.kubernetescrd"
+            - "--providers.kubernetescrd.allowCrossNamespace=true"
             - '--providers.kubernetescrd.labelselector=gateway.dask.org/instance={{ include "dask-gateway.fullname" . }}'
             - "--providers.kubernetescrd.throttleduration=2"
             - "--log.level={{ .Values.traefik.loglevel }}"
