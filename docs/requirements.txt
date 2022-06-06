@@ -6,7 +6,7 @@
 #   cd docs
 #   make html
 #
-dask-sphinx-theme
+dask-sphinx-theme>=3.0.0
 myst-parser
 sphinx
 

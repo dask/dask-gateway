@@ -12,7 +12,9 @@ release = version = dask_gateway_server.__version__
 source_suffix = [".rst", ".md"]
 root_doc = master_doc = "index"
 language = None
-pygments_style = "sphinx"
+# Commenting this out for now, if we register dask pygments,
+# then eventually this line can be:
+# pygments_style = "dask"
 exclude_patterns = []
 
 # Sphinx Extensions
