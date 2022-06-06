@@ -17,6 +17,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dask/dask-gateway/dask-gateway-proxy/internal/logging"
+	"github.com/dask/dask-gateway/dask-gateway-proxy/pkg/router"
+	"github.com/dask/dask-gateway/dask-gateway-proxy/pkg/sni"
 )
 
 type RoutesMsg struct {
@@ -88,18 +92,18 @@ func (r *Route) Validate(full bool) error {
 }
 
 type Proxy struct {
-	logger     *Logger
+	logger     *logging.Logger
 	sniRoutes  map[string]string
-	router     *Router
+	router     *router.Router
 	routesLock sync.RWMutex
 	proxy      *httputil.ReverseProxy
 }
 
-func NewProxy(logLevel LogLevel) *Proxy {
+func NewProxy(logLevel logging.LogLevel) *Proxy {
 	out := Proxy{
-		logger:    NewLogger("Proxy", logLevel),
+		logger:    logging.NewLogger("Proxy", logLevel),
 		sniRoutes: make(map[string]string),
-		router:    NewRouter(),
+		router:    router.NewRouter(),
 	}
 	out.proxy = &httputil.ReverseProxy{
 		Director:      out.director,
@@ -157,7 +161,7 @@ func (p *Proxy) run(address, tcpAddress, apiURL, apiToken, tlsCert, tlsKey strin
 func (p *Proxy) clearRoutes() {
 	p.logger.Infof("Resetting routing table")
 	p.sniRoutes = make(map[string]string)
-	p.router = NewRouter()
+	p.router = router.NewRouter()
 }
 
 func (p *Proxy) putRoute(route *Route) {
@@ -387,7 +391,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	p.routesLock.RUnlock()
 
 	var uri string
-	if p.logger.level >= DEBUG {
+	if p.logger.Level >= logging.DEBUG {
 		uri = req.URL.RequestURI()
 	}
 
@@ -473,7 +477,7 @@ func (h *Forwarder) Accept() (net.Conn, error) {
 func (p *Proxy) handleConnection(inConn *net.TCPConn, forwarder *Forwarder) {
 	var err error
 
-	sni, isTLS, pInConn, err := readSNI(inConn)
+	sni, isTLS, pInConn, err := sni.ReadSNI(inConn)
 	if err != nil {
 		p.logger.Debugf("Error extracting SNI: %s", err)
 		inConn.Close()
@@ -521,7 +525,7 @@ func (p *Proxy) handleConnection(inConn *net.TCPConn, forwarder *Forwarder) {
 	wg.Wait()
 }
 
-func (p *Proxy) proxyConnections(wg *sync.WaitGroup, in, out tcpConn) {
+func (p *Proxy) proxyConnections(wg *sync.WaitGroup, in, out sni.TcpConn) {
 	defer wg.Done()
 	if _, err := io.Copy(in, out); err != nil {
 		p.logger.Debugf("Error proxying %q -> %q: %s", in.RemoteAddr(), out.RemoteAddr(), err)
@@ -570,7 +574,7 @@ func main() {
 		panic("DASK_GATEWAY_PROXY_TOKEN environment variable not set")
 	}
 
-	logLevel := ParseLevel(logLevelString)
+	logLevel := logging.ParseLevel(logLevelString)
 
 	if (tlsCert == "") != (tlsKey == "") {
 		panic("Both -tls-cert and -tls-key must be set to use HTTPS")

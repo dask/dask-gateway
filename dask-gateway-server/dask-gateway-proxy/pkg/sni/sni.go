@@ -1,4 +1,4 @@
-package main
+package sni
 
 import (
 	"bufio"
@@ -8,7 +8,7 @@ import (
 	"net"
 )
 
-type tcpConn interface {
+type TcpConn interface {
 	net.Conn
 	CloseWrite() error
 	CloseRead() error
@@ -31,7 +31,7 @@ func (c *peekedTCPConn) Read(p []byte) (n int, err error) {
 	return c.TCPConn.Read(p)
 }
 
-func wrapPeeked(inConn *net.TCPConn, br *bufio.Reader) tcpConn {
+func wrapPeeked(inConn *net.TCPConn, br *bufio.Reader) TcpConn {
 	peeked, _ := br.Peek(br.Buffered())
 	return &peekedTCPConn{TCPConn: inConn, peeked: peeked}
 }
@@ -44,7 +44,7 @@ type readonly struct {
 func (c readonly) Read(p []byte) (int, error) { return c.r.Read(p) }
 func (readonly) Write(p []byte) (int, error)  { return 0, io.EOF }
 
-func readSNI(inConn *net.TCPConn) (string, bool, tcpConn, error) {
+func ReadSNI(inConn *net.TCPConn) (string, bool, TcpConn, error) {
 	br := bufio.NewReader(inConn)
 	hdr, err := br.Peek(1)
 	if err != nil {
