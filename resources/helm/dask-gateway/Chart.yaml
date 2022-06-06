@@ -7,5 +7,5 @@ description: A multi-tenant server for deploying and managing Dask clusters
 home: https://gateway.dask.org/
 sources:
   - https://github.com/dask/dask-gateway/
-icon: https://docs.dask.org/en/latest/_images/dask_icon_no_pad.svg
+icon: https://avatars3.githubusercontent.com/u/17131925?v=3&s=200
 kubeVersion: ">=1.20.0-0"
