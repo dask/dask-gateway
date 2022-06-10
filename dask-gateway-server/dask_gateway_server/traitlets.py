@@ -3,7 +3,22 @@ from traitlets import Type as _Type
 from traitlets import Unicode
 from traitlets.config import Application
 
-# Override default values for logging
+# We replace the class of the default formatter used via a configuration change.
+#
+# References:
+#
+# - Traitlets' Application.logging_config defaults:
+#   https://github.com/ipython/traitlets/blob/e2c731ef72dd41d4be527d4d93dd87ccc409830d/traitlets/config/application.py#L229-L256
+# - Python official schema for Application.logging_config:
+#   https://docs.python.org/3/library/logging.config.html#logging-config-dictschema
+#
+Application.logging_config = {
+    "formatters": {
+        "console": {
+            "class": "dask_gateway_server.utils.LogFormatter",
+        },
+    },
+}
 Application.log_level.default_value = "INFO"
 Application.log_format.default_value = (
     "%(log_color)s[%(levelname)1.1s %(asctime)s.%(msecs).03d "

@@ -175,10 +175,11 @@ def classname(cls):
 
 
 class LogFormatter(ColoredFormatter):
-    def __init__(self, fmt=None, datefmt=None):
+    def __init__(self, fmt=None, datefmt=None, style=None):
         super().__init__(
             fmt=fmt,
             datefmt=datefmt,
+            style=style,
             reset=False,
             log_colors={
                 "DEBUG": "blue",

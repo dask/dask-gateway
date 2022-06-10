@@ -13,7 +13,7 @@ from .auth import Authenticator
 from .backends import Backend
 from .routes import default_routes
 from .traitlets import Application, Type
-from .utils import AccessLogger, LogFormatter, classname, normalize_address, run_main
+from .utils import AccessLogger, classname, normalize_address, run_main
 
 
 class GenerateConfig(Application):
@@ -144,8 +144,6 @@ class DaskGateway(Application):
     @validate("address")
     def _validate_address(self, proposal):
         return normalize_address(proposal.value)
-
-    _log_formatter_cls = LogFormatter
 
     classes = List([Backend, Authenticator])
 
