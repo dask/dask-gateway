@@ -33,10 +33,9 @@ WORKDIR /home/dask/
 # The Golang proxy binary isn't built as the dask-gateway Helm chart relies on
 # Traefik as a proxy instead to run in its dedicated pod.
 #
-COPY --chown=dask:dask . /srv/dask-gateway-server
-
+COPY --chown=dask:dask . /opt/dask-gateway-server
 RUN DASK_GATEWAY_SERVER__NO_PROXY=true pip install --no-cache-dir \
-        "/srv/dask-gateway-server[kubernetes]"
+        -r /opt/dask-gateway-server/Dockerfile.requirements.txt
 
 ENTRYPOINT ["tini", "-g", "--"]
 CMD ["dask-gateway-server", "--config", "/etc/dask-gateway/dask_gateway_config.py"]
