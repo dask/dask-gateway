@@ -3,6 +3,6 @@
 aiohttp
 click
 dask>=2.2.0
-distributed>=2021.01.1
+distributed>=2022.5.2
 pyyaml
 tornado
