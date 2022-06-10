@@ -41,21 +41,15 @@ COPY --chown=dask:dask . /opt/dask-gateway
 # scheduler dashboard without changing the image.
 #
 # - bokeh is required by the scheduler pod to present dashbaords.
-# - numpy and pandas are required for the demonstrative test doing work in the
-#   worker pods.
-#
-# This is the test that we should support:
-#
-#   FIXME: declare a test here or provide a link to documentation that does
-#          provide a test.
+# - numpy is required for running a basic computation test:
+#   https://gateway.dask.org/usage.html#run-computations-on-the-cluster
 #
 COPY --chown=dask:dask . /opt/dask-gateway
 RUN pip install --no-cache-dir
         /opt/dask-gateway \
  && pip install --no-cache-dir \
         bokeh \
-        numpy \
-        pandas
+        numpy
 
 # Only set ENTRYPOINT, CMD is configured at runtime by dask-gateway-server
 ENTRYPOINT ["tini", "-g", "--"]
