@@ -37,3 +37,17 @@ extlinks = {
 # Sphinx Theme
 html_theme = "dask_sphinx_theme"
 templates_path = ["_templates"]
+
+# -- Options for linkcheck builder -------------------------------------------
+# http://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-the-linkcheck-builder
+#
+linkcheck_ignore = [
+    r"(.*)github\.com(.*)#",  # javascript based anchors
+    r"https://github.com/[^/]*$",  # too many github usernames / searches in changelog
+    "https://github.com/jupyterhub/oauthenticator/pull/",  # too many PRs in changelog
+    "https://github.com/jupyterhub/oauthenticator/compare/",  # too many comparisons in changelog
+]
+linkcheck_anchors_ignore = [
+    "/#!",
+    "/#%21",
+]
