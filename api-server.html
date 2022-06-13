@@ -719,50 +719,6 @@
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="dask_gateway_server.app.DaskGateway.logging_config">
-<span class="sig-name descname"><span class="pre">logging_config</span></span><em class="property"><span class="w"> </span><span class="pre">c.DaskGateway.logging_config</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.app.DaskGateway.logging_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configure additional log handlers.</p>
-<p>The default stderr logs handler is configured by the
-log_level, log_datefmt and log_format settings.</p>
-<p>This configuration can be used to configure additional handlers
-(e.g. to output the log to a file) or for finer control over the
-default handlers.</p>
-<p>If provided this should be a logging configuration dictionary, for
-more information see:
-<a class="reference external" href="https://docs.python.org/3/library/logging.config.html#logging-config-dictschema">https://docs.python.org/3/library/logging.config.html#logging-config-dictschema</a></p>
-<p>This dictionary is merged with the base logging configuration which
-defines the following:</p>
-<ul class="simple">
-<li><p>A logging formatter intended for interactive use called
-<code class="docutils literal notranslate"><span class="pre">console</span></code>.</p></li>
-<li><p>A logging handler that writes to stderr called
-<code class="docutils literal notranslate"><span class="pre">console</span></code> which uses the formatter <code class="docutils literal notranslate"><span class="pre">console</span></code>.</p></li>
-<li><p>A logger with the name of this application set to <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>
-level.</p></li>
-</ul>
-<p>This example adds a new handler that writes to a file:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">logging_configuration</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;file&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;logging.FileHandler&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;path/to/file&gt;&#39;</span><span class="p">,</span>
-        <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="s1">&#39;loggers&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;&lt;application-name&gt;&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
-            <span class="c1"># NOTE: if you don&#39;t list the default &quot;console&quot;</span>
-            <span class="c1"># handler here then it will be disabled</span>
-            <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;console&#39;</span><span class="p">,</span> <span class="s1">&#39;file&#39;</span><span class="p">],</span>
-        <span class="p">},</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.app.DaskGateway.show_config">
 <span class="sig-name descname"><span class="pre">show_config</span></span><em class="property"><span class="w"> </span><span class="pre">c.DaskGateway.show_config</span> <span class="pre">=</span> <span class="pre">Bool(False)</span></em><a class="headerlink" href="#dask_gateway_server.app.DaskGateway.show_config" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instead of starting the Application, dump configuration to stdout</p>
@@ -2461,50 +2417,6 @@ order of magnitude).</p>
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.controller.KubeController.log_level">
 <span class="sig-name descname"><span class="pre">log_level</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeController.log_level</span> <span class="pre">=</span> <span class="pre">Enum('INFO')</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.controller.KubeController.log_level" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the log level by value or name.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.controller.KubeController.logging_config">
-<span class="sig-name descname"><span class="pre">logging_config</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeController.logging_config</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.controller.KubeController.logging_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configure additional log handlers.</p>
-<p>The default stderr logs handler is configured by the
-log_level, log_datefmt and log_format settings.</p>
-<p>This configuration can be used to configure additional handlers
-(e.g. to output the log to a file) or for finer control over the
-default handlers.</p>
-<p>If provided this should be a logging configuration dictionary, for
-more information see:
-<a class="reference external" href="https://docs.python.org/3/library/logging.config.html#logging-config-dictschema">https://docs.python.org/3/library/logging.config.html#logging-config-dictschema</a></p>
-<p>This dictionary is merged with the base logging configuration which
-defines the following:</p>
-<ul class="simple">
-<li><p>A logging formatter intended for interactive use called
-<code class="docutils literal notranslate"><span class="pre">console</span></code>.</p></li>
-<li><p>A logging handler that writes to stderr called
-<code class="docutils literal notranslate"><span class="pre">console</span></code> which uses the formatter <code class="docutils literal notranslate"><span class="pre">console</span></code>.</p></li>
-<li><p>A logger with the name of this application set to <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>
-level.</p></li>
-</ul>
-<p>This example adds a new handler that writes to a file:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">logging_configuration</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;file&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;logging.FileHandler&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;path/to/file&gt;&#39;</span><span class="p">,</span>
-        <span class="p">}</span>
-    <span class="p">},</span>
-    <span class="s1">&#39;loggers&#39;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s1">&#39;&lt;application-name&gt;&#39;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s1">&#39;level&#39;</span><span class="p">:</span> <span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
-            <span class="c1"># NOTE: if you don&#39;t list the default &quot;console&quot;</span>
-            <span class="c1"># handler here then it will be disabled</span>
-            <span class="s1">&#39;handlers&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;console&#39;</span><span class="p">,</span> <span class="s1">&#39;file&#39;</span><span class="p">],</span>
-        <span class="p">},</span>
-    <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="py attribute">
