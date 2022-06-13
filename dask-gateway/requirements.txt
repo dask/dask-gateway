@@ -1,8 +1,8 @@
 # These are dependencies for installing the dask-gateway package.
 #
 aiohttp
-click
-dask>=2.2.0
-distributed>=2021.01.1
+click>=8.1.3
+dask>=2022.1.0
+distributed>=2022.1.0,!=2022.5.1,!=2022.5.2
 pyyaml
 tornado

@@ -469,7 +469,7 @@ async def test_cluster_fails_after_connect():
             async with gateway.new_cluster() as cluster:
                 # Kill scheduler
                 scheduler = g.gateway.backend.schedulers[cluster.name]
-                await scheduler.close(fast=True)
+                await scheduler.close()
                 scheduler.stop()
 
                 # Gateway notices and cleans up cluster in time

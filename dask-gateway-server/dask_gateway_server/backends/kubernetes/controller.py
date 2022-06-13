@@ -20,7 +20,6 @@ from ...traitlets import Application
 from ...utils import (
     AccessLogger,
     FrozenAttrDict,
-    LogFormatter,
     RateLimiter,
     TaskPool,
     normalize_address,
@@ -283,8 +282,6 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         help="A list of middlewares to apply to web routes added to the proxy.",
         config=True,
     )
-
-    _log_formatter_cls = LogFormatter
 
     # Fail if the config file errors
     raise_config_file_errors = True

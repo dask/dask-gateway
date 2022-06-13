@@ -69,7 +69,7 @@ class InProcessBackend(UnsafeLocalBackend):
     async def do_stop_cluster(self, cluster):
         scheduler = self.schedulers.pop(cluster.name)
 
-        await scheduler.close(fast=True)
+        await scheduler.close()
         scheduler.stop()
 
         workdir = cluster.state.get("workdir")
