@@ -1,5 +1,38 @@
 # Changelog
 
+## 2022.6.0
+
+This release makes `dask-gateway` the client require `dask>=2022`,
+`distributed>=2022`, and `click>=8.1.3`, but includes no other breaking changes.
+
+### New features added
+
+- Provide frozen requirements.txt files for images, and automation to update them [#575](https://github.com/dask/dask-gateway/pull/575) ([@consideRatio](https://github.com/consideRatio))
+
+### Bugs fixed
+
+- Fix compatibility with distributed >= 2022.5.1 and traitlets >= 5.2.0, and raise the lower bound of required versions [#573](https://github.com/dask/dask-gateway/pull/573) ([@consideRatio](https://github.com/consideRatio))
+- Let Traefik's route traffic across namespaces via IngressRoute resources [#569](https://github.com/dask/dask-gateway/pull/569) ([@olivier-lacroix](https://github.com/olivier-lacroix))
+
+### Maintenance and upkeep improvements
+
+- Install bokeh and numpy in the Helm chart's scheduler and worker sample image [#561](https://github.com/dask/dask-gateway/pull/561) ([@zonca](https://github.com/zonca))
+- golang: refresh dask-gateway-proxy using modules and package directories [#559](https://github.com/dask/dask-gateway/pull/559) ([@rigzba21](https://github.com/rigzba21))
+- maint: unpin click again as issues seems resolved [#558](https://github.com/dask/dask-gateway/pull/558) ([@consideRatio](https://github.com/consideRatio))
+
+### Documentation improvements
+
+- Update Dask logo [#572](https://github.com/dask/dask-gateway/pull/572) ([@jacobtomlinson](https://github.com/jacobtomlinson))
+- Update docs theme for rebranding [#567](https://github.com/dask/dask-gateway/pull/567) ([@scharlottej13](https://github.com/scharlottej13))
+- Document setting `display: False` in hub services config [#564](https://github.com/dask/dask-gateway/pull/564) ([@yuvipanda](https://github.com/yuvipanda))
+- docs: remove outdated comment about dev-environment.yaml [#557](https://github.com/dask/dask-gateway/pull/557) ([@consideRatio](https://github.com/consideRatio))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2022-04-21&to=2022-06-13&type=c))
+
+[@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2022-04-21..2022-06-13&type=Issues) | [@jacobtomlinson](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajacobtomlinson+updated%3A2022-04-21..2022-06-13&type=Issues) | [@jcrist](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajcrist+updated%3A2022-04-21..2022-06-13&type=Issues) | [@martindurant](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amartindurant+updated%3A2022-04-21..2022-06-13&type=Issues) | [@menendes](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amenendes+updated%3A2022-04-21..2022-06-13&type=Issues) | [@olivier-lacroix](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aolivier-lacroix+updated%3A2022-04-21..2022-06-13&type=Issues) | [@rigzba21](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Arigzba21+updated%3A2022-04-21..2022-06-13&type=Issues) | [@scharlottej13](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ascharlottej13+updated%3A2022-04-21..2022-06-13&type=Issues) | [@TomAugspurger](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3ATomAugspurger+updated%3A2022-04-21..2022-06-13&type=Issues) | [@yuvipanda](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ayuvipanda+updated%3A2022-04-21..2022-06-13&type=Issues) | [@zonca](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Azonca+updated%3A2022-04-21..2022-06-13&type=Issues)
+
 ## 2022.4.0
 
 This release is the first in a long time, and with it comes significant
