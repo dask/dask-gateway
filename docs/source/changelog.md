@@ -1,5 +1,21 @@
 # Changelog
 
+## 2022.6.1
+
+### Bugs fixed
+
+- Update dask-gateway package's requirements to what works [#580](https://github.com/dask/dask-gateway/pull/580) ([@consideRatio](https://github.com/consideRatio))
+
+### Other merged PRs
+
+- ci: avoid 429 too-many-requests issues from linkcheck [#578](https://github.com/dask/dask-gateway/pull/578) ([@consideRatio](https://github.com/consideRatio))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2022-06-13&to=2022-06-13&type=c))
+
+[@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2022-06-13..2022-06-13&type=Issues) | [@martindurant](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amartindurant+updated%3A2022-06-13..2022-06-13&type=Issues)
+
 ## 2022.6.0
 
 This release makes `dask-gateway` the client require `dask>=2022`,
