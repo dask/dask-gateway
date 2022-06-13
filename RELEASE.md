@@ -2,6 +2,11 @@
 
 Follow these steps to cut a new release.
 
+- Update frozen Dockerfile.requirements.txt files by running workflow that has
+  automated this at
+  https://github.com/dask/dask-gateway/actions/workflows/refreeze-dockerfile-requirements-txt.yaml
+  and merging the PRs.
+
 - Update `docs/changelog.md` in a dedicated PR
 
   - Generate a list of PRs using [executablebooks/github-activity](https://github.com/executablebooks/github-activity)

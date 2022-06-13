@@ -1,0 +1,61 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+#
+name: Refreeze Dockerfile.requirements.txt
+
+on:
+  push:
+    paths:
+      - "**/Dockerfile"
+      - "**/Dockerfile.requirements.in"
+      - "**/Dockerfile.requirements.txt"
+      - ".github/workflows/refreeze-dockerfile-requirements-txt.yaml"
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  refreeze-dockerfile-requirements-txt:
+    name: Refreeze Dockerfile.requirements.txt
+
+    # Don't run this job on forks
+    if: github.repository == 'dask/dask-gateway'
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: dask-gateway
+          - image: dask-gateway-server
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Refreeze Dockerfile.requirements.txt based on Dockerfile.requirements.in
+        run: |
+          cd ${{ matrix.image }}
+          docker run --rm \
+              --env=CUSTOM_COMPILE_COMMAND='Use "Run workflow" button at https://github.com/dask/dask-gateway/actions/workflows/refreeze-dockerfile-requirements-txt.yaml' \
+              --volume=$PWD:/opt/${{ matrix.image }} \
+              --workdir=/opt/${{ matrix.image }} \
+              --user=root \
+              python:3.10-slim-bullseye \
+              sh -c 'pip install pip-tools==6.* && pip-compile --upgrade --output-file=Dockerfile.requirements.txt Dockerfile.requirements.in'
+
+      - name: git diff
+        run: git --no-pager diff --color=always
+
+      # ref: https://github.com/peter-evans/create-pull-request
+      - name: Create a PR
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: "${{ secrets.dask_bot_token }}"
+          author: Dask Bot Account <65357765+dask-bot@users.noreply.github.com>
+          committer: Dask Bot Account <65357765+dask-bot@users.noreply.github.com>
+          branch: update-image-${{ matrix.image }}
+          labels: dependencies
+          commit-message: Refreeze ${{ matrix.image}}/Dockerfile.requirements.txt
+          title: Refreeze ${{ matrix.image}}/Dockerfile.requirements.txt
+          body: >-
+            ${{ matrix.image}}/Dockerfile.requirements.txt has been refrozen
+            based on ${{ matrix.image}}/Dockerfile.requirements.in.
