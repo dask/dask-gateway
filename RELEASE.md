@@ -30,9 +30,9 @@ Follow these steps to cut a new release.
   git checkout main
   git reset --hard origin/main
 
-  # Update dask-gateway/dask_gateway/version.py
-  # Update dask-gateway-server/dask_gateway_server/version.py
-  # Update Chart.yaml
+  # Update dask-gateway/dask_gateway/_version.py
+  # Update dask-gateway-server/dask_gateway_server/_version.py
+  # Update resources/helm/dask-gateway/Chart.yaml
   git add .
   git commit -m "Release $VERSION"
 
