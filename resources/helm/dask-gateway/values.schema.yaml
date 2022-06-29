@@ -239,6 +239,7 @@ properties:
         additionalProperties: false
         required:
           - image
+          - imagePullSecrets
           - scheduler
           - worker
         description: |
@@ -253,6 +254,7 @@ properties:
               Set a custom image name, tag, pullPolicy, or pullSecrets for Dask
               Cluster's scheduler and worker pods.
             properties: *image-properties
+          imagePullSecrets: *imagePullSecrets-spec
           namespace:
             type: [string, "null"]
             description: |

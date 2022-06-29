@@ -52,6 +52,8 @@ data:
             "%s:%s" % (image_name, image_tag) if image_tag else image_name
         )
 
+    c.KubeClusterConfig.imagePullSecrets = "{{ .Values.gateway.backend.imagePullSecrets }}"
+
     # Forward dask cluster configuration
     for field, prop_name in [
         # Scheduler config
