@@ -6,7 +6,7 @@ from collections import defaultdict
 
 from kubernetes_asyncio import client, config
 from kubernetes_asyncio.client.rest import ApiException
-from traitlets import Dict, Float, Unicode, default
+from traitlets import Dict, Float, Unicode, List, default
 from traitlets.config import LoggingConfigurable
 
 from ... import __version__ as VERSION
@@ -52,6 +52,12 @@ class KubeClusterConfig(ClusterConfig):
         "IfNotPresent",
         help="The image pull policy of the docker image specified in ``image``",
         config=True,
+    )
+
+    image_pull_secrets = List(
+        Unicode,
+        help="The pull secret(s) associated with the ``image``.",
+        config=True
     )
 
     # Kubernetes is a bit different in types/granularity of resource requests.
