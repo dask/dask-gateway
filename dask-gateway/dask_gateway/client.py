@@ -1011,7 +1011,7 @@ class GatewayCluster:
         if self._watch_worker_status_task is not None:
             await cancel_task(self._watch_worker_status_task)
         if self.scheduler_comm is not None:
-            self.scheduler_comm.close_rpc()
+            await self.scheduler_comm.close_rpc()
         for client in list(self._clients):
             await client._close()
             self._clients.discard(client)
