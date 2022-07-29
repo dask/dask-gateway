@@ -78,6 +78,20 @@ gateway:
     periodSeconds: 10
     failureThreshold: 3
 
+  # Settings for nodeSelector, affinity, and tolerations for the gateway pods,
+  # i.e., the `api` pod that runs the `dask-gateway-server`, and the
+  # backend worker/scheduler pods.
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
+  # Any extra configuration code to append to the generated `dask_gateway_config.py`
+  # file. Can be either a single code-block, or a map of key -> code-block
+  # (code-blocks are run in alphabetical order by key, the key value itself is
+  # meaningless). The map version is useful as it supports merging multiple
+  # `values.yaml` files, but is unnecessary in other cases.
+  extraConfig: {}
+
   # backend nested configuration relates to the scheduler and worker resources
   # created for DaskCluster k8s resources by the controller.
   backend:
@@ -135,19 +149,6 @@ gateway:
       # Number of threads available for a worker. Sets
       # `c.KubeClusterConfig.worker_threads`
       threads:
-
-  # Settings for nodeSelector, affinity, and tolerations for the gateway pods
-  nodeSelector: {}
-  affinity: {}
-  tolerations: []
-
-  # Any extra configuration code to append to the generated `dask_gateway_config.py`
-  # file. Can be either a single code-block, or a map of key -> code-block
-  # (code-blocks are run in alphabetical order by key, the key value itself is
-  # meaningless). The map version is useful as it supports merging multiple
-  # `values.yaml` files, but is unnecessary in other cases.
-  extraConfig: {}
-
 
 
 # controller nested config relates to the controller Pod and the
