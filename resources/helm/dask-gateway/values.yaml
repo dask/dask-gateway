@@ -78,9 +78,7 @@ gateway:
     periodSeconds: 10
     failureThreshold: 3
 
-  # Settings for nodeSelector, affinity, and tolerations for the gateway pods,
-  # i.e., the `api` pod that runs the `dask-gateway-server`, and the
-  # backend worker/scheduler pods.
+  # nodeSelector, affinity, and tolerations the for the `api` pod running dask-gateway-server
   nodeSelector: {}
   affinity: {}
   tolerations: []
