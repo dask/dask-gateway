@@ -16,6 +16,16 @@ required:
   - rbac
   - global
 properties:
+  fullnameOverride:
+    type: [string, "null"]
+    description: |
+      fullnameOverride and nameOverride allow you to adjust how the resources
+      part of the Helm chart are named.
+  nameOverride:
+    type: [string, "null"]
+    description: |
+      See the description of fullnameOverride.
+
   gateway:
     type: object
     additionalProperties: false
