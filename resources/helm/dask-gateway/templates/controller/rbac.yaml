@@ -9,7 +9,11 @@ metadata:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+{{- if .Values.runInClusterScope }}
 kind: ClusterRole
+{{- else }}
+kind: Role
+{{- end }}
 metadata:
   name: {{ include "dask-gateway.controllerName" . }}
   labels:
@@ -31,7 +35,11 @@ rules:
     resources: ["secrets", "services"]
     verbs: ["create", "delete"]
 ---
+{{- if .Values.runInClusterScope }}
 kind: ClusterRoleBinding
+{{- else }}
+kind: RoleBinding
+{{- end }}
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "dask-gateway.controllerName" . }}
@@ -42,7 +50,11 @@ subjects:
     name: {{ include "dask-gateway.controllerName" . }}
     namespace: {{ .Release.Namespace }}
 roleRef:
+  {{- if .Values.runInClusterScope }}
   kind: ClusterRole
+  {{- else }}
+  kind: Role
+  {{- end }}
   name: {{ include "dask-gateway.controllerName" . }}
   apiGroup: rbac.authorization.k8s.io
 {{- end }}

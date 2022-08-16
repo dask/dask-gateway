@@ -6,6 +6,16 @@ nameOverride: ""
 ##
 fullnameOverride: ""
 
+## Run the whole stack either at the cluster scope or at the namespace scope
+##
+runInClusterScope: true
+
+## Watch only a specific namespace
+## If runInClusterScope is false and watchNamespace is empty, it will watch the release namespace only
+## If runInClusterScope is true, it will watch all cluster namespaces
+##
+watchNamespace: ""
+
 # gateway nested config relates to the api Pod and the dask-gateway-server
 # running within it, the k8s Service exposing it, as well as the schedulers
 # (gateway.backend.scheduler) and workers gateway.backend.worker) created by the

@@ -352,6 +352,19 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
         self.core_client = client.CoreV1Api(api_client=self.api_client)
         self.custom_client = client.CustomObjectsApi(api_client=self.api_client)
 
+        method = "list_cluster_custom_object"
+        method_kwargs = dict(
+            group="gateway.dask.org",
+            version=self.crd_version,
+            plural="daskclusters",
+            label_selector=self.label_selector,
+        )
+
+        self.watch_namespace = os.environ.get("WATCH_NAMESPACE")
+        if self.watch_namespace:
+            method = "list_namespaced_custom_object"
+            method_kwargs["namespace"] = self.watch_namespace
+
         self.cluster_waiters = defaultdict(Flag)
         self.clusters = {}
         self.username_to_clusters = defaultdict(dict)
@@ -360,13 +373,8 @@ class KubeBackend(KubeBackendAndControllerMixin, Backend):
             parent=self,
             name="cluster",
             client=self.custom_client,
-            method="list_cluster_custom_object",
-            method_kwargs=dict(
-                group="gateway.dask.org",
-                version=self.crd_version,
-                plural="daskclusters",
-                label_selector=self.label_selector,
-            ),
+            method=method,
+            method_kwargs=method_kwargs,
             on_update=self.on_cluster_event,
             on_delete=self.on_cluster_event,
         )

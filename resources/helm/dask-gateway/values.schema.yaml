@@ -26,6 +26,16 @@ properties:
     description: |
       See the description of fullnameOverride.
 
+  runInClusterScope:
+    type: boolean
+    description: |
+      Run the whole stack either at the cluster scope or at the namespace scope
+
+  watchNamespace:
+    type: [string, "null"]
+    description: |
+      Watch only a specific namespace
+
   gateway:
     type: object
     additionalProperties: false

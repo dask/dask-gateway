@@ -2,6 +2,7 @@ import asyncio
 import collections
 import json
 import logging
+import os
 import signal
 import sys
 import time
@@ -378,18 +379,39 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         endpoints_selector = (
             self.label_selector + ",app.kubernetes.io/component=dask-scheduler"
         )
+
+        method_clusters = "list_cluster_custom_object"
+        method_kwargs_clusters = dict(
+            group="gateway.dask.org",
+            version=self.crd_version,
+            plural="daskclusters",
+            label_selector=self.label_selector,
+        )
+
+        method_pod = "list_pod_for_all_namespaces"
+        method_kwargs_pod = dict(label_selector=self.label_selector)
+
+        method_endpoints = "list_endpoints_for_all_namespaces"
+        method_kwargs_endpoints = dict(label_selector=endpoints_selector)
+
+        self.watch_namespace = os.environ.get("WATCH_NAMESPACE")
+        if self.watch_namespace:
+            method_clusters = "list_namespaced_custom_object"
+            method_kwargs_clusters["namespace"] = self.watch_namespace
+
+            method_pod = "list_namespaced_pod"
+            method_kwargs_pod["namespace"] = self.watch_namespace
+
+            method_endpoints = "list_namespaced_endpoints"
+            method_kwargs_endpoints["namespace"] = self.watch_namespace
+
         self.informers = {
             "cluster": Informer(
                 parent=self,
                 name="cluster",
                 client=self.custom_client,
-                method="list_cluster_custom_object",
-                method_kwargs=dict(
-                    group="gateway.dask.org",
-                    version=self.crd_version,
-                    plural="daskclusters",
-                    label_selector=self.label_selector,
-                ),
+                method=method_clusters,
+                method_kwargs=method_kwargs_clusters,
                 on_update=self.on_cluster_update,
                 on_delete=self.on_cluster_delete,
             ),
@@ -397,8 +419,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 parent=self,
                 name="pod",
                 client=self.core_client,
-                method="list_pod_for_all_namespaces",
-                method_kwargs=dict(label_selector=self.label_selector),
+                method=method_pod,
+                method_kwargs=method_kwargs_pod,
                 on_update=self.on_pod_update,
                 on_delete=self.on_pod_delete,
             ),
@@ -406,8 +428,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 parent=self,
                 name="endpoints",
                 client=self.core_client,
-                method="list_endpoints_for_all_namespaces",
-                method_kwargs=dict(label_selector=endpoints_selector),
+                method=method_endpoints,
+                method_kwargs=method_kwargs_endpoints,
                 on_update=self.on_endpoints_update,
                 on_delete=self.on_endpoints_delete,
             ),
