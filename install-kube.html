@@ -802,7 +802,15 @@ object.</p>
 <span id="id1"></span><h2>Helm chart reference<a class="headerlink" href="#helm-chart-reference" title="Permalink to this headline">¶</a></h2>
 <p>The full <a class="reference external" href="https://github.com/dask/dask-gateway/blob/main/resources/helm/dask-gateway/values.yaml">default values.yaml file</a> for the dask-gateway Helm chart is included
 here for reference:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># gateway nested config relates to the api Pod and the dask-gateway-server</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1">## Provide a name to partially substitute for the full names of resources (will maintain the release name)</span><span class="w"></span>
+<span class="c1">##</span><span class="w"></span>
+<span class="nt">nameOverride</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"></span>
+
+<span class="c1">## Provide a name to substitute for the full names of resources</span><span class="w"></span>
+<span class="c1">##</span><span class="w"></span>
+<span class="nt">fullnameOverride</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"></span>
+
+<span class="c1"># gateway nested config relates to the api Pod and the dask-gateway-server</span><span class="w"></span>
 <span class="c1"># running within it, the k8s Service exposing it, as well as the schedulers</span><span class="w"></span>
 <span class="c1"># (gateway.backend.scheduler) and workers gateway.backend.worker) created by the</span><span class="w"></span>
 <span class="c1"># controller when a DaskCluster k8s resource is registered.</span><span class="w"></span>
@@ -882,6 +890,18 @@ here for reference:</p>
 <span class="w">    </span><span class="nt">periodSeconds</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w"></span>
 <span class="w">    </span><span class="nt">failureThreshold</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span><span class="w"></span>
 
+<span class="w">  </span><span class="c1"># nodeSelector, affinity, and tolerations the for the `api` pod running dask-gateway-server</span><span class="w"></span>
+<span class="w">  </span><span class="nt">nodeSelector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
+<span class="w">  </span><span class="nt">affinity</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
+<span class="w">  </span><span class="nt">tolerations</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1"># Any extra configuration code to append to the generated `dask_gateway_config.py`</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># file. Can be either a single code-block, or a map of key -&gt; code-block</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># (code-blocks are run in alphabetical order by key, the key value itself is</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># meaningless). The map version is useful as it supports merging multiple</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># `values.yaml` files, but is unnecessary in other cases.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">extraConfig</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
+
 <span class="w">  </span><span class="c1"># backend nested configuration relates to the scheduler and worker resources</span><span class="w"></span>
 <span class="w">  </span><span class="c1"># created for DaskCluster k8s resources by the controller.</span><span class="w"></span>
 <span class="w">  </span><span class="nt">backend</span><span class="p">:</span><span class="w"></span>
@@ -939,19 +959,6 @@ here for reference:</p>
 <span class="w">      </span><span class="c1"># Number of threads available for a worker. Sets</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># `c.KubeClusterConfig.worker_threads`</span><span class="w"></span>
 <span class="w">      </span><span class="nt">threads</span><span class="p">:</span><span class="w"></span>
-
-<span class="w">  </span><span class="c1"># Settings for nodeSelector, affinity, and tolerations for the gateway pods</span><span class="w"></span>
-<span class="w">  </span><span class="nt">nodeSelector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
-<span class="w">  </span><span class="nt">affinity</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
-<span class="w">  </span><span class="nt">tolerations</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w"></span>
-
-<span class="w">  </span><span class="c1"># Any extra configuration code to append to the generated `dask_gateway_config.py`</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># file. Can be either a single code-block, or a map of key -&gt; code-block</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># (code-blocks are run in alphabetical order by key, the key value itself is</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># meaningless). The map version is useful as it supports merging multiple</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># `values.yaml` files, but is unnecessary in other cases.</span><span class="w"></span>
-<span class="w">  </span><span class="nt">extraConfig</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w"></span>
-
 
 
 <span class="c1"># controller nested config relates to the controller Pod and the</span><span class="w"></span>
