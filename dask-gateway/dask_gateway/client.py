@@ -608,6 +608,7 @@ class Gateway:
             cluster_name,
             shutdown_on_close=shutdown_on_close,
             address=self.address,
+            public_address=self._public_address,
             proxy_address=self.proxy_address,
             auth=self.auth,
             asynchronous=self.asynchronous,
