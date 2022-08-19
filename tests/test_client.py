@@ -304,6 +304,9 @@ async def test_dashboard_link_from_public_address():
                 for c in clusters:
                     assert c.dashboard_link.startswith("/services/dask-gateway")
 
+                cluster = await gateway.connect(cluster_name=cluster.name)
+                assert cluster.dashboard_link == sol
+
 
 async def test_create_cluster_with_GatewayCluster_constructor():
     async with temp_gateway() as g:
