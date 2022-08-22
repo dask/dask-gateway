@@ -59,7 +59,7 @@ class SlurmBackend(JobQueueBackend):
         if cluster.config.partition:
             cmd.append("--partition=" + cluster.config.partition)
         if cluster.config.account:
-            cmd.account("--account=" + cluster.config.account)
+            cmd.append("--account=" + cluster.config.account)
         if cluster.config.qos:
             cmd.extend("--qos=" + cluster.config.qos)
 
