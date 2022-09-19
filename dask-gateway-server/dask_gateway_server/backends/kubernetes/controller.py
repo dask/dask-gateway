@@ -1175,6 +1175,10 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             },
         }
 
+        pod["spec"]["imagePullSecrets"] = []
+        for image_pull_secret in config.image_pull_secrets:
+            pod["spec"]["imagePullSecrets"].append({"name": image_pull_secret})
+
         if extra_pod_config:
             pod["spec"] = merge_json_objects(pod["spec"], extra_pod_config)
 

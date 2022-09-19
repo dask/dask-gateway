@@ -51,6 +51,7 @@ data:
         c.KubeClusterConfig.image = (
             "%s:%s" % (image_name, image_tag) if image_tag else image_name
         )
+        c.KubeClusterConfig.image_pull_secrets = get_property("gateway.backend.imagePullSecrets")
 
     # Forward dask cluster configuration
     for field, prop_name in [

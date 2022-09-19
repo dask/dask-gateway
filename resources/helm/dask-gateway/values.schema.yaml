@@ -251,6 +251,7 @@ properties:
           - image
           - scheduler
           - worker
+          - imagePullSecrets
         description: |
           `backend` nested configuration relates to the scheduler and worker
           resources created for DaskCluster k8s resources by the controller.
@@ -263,6 +264,7 @@ properties:
               Set a custom image name, tag, pullPolicy, or pullSecrets for Dask
               Cluster's scheduler and worker pods.
             properties: *image-properties
+          imagePullSecrets: *imagePullSecrets-spec
           namespace:
             type: [string, "null"]
             description: |
