@@ -39,19 +39,23 @@ spec:
           resources:
             {{- . | toYaml | nindent 12 }}
           {{- end }}
+          # The Dockerfile's entrypoint is traefik the CLI, and we provide args
+          # to it as documented here:
+          # https://doc.traefik.io/traefik/reference/static-configuration/cli/
+          #
           args:
-            - "--global.checknewversion=False"
-            - "--global.sendanonymoususage=False"
+            - "--global.checknewversion=false"
+            - "--global.sendanonymoususage=false"
             - "--ping=true"
             - "--providers.kubernetescrd"
-            - "--providers.kubernetescrd.allowCrossNamespace=true"
+            - "--providers.kubernetescrd.allowcrossnamespace=true"
             - '--providers.kubernetescrd.labelselector=gateway.dask.org/instance={{ include "dask-gateway.fullname" . }}'
             - "--providers.kubernetescrd.throttleduration=2"
             - "--log.level={{ .Values.traefik.loglevel }}"
-            - "--entryPoints.traefik.address=:9000"
-            - "--entryPoints.web.address=:8000"
+            - "--entrypoints.traefik.address=:9000"
+            - "--entrypoints.web.address=:8000"
             {{- if ne (toString .Values.traefik.service.ports.tcp.port) "web" }}
-            - "--entryPoints.tcp.address=:8786"
+            - "--entrypoints.tcp.address=:8786"
             {{- end }}
             {{- if .Values.traefik.dashboard }}
             - "--api.dashboard=true"
