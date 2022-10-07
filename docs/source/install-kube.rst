@@ -300,36 +300,70 @@ JupyterHub_ provides a multi-user interactive notebook_ environment. Through
 the zero-to-jupyterhub-k8s_ project, many companies and institutions have setup
 JuypterHub to run on Kubernetes. When deploying Dask-Gateway alongside
 JupyterHub, you can configure Dask-Gateway to use JupyterHub for
-authentication. To do this, we register ``dask-gateway`` as a `JupyterHub
-Service`_.
+authentication.
 
-First we need to generate an API Token - this is commonly done using
-``openssl``:
+Configuring a dask-gateway chart with a jupyterhub chart is more straight
+forward if they are installed in the same namespace for two reasons. First the
+JupyterHub chart generates api tokens for registered services and puts them in a
+k8s Secret that dask-gateway can make use of. Secondly dask-gateway
+pods/containers can detect the k8s Service from the JupyterHub chart's resources
+in the automatically.
+
+If dask-gateway **is installed in the same namespace as jupyterhub**, this is the
+recommended configuration to use.
+
+.. code-block:: yaml
+
+   # jupyterhub chart configuration
+   hub:
+     services:
+       dask-gateway:
+         display: false
+
+.. note::
+
+   The ``display`` attribute hides dask-gateway from the 'Services' dropdown in
+   the JupyterHub home page as dask-gateway doesn't offer any UI.
+
+.. code-block:: yaml
+
+   # dask-gateway chart configuration
+   gateway:
+     auth:
+       type: jupyterhub
+
+.. note::
+
+   This configuration relies on the dask-gateway chart's default values of
+   ``display.auth.jupyterhub.apiTokenFromSecretName`` and
+   ``display.auth.jupyterhub.apiTokenFromSecretKey`` as can be inspected in the
+   `default values.yaml file`_.
+
+If dask-gateway **isn't installed in the same namespace as jupyterhub**, this is
+the recommended configuration procedure.
+
+First generate an api token to use, for example using using ``openssl``:
 
 .. code-block:: shell
 
    openssl rand -hex 32
 
-Then add the following lines to your ``config.yaml`` file:
+Once you have it, your configuration should look like below, where ``<API URL>``
+should look like ``https://<JUPYTERHUB-HOST>:<JUPYTERHUB-PORT>/hub/api`` and
+``<API TOKEN>`` should be the generated api token.
 
 .. code-block:: yaml
 
-   gateway:
-     auth:
-       type: jupyterhub
-       jupyterhub:
+   # jupyterhub chart configuration
+   hub:
+     services:
+       dask-gateway:
          apiToken: "<API TOKEN>"
-
-replacing ``<API TOKEN>`` with the output from above.
-
-If you're not deploying Dask-Gateway in the same cluster and namespace as
-JupyterHub, you'll also need to specify JupyterHub's API url. This is usually
-of the form ``https://<JUPYTERHUB-HOST>:<JUPYTERHUB-PORT>/hub/api``. If
-JupyterHub and Dask-Gateway are on the same cluster and namespace you can omit
-this configuration key, the address will be inferred automatically.
+         display: false
 
 .. code-block:: yaml
 
+   # dask-gateway chart configuration
    gateway:
      auth:
        type: jupyterhub
@@ -337,25 +371,13 @@ this configuration key, the address will be inferred automatically.
          apiToken: "<API TOKEN>"
          apiUrl: "<API URL>"
 
-You'll also need to add the following to the ``config.yaml`` file for your
-JupyterHub Helm Chart.
+With JupyterHub authentication configured, it can be used to authenticate
+requests between users of the dask-gateway client and the dask-gateway server
+running in the api-dask-gateway pod.
 
-.. code-block:: yaml
-
-   hub:
-     services:
-       dask-gateway:
-         apiToken: "<API TOKEN>"
-         display: false
-
-again, replacing ``<API TOKEN>`` with the output from above. The ``display``
-attribute hides dask-gateway from the 'Services' dropdown in the hub home
-page, as dask-gateway doesn't offer any useful UI features.
-
-With this configuration, JupyterHub will be used to authenticate requests
-between users and the ``dask-gateway-server``. Note that users will need to add
-``auth="jupyterhub"`` when they create a Gateway :class:`dask_gateway.Gateway`
-object.
+Dask-Gateway client users should add ``auth="jupyterhub"`` when they create a
+Gateway :class:`dask_gateway.Gateway` object, or provide configuration for
+dask-gateway client to authenticate with JupyterHub.
 
 .. code-block:: python
 

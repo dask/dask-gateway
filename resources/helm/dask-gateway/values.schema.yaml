@@ -225,6 +225,19 @@ properties:
                 description: |
                   A JupyterHub api token for dask-gateway to use. See
                   https://gateway.dask.org/install-kube.html#authenticating-with-jupyterhub.
+              apiTokenFromSecretName:
+                type: [string]
+                description: |
+                  A k8s Secret in the same namespace as dask-gateway where we
+                  can look for a JupyterHub api token for dask-gateway to use. See
+                  https://gateway.dask.org/install-kube.html#authenticating-with-jupyterhub.
+              apiTokenFromSecretKey:
+                type: [string]
+                description: |
+                  The name of a key in a k8s Secret named by
+                  `apiTokenFromSecretName` holding the value of a JupyterHub api
+                  token for dask-gateway to use. See
+                  https://gateway.dask.org/install-kube.html#authenticating-with-jupyterhub.
               apiUrl:
                 type: [string, "null"]
                 description: |
