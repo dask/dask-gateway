@@ -107,7 +107,7 @@ gateway:
       tag: "set-by-chartpress"
       pullPolicy: IfNotPresent
 
-    # Image pull secrets for backend pod
+    # Image pull secrets for a dask cluster's scheduler and worker pods
     imagePullSecrets: []
 
     # The namespace to launch dask clusters in. If not specified, defaults to

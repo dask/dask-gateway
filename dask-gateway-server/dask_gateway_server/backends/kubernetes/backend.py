@@ -56,7 +56,12 @@ class KubeClusterConfig(ClusterConfig):
 
     image_pull_secrets = List(
         [],
-        help="Image pull secrets to access private registries",
+        help="""
+        Image pull secrets to access private registries.
+        
+        Should be a list of dictionaries with a single key called ``name`` to
+        match the k8s native syntax.
+        """,
         config=True,
     )
 
