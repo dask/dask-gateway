@@ -2018,6 +2018,14 @@ number of workers available to this cluster.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.image_pull_secrets">
+<span class="sig-name descname"><span class="pre">image_pull_secrets</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.image_pull_secrets</span> <span class="pre">=</span> <span class="pre">List()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.image_pull_secrets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Image pull secrets to access private registries.</p>
+<p>Should be a list of dictionaries with a single key called <code class="docutils literal notranslate"><span class="pre">name</span></code> to
+match the k8s native syntax.</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.namespace">
 <span class="sig-name descname"><span class="pre">namespace</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.namespace</span> <span class="pre">=</span> <span class="pre">Unicode('default')</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.namespace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Kubernetes namespace to launch pods in.</p>

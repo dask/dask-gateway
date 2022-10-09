@@ -911,6 +911,9 @@ here for reference:</p>
 <span class="w">      </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;set-by-chartpress&quot;</span><span class="w"></span>
 <span class="w">      </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span><span class="w"></span>
 
+<span class="w">    </span><span class="c1"># Image pull secrets for a dask cluster&#39;s scheduler and worker pods</span><span class="w"></span>
+<span class="w">    </span><span class="nt">imagePullSecrets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span><span class="w"></span>
+
 <span class="w">    </span><span class="c1"># The namespace to launch dask clusters in. If not specified, defaults to</span><span class="w"></span>
 <span class="w">    </span><span class="c1"># the same namespace the gateway is running in.</span><span class="w"></span>
 <span class="w">    </span><span class="nt">namespace</span><span class="p">:</span><span class="w"></span>
