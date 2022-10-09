@@ -139,6 +139,8 @@ jobs:
           # correctly
           fetch-depth: 0
       - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
       # Starts a k8s cluster with NetworkPolicy enforcement and installs both
       # kubectl and helm
