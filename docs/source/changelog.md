@@ -1,12 +1,55 @@
 # Changelog
 
+## 2022.10.0
+
+This release includes no breaking changes.
+
+([full changelog](https://github.com/dask/dask-gateway/compare/2022.6.1...2022.10.0))
+
+### New features added
+
+- Simplified integration with namespace local JupyterHub Helm charts [#612](https://github.com/dask/dask-gateway/pull/612) ([@consideRatio](https://github.com/consideRatio))
+- Helm chart: add gateway.backend.imagePullSecrets [#606](https://github.com/dask/dask-gateway/pull/606) ([@maxime1907](https://github.com/maxime1907), [@consideRatio](https://github.com/consideRatio))
+
+### Bugs fixed
+
+- Fix typo in SLURM backend. [#603](https://github.com/dask/dask-gateway/pull/603) ([@amanning9](https://github.com/amanning9), [@jcrist](https://github.com/jcrist))
+- Add public address to GatewayCluster when connecting to an existing cluster [#601](https://github.com/dask/dask-gateway/pull/601) ([@giffels](https://github.com/giffels), [@consideRatio](https://github.com/consideRatio))
+- fix: add missing fields nameOverride and fullnameOverride [#593](https://github.com/dask/dask-gateway/pull/593) ([@maxime1907](https://github.com/maxime1907), [@consideRatio](https://github.com/consideRatio))
+- Await `close_rpc()` in client [#588](https://github.com/dask/dask-gateway/pull/588) ([@patrix58](https://github.com/patrix58), [@consideRatio](https://github.com/consideRatio))
+
+### Maintenance and upkeep improvements
+
+- refactor: use traefik documented syntax for cli flags [#611](https://github.com/dask/dask-gateway/pull/611) ([@consideRatio](https://github.com/consideRatio), [@martindurant](https://github.com/martindurant))
+- Compatibility fix for ipywidgets 8+ [#609](https://github.com/dask/dask-gateway/pull/609) ([@viniciusdc](https://github.com/viniciusdc), [@consideRatio](https://github.com/consideRatio))
+
+### Documentation improvements
+
+- Reorder gateway config and update comment about gateway.nodeSelector [#590](https://github.com/dask/dask-gateway/pull/590) ([@GeorgianaElena](https://github.com/GeorgianaElena), [@consideRatio](https://github.com/consideRatio))
+
+### Continuous integration improvements
+
+- build(deps): bump pypa/gh-action-pypi-publish from 1.5.0 to 1.5.1 [#602](https://github.com/dask/dask-gateway/pull/602) ([@dependabot](https://github.com/dependabot), [@consideRatio](https://github.com/consideRatio))
+- build(deps): bump docker/setup-qemu-action from 1 to 2 [#600](https://github.com/dask/dask-gateway/pull/600) ([@dependabot](https://github.com/dependabot), [@consideRatio](https://github.com/consideRatio))
+- build(deps): bump actions/setup-python from 3 to 4 [#599](https://github.com/dask/dask-gateway/pull/599) ([@dependabot](https://github.com/dependabot), [@consideRatio](https://github.com/consideRatio))
+- build(deps): bump JamesIves/github-pages-deploy-action from 4.2.5 to 4.4.0 [#598](https://github.com/dask/dask-gateway/pull/598) ([@dependabot](https://github.com/dependabot), [@consideRatio](https://github.com/consideRatio))
+- build(deps): bump jupyterhub/action-k3s-helm from 2 to 3 [#597](https://github.com/dask/dask-gateway/pull/597) ([@dependabot](https://github.com/dependabot), [@consideRatio](https://github.com/consideRatio))
+- build(deps): bump docker/setup-buildx-action from 1 to 2 [#596](https://github.com/dask/dask-gateway/pull/596) ([@dependabot](https://github.com/dependabot), [@consideRatio](https://github.com/consideRatio))
+- ci: fix broken dependabot config [#595](https://github.com/dask/dask-gateway/pull/595) ([@consideRatio](https://github.com/consideRatio))
+
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2022-06-13&to=2022-10-13&type=c))
+
+[@amanning9](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aamanning9+updated%3A2022-06-13..2022-10-13&type=Issues) | [@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2022-06-13..2022-10-13&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Adependabot+updated%3A2022-06-13..2022-10-13&type=Issues) | [@GeorgianaElena](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AGeorgianaElena+updated%3A2022-06-13..2022-10-13&type=Issues) | [@giffels](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Agiffels+updated%3A2022-06-13..2022-10-13&type=Issues) | [@jcrist](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajcrist+updated%3A2022-06-13..2022-10-13&type=Issues) | [@martindurant](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amartindurant+updated%3A2022-06-13..2022-10-13&type=Issues) | [@maxime1907](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amaxime1907+updated%3A2022-06-13..2022-10-13&type=Issues) | [@patrix58](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Apatrix58+updated%3A2022-06-13..2022-10-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Apre-commit-ci+updated%3A2022-06-13..2022-10-13&type=Issues) | [@viniciusdc](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aviniciusdc+updated%3A2022-06-13..2022-10-13&type=Issues)
 ## 2022.6.1
 
 ### Bugs fixed
 
 - Update dask-gateway package's requirements to what works [#580](https://github.com/dask/dask-gateway/pull/580) ([@consideRatio](https://github.com/consideRatio))
 
-### Other merged PRs
+### Continuous integration improvements
 
 - ci: avoid 429 too-many-requests issues from linkcheck [#578](https://github.com/dask/dask-gateway/pull/578) ([@consideRatio](https://github.com/consideRatio))
 
