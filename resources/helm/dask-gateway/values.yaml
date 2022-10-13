@@ -58,6 +58,16 @@ gateway:
       # https://gateway.dask.org/install-kube.html#authenticating-with-jupyterhub.
       apiToken:
 
+      # The JupyterHub Helm chart will automatically generate a token for a
+      # registered service. If you don't specify an apiToken explicitly as
+      # required in dask-gateway version <=2022.6.1, the dask-gateway Helm chart
+      # will try to look for a token from a k8s Secret created by the JupyterHub
+      # Helm chart in the same namespace. A failure to find this k8s Secret and
+      # key will cause a MountFailure for when the api-dask-gateway pod is
+      # starting.
+      apiTokenFromSecretName: hub
+      apiTokenFromSecretKey: hub.services.dask-gateway.apiToken
+
       # JupyterHub's api url. Inferred from JupyterHub's service name if running
       # in the same namespace.
       apiUrl:

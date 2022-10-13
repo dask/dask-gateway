@@ -58,8 +58,13 @@ spec:
             - name: JUPYTERHUB_API_TOKEN
               valueFrom:
                 secretKeyRef:
+                  {{- if .Values.gateway.auth.jupyterhub.apiToken }}
                   name: {{ include "dask-gateway.apiName" . }}
                   key: jupyterhub-api-token
+                  {{- else }}
+                  name: "{{ .Values.gateway.auth.jupyterhub.apiTokenFromSecretName }}"
+                  key: "{{ .Values.gateway.auth.jupyterhub.apiTokenFromSecretKey }}"
+                  {{- end }}
             {{- end }}
           ports:
             - containerPort: 8000
