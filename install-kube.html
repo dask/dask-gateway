@@ -744,28 +744,59 @@ section).</p>
 the <a class="reference external" href="https://zero-to-jupyterhub.readthedocs.io/en/latest/">zero-to-jupyterhub-k8s</a> project, many companies and institutions have setup
 JuypterHub to run on Kubernetes. When deploying Dask-Gateway alongside
 JupyterHub, you can configure Dask-Gateway to use JupyterHub for
-authentication. To do this, we register <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> as a <a class="reference external" href="https://jupyterhub.readthedocs.io/en/stable/getting-started/services-basics.html">JupyterHub
-Service</a>.</p>
-<p>First we need to generate an API Token - this is commonly done using
-<code class="docutils literal notranslate"><span class="pre">openssl</span></code>:</p>
+authentication.</p>
+<p>Configuring a dask-gateway chart with a jupyterhub chart is more straight
+forward if they are installed in the same namespace for two reasons. First the
+JupyterHub chart generates api tokens for registered services and puts them in a
+k8s Secret that dask-gateway can make use of. Secondly dask-gateway
+pods/containers can detect the k8s Service from the JupyterHub chart’s resources
+in the automatically.</p>
+<p>If dask-gateway <strong>is installed in the same namespace as jupyterhub</strong>, this is the
+recommended configuration to use.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># jupyterhub chart configuration</span><span class="w"></span>
+<span class="nt">hub</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">services</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dask-gateway</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">display</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">display</span></code> attribute hides dask-gateway from the ‘Services’ dropdown in
+the JupyterHub home page as dask-gateway doesn’t offer any UI.</p>
+</div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># dask-gateway chart configuration</span><span class="w"></span>
+<span class="nt">gateway</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jupyterhub</span><span class="w"></span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This configuration relies on the dask-gateway chart’s default values of
+<code class="docutils literal notranslate"><span class="pre">display.auth.jupyterhub.apiTokenFromSecretName</span></code> and
+<code class="docutils literal notranslate"><span class="pre">display.auth.jupyterhub.apiTokenFromSecretKey</span></code> as can be inspected in the
+<a class="reference external" href="https://github.com/dask/dask-gateway/blob/main/resources/helm/dask-gateway/values.yaml">default values.yaml file</a>.</p>
+</div>
+<p>If dask-gateway <strong>isn’t installed in the same namespace as jupyterhub</strong>, this is
+the recommended configuration procedure.</p>
+<p>First generate an api token to use, for example using using <code class="docutils literal notranslate"><span class="pre">openssl</span></code>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>openssl rand -hex <span class="m">32</span>
 </pre></div>
 </div>
-<p>Then add the following lines to your <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">auth</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jupyterhub</span><span class="w"></span>
-<span class="w">    </span><span class="nt">jupyterhub</span><span class="p">:</span><span class="w"></span>
+<p>Once you have it, your configuration should look like below, where <code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">URL&gt;</span></code>
+should look like <code class="docutils literal notranslate"><span class="pre">https://&lt;JUPYTERHUB-HOST&gt;:&lt;JUPYTERHUB-PORT&gt;/hub/api</span></code> and
+<code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">TOKEN&gt;</span></code> should be the generated api token.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># jupyterhub chart configuration</span><span class="w"></span>
+<span class="nt">hub</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">services</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dask-gateway</span><span class="p">:</span><span class="w"></span>
 <span class="w">      </span><span class="nt">apiToken</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;API</span><span class="nv"> </span><span class="s">TOKEN&gt;&quot;</span><span class="w"></span>
+<span class="w">      </span><span class="nt">display</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
 </pre></div>
 </div>
-<p>replacing <code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">TOKEN&gt;</span></code> with the output from above.</p>
-<p>If you’re not deploying Dask-Gateway in the same cluster and namespace as
-JupyterHub, you’ll also need to specify JupyterHub’s API url. This is usually
-of the form <code class="docutils literal notranslate"><span class="pre">https://&lt;JUPYTERHUB-HOST&gt;:&lt;JUPYTERHUB-PORT&gt;/hub/api</span></code>. If
-JupyterHub and Dask-Gateway are on the same cluster and namespace you can omit
-this configuration key, the address will be inferred automatically.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># dask-gateway chart configuration</span><span class="w"></span>
+<span class="nt">gateway</span><span class="p">:</span><span class="w"></span>
 <span class="w">  </span><span class="nt">auth</span><span class="p">:</span><span class="w"></span>
 <span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jupyterhub</span><span class="w"></span>
 <span class="w">    </span><span class="nt">jupyterhub</span><span class="p">:</span><span class="w"></span>
@@ -773,22 +804,12 @@ this configuration key, the address will be inferred automatically.</p>
 <span class="w">      </span><span class="nt">apiUrl</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;API</span><span class="nv"> </span><span class="s">URL&gt;&quot;</span><span class="w"></span>
 </pre></div>
 </div>
-<p>You’ll also need to add the following to the <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file for your
-JupyterHub Helm Chart.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">hub</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">services</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">dask-gateway</span><span class="p">:</span><span class="w"></span>
-<span class="w">      </span><span class="nt">apiToken</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;API</span><span class="nv"> </span><span class="s">TOKEN&gt;&quot;</span><span class="w"></span>
-<span class="w">      </span><span class="nt">display</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
-</pre></div>
-</div>
-<p>again, replacing <code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">TOKEN&gt;</span></code> with the output from above. The <code class="docutils literal notranslate"><span class="pre">display</span></code>
-attribute hides dask-gateway from the ‘Services’ dropdown in the hub home
-page, as dask-gateway doesn’t offer any useful UI features.</p>
-<p>With this configuration, JupyterHub will be used to authenticate requests
-between users and the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. Note that users will need to add
-<code class="docutils literal notranslate"><span class="pre">auth=&quot;jupyterhub&quot;</span></code> when they create a Gateway <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>
-object.</p>
+<p>With JupyterHub authentication configured, it can be used to authenticate
+requests between users of the dask-gateway client and the dask-gateway server
+running in the api-dask-gateway pod.</p>
+<p>Dask-Gateway client users should add <code class="docutils literal notranslate"><span class="pre">auth=&quot;jupyterhub&quot;</span></code> when they create a
+Gateway <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a> object, or provide configuration for
+dask-gateway client to authenticate with JupyterHub.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
 <span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span>
     <span class="s2">&quot;http://146.148.58.187&quot;</span><span class="p">,</span>
@@ -861,6 +882,16 @@ here for reference:</p>
 <span class="w">      </span><span class="c1"># A JupyterHub api token for dask-gateway to use. See</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># https://gateway.dask.org/install-kube.html#authenticating-with-jupyterhub.</span><span class="w"></span>
 <span class="w">      </span><span class="nt">apiToken</span><span class="p">:</span><span class="w"></span>
+
+<span class="w">      </span><span class="c1"># The JupyterHub Helm chart will automatically generate a token for a</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># registered service. If you don&#39;t specify an apiToken explicitly as</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># required in dask-gateway version &lt;=2022.6.1, the dask-gateway Helm chart</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># will try to look for a token from a k8s Secret created by the JupyterHub</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># Helm chart in the same namespace. A failure to find this k8s Secret and</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># key will cause a MountFailure for when the api-dask-gateway pod is</span><span class="w"></span>
+<span class="w">      </span><span class="c1"># starting.</span><span class="w"></span>
+<span class="w">      </span><span class="nt">apiTokenFromSecretName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hub</span><span class="w"></span>
+<span class="w">      </span><span class="nt">apiTokenFromSecretKey</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hub.services.dask-gateway.apiToken</span><span class="w"></span>
 
 <span class="w">      </span><span class="c1"># JupyterHub&#39;s api url. Inferred from JupyterHub&#39;s service name if running</span><span class="w"></span>
 <span class="w">      </span><span class="c1"># in the same namespace.</span><span class="w"></span>
