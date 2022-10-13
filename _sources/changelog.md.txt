@@ -20,6 +20,8 @@ This release includes no breaking changes.
 
 ### Maintenance and upkeep improvements
 
+- Refreeze dask-gateway-server/Dockerfile.requirements.txt [#617](https://github.com/dask/dask-gateway/pull/617) ([@dask-bot](https://github.com/dask-bot))
+- Refreeze dask-gateway/Dockerfile.requirements.txt [#616](https://github.com/dask/dask-gateway/pull/616) ([@dask-bot](https://github.com/dask-bot))
 - refactor: use traefik documented syntax for cli flags [#611](https://github.com/dask/dask-gateway/pull/611) ([@consideRatio](https://github.com/consideRatio), [@martindurant](https://github.com/martindurant))
 - Compatibility fix for ipywidgets 8+ [#609](https://github.com/dask/dask-gateway/pull/609) ([@viniciusdc](https://github.com/viniciusdc), [@consideRatio](https://github.com/consideRatio))
 
