@@ -1,6 +1,7 @@
 {{- if .Values.controller.enabled -}}
 {{- if .Values.rbac.enabled -}}
 {{- if not .Values.rbac.controller.serviceAccountName -}}
+{{- $multiNamespace := default false (and .Values.gateway.backend.namespace (ne .Release.Namespace .Values.gateway.backend.namespace)) }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -12,6 +13,49 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ include "dask-gateway.controllerName" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["gateway.dask.org"]
+    resources: ["daskclusters", "daskclusters/status"]
+    verbs: {{ ternary "[\"*\"]" "[\"get\", \"list\", \"watch\"]" $multiNamespace }}
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch" {{- if $multiNamespace }}, "create", "delete"{{ end -}} ]
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch"]
+{{- if $multiNamespace }}
+  - apiGroups: [""]
+    resources: ["secrets", "services"]
+    verbs: ["create", "delete"]
+  - apiGroups: ["traefik.containo.us"]
+    resources: ["ingressroutes", "ingressroutetcps"]
+    verbs: ["get", "create", "delete"]
+{{- end }}
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "dask-gateway.controllerName" . }}
+  labels:
+    {{- include "dask-gateway.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "dask-gateway.controllerName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "dask-gateway.controllerName" . }}
+  apiGroup: rbac.authorization.k8s.io
+
+---
+{{- if not $multiNamespace }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "dask-gateway.controllerName" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 rules:
@@ -31,10 +75,11 @@ rules:
     resources: ["secrets", "services"]
     verbs: ["create", "delete"]
 ---
-kind: ClusterRoleBinding
+kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "dask-gateway.controllerName" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 subjects:
@@ -42,9 +87,11 @@ subjects:
     name: {{ include "dask-gateway.controllerName" . }}
     namespace: {{ .Release.Namespace }}
 roleRef:
-  kind: ClusterRole
+  kind: Role
   name: {{ include "dask-gateway.controllerName" . }}
   apiGroup: rbac.authorization.k8s.io
+
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

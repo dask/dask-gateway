@@ -1,5 +1,6 @@
 {{- if .Values.rbac.enabled -}}
 {{- if not .Values.rbac.gateway.serviceAccountName -}}
+{{- $multiNamespace := default false (and .Values.gateway.backend.namespace (ne .Release.Namespace .Values.gateway.backend.namespace)) }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -14,12 +15,14 @@ metadata:
   labels:
     {{- include "dask-gateway.labels" . | nindent 4 }}
 rules:
+{{- if $multiNamespace }}
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get"]
+{{- end }}
   - apiGroups: ["gateway.dask.org"]
     resources: ["daskclusters"]
-    verbs: ["*"]
+    verbs: {{ ternary "[\"*\"]" "[\"get\", \"list\", \"watch\"]" $multiNamespace }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -35,5 +38,35 @@ roleRef:
   kind: ClusterRole
   name: {{ include "dask-gateway.apiName" . }}
   apiGroup: rbac.authorization.k8s.io
+
+{{- if not $multiNamespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "dask-gateway.apiName" . }}
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  - apiGroups: ["gateway.dask.org"]
+    resources: ["daskclusters"]
+    verbs: ["*"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "dask-gateway.apiName" . }}
+  namespace: {{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "dask-gateway.apiName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "dask-gateway.apiName" . }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
 {{- end }}
 {{- end }}

@@ -1,11 +1,12 @@
 {{- if .Values.rbac.enabled -}}
 {{- if not .Values.rbac.traefik.serviceAccountName -}}
+{{- $multiNamespace := default false (and .Values.gateway.backend.namespace (ne .Release.Namespace .Values.gateway.backend.namespace)) }}
 kind: ServiceAccount
 apiVersion: v1
 metadata:
   name: {{ include "dask-gateway.traefikName" . }}
 ---
-kind: ClusterRole
+kind: {{ ternary "ClusterRole" "Role" $multiNamespace }}
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "dask-gateway.traefikName" . }}
@@ -52,13 +53,13 @@ rules:
       - list
       - watch
 ---
-kind: ClusterRoleBinding
+kind: {{ ternary "ClusterRoleBinding" "RoleBinding" $multiNamespace }}
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "dask-gateway.traefikName" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: {{ ternary "ClusterRole" "Role" $multiNamespace }}
   name: {{ include "dask-gateway.traefikName" . }}
 subjects:
 - kind: ServiceAccount

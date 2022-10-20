@@ -1,3 +1,4 @@
+{{- $multiNamespace := default false (and .Values.gateway.backend.namespace (ne .Release.Namespace .Values.gateway.backend.namespace)) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -60,6 +61,9 @@ spec:
             {{- if .Values.traefik.dashboard }}
             - "--api.dashboard=true"
             - "--api.insecure=true"
+            {{- end }}
+            {{- if not $multiNamespace }}
+            - "--providers.kubernetescrd.namespaces={{ .Release.Namespace }}"
             {{- end }}
             {{- range .Values.traefik.additionalArguments }}
             - {{ . | quote }}
