@@ -93,6 +93,7 @@ async def test_cluster_operations(gateway):
 
 
 async def test_deleted_worker_recreated(gateway, core_client):
+    namespace = os.environ.get("TEST_DASK_GATEWAY_KUBE_NAMESPACE", "default")
     async with gateway.new_cluster() as cluster:
         # Scale up, connect, and compute
         await cluster.scale(2)
@@ -106,15 +107,15 @@ async def test_deleted_worker_recreated(gateway, core_client):
             f"app.kubernetes.io/component=dask-worker"
         )
 
-        pods = await core_client.list_namespaced_pod("default", label_selector=selector)
+        pods = await core_client.list_namespaced_pod(namespace, label_selector=selector)
         pod_names = [p.metadata.name for p in pods.items]
         assert len(pod_names) == 2
         deleted_pod = pod_names[0]
-        await core_client.delete_namespaced_pod(deleted_pod, "default")
+        await core_client.delete_namespaced_pod(deleted_pod, namespace)
 
         async def test():
             pods = await core_client.list_namespaced_pod(
-                "default", label_selector=selector
+                namespace, label_selector=selector
             )
             pods = [p.metadata.name for p in pods.items]
             # New worker pod created to replace old pod
