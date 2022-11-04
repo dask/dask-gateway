@@ -149,8 +149,8 @@ try:
             #
             go_plat = os.environ.get("GOOS", "") + "_" + os.environ.get("GOARCH", "")
             go_plat_to_pypi_plat_mapping = {
-                "linux_amd64": "manylinux_2_17_x86_64.manylinux2014_x86_64",
-                "linux_arm64": "manylinux_2_17_aarch64.manylinux2014_aarch64",
+                "linux_amd64": "manylinux_2_17_x86_64",
+                "linux_arm64": "manylinux_2_17_aarch64",
                 "darwin_amd64": "macosx_10_15_x86_64",
                 "darwin_arm64": "macosx_11_0_arm64",
             }
