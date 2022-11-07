@@ -198,6 +198,10 @@ jobs:
               --timeout 1m0s
 
       - working-directory: resources/helm
+        env:
+          # DOCKER_BUILDKIT is required for building images with --mount flags,
+          # as used in dask-gateway/Dockerfile.
+          DOCKER_BUILDKIT: "1"
         run: chartpress
 
       # If the Helm chart's CRDs have changed, helm won't upgrade them when

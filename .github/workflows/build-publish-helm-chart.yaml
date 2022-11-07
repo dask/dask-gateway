@@ -64,4 +64,7 @@ jobs:
           #
           GITHUB_ACTOR: ""
           GITHUB_TOKEN: "${{ secrets.dask_bot_token }}"
+          # DOCKER_BUILDKIT is required for building images with --mount flags,
+          # as used in dask-gateway/Dockerfile.
+          DOCKER_BUILDKIT: "1"
         run: continuous_integration/kubernetes/build-publish-helm-chart.sh

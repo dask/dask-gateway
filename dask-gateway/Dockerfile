@@ -11,7 +11,36 @@
 #
 # See https://gateway.dask.org/install-kube.html#using-a-custom-image.
 #
-FROM python:3.10-slim-bullseye
+
+
+# The build stage
+# ---------------
+# This stage is building Python wheels for use in later stages by using a base
+# image that has more pre-requisites to do so, such as a C++ compiler.
+#
+# psutils, a dependency of distributed, is currently the sole reason we have to
+# have this build stage.
+#
+FROM python:3.10-bullseye as build-stage
+
+# Build wheels
+#
+# We set pip's cache directory and expose it across build stages via an
+# ephemeral docker cache (--mount=type=cache,target=${PIP_CACHE_DIR}).
+#
+COPY . /opt/dask-gateway
+ARG PIP_CACHE_DIR=/tmp/pip-cache
+RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
+    pip install build \
+ && pip wheel \
+        --wheel-dir=/tmp/wheels \
+        -r /opt/dask-gateway/Dockerfile.requirements.txt
+
+
+# The final stage
+# ---------------
+#
+FROM python:3.10-slim-bullseye as slim-stage
 
 # Set labels based on the Open Containers Initiative (OCI):
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
@@ -34,7 +63,11 @@ WORKDIR /home/dask/
 
 # Install dask-gateway
 COPY --chown=dask:dask . /opt/dask-gateway
-RUN pip install --no-cache-dir \
+ARG PIP_CACHE_DIR=/tmp/pip-cache
+RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
+    --mount=type=cache,from=build-stage,source=/tmp/wheels,target=/tmp/wheels \
+    pip install \
+        --find-links=/tmp/wheels/ \
         -r /opt/dask-gateway/Dockerfile.requirements.txt
 
 # Only set ENTRYPOINT, CMD is configured at runtime by dask-gateway-server
