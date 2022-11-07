@@ -47,8 +47,8 @@ ENV JAVA_HOME /usr/lib/jvm/jre-openjdk
 #    setgid bits for this directory so that folders created in it become owned
 #    by root:hadoop as well.
 #
-RUN INSTALL_HADOOP_VERSION=3.3.2 \
- && curl -sL /tmp/hadoop.tar.gz https://dlcdn.apache.org/hadoop/common/stable/hadoop-${INSTALL_HADOOP_VERSION}.tar.gz \
+RUN INSTALL_HADOOP_VERSION=3.3.4 \
+ && curl -sL /tmp/hadoop.tar.gz https://dlcdn.apache.org/hadoop/common/hadoop-${INSTALL_HADOOP_VERSION}/hadoop-${INSTALL_HADOOP_VERSION}.tar.gz \
   | tar -xvz --directory /opt \
  && mv /opt/hadoop-* /opt/hadoop \
  && chown -R root:hadoop /opt/hadoop \
@@ -80,8 +80,13 @@ ENV PATH=/opt/hadoop/sbin:/opt/hadoop/bin:$PATH
 #    these folders later and want them to have root:hadoop ownership for
 #    readability, we "chmod ug+s" as well on the folder.
 #
+#    We workaround this error for example:
+#
+#        File /etc/hadoop/conf.kerberos must not be world or group writable, but is 6775
+#
 COPY --chown=root:hadoop ./files/etc/hadoop /etc/hadoop/
 RUN chmod -R ug+s /etc/hadoop/
+RUN chmod -R go-w /etc/hadoop/conf.kerberos
 #
 # 7. Copy our setup script and run it
 #

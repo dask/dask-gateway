@@ -39,13 +39,42 @@ a maintainer of the dask/dask-gateway repo on how to do it.
 4. Verify that images seem to work
 
    ```shell
-   # hadoop: verify that the supervisord programs starts successfully
+   # hadoop: verify that the supervisord programs starts successfully:
+   #
+   #   ...
+   #   kadmind entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+   #   krb5kdc entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+   #   hdfs-namenode entered RUNNING state, process has stayed up for > than 3 seconds (startsecs)
+   #   hdfs-datanode entered RUNNING state, process has stayed up for > than 3 seconds (startsecs)
+   #   yarn-resourcemanager entered RUNNING state, process has stayed up for > than 3 seconds (startsecs)
+   #   yarn-nodemanager entered RUNNING state, process has stayed up for > than 3 seconds (startsecs)
+   #
    docker run --hostname=master.example.com --rm ghcr.io/dask/dask-gateway-ci-hadoop
 
    # pbs: verify that logs doesn't include errors
+   #
+   #   ...
+   #   PBS server
+   #   + /opt/pbs/bin/qmgr -c 'set server scheduler_iteration = 20'
+   #   + /opt/pbs/bin/qmgr -c 'set server job_history_enable = True'
+   #   + /opt/pbs/bin/qmgr -c 'set server job_history_duration = 24:00:00'
+   #   + /opt/pbs/bin/qmgr -c 'set node pbs queue=workq'
+   #   + /opt/pbs/bin/qmgr -c 'set server operators += dask@pbs'
+   #   Entering sleep
+   #   + echo 'Entering sleep'
+   #   + sleep infinity
+   #
    docker run --hostname=pbs --rm ghcr.io/dask/dask-gateway-ci-pbs
 
    # slurm: verify that the supervisord programs starts successfully
+   #
+   #   ...
+   #   mysqld entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+   #   slurmdbd entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+   #   slurmd entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+   #   slurmctld entered RUNNING state, process has stayed up for > than 3 seconds (startsecs)
+   #   munged entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
+   #
    docker run --hostname=slurm --rm ghcr.io/dask/dask-gateway-ci-slurm
    ```
 
@@ -58,7 +87,7 @@ a maintainer of the dask/dask-gateway repo on how to do it.
    docker push ghcr.io/dask/dask-gateway-ci-slurm:latest
 
    # YYYY-MM-DD format
-   date=$(printf '%(%Y-%m-%d)T\n' -1)
+   date=$(date '+%Y-%m-%d')
    docker tag ghcr.io/dask/dask-gateway-ci-base:latest   ghcr.io/dask/dask-gateway-ci-base:$date
    docker tag ghcr.io/dask/dask-gateway-ci-hadoop:latest ghcr.io/dask/dask-gateway-ci-hadoop:$date
    docker tag ghcr.io/dask/dask-gateway-ci-pbs:latest    ghcr.io/dask/dask-gateway-ci-pbs:$date
@@ -114,7 +143,20 @@ docker stop --timeout=0 hadoop
 ### Debugging the slurm image
 
 If you upgrade `slurm` to a new version, you may very well run into breaking
-changes in your `slurm.conf`.
+changes in your `slurm.conf`. See the [slurm release notes][] for an overview of
+changes. If there is a systemd service that fails to startup, you could try
+inspect its log file that is declared in `slurm.conf` found in this repo.
+
+```shell
+docker ps
+docker exec -it <container name> bash
+
+# print logs from within the running slurm container
+cat /var/log/slurm/slurmd.log
+cat /var/log/slurm/slurmctld.log
+```
+
+[slurm release notes]: https://slurm.schedmd.com/news.html
 
 ### Debugging the hadoop image
 
@@ -154,6 +196,15 @@ docker exec -it hadoop bash
 # For example, a command to run within the container, useful for debugging
 # Java CLASSPATH issues for skein:
 skein driver start --log-level=ALL --log=/tmp/skein.log || cat /tmp/skein.log
+
+# A systemd service may have failed to startup, with registered logfile to inspect
+cat /var/log/supervisor/yarn-nodemanager.log
+cat /var/log/supervisor/yarn-resourcemanager.log
+cat /var/log/supervisor/hdfs-datanode.log
+cat /var/log/supervisor/hdfs-namenode.log
+cat var/log/supervisor/krb5libs.log
+cat var/log/supervisor/krb5kdc.log
+cat var/log/supervisor/kadmind.log
 ```
 
 __Function when running tests__
