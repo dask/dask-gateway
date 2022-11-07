@@ -53,7 +53,7 @@ RUN yum install -y bzip2 \
  && curl -sL https://micromamba.snakepit.net/api/micromamba/linux-64/latest \
   | tar --extract --verbose --bzip2 bin/micromamba --strip-components=1 \
  && ./micromamba install \
-    --channel conda-forge \
+    --channel=conda-forge \
     --root-prefix="/opt/python" \
     --prefix="/opt/python" \
           python="${python_version}" \
