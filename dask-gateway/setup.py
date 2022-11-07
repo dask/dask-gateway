@@ -26,7 +26,7 @@ setup(
     maintainer_email="jcristharif@gmail.com",
     license="BSD",
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "License :: OSI Approved :: BSD License",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
@@ -36,6 +36,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     keywords="dask hadoop kubernetes HPC distributed cluster",
     description="A client library for interacting with a dask-gateway server",
