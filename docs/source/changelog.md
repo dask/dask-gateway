@@ -1,5 +1,52 @@
 # Changelog
 
+## 2022.11.0
+
+([full changelog](https://github.com/dask/dask-gateway/compare/2022.10.0...f102dc3041423e31194383de94a6793c4fab646f))
+
+### Breaking changes
+
+This breaking change only impacts Helm chart installations. The Bundled CRDs for
+Traefik has been updated. To upgrade to 2022.11.0, also upgrade the registered
+CRDs like below.
+
+```shell
+kubectl apply -f https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/daskclusters.yaml
+kubectl apply -f https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/traefik.yaml
+```
+
+### Bugs fixed
+
+- Fix invalid wheel name to PEP 600 [#635](https://github.com/dask/dask-gateway/pull/635) ([@consideRatio](https://github.com/consideRatio))
+- Fix failure to build and publish arm64 images [#634](https://github.com/dask/dask-gateway/pull/634) ([@consideRatio](https://github.com/consideRatio))
+
+### Maintenance and upkeep improvements
+
+- helm chart: update traefik to 2.9.4 (associated CRDs unchanged) [#636](https://github.com/dask/dask-gateway/pull/636) ([@consideRatio](https://github.com/consideRatio))
+- Extend integration tests to multi-namespace deployment [#627](https://github.com/dask/dask-gateway/pull/627) ([@holzman](https://github.com/holzman))
+- helm chart: update traefik to 2.9.1 and the associated CRDs [#621](https://github.com/dask/dask-gateway/pull/621) ([@consideRatio](https://github.com/consideRatio))
+
+### Continuous integration improvements
+
+- ci: test against golang 1.19, latest slurm, latest hadoop [#637](https://github.com/dask/dask-gateway/pull/637) ([@consideRatio](https://github.com/consideRatio))
+- ci: test against latest versions of k8s [#620](https://github.com/dask/dask-gateway/pull/620) ([@consideRatio](https://github.com/consideRatio))
+
+### Other merged PRs
+
+- Refreeze dask-gateway/Dockerfile.requirements.txt [#640](https://github.com/dask/dask-gateway/pull/640) ([@dask-bot](https://github.com/dask-bot))
+- Refreeze dask-gateway-server/Dockerfile.requirements.txt [#639](https://github.com/dask/dask-gateway/pull/639) ([@dask-bot](https://github.com/dask-bot))
+- Refreeze dask-gateway-server/Dockerfile.requirements.txt [#631](https://github.com/dask/dask-gateway/pull/631) ([@dask-bot](https://github.com/dask-bot))
+- Refreeze dask-gateway/Dockerfile.requirements.txt [#630](https://github.com/dask/dask-gateway/pull/630) ([@dask-bot](https://github.com/dask-bot))
+- [pre-commit.ci] pre-commit autoupdate [#628](https://github.com/dask/dask-gateway/pull/628) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- [pre-commit.ci] pre-commit autoupdate [#625](https://github.com/dask/dask-gateway/pull/625) ([@pre-commit-ci](https://github.com/pre-commit-ci))
+- build(deps): bump JamesIves/github-pages-deploy-action from 4.4.0 to 4.4.1 [#623](https://github.com/dask/dask-gateway/pull/623) ([@dependabot](https://github.com/dependabot))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2022-10-13&to=2022-11-09&type=c))
+
+[@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2022-10-13..2022-11-09&type=Issues) | [@holzman](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aholzman+updated%3A2022-10-13..2022-11-09&type=Issues) | [@martindurant](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amartindurant+updated%3A2022-10-13..2022-11-09&type=Issues)
+
 ## 2022.10.0
 
 This release includes no breaking changes.
