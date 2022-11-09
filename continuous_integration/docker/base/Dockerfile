@@ -11,7 +11,7 @@ FROM centos:7
 #        need to built it, but also then have gcc available during that time.
 #        Due to this, our test suite is broken.
 #
-ARG python_version="3.11"
+ARG python_version="3.10"
 ARG go_version="1.19"
 
 # Set labels based on the Open Containers Initiative (OCI):

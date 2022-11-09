@@ -36,7 +36,6 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
     ],
     keywords="dask hadoop kubernetes HPC distributed cluster",
     description="A client library for interacting with a dask-gateway server",
