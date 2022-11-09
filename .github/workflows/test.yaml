@@ -56,11 +56,14 @@ jobs:
           #   that would be fine.
           #
           - python-version: "3.8"
-            go-version: "1.16"
-          - python-version: "3.9"
-            go-version: "1.17"
-          - python-version: "3.10"
             go-version: "1.18"
+          - python-version: "3.9"
+            go-version: "1.18"
+          - python-version: "3.10"
+            go-version: "1.19"
+          # FIXME: See https://github.com/dask/dask-gateway/issues/638
+          # - python-version: "3.11"
+          #   go-version: "1.19"
 
     steps:
       - uses: actions/checkout@v3

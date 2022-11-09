@@ -19,7 +19,7 @@ ENV TEST_DASK_GATEWAY_SLURM true
 #    Slurm versions:      https://download.schedmd.com/slurm/
 #    Slurm release notes: https://github.com/SchedMD/slurm/blame/HEAD/RELEASE_NOTES
 #
-RUN INSTALL_SLURM_VERSION=21.08.6 \
+RUN INSTALL_SLURM_VERSION=22.05.5 \
  && yum install -y \
         # required to install supervisor (and more?)
         epel-release \

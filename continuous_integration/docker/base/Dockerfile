@@ -7,8 +7,12 @@
 #
 FROM centos:7
 
+# FIXME: As of 2022-11-07, pykerberos didn't have a wheel available making us
+#        need to built it, but also then have gcc available during that time.
+#        Due to this, our test suite is broken.
+#
 ARG python_version="3.10"
-ARG go_version="1.18"
+ARG go_version="1.19"
 
 # Set labels based on the Open Containers Initiative (OCI):
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
@@ -49,7 +53,7 @@ RUN yum install -y bzip2 \
  && curl -sL https://micromamba.snakepit.net/api/micromamba/linux-64/latest \
   | tar --extract --verbose --bzip2 bin/micromamba --strip-components=1 \
  && ./micromamba install \
-    --channel conda-forge \
+    --channel=conda-forge \
     --root-prefix="/opt/python" \
     --prefix="/opt/python" \
           python="${python_version}" \
