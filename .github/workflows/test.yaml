@@ -215,8 +215,8 @@ jobs:
       - name: Manual upgrade of CRDs
         if: matrix.upgrade-from != ''
         run: |
-          kubectl apply -f resources/helm/dask-gateway/crds/daskclusters.yaml
-          kubectl apply -f resources/helm/dask-gateway/crds/traefik.yaml
+          kubectl apply --server-side --force-conflicts -f resources/helm/dask-gateway/crds/daskclusters.yaml
+          kubectl apply --server-side --force-conflicts -f resources/helm/dask-gateway/crds/traefik.yaml
 
       - name: helm install (or upgrade)
         run: |
