@@ -19,7 +19,7 @@ jobs:
 
     # Don't run this job on forks
     if: github.repository == 'dask/dask-gateway'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false

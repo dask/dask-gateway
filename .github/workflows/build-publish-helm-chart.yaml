@@ -11,7 +11,7 @@ on:
 jobs:
   build-publish-helm-chart:
     name: "Build and publish Helm chart"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     # permissions requested for secrets.github_token in order to push to the
     # container registry, available for push and workflow_dispatch triggers.
