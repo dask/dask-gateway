@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Changelog &#8212; Dask Gateway 2022.10.0 documentation</title>
+    <title>Changelog &#8212; Dask Gateway 2022.11.0 documentation</title>
     
   <link href="_static/css/theme.css" rel="stylesheet">
   <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
@@ -103,7 +103,7 @@
       
       
       
-      <h1 class="site-logo" id="site-title">Dask Gateway 2022.10.0 documentation</h1>
+      <h1 class="site-logo" id="site-title">Dask Gateway 2022.11.0 documentation</h1>
       
     </a>
 </div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
@@ -667,7 +667,7 @@
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
 <h2>2022.11.0<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<p>(<a class="reference external" href="https://github.com/dask/dask-gateway/compare/2022.10.0...f102dc3041423e31194383de94a6793c4fab646f">full changelog</a>)</p>
+<p>(<a class="reference external" href="https://github.com/dask/dask-gateway/compare/2022.10.0...2c2bed23b83831ad073fdbae80647e96d2111d22">full changelog</a>)</p>
 <div class="section" id="breaking-changes">
 <h3>Breaking changes<a class="headerlink" href="#breaking-changes" title="Permalink to this headline">¶</a></h3>
 <p>This breaking change only impacts Helm chart installations. The Bundled CRDs for
@@ -696,6 +696,7 @@ kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.c
 <div class="section" id="continuous-integration-improvements">
 <h3>Continuous integration improvements<a class="headerlink" href="#continuous-integration-improvements" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
+<li><p>ci: use ubuntu-22.04 explicitly and constrain test duration <a class="reference external" href="https://github.com/dask/dask-gateway/pull/644">#644</a> (<a class="reference external" href="https://github.com/consideRatio">&#64;consideRatio</a>)</p></li>
 <li><p>ci: test against golang 1.19, latest slurm, latest hadoop <a class="reference external" href="https://github.com/dask/dask-gateway/pull/637">#637</a> (<a class="reference external" href="https://github.com/consideRatio">&#64;consideRatio</a>)</p></li>
 <li><p>ci: test against latest versions of k8s <a class="reference external" href="https://github.com/dask/dask-gateway/pull/620">#620</a> (<a class="reference external" href="https://github.com/consideRatio">&#64;consideRatio</a>)</p></li>
 </ul>
@@ -703,6 +704,7 @@ kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.c
 <div class="section" id="other-merged-prs">
 <h3>Other merged PRs<a class="headerlink" href="#other-merged-prs" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
+<li><p>Refreeze dask-gateway/Dockerfile.requirements.txt <a class="reference external" href="https://github.com/dask/dask-gateway/pull/644">#644</a> (<a class="reference external" href="https://github.com/dask-bot">&#64;dask-bot</a>)</p></li>
 <li><p>Refreeze dask-gateway/Dockerfile.requirements.txt <a class="reference external" href="https://github.com/dask/dask-gateway/pull/640">#640</a> (<a class="reference external" href="https://github.com/dask-bot">&#64;dask-bot</a>)</p></li>
 <li><p>Refreeze dask-gateway-server/Dockerfile.requirements.txt <a class="reference external" href="https://github.com/dask/dask-gateway/pull/639">#639</a> (<a class="reference external" href="https://github.com/dask-bot">&#64;dask-bot</a>)</p></li>
 <li><p>Refreeze dask-gateway-server/Dockerfile.requirements.txt <a class="reference external" href="https://github.com/dask/dask-gateway/pull/631">#631</a> (<a class="reference external" href="https://github.com/dask-bot">&#64;dask-bot</a>)</p></li>
