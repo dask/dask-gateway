@@ -2,7 +2,7 @@
 
 ## 2022.11.0
 
-([full changelog](https://github.com/dask/dask-gateway/compare/2022.10.0...f102dc3041423e31194383de94a6793c4fab646f))
+([full changelog](https://github.com/dask/dask-gateway/compare/2022.10.0...2c2bed23b83831ad073fdbae80647e96d2111d22))
 
 ### Breaking changes
 
@@ -28,11 +28,13 @@ kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.c
 
 ### Continuous integration improvements
 
+- ci: use ubuntu-22.04 explicitly and constrain test duration [#644](https://github.com/dask/dask-gateway/pull/644) ([@consideRatio](https://github.com/consideRatio))
 - ci: test against golang 1.19, latest slurm, latest hadoop [#637](https://github.com/dask/dask-gateway/pull/637) ([@consideRatio](https://github.com/consideRatio))
 - ci: test against latest versions of k8s [#620](https://github.com/dask/dask-gateway/pull/620) ([@consideRatio](https://github.com/consideRatio))
 
 ### Other merged PRs
 
+- Refreeze dask-gateway/Dockerfile.requirements.txt [#644](https://github.com/dask/dask-gateway/pull/644) ([@dask-bot](https://github.com/dask-bot))
 - Refreeze dask-gateway/Dockerfile.requirements.txt [#640](https://github.com/dask/dask-gateway/pull/640) ([@dask-bot](https://github.com/dask-bot))
 - Refreeze dask-gateway-server/Dockerfile.requirements.txt [#639](https://github.com/dask/dask-gateway/pull/639) ([@dask-bot](https://github.com/dask-bot))
 - Refreeze dask-gateway-server/Dockerfile.requirements.txt [#631](https://github.com/dask/dask-gateway/pull/631) ([@dask-bot](https://github.com/dask-bot))
