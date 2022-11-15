@@ -120,7 +120,7 @@ cd ./hadoop
 ./print_logs.sh
 
 # cleanup after running tests
-docker stop --timeout=0 hadoop
+docker stop --time=0 hadoop
 ```
 
 ## Debugging
@@ -189,7 +189,7 @@ If something seems wrong, dig deeper.
 ```shell
 # Start a container and inspect the container from a shell if something doesn't
 # start correctly.
-docker stop hadoop --timeout=0
+docker stop --time=0 hadoop
 docker run --name hadoop --hostname master.example.com --detach --rm ghcr.io/dask/dask-gateway-ci-hadoop
 docker exec -it hadoop bash
 
