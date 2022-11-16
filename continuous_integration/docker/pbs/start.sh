@@ -16,9 +16,10 @@ docker run --rm -d \
     ghcr.io/dask/dask-gateway-ci-pbs
 
 # The pbs container's entrypoint, files/scripts/start.sh, emits a log message
-# that we will await observing. We do it to avoid getting OOMKilled by peaking
-# memory needs during startup, which is prone to happen if we run pip install at
-# the same time.
+# that we will await.
+#
+# We do it to avoid getting OOMKilled by peaking memory needs during startup,
+# which is prone to happen if we run pip install at the same time.
 #
 set +x
 await_startup() {
@@ -32,5 +33,9 @@ await_startup() {
         exit 1
     fi
     echo "pbs container started!"
+
+    # We add some seconds of precautionary sleep to avoid unknown and hard to
+    # debug issues.
+    sleep 3
 }
 await_startup
