@@ -129,7 +129,7 @@ jobs:
       # dask-gateway-server packages, we define two separate steps to pick out
       # the relevant secret depending on matrix.package.
       - name: Publish to PyPI (dask-gateway)
-        uses: pypa/gh-action-pypi-publish@v1.5.1
+        uses: pypa/gh-action-pypi-publish@v1.6.4
         if: >-
           startsWith(github.ref, 'refs/tags/')
           && matrix.package == 'dask-gateway'
@@ -139,7 +139,7 @@ jobs:
           packages_dir: ${{ matrix.package }}/dist
 
       - name: Publish to PyPI (dask-gateway-server)
-        uses: pypa/gh-action-pypi-publish@v1.5.1
+        uses: pypa/gh-action-pypi-publish@v1.6.4
         if: >-
           startsWith(github.ref, 'refs/tags/')
           && matrix.package == 'dask-gateway-server'
