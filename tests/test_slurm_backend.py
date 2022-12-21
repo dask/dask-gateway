@@ -109,7 +109,7 @@ async def test_slurm_backend():
                     res = await g.gateway.backend.do_check_workers(db_workers)
                     assert sum(res) == 0
 
-                await with_retries(test, 30, 0.25)
+                await with_retries(test, 60, 0.25)
 
             # No-op for shutdown of already shutdown worker
             async def test():
