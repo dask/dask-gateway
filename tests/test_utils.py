@@ -125,13 +125,13 @@ async def test_flag(use_wait):
     async def wait(flag):
         nonlocal triggered
         if use_wait:
-            await asyncio.wait([flag])
+            await asyncio.wait([asyncio.ensure_future(flag)])
         else:
             await flag
         if flag.is_set():
             triggered = True
 
-    res = asyncio.ensure_future(wait(flag))
+    res = wait(flag)
 
     flag.set()
     await res

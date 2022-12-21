@@ -882,7 +882,9 @@ class DBBackendBase(Backend):
                     if c.status < JobStatus.STOPPED
                 ]
                 if pending_shutdown:
-                    await asyncio.wait([c.shutdown for c in pending_shutdown])
+                    await asyncio.wait(
+                        [asyncio.ensure_future(c.shutdown) for c in pending_shutdown]
+                    )
 
         # Stop reconcilation queues
         if hasattr(self, "reconcilers"):
