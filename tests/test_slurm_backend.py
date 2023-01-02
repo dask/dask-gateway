@@ -64,6 +64,7 @@ class SlurmTestingBackend(SlurmBackend):
         JOBIDS.discard(job_id)
 
 
+@pytest.mark.timeout(90)
 async def test_slurm_backend():
     c = Config()
 

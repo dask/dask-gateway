@@ -47,6 +47,7 @@ class YarnTestingBackend(YarnBackend):
         _APPIDS.discard(appid)
 
 
+@pytest.mark.timeout(90)
 async def test_yarn_backend():
 
     c = Config()

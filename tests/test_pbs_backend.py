@@ -58,6 +58,7 @@ class PBSTestingBackend(PBSBackend):
         JOBIDS.discard(job_id)
 
 
+@pytest.mark.timeout(90)
 async def test_pbs_backend():
     c = Config()
     c.PBSClusterConfig.scheduler_cmd = "/opt/python/bin/dask-scheduler"

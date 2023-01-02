@@ -21,6 +21,7 @@ pyyaml
 
 pytest
 pytest-asyncio
+pytest-timeout
 
 # dask-gateway and dask-gateway-server and all their dependencies are assumed to
 # be installed.
