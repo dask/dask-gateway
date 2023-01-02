@@ -376,10 +376,10 @@ need to create a <code class="docutils literal notranslate"><span class="pre">HT
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> (if one doesn’t already exist). Keytabs can be created
 on the command-line as:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create the HTTP principal (if not already created)</span>
-$ kadmin -q <span class="s2">&quot;addprinc -randkey HTTP/FQDN&quot;</span>
+$<span class="w"> </span>kadmin<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;addprinc -randkey HTTP/FQDN&quot;</span>
 
 <span class="c1"># Create a keytab</span>
-$ kadmin -q <span class="s2">&quot;xst -norandkey -k /etc/dask-gateway/http.keytab HTTP/FQDN&quot;</span>
+$<span class="w"> </span>kadmin<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;xst -norandkey -k /etc/dask-gateway/http.keytab HTTP/FQDN&quot;</span>
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">FQDN</span></code> is the <a class="reference external" href="https://en.wikipedia.org/wiki/Fully_qualified_domain_name">fully qualified domain name</a> of the host running
@@ -388,8 +388,8 @@ $ kadmin -q <span class="s2">&quot;xst -norandkey -k /etc/dask-gateway/http.keyt
 the other configuration (usually in <code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway/</span></code>). You’ll also want
 to make sure that <code class="docutils literal notranslate"><span class="pre">http.keytab</span></code> is only readable by admin users (usually just
 the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>).</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ chown dask /etc/dask-gateway/http.keytab
-$ chmod <span class="m">400</span> /etc/dask-gateway/http.keytab
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>chown<span class="w"> </span>dask<span class="w"> </span>/etc/dask-gateway/http.keytab
+$<span class="w"> </span>chmod<span class="w"> </span><span class="m">400</span><span class="w"> </span>/etc/dask-gateway/http.keytab
 </pre></div>
 </div>
 <p>To configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use this keytab file, you’ll need to
@@ -411,7 +411,7 @@ use JupyterHub for authentication. To do this, we register <code class="docutils
 a <a class="reference external" href="https://jupyterhub.readthedocs.io/en/stable/getting-started/services-basics.html">JupyterHub Service</a>.</p>
 <p>First we need to generate an API Token - this is commonly done using
 <code class="docutils literal notranslate"><span class="pre">openssl</span></code>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ openssl rand -hex <span class="m">32</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>openssl<span class="w"> </span>rand<span class="w"> </span>-hex<span class="w"> </span><span class="m">32</span>
 </pre></div>
 </div>
 <p>Then add the following lines to your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file:</p>

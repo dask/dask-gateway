@@ -338,17 +338,17 @@ configuration</a>.</p>
 users, specifying the addresses and authentication necessary to connect to
 their <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>. For example:</p>
 <p><strong>Example:</strong></p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># ~/.config/dask/gateway.yaml</span><span class="w"></span>
-<span class="nt">gateway</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="c1"># The full address to the dask-gateway server.</span><span class="w"></span>
-<span class="w">  </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://146.148.58.187</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># ~/.config/dask/gateway.yaml</span>
+<span class="nt">gateway</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># The full address to the dask-gateway server.</span>
+<span class="w">  </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://146.148.58.187</span>
 
-<span class="w">  </span><span class="c1"># The full address to the dask-gateway scheduler proxy</span><span class="w"></span>
-<span class="w">  </span><span class="nt">proxy-address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tls://35.202.68.87:8786</span><span class="w"></span>
+<span class="w">  </span><span class="c1"># The full address to the dask-gateway scheduler proxy</span>
+<span class="w">  </span><span class="nt">proxy-address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tls://35.202.68.87:8786</span>
 
-<span class="w w-Error"> </span><span class="nt">auth</span><span class="p">:</span><span class="w"></span>
-<span class="w">   </span><span class="c1"># Use kerberos for authentication</span><span class="w"></span>
-<span class="w">   </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kerberos</span><span class="w"></span>
+<span class="w w-Error"> </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">   </span><span class="c1"># Use kerberos for authentication</span>
+<span class="w">   </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kerberos</span>
 </pre></div>
 </div>
 <p>Users can now create <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gateway</span></code></a> or <a class="reference internal" href="api-client.html#dask_gateway.GatewayCluster" title="dask_gateway.GatewayCluster"><code class="xref py py-class docutils literal notranslate"><span class="pre">GatewayCluster</span></code></a> objects
@@ -364,43 +364,43 @@ documentation</a>.</p>
 <div class="section" id="default-configuration">
 <h2>Default Configuration<a class="headerlink" href="#default-configuration" title="Permalink to this headline">¶</a></h2>
 <p>The default configuration file is as follows</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">         </span><span class="c1"># The full address to the dask-gateway server.</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># May also be a template string, which will be formatted</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># with any environment variables before usage.</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gateway</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">         </span><span class="c1"># The full address to the dask-gateway server.</span>
+<span class="w">                        </span><span class="c1"># May also be a template string, which will be formatted</span>
+<span class="w">                        </span><span class="c1"># with any environment variables before usage.</span>
 
-<span class="w">  </span><span class="nt">public-address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># The address to the dask-gateway server, as accessible</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># from a web browser. This will be used as the root of</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># all browser-facing links (e.g. the dask dashboard).</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># If `None` (default), `gateway.address` will be used.</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># May be a template string.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">public-address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># The address to the dask-gateway server, as accessible</span>
+<span class="w">                        </span><span class="c1"># from a web browser. This will be used as the root of</span>
+<span class="w">                        </span><span class="c1"># all browser-facing links (e.g. the dask dashboard).</span>
+<span class="w">                        </span><span class="c1"># If `None` (default), `gateway.address` will be used.</span>
+<span class="w">                        </span><span class="c1"># May be a template string.</span>
 
-<span class="w">  </span><span class="nt">proxy-address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">   </span><span class="c1"># The full address or port to the dask-gateway</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># scheduler proxy. If a port, the host/ip is taken from</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># ``address``. If null, defaults to `address`.</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># May also be a template string.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">proxy-address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">   </span><span class="c1"># The full address or port to the dask-gateway</span>
+<span class="w">                        </span><span class="c1"># scheduler proxy. If a port, the host/ip is taken from</span>
+<span class="w">                        </span><span class="c1"># ``address``. If null, defaults to `address`.</span>
+<span class="w">                        </span><span class="c1"># May also be a template string.</span>
 
-<span class="w">  </span><span class="nt">auth</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">basic</span><span class="w">         </span><span class="c1"># The authentication type to use. Options are basic,</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># kerberos, jupyterhub, or a full class path to a</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># custom class.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">auth</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">basic</span><span class="w">         </span><span class="c1"># The authentication type to use. Options are basic,</span>
+<span class="w">                        </span><span class="c1"># kerberos, jupyterhub, or a full class path to a</span>
+<span class="w">                        </span><span class="c1"># custom class.</span>
 
-<span class="w">    </span><span class="nt">kwargs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w">          </span><span class="c1"># Keyword arguments to use when instantiating the</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># authentication class above. Values may be template</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># strings.</span><span class="w"></span>
+<span class="w">    </span><span class="nt">kwargs</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w">          </span><span class="c1"># Keyword arguments to use when instantiating the</span>
+<span class="w">                        </span><span class="c1"># authentication class above. Values may be template</span>
+<span class="w">                        </span><span class="c1"># strings.</span>
 
-<span class="w">  </span><span class="nt">http-client</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">proxy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">         </span><span class="c1"># The http proxy configuration to use when contacting</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># the dask-gateway server. If `true` (default), this is</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># inferred from your environment (i.e. `HTTP(S)_PROXY`</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># environment variables).  Set to `false` to disable</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># this inference. You may also specify a proxy address</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># explicitly (e.g.  `http://user:password@host:port`).</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># May be a template string.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">http-client</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">proxy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">         </span><span class="c1"># The http proxy configuration to use when contacting</span>
+<span class="w">                        </span><span class="c1"># the dask-gateway server. If `true` (default), this is</span>
+<span class="w">                        </span><span class="c1"># inferred from your environment (i.e. `HTTP(S)_PROXY`</span>
+<span class="w">                        </span><span class="c1"># environment variables).  Set to `false` to disable</span>
+<span class="w">                        </span><span class="c1"># this inference. You may also specify a proxy address</span>
+<span class="w">                        </span><span class="c1"># explicitly (e.g.  `http://user:password@host:port`).</span>
+<span class="w">                        </span><span class="c1"># May be a template string.</span>
 
-<span class="w">  </span><span class="nt">cluster</span><span class="p">:</span><span class="w"></span>
-<span class="w">    </span><span class="nt">options</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w">         </span><span class="c1"># Default options to use when calling ``new_cluster`` or</span><span class="w"></span>
-<span class="w">                        </span><span class="c1"># ``cluster_options``. Values may be template strings.</span><span class="w"></span>
+<span class="w">  </span><span class="nt">cluster</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">options</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span><span class="w">         </span><span class="c1"># Default options to use when calling ``new_cluster`` or</span>
+<span class="w">                        </span><span class="c1"># ``cluster_options``. Values may be template strings.</span>
 </pre></div>
 </div>
 </div>

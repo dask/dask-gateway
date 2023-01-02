@@ -407,7 +407,7 @@
 <div class="section" id="clone-repository">
 <h3>Clone Repository<a class="headerlink" href="#clone-repository" title="Permalink to this headline">¶</a></h3>
 <p>Clone the Dask-Gateway git repository:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/dask/dask-gateway.git
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/dask/dask-gateway.git
 </pre></div>
 </div>
 </div>
@@ -417,35 +417,35 @@
 environment. Here we setup a conda environment to contain the build
 dependencies.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a new conda environment</span>
-$ conda create -n dask-gateway
+$<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>dask-gateway
 
 <span class="c1"># Activate environment</span>
-$ conda activate dask-gateway
+$<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>dask-gateway
 
 <span class="c1"># Install dependencies</span>
-$ conda install -c conda-forge <span class="se">\</span>
-    cryptography <span class="se">\</span>
-    tornado <span class="se">\</span>
-    traitlets <span class="se">\</span>
-    sqlalchemy <span class="se">\</span>
-    dask
+$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>cryptography<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>tornado<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>traitlets<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>sqlalchemy<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>dask
 </pre></div>
 </div>
 <p>Besides the above dependencies, you’ll also need a <a class="reference external" href="https://go.dev/">Go</a> compiler. You can
 install Go using your system package manager, the <a class="reference external" href="https://go.dev/">Go website</a>, or use Conda:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ conda install -c conda-forge go
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>go
 </pre></div>
 </div>
 </div>
 <div class="section" id="install-dependencies-pip">
 <h3>Install Dependencies (Pip)<a class="headerlink" href="#install-dependencies-pip" title="Permalink to this headline">¶</a></h3>
 <p>You can also setup the development environment using <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ pip install <span class="se">\</span>
-    cryptography <span class="se">\</span>
-    tornado <span class="se">\</span>
-    traitlets <span class="se">\</span>
-    sqlalchemy <span class="se">\</span>
-    dask
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>cryptography<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>tornado<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>traitlets<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>sqlalchemy<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>dask
 </pre></div>
 </div>
 <p>Besides the above dependencies, you’ll also need a <a class="reference external" href="https://go.dev/">Go</a> compiler. You can
@@ -455,7 +455,7 @@ install Go using your system package manager or the <a class="reference external
 <h3>(Optional) Install Dependencies via Conda Environment File<a class="headerlink" href="#optional-install-dependencies-via-conda-environment-file" title="Permalink to this headline">¶</a></h3>
 <p>You can easily install all dependencies needed for local development with the <code class="docutils literal notranslate"><span class="pre">dev-environment.yaml</span></code>
 environment file:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ conda env create --file dev-environment.yaml
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>--file<span class="w"> </span>dev-environment.yaml
 </pre></div>
 </div>
 </div>
@@ -473,18 +473,18 @@ subdirectory.</p></li>
 of the repository.</p>
 <p><strong>Building dask-gateway-server</strong></p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build and install dask-gateway-server as an editable package</span>
-$ pip install -e ./dask-gateway-server
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>./dask-gateway-server
 
 <span class="c1"># or, build and install as a regular package</span>
-$ pip install ./dask-gateway-server
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>./dask-gateway-server
 </pre></div>
 </div>
 <p><strong>Building dask-gateway</strong></p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build and install dask-gateway as an editable package</span>
-$ pip install -e ./dask-gateway
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>./dask-gateway
 
 <span class="c1"># or, build and install as a regular package</span>
-$ pip install ./dask-gateway
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>./dask-gateway
 </pre></div>
 </div>
 </div>
@@ -494,15 +494,15 @@ $ pip install ./dask-gateway
 <p>The tests are located in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> subdirectory, and test both packages. To
 run the tests you also need to install <code class="docutils literal notranslate"><span class="pre">pytest</span></code>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install pytest with conda</span>
-$ conda install -c conda-forge pytest
+$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>pytest
 
 <span class="c1"># Or install with pip</span>
-$ pip install pytest
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pytest
 </pre></div>
 </div>
 <p>The tests can then be run as:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run the test suite</span>
-$ pytest -v tests
+$<span class="w"> </span>pytest<span class="w"> </span>-v<span class="w"> </span>tests
 </pre></div>
 </div>
 <p>In addition to the main tests, additional tests for the various backends are
@@ -526,22 +526,22 @@ the documentation build requirements. Note that <code class="docutils literal no
 inspect the Python source code, which makes us also need the packages listed
 after <code class="docutils literal notranslate"><span class="pre">autodoc-traits</span></code> to generate the full configuration reference.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install docs dependencies with conda</span>
-$ conda install -c conda-forge sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
+$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>sphinx<span class="w"> </span>dask-sphinx-theme<span class="w"> </span>sphinx-autobuild<span class="w"> </span>autodoc-traits<span class="w"> </span>kubernetes_asyncio<span class="w"> </span>skein<span class="w"> </span>sqlalchemy
 
 <span class="c1"># Or install with pip</span>
-$ pip install sphinx dask-sphinx-theme sphinx-autobuild autodoc-traits kubernetes_asyncio skein sqlalchemy
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>sphinx<span class="w"> </span>dask-sphinx-theme<span class="w"> </span>sphinx-autobuild<span class="w"> </span>autodoc-traits<span class="w"> </span>kubernetes_asyncio<span class="w"> </span>skein<span class="w"> </span>sqlalchemy
 </pre></div>
 </div>
 <p>Then build the documentation with <code class="docutils literal notranslate"><span class="pre">make</span></code></p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Running from the dask-gateway/docs folder</span>
-$ make html
+$<span class="w"> </span>make<span class="w"> </span>html
 </pre></div>
 </div>
 <p>The resulting HTML files end up in the <code class="docutils literal notranslate"><span class="pre">_build/html</span></code> directory.</p>
 <p>Then consider using another <code class="docutils literal notranslate"><span class="pre">make</span></code> command to rebuild the documentation and
 refresh a browser viewing the built documentation.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Running from the dask-gateway/docs folder</span>
-$ make devenv
+$<span class="w"> </span>make<span class="w"> </span>devenv
 </pre></div>
 </div>
 </div>

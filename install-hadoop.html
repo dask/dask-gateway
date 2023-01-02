@@ -501,7 +501,7 @@
 <p>Before installing anything, you’ll need to create the user account which will
 be used to run the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> process. The name of the user
 doesn’t matter, only the permissions they have. Here we’ll use <code class="docutils literal notranslate"><span class="pre">dask</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ adduser dask
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>adduser<span class="w"> </span>dask
 </pre></div>
 </div>
 </div>
@@ -519,24 +519,24 @@ impersonate may be restricted to certain hosts. At a minimum, the <code class="d
 will require permission to impersonate anyone using the gateway, with requests
 allowed from at least the host running the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>.</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;property&gt;</span>
-  <span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.hosts<span class="nt">&lt;/name&gt;</span>
-  <span class="nt">&lt;value&gt;</span>host-where-dask-gateway-is-running<span class="nt">&lt;/value&gt;</span>
+<span class="w">  </span><span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.hosts<span class="nt">&lt;/name&gt;</span>
+<span class="w">  </span><span class="nt">&lt;value&gt;</span>host-where-dask-gateway-is-running<span class="nt">&lt;/value&gt;</span>
 <span class="nt">&lt;/property&gt;</span>
 <span class="nt">&lt;property&gt;</span>
-  <span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.groups<span class="nt">&lt;/name&gt;</span>
-  <span class="nt">&lt;value&gt;</span>group1,group2<span class="nt">&lt;/value&gt;</span>
+<span class="w">  </span><span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.groups<span class="nt">&lt;/name&gt;</span>
+<span class="w">  </span><span class="nt">&lt;value&gt;</span>group1,group2<span class="nt">&lt;/value&gt;</span>
 <span class="nt">&lt;/property&gt;</span>
 </pre></div>
 </div>
 <p>If looser restrictions are acceptable, you may also use the wildcard <code class="docutils literal notranslate"><span class="pre">*</span></code>
 to allow impersonation of any user or from any host.</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;property&gt;</span>
-  <span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.hosts<span class="nt">&lt;/name&gt;</span>
-  <span class="nt">&lt;value&gt;</span>*<span class="nt">&lt;/value&gt;</span>
+<span class="w">  </span><span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.hosts<span class="nt">&lt;/name&gt;</span>
+<span class="w">  </span><span class="nt">&lt;value&gt;</span>*<span class="nt">&lt;/value&gt;</span>
 <span class="nt">&lt;/property&gt;</span>
 <span class="nt">&lt;property&gt;</span>
-  <span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.groups<span class="nt">&lt;/name&gt;</span>
-  <span class="nt">&lt;value&gt;</span>*<span class="nt">&lt;/value&gt;</span>
+<span class="w">  </span><span class="nt">&lt;name&gt;</span>hadoop.proxyuser.dask.groups<span class="nt">&lt;/name&gt;</span>
+<span class="w">  </span><span class="nt">&lt;value&gt;</span>*<span class="nt">&lt;/value&gt;</span>
 <span class="nt">&lt;/property&gt;</span>
 </pre></div>
 </div>
@@ -553,14 +553,14 @@ libraries. Here we use <code class="docutils literal notranslate"><span class="p
 <li><p>Runtime files: Here we use <code class="docutils literal notranslate"><span class="pre">/var/dask-gateway</span></code>.</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Software files</span>
-$ mkdir -p /opt/dask-gateway
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/opt/dask-gateway
 
 <span class="c1"># Configuration files</span>
-$ mkdir /etc/dask-gateway
+$<span class="w"> </span>mkdir<span class="w"> </span>/etc/dask-gateway
 
 <span class="c1"># Runtime files</span>
-$ mkdir /var/dask-gateway
-$ chown dask /var/dask-gateway
+$<span class="w"> </span>mkdir<span class="w"> </span>/var/dask-gateway
+$<span class="w"> </span>chown<span class="w"> </span>dask<span class="w"> </span>/var/dask-gateway
 </pre></div>
 </div>
 </div>
@@ -570,27 +570,27 @@ $ chown dask /var/dask-gateway
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, we’ll install a full Python environment into the
 software directory. The easiest way to do this is to use <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>, but this
 isn’t a strict requirement.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
-$ bash /tmp/miniconda.sh -b -p /opt/dask-gateway/miniconda
-$ rm /tmp/miniconda.sh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>curl<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh<span class="w"> </span>-o<span class="w"> </span>/tmp/miniconda.sh
+$<span class="w"> </span>bash<span class="w"> </span>/tmp/miniconda.sh<span class="w"> </span>-b<span class="w"> </span>-p<span class="w"> </span>/opt/dask-gateway/miniconda
+$<span class="w"> </span>rm<span class="w"> </span>/tmp/miniconda.sh
 </pre></div>
 </div>
 <p>We also recommend adding miniconda to the <code class="docutils literal notranslate"><span class="pre">root</span></code> user’s path to ease further
 commands.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;export PATH=&quot;/opt/dask-gateway/miniconda/bin:$PATH&quot;&#39;</span> &gt;&gt; /root/.bashrc
-$ <span class="nb">source</span> /root/.bashrc
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export PATH=&quot;/opt/dask-gateway/miniconda/bin:$PATH&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>/root/.bashrc
+$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>/root/.bashrc
 </pre></div>
 </div>
 </div>
 <div class="section" id="install-dask-gateway-server">
 <h2>Install dask-gateway-server<a class="headerlink" href="#install-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>Now we can install <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> and its dependencies.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install -y -c conda-forge dask-gateway-server-yarn
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>dask-gateway-server-yarn
 </pre></div>
 </div>
 <p>If you want to use Kerberos for user-facing authentication, you’ll also want to
 install <code class="docutils literal notranslate"><span class="pre">dask-gateway-server-kerberos</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install -y -c conda-forge dask-gateway-server-kerberos
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>dask-gateway-server-kerberos
 </pre></div>
 </div>
 </div>
@@ -621,13 +621,13 @@ and keytab for the <code class="docutils literal notranslate"><span class="pre">
 principal for the host running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> (if one doesn’t already
 exist).  Keytabs can be created on the command-line as:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create the dask principal</span>
-$ kadmin -q <span class="s2">&quot;addprinc -randkey dask@YOUR_REALM.COM&quot;</span>
+$<span class="w"> </span>kadmin<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;addprinc -randkey dask@YOUR_REALM.COM&quot;</span>
 
 <span class="c1"># Create the HTTP principal (if not already created)</span>
-$ kadmin -q <span class="s2">&quot;addprinc -randkey HTTP/FQDN&quot;</span>
+$<span class="w"> </span>kadmin<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;addprinc -randkey HTTP/FQDN&quot;</span>
 
 <span class="c1"># Create a keytab</span>
-$ kadmin -q <span class="s2">&quot;xst -norandkey -k /etc/dask-gateway/dask.keytab dask HTTP/FQDN&quot;</span>
+$<span class="w"> </span>kadmin<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;xst -norandkey -k /etc/dask-gateway/dask.keytab dask HTTP/FQDN&quot;</span>
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">FQDN</span></code> is the <a class="reference external" href="https://en.wikipedia.org/wiki/Fully_qualified_domain_name">fully qualified domain name</a> of the host running
@@ -635,8 +635,8 @@ $ kadmin -q <span class="s2">&quot;xst -norandkey -k /etc/dask-gateway/dask.keyt
 <p>Store the keytab file wherever you see fit (we recommend storing it along with
 the other configuration in <code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway/</span></code>, as above). You’ll also want
 to make sure that <code class="docutils literal notranslate"><span class="pre">dask.keytab</span></code> is only readable by the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ chown dask /etc/dask-gateway/dask.keytab
-$ chmod <span class="m">400</span> /etc/dask-gateway/dask.keytab
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>chown<span class="w"> </span>dask<span class="w"> </span>/etc/dask-gateway/dask.keytab
+$<span class="w"> </span>chmod<span class="w"> </span><span class="m">400</span><span class="w"> </span>/etc/dask-gateway/dask.keytab
 </pre></div>
 </div>
 <p>To configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use this keytab file, you’ll need to
@@ -723,22 +723,22 @@ will be automatically extracted during <a class="reference external" href="https
 packages could be added as needed.</p>
 <p><strong>Packaging a conda environment with conda-pack</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a folder for storing the conda environments locally</span>
-$ mkdir /opt/dask-gateway/envs
+$<span class="w"> </span>mkdir<span class="w"> </span>/opt/dask-gateway/envs
 
 <span class="c1"># Create a new conda environment</span>
-$ conda create -c conda-forge -y -p /opt/dask-gateway/envs/example
+$<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-y<span class="w"> </span>-p<span class="w"> </span>/opt/dask-gateway/envs/example
 ...
 
 <span class="c1"># Activate the environment</span>
-$ conda activate /opt/dask-gateway/envs/example
+$<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>/opt/dask-gateway/envs/example
 
 <span class="c1"># Install dask-gateway, along with any other packages</span>
-$ conda install -c conda-forge -y dask-gateway pandas scikit-learn conda-pack
+$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>-y<span class="w"> </span>dask-gateway<span class="w"> </span>pandas<span class="w"> </span>scikit-learn<span class="w"> </span>conda-pack
 
 <span class="c1"># Package the environment into example.tar.gz</span>
-$ conda pack -o example.tar.gz
-Collecting packages...
-Packing environment at <span class="s1">&#39;/opt/dask-gateway/envs/example&#39;</span> to <span class="s1">&#39;example.tar.gz&#39;</span>
+$<span class="w"> </span>conda<span class="w"> </span>pack<span class="w"> </span>-o<span class="w"> </span>example.tar.gz
+Collecting<span class="w"> </span>packages...
+Packing<span class="w"> </span>environment<span class="w"> </span>at<span class="w"> </span><span class="s1">&#39;/opt/dask-gateway/envs/example&#39;</span><span class="w"> </span>to<span class="w"> </span><span class="s1">&#39;example.tar.gz&#39;</span>
 <span class="o">[</span><span class="c1">########################################] | 100% Completed | 17.9s</span>
 </pre></div>
 </div>
@@ -748,13 +748,13 @@ beforehand, to avoid repeating the upload cost for every user. This directory
 should be readable by all users, but writable only by the admin user managing
 Python environments (here we’ll use the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user, and create a
 <code class="docutils literal notranslate"><span class="pre">/dask-gateway</span></code> directory).</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ hdfs dfs -mkdir -p /dask-gateway
-$ hdfs dfs -chown dask /dask-gateway
-$ hdfs dfs -chmod <span class="m">755</span> /dask-gateway
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>hdfs<span class="w"> </span>dfs<span class="w"> </span>-mkdir<span class="w"> </span>-p<span class="w"> </span>/dask-gateway
+$<span class="w"> </span>hdfs<span class="w"> </span>dfs<span class="w"> </span>-chown<span class="w"> </span>dask<span class="w"> </span>/dask-gateway
+$<span class="w"> </span>hdfs<span class="w"> </span>dfs<span class="w"> </span>-chmod<span class="w"> </span><span class="m">755</span><span class="w"> </span>/dask-gateway
 </pre></div>
 </div>
 <p>Uploading our already packaged environment to hdfs:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ hdfs dfs -put /opt/dask-gateway/envs/example.tar.gz /dask-gateway/example.tar.gz
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>hdfs<span class="w"> </span>dfs<span class="w"> </span>-put<span class="w"> </span>/opt/dask-gateway/envs/example.tar.gz<span class="w"> </span>/dask-gateway/example.tar.gz
 </pre></div>
 </div>
 <p>To use the packaged environment with <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, you need to
@@ -859,14 +859,14 @@ etc…) is system specific. The requirements are:</p>
 <code class="docutils literal notranslate"><span class="pre">/opt/dask-gateway/start-dask-gateway</span></code> to set this up:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env bash</span>
 
-<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/opt/dask-gateway/miniconda/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
-<span class="nb">cd</span> /var/dask-gateway
-dask-gateway-server -f /etc/dask-gateway/dask_gateway_config.py
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/opt/dask-gateway/miniconda/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+<span class="nb">cd</span><span class="w"> </span>/var/dask-gateway
+dask-gateway-server<span class="w"> </span>-f<span class="w"> </span>/etc/dask-gateway/dask_gateway_config.py
 </pre></div>
 </div>
 <p>For <em>testing</em> here’s how you might start <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> manually:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> /var/dask-gateway
-$ sudo -iu dask /opt/dask-gateway/start-dask-gateway
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/var/dask-gateway
+$<span class="w"> </span>sudo<span class="w"> </span>-iu<span class="w"> </span>dask<span class="w"> </span>/opt/dask-gateway/start-dask-gateway
 </pre></div>
 </div>
 </div>
@@ -878,10 +878,10 @@ working properly. The easiest way to do this is to try connecting as a user.</p>
 your cluster is secured with kerberos, you’ll also need to install
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-kerberos</span></code>.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install the dask-gateway client library</span>
-$ conda create -n dask-gateway -c conda-forge dask-gateway
+$<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>dask-gateway<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>dask-gateway
 
 <span class="c1"># If kerberos is enabled, also install dask-gateway-kerberos</span>
-$ conda create -n dask-gateway -c conda-forge dask-gateway-kerberos
+$<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>dask-gateway<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>dask-gateway-kerberos
 </pre></div>
 </div>
 <p>You can connect to the gateway by creating a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>

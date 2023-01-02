@@ -673,8 +673,8 @@
 <p>This breaking change only impacts Helm chart installations. The Bundled CRDs for
 Traefik has been updated. To upgrade to 2022.11.0, also upgrade the registered
 CRDs like below.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/daskclusters.yaml
-kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/traefik.yaml
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>apply<span class="w"> </span>--server-side<span class="w"> </span>--force-conflicts<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/daskclusters.yaml
+kubectl<span class="w"> </span>apply<span class="w"> </span>--server-side<span class="w"> </span>--force-conflicts<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/traefik.yaml
 </pre></div>
 </div>
 </div>
@@ -848,8 +848,8 @@ slightly different <code class="docutils literal notranslate"><span class="pre">
 <li><p>Breaking changes to the <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> Helm chart:</p>
 <ul>
 <li><p><em>ACTION REQUIRED</em>: When upgrading to this version you must also update the Helm chart’s bundled CRD resources like this:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>kubectl apply -f https://raw.githubusercontent.com/dask/dask-gateway/2022.4.0/resources/helm/dask-gateway/crds/daskclusters.yaml
-kubectl apply -f https://raw.githubusercontent.com/dask/dask-gateway/2022.4.0/resources/helm/dask-gateway/crds/traefik.yaml
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/dask/dask-gateway/2022.4.0/resources/helm/dask-gateway/crds/daskclusters.yaml
+kubectl<span class="w"> </span>apply<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/dask/dask-gateway/2022.4.0/resources/helm/dask-gateway/crds/traefik.yaml
 </pre></div>
 </div>
 </li>

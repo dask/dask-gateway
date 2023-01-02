@@ -508,7 +508,7 @@ issue</a>.</p>
 <p>Before installing anything, you’ll need to create the user account which will
 be used to run the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> process. The name of the user
 doesn’t matter, only the permissions they have. Here we’ll use <code class="docutils literal notranslate"><span class="pre">dask</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ adduser dask
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>adduser<span class="w"> </span>dask
 </pre></div>
 </div>
 </div>
@@ -523,14 +523,14 @@ libraries. Here we use <code class="docutils literal notranslate"><span class="p
 <li><p>Runtime files: Here we use <code class="docutils literal notranslate"><span class="pre">/var/dask-gateway</span></code>.</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Software files</span>
-$ mkdir -p /opt/dask-gateway
+$<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/opt/dask-gateway
 
 <span class="c1"># Configuration files</span>
-$ mkdir /etc/dask-gateway
+$<span class="w"> </span>mkdir<span class="w"> </span>/etc/dask-gateway
 
 <span class="c1"># Runtime files</span>
-$ mkdir /var/dask-gateway
-$ chown dask /var/dask-gateway
+$<span class="w"> </span>mkdir<span class="w"> </span>/var/dask-gateway
+$<span class="w"> </span>chown<span class="w"> </span>dask<span class="w"> </span>/var/dask-gateway
 </pre></div>
 </div>
 </div>
@@ -540,22 +540,22 @@ $ chown dask /var/dask-gateway
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, we’ll install a full Python environment into the
 software directory. The easiest way to do this is to use <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>, but this
 isn’t a strict requirement.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh
-$ bash /tmp/miniconda.sh -b -p /opt/dask-gateway/miniconda
-$ rm /tmp/miniconda.sh
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>curl<span class="w"> </span>https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh<span class="w"> </span>-o<span class="w"> </span>/tmp/miniconda.sh
+$<span class="w"> </span>bash<span class="w"> </span>/tmp/miniconda.sh<span class="w"> </span>-b<span class="w"> </span>-p<span class="w"> </span>/opt/dask-gateway/miniconda
+$<span class="w"> </span>rm<span class="w"> </span>/tmp/miniconda.sh
 </pre></div>
 </div>
 <p>We also recommend adding miniconda to the <code class="docutils literal notranslate"><span class="pre">root</span></code> user’s path to ease further
 commands.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;export PATH=&quot;/opt/dask-gateway/miniconda/bin:$PATH&quot;&#39;</span> &gt;&gt; /root/.bashrc
-$ <span class="nb">source</span> /root/.bashrc
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export PATH=&quot;/opt/dask-gateway/miniconda/bin:$PATH&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>/root/.bashrc
+$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>/root/.bashrc
 </pre></div>
 </div>
 </div>
 <div class="section" id="install-dask-gateway-server">
 <h2>Install dask-gateway-server<a class="headerlink" href="#install-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>Now we can install <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> and its dependencies.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ conda install -y -c conda-forge dask-gateway-server-jobqueue
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>dask-gateway-server-jobqueue
 </pre></div>
 </div>
 </div>
@@ -577,7 +577,7 @@ dask ALL=(%dask_users,!root) NOPASSWD:DASK_GATEWAY_JOBQUEUE_LAUNCHER
 </div>
 <p>Additionaly, when using <a class="reference external" href="ttps://www.openpbs.org/">PBS</a> you’ll need to make the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user a PBS
 Operator:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ qmgr -c <span class="s2">&quot;set server operators += dask@pbs&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>qmgr<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;set server operators += dask@pbs&quot;</span>
 </pre></div>
 </div>
 <p>Operator level permissions are needed in <a class="reference external" href="ttps://www.openpbs.org/">PBS</a> to allow <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>
@@ -756,14 +756,14 @@ etc…) is system specific. The requirements are:</p>
 <code class="docutils literal notranslate"><span class="pre">/opt/dask-gateway/start-dask-gateway</span></code> to set this up:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env bash</span>
 
-<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/opt/dask-gateway/miniconda/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
-<span class="nb">cd</span> /var/dask-gateway
-dask-gateway-server -f /etc/dask-gateway/dask_gateway_config.py
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/opt/dask-gateway/miniconda/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+<span class="nb">cd</span><span class="w"> </span>/var/dask-gateway
+dask-gateway-server<span class="w"> </span>-f<span class="w"> </span>/etc/dask-gateway/dask_gateway_config.py
 </pre></div>
 </div>
 <p>For <em>testing</em> here’s how you might start <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> manually:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> /var/dask-gateway
-$ sudo -iu dask /opt/dask-gateway/start-dask-gateway
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>/var/dask-gateway
+$<span class="w"> </span>sudo<span class="w"> </span>-iu<span class="w"> </span>dask<span class="w"> </span>/opt/dask-gateway/start-dask-gateway
 </pre></div>
 </div>
 </div>
@@ -773,7 +773,7 @@ $ sudo -iu dask /opt/dask-gateway/start-dask-gateway
 working properly. The easiest way to do this is to try connecting as a user.</p>
 <p>A user’s environment requires the <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> library be installed.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install the dask-gateway client library</span>
-$ conda create -n dask-gateway -c conda-forge dask-gateway
+$<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>dask-gateway<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>dask-gateway
 </pre></div>
 </div>
 <p>You can connect to the gateway by creating a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>
