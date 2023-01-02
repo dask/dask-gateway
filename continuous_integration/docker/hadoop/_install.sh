@@ -5,6 +5,7 @@ cd /working
 
 # pykerberos needs to compile c++ code that depends on system libraries, by
 # installing it from conda-forge, we avoid such hassle.
+#
 mamba install -c conda-forge pykerberos
 
 # This installs everything else we need for tests
