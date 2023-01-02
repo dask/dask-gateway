@@ -412,7 +412,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 on_delete=self.on_endpoints_delete,
             ),
         }
-        await asyncio.wait([i.start() for i in self.informers.values()])
+        await asyncio.wait(
+            [asyncio.ensure_future(i.start()) for i in self.informers.values()]
+        )
         self.log.debug("All informers started")
 
         # Initialize reconcilers
@@ -448,7 +450,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             await asyncio.gather(*self.reconcilers, return_exceptions=True)
 
         if hasattr(self, "informers"):
-            await asyncio.wait([i.stop() for i in self.informers.values()])
+            await asyncio.wait(
+                [asyncio.ensure_future(i.stop()) for i in self.informers.values()]
+            )
 
         # Stop background tasks
         if hasattr(self, "task_pool"):

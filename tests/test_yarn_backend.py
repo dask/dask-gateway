@@ -47,13 +47,14 @@ class YarnTestingBackend(YarnBackend):
         _APPIDS.discard(appid)
 
 
+@pytest.mark.timeout(90)
 async def test_yarn_backend():
 
     c = Config()
     c.YarnClusterConfig.scheduler_cmd = "/opt/python/bin/dask-scheduler"
     c.YarnClusterConfig.worker_cmd = "/opt/python/bin/dask-worker"
-    c.YarnClusterConfig.scheduler_memory = "128M"
-    c.YarnClusterConfig.worker_memory = "128M"
+    c.YarnClusterConfig.scheduler_memory = "256M"
+    c.YarnClusterConfig.worker_memory = "256M"
     c.YarnClusterConfig.scheduler_cores = 1
     c.YarnClusterConfig.worker_cores = 1
 
