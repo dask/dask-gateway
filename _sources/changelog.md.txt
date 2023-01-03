@@ -1,5 +1,45 @@
 # Changelog
 
+## 2023.1.0
+
+([full changelog](https://github.com/dask/dask-gateway/compare/2022.11.0...2023.1.0))
+
+### Highlights
+
+- The `dask-gateway-server` in the Helm chart is now run with Python 3.11.
+- Full compatibility with Python 3.11, where `dask-gateway-server` previously
+  didn't have it but the `dask-gateway` client had it.
+
+### New features added
+
+- Add support for Python 3.11 [#659](https://github.com/dask/dask-gateway/pull/659) ([@consideRatio](https://github.com/consideRatio))
+
+### Maintenance and upkeep improvements
+
+- Use and fix support for Python 3.11 in Helm chart images [#666](https://github.com/dask/dask-gateway/pull/666) ([@consideRatio](https://github.com/consideRatio))
+- maint: increase test's wait duration for shutdown of worker processes for distributed>=2022.11.0 [#652](https://github.com/dask/dask-gateway/pull/652) ([@consideRatio](https://github.com/consideRatio))
+- maint: increase test's wait duration for shutdown of worker processes for distributed>=2022.11.0, for slurm [#660](https://github.com/dask/dask-gateway/pull/660) ([@consideRatio](https://github.com/consideRatio))
+
+### Continuous integration improvements
+
+- ci: test against python 3.11 (tests are failing) [#656](https://github.com/dask/dask-gateway/pull/656) ([@consideRatio](https://github.com/consideRatio))
+- ci: pre-commit.ci to update hooks monthly instead of weekly [#655](https://github.com/dask/dask-gateway/pull/655) ([@consideRatio](https://github.com/consideRatio))
+- ci: help hadoop/pbs tests become robuster by awaiting startup [#647](https://github.com/dask/dask-gateway/pull/647) ([@consideRatio](https://github.com/consideRatio))
+
+### Other merged PRs
+
+- Refreeze dask-gateway/Dockerfile.requirements.txt [#669](https://github.com/dask/dask-gateway/pull/669) ([@dask-bot](https://github.com/dask-bot))
+- Refreeze dask-gateway/Dockerfile.requirements.txt [#668](https://github.com/dask/dask-gateway/pull/668) ([@dask-bot](https://github.com/dask-bot))
+- Refreeze dask-gateway-server/Dockerfile.requirements.txt [#667](https://github.com/dask/dask-gateway/pull/667) ([@dask-bot](https://github.com/dask-bot))
+- Refreeze dask-gateway-server/Dockerfile.requirements.txt [#663](https://github.com/dask/dask-gateway/pull/663) ([@dask-bot](https://github.com/dask-bot))
+- Refreeze dask-gateway/Dockerfile.requirements.txt [#664](https://github.com/dask/dask-gateway/pull/664) ([@dask-bot](https://github.com/dask-bot))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2022-11-15&to=2023-01-03&type=c))
+
+[@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2022-11-15..2023-01-03&type=Issues) | [@fjetter](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Afjetter+updated%3A2022-11-15..2023-01-03&type=Issues) | [@holzman](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aholzman+updated%3A2022-11-15..2023-01-03&type=Issues)
+
 ## 2022.11.0
 
 ([full changelog](https://github.com/dask/dask-gateway/compare/2022.10.0...2c2bed23b83831ad073fdbae80647e96d2111d22))
