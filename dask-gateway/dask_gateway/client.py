@@ -1221,16 +1221,12 @@ class GatewayCluster:
         return box
 
     def _ipython_display_(self, **kwargs):
+        from IPython.display import display
+
         widget = self._widget()
         if widget is not None:
-            # ipywidgets renamed the _ipython_display_ method in 8.x
-            try:
-                return widget._ipython_display_(**kwargs)
-            except AttributeError:
-                return widget._repr_mimebundle_(**kwargs)
+            display(widget, **kwargs)
         else:
-            from IPython.display import display
-
             data = {"text/plain": repr(self), "text/html": self._repr_html_()}
             display(data, raw=True)
 
