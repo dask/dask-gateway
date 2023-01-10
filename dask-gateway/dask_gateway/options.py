@@ -74,11 +74,9 @@ class Options(MutableMapping):
     def _ipython_display_(self, **kwargs):
         widget = self._widget()
         if widget is not None:
-            # ipywidgets renamed the _ipython_display_ method in 8.x
-            try:
-                return widget._ipython_display_(**kwargs)
-            except AttributeError:
-                return widget._repr_mimebundle_(**kwargs)
+            from IPython.display import display
+
+            display(widget, **kwargs)
         from IPython.lib.pretty import pprint
 
         pprint(self)
