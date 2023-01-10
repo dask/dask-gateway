@@ -1,5 +1,23 @@
 # Changelog
 
+## 2023.1.1
+
+([full changelog](https://github.com/dask/dask-gateway/compare/2023.1.0...2023.1.1))
+
+### Bugs fixed
+
+- client: fix failure to display widget with ipywidgets 8 [#672](https://github.com/dask/dask-gateway/pull/672) ([@Kirill888](https://github.com/Kirill888))
+
+### Maintenance and upkeep improvements
+
+- Update RELEASE.md to use tbump [#673](https://github.com/dask/dask-gateway/pull/673) ([@consideRatio](https://github.com/consideRatio))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2023-01-03&to=2023-01-10&type=c))
+
+[@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2023-01-03..2023-01-10&type=Issues) | [@Kirill888](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AKirill888+updated%3A2023-01-03..2023-01-10&type=Issues)
+
 ## 2023.1.0
 
 ([full changelog](https://github.com/dask/dask-gateway/compare/2022.11.0...2023.1.0))
