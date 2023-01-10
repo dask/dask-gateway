@@ -38,7 +38,7 @@ asyncio_mode = "auto"
 github_url = "https://github.com/dask/dask-gateway"
 
 [tool.tbump.version]
-current = "2023.1.0"
+current = "2023.1.1"
 regex = '''
     (?P<major>\d+)
     \.
