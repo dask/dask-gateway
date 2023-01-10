@@ -56,13 +56,13 @@ These are instructions on how to make a release.
    Helm chart.
 
 4. Following the release to PyPI, an automated PR should arrive to
-   [conda-forge/jupyterhub-feedstock] with instructions.
+   [conda-forge/dask-gateway-feedstock] with instructions.
 
 [pypi]: https://pypi.org/project/dask-gateway/
 [conda-forge]: https://anaconda.org/conda-forge/dask-gateway
 [helm.dask.org]: https://helm.dask.org/
 [index.yaml]: https://helm.dask.org/index.yaml
 [dask/dask-gateway]: https://github.com/dask/dask-gateway
-[conda-forge/dask-gateway-feedstock]: https://github.com/conda-forge/jupyterhub-feedstock
+[conda-forge/dask-gateway-feedstock]: https://github.com/conda-forge/dask-gateway-feedstock
 [github-activity]: https://github.com/executablebooks/github-activity
 [ci system]: https://github.com/dask/dask-gateway/actions
