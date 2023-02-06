@@ -10,7 +10,6 @@ async def test_local_cluster_backend():
     async with temp_gateway(backend_class=LocalTestingBackend) as g:
         async with g.gateway_client() as gateway:
             async with gateway.new_cluster() as cluster:
-
                 db_cluster = g.gateway.backend.db.get_cluster(cluster.name)
 
                 res = await g.gateway.backend.do_check_clusters([db_cluster])

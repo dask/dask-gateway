@@ -313,7 +313,6 @@ async def test_create_cluster_with_GatewayCluster_constructor():
         async with GatewayCluster(
             address=g.address, proxy_address=g.proxy_address, asynchronous=True
         ) as cluster:
-
             # Cluster is now present in list
             clusters = await cluster.gateway.list_clusters()
             assert len(clusters)
