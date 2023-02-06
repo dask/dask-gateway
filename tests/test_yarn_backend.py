@@ -49,7 +49,6 @@ class YarnTestingBackend(YarnBackend):
 
 @pytest.mark.timeout(90)
 async def test_yarn_backend():
-
     c = Config()
     c.YarnClusterConfig.scheduler_cmd = "/opt/python/bin/dask-scheduler"
     c.YarnClusterConfig.worker_cmd = "/opt/python/bin/dask-worker"
@@ -67,7 +66,6 @@ async def test_yarn_backend():
         auth = BasicAuth(username="alice")
         async with g.gateway_client(auth=auth) as gateway:
             async with gateway.new_cluster() as cluster:
-
                 db_cluster = g.gateway.backend.db.get_cluster(cluster.name)
 
                 res = await g.gateway.backend.do_check_clusters([db_cluster])

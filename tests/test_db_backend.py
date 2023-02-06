@@ -418,7 +418,6 @@ async def test_slow_cluster_connect():
 
 @pytest.mark.parametrize("fail_stage", [0, 1])
 async def test_cluster_fails_during_start(fail_stage):
-
     config = Config()
     config.DaskGateway.backend_class = ClusterFailsDuringStart
     config.ClusterFailsDuringStart.fail_stage = fail_stage

@@ -73,7 +73,6 @@ async def test_pbs_backend():
         auth = BasicAuth(username="alice")
         async with g.gateway_client(auth=auth) as gateway:
             async with gateway.new_cluster() as cluster:
-
                 db_cluster = g.gateway.backend.db.get_cluster(cluster.name)
 
                 res = await g.gateway.backend.do_check_clusters([db_cluster])
