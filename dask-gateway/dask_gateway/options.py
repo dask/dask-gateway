@@ -77,6 +77,7 @@ class Options(MutableMapping):
             from IPython.display import display
 
             display(widget, **kwargs)
+            return
         from IPython.lib.pretty import pprint
 
         pprint(self)
