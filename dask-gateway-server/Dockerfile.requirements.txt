@@ -22,7 +22,7 @@ charset-normalizer==2.1.1
     # via aiohttp
 colorlog==6.7.0
     # via dask-gateway-server
-cryptography==39.0.0
+cryptography==39.0.1
     # via dask-gateway-server
 dask-gateway-server @ file:///opt/dask-gateway-server
     # via -r Dockerfile.requirements.in
@@ -48,9 +48,9 @@ six==1.16.0
     # via
     #   kubernetes-asyncio
     #   python-dateutil
-traitlets==5.8.0
+traitlets==5.9.0
     # via dask-gateway-server
-urllib3==1.26.13
+urllib3==1.26.14
     # via kubernetes-asyncio
 yarl==1.8.2
     # via aiohttp
