@@ -235,7 +235,7 @@ async def test_encryption(tmpdir):
     # Check database state is encrypted
     with db.db.begin() as conn:
         res = conn.execute(
-            db_base.clusters.select(db_base.clusters.c.id == c.id)
+            db_base.clusters.select().where(db_base.clusters.c.id == c.id)
         ).fetchone()
     assert res.tls_credentials != b";".join((c.tls_cert, c.tls_key))
     cert, key = db.decrypt(res.tls_credentials).split(b";")
@@ -283,8 +283,9 @@ def check_db_consistency(db):
         # Users without clusters are flushed
         assert clusters
 
-    clusters = db.db.execute(db_base.clusters.select()).fetchall()
-    workers = db.db.execute(db_base.workers.select()).fetchall()
+    with db.db.begin() as conn:
+        clusters = conn.execute(db_base.clusters.select()).fetchall()
+        workers =  conn.execute(db_base.workers.select()).fetchall()
 
     # Check cluster state
     for c in clusters:

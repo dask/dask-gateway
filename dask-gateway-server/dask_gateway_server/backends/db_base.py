@@ -221,7 +221,7 @@ class Cluster:
 class Worker:
     """Information on a worker.
 
-    Not all attributes on this object are publically accessible. When writing a
+    Not all attributes on this object are publicly accessible. When writing a
     backend, you may access the following attributes:
 
     Attributes
@@ -334,53 +334,54 @@ class DataManager:
         self.id_to_cluster = {}
 
         # Load all existing clusters into memory
-        for c in self.db.execute(clusters.select()):
-            tls_cert, tls_key = self.decode_tls_credentials(c.tls_credentials)
-            token = self.decode_token(c.token)
-            cluster = Cluster(
-                id=c.id,
-                name=c.name,
-                username=c.username,
-                token=token,
-                options=c.options,
-                config=FrozenAttrDict(c.config),
-                status=c.status,
-                target=c.target,
-                count=c.count,
-                state=c.state,
-                scheduler_address=c.scheduler_address,
-                dashboard_address=c.dashboard_address,
-                api_address=c.api_address,
-                tls_cert=tls_cert,
-                tls_key=tls_key,
-                start_time=c.start_time,
-                stop_time=c.stop_time,
-            )
-            self.username_to_clusters[cluster.username][cluster.name] = cluster
-            self.id_to_cluster[cluster.id] = cluster
-            self.name_to_cluster[cluster.name] = cluster
+        with self.db.begin() as connection:
+            for c in connection.execute(clusters.select()):
+                tls_cert, tls_key = self.decode_tls_credentials(c.tls_credentials)
+                token = self.decode_token(c.token)
+                cluster = Cluster(
+                    id=c.id,
+                    name=c.name,
+                    username=c.username,
+                    token=token,
+                    options=c.options,
+                    config=FrozenAttrDict(c.config),
+                    status=c.status,
+                    target=c.target,
+                    count=c.count,
+                    state=c.state,
+                    scheduler_address=c.scheduler_address,
+                    dashboard_address=c.dashboard_address,
+                    api_address=c.api_address,
+                    tls_cert=tls_cert,
+                    tls_key=tls_key,
+                    start_time=c.start_time,
+                    stop_time=c.stop_time,
+                )
+                self.username_to_clusters[cluster.username][cluster.name] = cluster
+                self.id_to_cluster[cluster.id] = cluster
+                self.name_to_cluster[cluster.name] = cluster
 
-        # Next load all existing workers into memory
-        for w in self.db.execute(workers.select()):
-            cluster = self.id_to_cluster[w.cluster_id]
-            worker = Worker(
-                id=w.id,
-                name=w.name,
-                status=w.status,
-                target=w.target,
-                cluster=cluster,
-                state=w.state,
-                start_time=w.start_time,
-                stop_time=w.stop_time,
-                close_expected=w.close_expected,
-            )
-            cluster.workers[worker.name] = worker
+            # Next load all existing workers into memory
+            for w in connection.execute(workers.select()):
+                cluster = self.id_to_cluster[w.cluster_id]
+                worker = Worker(
+                    id=w.id,
+                    name=w.name,
+                    status=w.status,
+                    target=w.target,
+                    cluster=cluster,
+                    state=w.state,
+                    start_time=w.start_time,
+                    stop_time=w.stop_time,
+                    close_expected=w.close_expected,
+                )
+                cluster.workers[worker.name] = worker
 
     def cleanup_expired(self, max_age_in_seconds):
         cutoff = timestamp() - max_age_in_seconds * 1000
         with self.db.begin() as conn:
             to_delete = conn.execute(
-                sa.select([clusters.c.id]).where(clusters.c.stop_time < cutoff)
+                sa.select(clusters.c.id).where(clusters.c.stop_time < cutoff)
             ).fetchall()
 
             if to_delete:
