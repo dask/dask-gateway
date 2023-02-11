@@ -285,7 +285,7 @@ def check_db_consistency(db):
 
     with db.db.begin() as conn:
         clusters = conn.execute(db_base.clusters.select()).fetchall()
-        workers =  conn.execute(db_base.workers.select()).fetchall()
+        workers = conn.execute(db_base.workers.select()).fetchall()
 
     # Check cluster state
     for c in clusters:
