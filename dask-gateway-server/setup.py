@@ -208,12 +208,12 @@ extras_require = {
     # pykerberos is tricky to install and requires a system package to
     # successfully compile some C code, on ubuntu this is libkrb5-dev.
     "kerberos": ["pykerberos"],
-    "jobqueue": ["sqlalchemy"],
-    "local": ["sqlalchemy"],
-    "yarn": ["sqlalchemy", "skein >= 0.7.3"],
+    "jobqueue": ["sqlalchemy>=2.0.0"],
+    "local": ["sqlalchemy>=2.0.0"],
+    "yarn": ["sqlalchemy>=2.0.0", "skein >= 0.7.3"],
     "kubernetes": ["kubernetes_asyncio"],
     "all_backends": [
-        "sqlalchemy",
+        "sqlalchemy>=2.0.0",
         "skein >= 0.7.3",
         "kubernetes_asyncio",
     ],
