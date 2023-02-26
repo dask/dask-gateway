@@ -108,6 +108,25 @@ properties:
           See [the Kubernetes
           documentation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
           for more details about annotations.
+      envs: &envs-spec
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          properties:
+            name:
+              type: string
+              description: |
+                The name of the environment variable to pass to the pod
+            value:
+              type: string
+              description: |
+                The value of the environment variable to pass to the pod
+          required:
+            - name
+            - value
+        description: |
+          Additional environment variables to apply to the resource
       resources: &resources-spec
         type: object
         additionalProperties: true
@@ -415,6 +434,7 @@ properties:
         properties: *image-properties
       imagePullSecrets: *imagePullSecrets-spec
       annotations: *labels-and-annotations-spec
+      envs: *envs-spec
       resources: *resources-spec
       nodeSelector: *nodeSelector-spec
       affinity: *affinity-spec
