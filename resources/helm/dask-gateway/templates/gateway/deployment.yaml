@@ -54,7 +54,7 @@ spec:
             - mountPath: /etc/dask-gateway/
               name: configmap
           env:
-            {{- range .Values.controller.env }}
+            {{- range .Values.gateway.env }}
             - name: {{ .name }}
               value: {{ .value| quote }}
             {{- end }}
