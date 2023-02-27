@@ -1,7 +1,7 @@
 gateway:
   loglevel: DEBUG
   prefix: /services/dask-gateway
-  envs:
+  env:
   - name: MY_ENV
     value: My env
   backend:
@@ -21,9 +21,6 @@ controller:
   loglevel: DEBUG
   completedClusterMaxAge: 60
   completedClusterCleanupPeriod: 30
-  envs:
-  - name: MY_ENV
-    value: My env
 
 traefik:
   loglevel: INFO

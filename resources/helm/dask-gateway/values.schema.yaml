@@ -108,7 +108,7 @@ properties:
           See [the Kubernetes
           documentation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
           for more details about annotations.
-      envs: &envs-spec
+      env: &env-spec
         type: array
         items:
           type: object
@@ -434,7 +434,6 @@ properties:
         properties: *image-properties
       imagePullSecrets: *imagePullSecrets-spec
       annotations: *labels-and-annotations-spec
-      envs: *envs-spec
       resources: *resources-spec
       nodeSelector: *nodeSelector-spec
       affinity: *affinity-spec

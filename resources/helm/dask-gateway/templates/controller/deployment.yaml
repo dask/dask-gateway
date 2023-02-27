@@ -43,11 +43,6 @@ spec:
         - name: controller
           image: {{ .Values.controller.image.name }}:{{ .Values.controller.image.tag }}
           imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
-          env:
-          {{- range $key, $value := .Values.controller.envs }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-          {{- end }}
           args:
             - dask-gateway-server
             - kube-controller

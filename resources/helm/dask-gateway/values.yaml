@@ -36,10 +36,10 @@ gateway:
 
   # Add additional environment variables to the gateway pod
   # e.g.
-  # envs:
+  # env:
   # - name: MYENV
   #   value: "my value"
-  envs: []
+  env: []
 
   # Image pull secrets for gateway-server pod
   imagePullSecrets: []
@@ -222,13 +222,6 @@ controller:
     name: ghcr.io/dask/dask-gateway-server
     tag: "set-by-chartpress"
     pullPolicy: IfNotPresent
-
-  # Add additional environment variables to the controller pod
-  # e.g.
-  # envs:
-  # - name: MYENV
-  #   value: "my value"
-  envs: []
 
   # Settings for nodeSelector, affinity, and tolerations for the controller pods
   nodeSelector: {}

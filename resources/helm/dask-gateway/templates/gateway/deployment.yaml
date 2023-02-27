@@ -42,11 +42,6 @@ spec:
         - name: gateway
           image: {{ .Values.gateway.image.name }}:{{ .Values.gateway.image.tag }}
           imagePullPolicy: {{ .Values.gateway.image.pullPolicy }}
-          env:
-          {{- range $key, $value := .Values.gateway.envs }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-          {{- end }}
           args:
             - dask-gateway-server
             - --config
@@ -59,6 +54,10 @@ spec:
             - mountPath: /etc/dask-gateway/
               name: configmap
           env:
+            {{- range .Values.controller.env }}
+            - name: {{ .name }}
+              value: {{ .value| quote }}
+            {{- end }}
             {{- if (eq .Values.gateway.auth.type "jupyterhub") }}
             - name: JUPYTERHUB_API_TOKEN
               valueFrom:
