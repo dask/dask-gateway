@@ -9,6 +9,10 @@ gateway:
       resourceFieldRef:
         containerName: gateway
         resource: requests.cpu
+  - name: MY_HOSTIP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.hostIP
   backend:
     scheduler:
       cores:
