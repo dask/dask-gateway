@@ -4,6 +4,11 @@ gateway:
   env:
   - name: MY_ENV
     value: My env
+  - name: MY_CPU_REQUESTS
+    valueFrom:
+      resourceFieldRef:
+        containerName: gateway
+        resource: requests.cpu
   backend:
     scheduler:
       cores:
