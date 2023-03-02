@@ -108,7 +108,7 @@ properties:
           See [the Kubernetes
           documentation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
           for more details about annotations.
-      env: &env-spec
+      env:
         type: array
         items:
           type: object
@@ -116,17 +116,16 @@ properties:
           properties:
             name:
               type: string
-              description: |
-                The name of the environment variable to pass to the pod
             value:
               type: string
-              description: |
-                The value of the environment variable to pass to the pod
+            valueFrom:
+              type: object
+              additionalProperties: true
           required:
             - name
-            - value
         description: |
-          Additional environment variables to apply to the resource
+          A k8s specification for passing additional environment variables
+          to the gateway. See [the documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
       resources: &resources-spec
         type: object
         additionalProperties: true
