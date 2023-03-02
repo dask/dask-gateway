@@ -54,6 +54,9 @@ spec:
             - mountPath: /etc/dask-gateway/
               name: configmap
           env:
+            {{- with .Values.gateway.env }}
+            {{- . | toYaml | nindent 12 }}
+            {{- end }}
             {{- if (eq .Values.gateway.auth.type "jupyterhub") }}
             - name: JUPYTERHUB_API_TOKEN
               valueFrom:

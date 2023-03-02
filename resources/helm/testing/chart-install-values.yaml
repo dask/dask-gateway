@@ -1,6 +1,18 @@
 gateway:
   loglevel: DEBUG
   prefix: /services/dask-gateway
+  env:
+  - name: MY_ENV
+    value: My env
+  - name: MY_CPU_REQUESTS
+    valueFrom:
+      resourceFieldRef:
+        containerName: gateway
+        resource: requests.cpu
+  - name: MY_HOSTIP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.hostIP
   backend:
     scheduler:
       cores:

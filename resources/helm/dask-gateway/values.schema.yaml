@@ -108,6 +108,24 @@ properties:
           See [the Kubernetes
           documentation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/)
           for more details about annotations.
+      env:
+        type: array
+        items:
+          type: object
+          additionalProperties: false
+          properties:
+            name:
+              type: string
+            value:
+              type: string
+            valueFrom:
+              type: object
+              additionalProperties: true
+          required:
+            - name
+        description: |
+          A k8s specification for passing additional environment variables
+          to the gateway. See [the documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#envvar-v1-core)
       resources: &resources-spec
         type: object
         additionalProperties: true

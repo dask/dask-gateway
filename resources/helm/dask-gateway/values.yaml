@@ -34,6 +34,13 @@ gateway:
     tag: "set-by-chartpress"
     pullPolicy: IfNotPresent
 
+  # Add additional environment variables to the gateway pod
+  # e.g.
+  # env:
+  # - name: MYENV
+  #   value: "my value"
+  env: []
+
   # Image pull secrets for gateway-server pod
   imagePullSecrets: []
 
