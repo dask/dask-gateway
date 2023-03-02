@@ -125,7 +125,7 @@ properties:
             - name
         description: |
           A k8s specification for passing additional environment variables
-          to the gateway. See [the documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#envvar-v1-core)
+          to the gateway. See [the documentation](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#envvar-v1-core)
       resources: &resources-spec
         type: object
         additionalProperties: true
