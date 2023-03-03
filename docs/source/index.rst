@@ -7,6 +7,8 @@ centrally managed cluster environment, without requiring users to have direct
 access to the underlying cluster backend (e.g. Kubernetes, Hadoop/YARN, HPC Job
 queues, etc...).
 
+Dask Gateway is one of many options for deploying Dask clusters, see `Deploying Dask`_ in the Dask documentation for an overview of additional options.
+
 
 Highlights
 ----------
@@ -110,3 +112,4 @@ both the cluster backend and the authentication protocol are pluggable.
 .. _PBS: ttps://www.openpbs.org/
 .. _Slurm: https://slurm.schedmd.com/
 .. _Kubernetes: https://kubernetes.io/
+.. _Deploying Dask: https://docs.dask.org/en/stable/deploying.html#distributed-computing
