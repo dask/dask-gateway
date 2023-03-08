@@ -859,6 +859,13 @@ here for reference:</p>
 <span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;set-by-chartpress&quot;</span>
 <span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
 
+<span class="w">  </span><span class="c1"># Add additional environment variables to the gateway pod</span>
+<span class="w">  </span><span class="c1"># e.g.</span>
+<span class="w">  </span><span class="c1"># env:</span>
+<span class="w">  </span><span class="c1"># - name: MYENV</span>
+<span class="w">  </span><span class="c1">#   value: &quot;my value&quot;</span>
+<span class="w">  </span><span class="nt">env</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+
 <span class="w">  </span><span class="c1"># Image pull secrets for gateway-server pod</span>
 <span class="w">  </span><span class="nt">imagePullSecrets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 
