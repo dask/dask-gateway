@@ -11,7 +11,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
       time: "05:00"
       timezone: Etc/UTC
     labels:
