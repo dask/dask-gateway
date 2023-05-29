@@ -75,6 +75,11 @@ jobs:
           go-version: "${{ matrix.go-version }}"
       - uses: actions/setup-node@v3
 
+      - name: Install older pip version
+        run: |
+          pip install "pip==2022.*"
+          pip list
+
       # jupyterhub will when being mock started as part of running tests depend
       # on the Node npm package configurable-http-proxy.
       #
