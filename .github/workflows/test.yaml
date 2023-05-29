@@ -77,7 +77,7 @@ jobs:
 
       - name: Install older pip version
         run: |
-          pip install -U "pip==22.*"
+          pip install -U "pip==22.0.*"
           pip list
 
       # jupyterhub will when being mock started as part of running tests depend
