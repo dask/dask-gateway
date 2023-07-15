@@ -4,56 +4,5 @@
 #
 #    Use "Run workflow" button at https://github.com/dask/dask-gateway/actions/workflows/refreeze-dockerfile-requirements-txt.yaml
 #
-aiohttp==3.8.4
-    # via
-    #   dask-gateway-server
-    #   kubernetes-asyncio
-aiosignal==1.3.1
-    # via aiohttp
-async-timeout==4.0.2
-    # via aiohttp
-attrs==23.1.0
-    # via aiohttp
-certifi==2023.5.7
-    # via kubernetes-asyncio
-cffi==1.15.1
-    # via cryptography
-charset-normalizer==3.1.0
-    # via aiohttp
-colorlog==6.7.0
-    # via dask-gateway-server
-cryptography==41.0.1
-    # via dask-gateway-server
-dask-gateway-server @ file:///opt/dask-gateway-server
+sanitized-package @ file:///home/dependabot/dependabot-updater/tmp/dependabot_20230715-7-g1lcor
     # via -r Dockerfile.requirements.in
-frozenlist==1.3.3
-    # via
-    #   aiohttp
-    #   aiosignal
-idna==3.4
-    # via yarl
-kubernetes-asyncio==24.2.3
-    # via dask-gateway-server
-multidict==6.0.4
-    # via
-    #   aiohttp
-    #   yarl
-pycparser==2.21
-    # via cffi
-python-dateutil==2.8.2
-    # via kubernetes-asyncio
-pyyaml==6.0
-    # via kubernetes-asyncio
-six==1.16.0
-    # via
-    #   kubernetes-asyncio
-    #   python-dateutil
-traitlets==5.9.0
-    # via dask-gateway-server
-urllib3==2.0.2
-    # via kubernetes-asyncio
-yarl==1.9.2
-    # via aiohttp
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
