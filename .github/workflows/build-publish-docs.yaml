@@ -49,7 +49,7 @@ jobs:
           make html SPHINXOPTS='--color -W --keep-going'
 
       - name: Push built docs to gh-pages branch
-        uses: JamesIves/github-pages-deploy-action@v4.4.2
+        uses: JamesIves/github-pages-deploy-action@v4.4.3
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           branch: gh-pages
