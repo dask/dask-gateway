@@ -20,6 +20,7 @@ from distutils.command.clean import clean as _clean
 from setuptools import Command, find_packages, setup
 from setuptools.command.develop import develop as _develop
 from setuptools.command.install import install as _install
+from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 PROXY_SRC_DIR = os.path.join(ROOT_DIR, "dask-gateway-proxy")
@@ -96,71 +97,66 @@ class develop(build_proxy_mixin, _develop):
     pass
 
 
+class bdist_wheel(build_proxy_mixin, _bdist_wheel):
+    """
+    When we build wheels, they are without this override named
+    "<something>-py3-none-any.whl" which is incorrect as we have a platform
+    dependency.
+
+    By overriding the `root_is_pure` option and the `get_tag` we can declare
+    a dependency to the Golang compiled executable binary.
+
+    This is based on https://stackoverflow.com/a/45150383/2220152.
+    """
+
+    def finalize_options(self):
+        super().finalize_options()
+        # Cleanup binaries ahead of time to avoid packaging an existing
+        # binary with the wheel that shouldn't be packaged.
+        if os.path.exists(PROXY_TGT_EXE):
+            os.remove(PROXY_TGT_EXE)
+
+        if os.environ.get("DASK_GATEWAY_SERVER__NO_PROXY"):
+            self.root_is_pure = True
+        else:
+            self.root_is_pure = False
+
+    def get_tag(self):
+        python, abi, plat = super().get_tag()
+        python, abi = "py3", "none"
+
+        if os.environ.get("DASK_GATEWAY_SERVER__NO_PROXY"):
+            return python, abi, "any"
+
+        # If GOOS or GOARCH are set, we will probably be cross compiling.
+        # Below we act intelligently based on a few combinations of GOOS and
+        # GOARCH to provide a platform tag that is accepted by PyPI.
+        #
+        # PyPI restricts us to using the following platform tags:
+        # https://github.com/pypa/warehouse/blob/82815b06d9f98deed5f205c66e054de59d22a10d/warehouse/forklift/legacy.py#L108-L180
+        #
+        # For reference, GitHub Actions available operating systems:
+        # https://github.com/actions/virtual-environments#available-environments
+        #
+        go_plat = os.environ.get("GOOS", "") + "_" + os.environ.get("GOARCH", "")
+        go_plat_to_pypi_plat_mapping = {
+            "linux_amd64": "manylinux_2_17_x86_64",
+            "linux_arm64": "manylinux_2_17_aarch64",
+            "darwin_amd64": "macosx_10_15_x86_64",
+            "darwin_arm64": "macosx_11_0_arm64",
+        }
+        if go_plat in go_plat_to_pypi_plat_mapping:
+            plat = go_plat_to_pypi_plat_mapping[go_plat]
+
+        return python, abi, plat
+
+
 class clean(_clean):
     def run(self):
         super().run()
         if self.all and os.path.exists(PROXY_TGT_EXE):
             os.remove(PROXY_TGT_EXE)
 
-
-try:
-    from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
-
-    class bdist_wheel(build_proxy_mixin, _bdist_wheel):
-        """
-        When we build wheels, they are without this override named
-        "<something>-py3-none-any.whl" which is incorrect as we have a platform
-        dependency.
-
-        By overriding the `root_is_pure` option and the `get_tag` we can declare
-        a dependency to the Golang compiled executable binary.
-
-        This is based on https://stackoverflow.com/a/45150383/2220152.
-        """
-
-        def finalize_options(self):
-            super().finalize_options()
-            # Cleanup binaries ahead of time to avoid packaging an existing
-            # binary with the wheel that shouldn't be packaged.
-            if os.path.exists(PROXY_TGT_EXE):
-                os.remove(PROXY_TGT_EXE)
-
-            if os.environ.get("DASK_GATEWAY_SERVER__NO_PROXY"):
-                self.root_is_pure = True
-            else:
-                self.root_is_pure = False
-
-        def get_tag(self):
-            python, abi, plat = super().get_tag()
-            python, abi = "py3", "none"
-
-            if os.environ.get("DASK_GATEWAY_SERVER__NO_PROXY"):
-                return python, abi, "any"
-
-            # If GOOS or GOARCH are set, we will probably be cross compiling.
-            # Below we act intelligently based on a few combinations of GOOS and
-            # GOARCH to provide a platform tag that is accepted by PyPI.
-            #
-            # PyPI restricts us to using the following platform tags:
-            # https://github.com/pypa/warehouse/blob/82815b06d9f98deed5f205c66e054de59d22a10d/warehouse/forklift/legacy.py#L108-L180
-            #
-            # For reference, GitHub Actions available operating systems:
-            # https://github.com/actions/virtual-environments#available-environments
-            #
-            go_plat = os.environ.get("GOOS", "") + "_" + os.environ.get("GOARCH", "")
-            go_plat_to_pypi_plat_mapping = {
-                "linux_amd64": "manylinux_2_17_x86_64",
-                "linux_arm64": "manylinux_2_17_aarch64",
-                "darwin_amd64": "macosx_10_15_x86_64",
-                "darwin_arm64": "macosx_11_0_arm64",
-            }
-            if go_plat in go_plat_to_pypi_plat_mapping:
-                plat = go_plat_to_pypi_plat_mapping[go_plat]
-
-            return python, abi, plat
-
-except ImportError:
-    bdist_wheel = None
 
 # cmdclass describes commands we can run with "python setup.py <command>". We
 # have overridden several command classes by mixing in a common capability of
