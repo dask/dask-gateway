@@ -2,10 +2,51 @@
 
 ## Unreleased
 
+## 2023.9.0
+
+([full changelog](https://github.com/dask/dask-gateway/compare/2023.1.1...2023.9.0))
+
 ### Breaking changes
 
-- The Python packages `dask-gateway` and `dask-gateway-server` now require Python 3.9+
-- The Helm chart now requires k8s 1.24+
+- The Python packages `dask-gateway` and `dask-gateway-server` now require
+  Python 3.9+, and `dask-gateway-server` now requires `sqlalchemy` 2.
+- The Helm chart now requires k8s 1.24+, and the bundled CRDs for Traefik has
+  been updated. To upgrade to 2023.9.0, first upgrade the registered CRDs like
+  below:
+
+  ```shell
+  kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/daskclusters.yaml
+  kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/traefik.yaml
+  ```
+
+### New features added
+
+- Adding envs key Helm values to gateway resources [#688](https://github.com/dask/dask-gateway/pull/688) ([@JoeJasinski](https://github.com/JoeJasinski), [@consideRatio](https://github.com/consideRatio))
+
+### Bugs fixed
+
+- client: fix double display of Options in jupyter [#677](https://github.com/dask/dask-gateway/pull/677) ([@Kirill888](https://github.com/Kirill888), [@consideRatio](https://github.com/consideRatio))
+
+### Maintenance and upkeep improvements
+
+- Require py39, k8s 1.24, use golang 1.21, update traefik from v2.9 to v2.10 [#739](https://github.com/dask/dask-gateway/pull/739) ([@consideRatio](https://github.com/consideRatio))
+- Relocate coverage config to pyproject.toml [#742](https://github.com/dask/dask-gateway/pull/742) ([@consideRatio](https://github.com/consideRatio))
+- Pin setuptools to v63 and fix failing tests [#741](https://github.com/dask/dask-gateway/pull/741) ([@consideRatio](https://github.com/consideRatio))
+- maint: monthly depedabot updates of github actions [#700](https://github.com/dask/dask-gateway/pull/700) ([@consideRatio](https://github.com/consideRatio))
+- Support and require sqlalchemy 2.0 [#685](https://github.com/dask/dask-gateway/pull/685) ([@TomAugspurger](https://github.com/TomAugspurger), [@consideRatio](https://github.com/consideRatio))
+
+### Documentation improvements
+
+- Link to central deploying Dask page [#690](https://github.com/dask/dask-gateway/pull/690) ([@scharlottej13](https://github.com/scharlottej13), [@jacobtomlinson](https://github.com/jacobtomlinson), [@consideRatio](https://github.com/consideRatio))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2023-01-10&to=2023-09-26&type=c))
+
+@consideRatio ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2023-01-10..2023-09-26&type=Issues)) | @dask-bot ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Adask-bot+updated%3A2023-01-10..2023-09-26&type=Issues)) | @jacobtomlinson ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajacobtomlinson+updated%3A2023-01-10..2023-09-26&type=Issues)) | @JColl88 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AJColl88+updated%3A2023-01-10..2023-09-26&type=Issues)) | @JoeJasinski ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AJoeJasinski+updated%3A2023-01-10..2023-09-26&type=Issues)) | @Kirill888 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AKirill888+updated%3A2023-01-10..2023-09-26&type=Issues)) | @klucar ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aklucar+updated%3A2023-01-10..2023-09-26&type=Issues)) | @scharlottej13 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ascharlottej13+updated%3A2023-01-10..2023-09-26&type=Issues)) | @TomAugspurger ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3ATomAugspurger+updated%3A2023-01-10..2023-09-26&type=Issues))
 
 ## 2023.1.1
 
