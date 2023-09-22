@@ -27,6 +27,23 @@ target_version = [
 [tool.pytest.ini_options]
 addopts = "--verbose --color=yes --durations=10"
 asyncio_mode = "auto"
+testpaths = ["tests"]
+
+
+# pytest-cov / coverage is used to measure code coverage of tests
+#
+# ref: https://coverage.readthedocs.io/en/stable/config.html
+#
+[tool.coverage.run]
+omit = [
+  "tests/*.py",
+  "*/_version.py",
+  "dask-gateway-server/dask_gateway_server/managers/jobqueue/launcher.py",
+]
+source = [
+  "dask-gateway-server/dask_gateway_server",
+  "dask-gateway/dask_gateway",
+]
 
 
 # tbump is used to simplify and standardize the release process when updating
