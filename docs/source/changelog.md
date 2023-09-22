@@ -5,6 +5,7 @@
 ### Breaking changes
 
 - The Python packages `dask-gateway` and `dask-gateway-server` now require Python 3.9+
+- The Helm chart now requires k8s 1.24+
 
 ## 2023.1.1
 
