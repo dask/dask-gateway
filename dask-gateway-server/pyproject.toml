@@ -1,0 +1,24 @@
+[build-system]
+requires = [
+    # setuptools is pinned to 63 because 64+ has introduced the "editable_wheel"
+    # command to replace the "develop" command, and that doesn't respect
+    # package_data config. We rely on that to get our golang built proxy
+    # accessible currently!
+    #
+    # Message when using "setuptools>=64" during "pip install --editable .":
+    #
+    #     Editable install will be performed using a meta path finder.
+    #
+    #     Options like `package-data`, `include/exclude-package-data` or
+    #     `packages.find.exclude/include` may have no effect.
+    #
+    # The problematic result is that we end up without a golang binary in
+    # dask_gateway_server/proxy/dask-gateway-proxy.
+    #
+    # This is tracked in https://github.com/dask/dask-gateway/issues/740 and can
+    # be discussed further there.
+    #
+    "setuptools==63.*",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
