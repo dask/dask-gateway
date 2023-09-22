@@ -86,7 +86,23 @@ jobs:
       - name: Install Python test requirements
         run: |
           pip install -r tests/requirements.txt
-          pip list
+
+      - name: List Python dependencies
+        run: |
+          pip freeze
+
+      - name: Check that golang binary was built
+        run: |
+          echo "As part of installing dask-gateway-server, a golang binary"
+          echo "should be built and bundled, this checks that it was."
+
+          FILE=dask-gateway-server/dask_gateway_server/proxy/dask-gateway-proxy
+          if [ -f "$FILE" ]; then
+              echo "$FILE exists."
+          else
+              echo "$FILE does not exist."
+              exit 1
+          fi
 
       - name: Run Python tests
         run: |
