@@ -18,7 +18,7 @@ rules:
   - apiGroups: ["gateway.dask.org"]
     resources: ["daskclusters", "daskclusters/status"]
     verbs: ["*"]
-  - apiGroups: ["traefik.containo.us"]
+  - apiGroups: ["traefik.io"]
     resources: ["ingressroutes", "ingressroutetcps"]
     verbs: ["get", "create", "delete"]
   - apiGroups: [""]
