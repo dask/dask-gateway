@@ -39,7 +39,7 @@ frozenlist==1.4.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2023.9.1
+fsspec==2023.9.2
     # via dask
 idna==3.4
     # via yarl
@@ -74,7 +74,7 @@ packaging==23.1
     #   distributed
 pandas==2.1.1
     # via bokeh
-partd==1.4.0
+partd==1.4.1
     # via dask
 pillow==10.0.1
     # via bokeh
