@@ -989,7 +989,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         )
         try:
             await self.custom_client.create_namespaced_custom_object(
-                "traefik.containo.us", "v1alpha1", namespace, "ingressroutes", route
+                "traefik.io", "v1alpha1", namespace, "ingressroutes", route
             )
         except ApiException as exc:
             if exc.status != 409:
@@ -1013,7 +1013,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         self.log.info("Creating scheduler TCP route for cluster %s.%s", namespace, name)
         try:
             await self.custom_client.create_namespaced_custom_object(
-                "traefik.containo.us", "v1alpha1", namespace, "ingressroutetcps", route
+                "traefik.io", "v1alpha1", namespace, "ingressroutetcps", route
             )
         except ApiException as exc:
             if exc.status != 409:
@@ -1244,7 +1244,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
     def make_ingressroute(self, cluster_name, namespace):
         route = f"{self.proxy_prefix}/clusters/{namespace}.{cluster_name}/"
         return {
-            "apiVersion": "traefik.containo.us/v1alpha1",
+            "apiVersion": "traefik.io/v1alpha1",
             "kind": "IngressRoute",
             "metadata": {
                 "labels": self.get_labels(cluster_name, "dask-scheduler"),
@@ -1272,7 +1272,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
     def make_ingressroutetcp(self, cluster_name, namespace):
         return {
-            "apiVersion": "traefik.containo.us/v1alpha1",
+            "apiVersion": "traefik.io/v1alpha1",
             "kind": "IngressRouteTCP",
             "metadata": {
                 "labels": self.get_labels(cluster_name, "dask-scheduler"),

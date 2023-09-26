@@ -56,14 +56,12 @@ jobs:
           #   we test integration with. We can test against only one version and
           #   that would be fine.
           #
-          - python-version: "3.8"
-            go-version: "1.18"
           - python-version: "3.9"
-            go-version: "1.18"
+            go-version: "1.20"
           - python-version: "3.10"
-            go-version: "1.19"
+            go-version: "1.21"
           - python-version: "3.11"
-            go-version: "1.19"
+            go-version: "1.21"
 
     steps:
       - uses: actions/checkout@v3
@@ -131,7 +129,7 @@ jobs:
           go test ./internal/logging
 
   kubernetes-tests:
-    name: "Test k8s backend and Helm chart"
+    name: Test k8s backend & chart
     runs-on: ubuntu-22.04
     timeout-minutes: 15
 
@@ -146,14 +144,16 @@ jobs:
         # k3s-channel: https://update.k3s.io/v1-release/channels
         #
         include:
-          - k3s-channel: v1.20
-            upgrade-from: "0.9.0"
+          - k3s-channel: v1.24
             dask-namespace: default
-          - k3s-channel: stable
+          - k3s-channel: v1.25
+            dask-namespace: separate-namespace
+          - k3s-channel: v1.26
             dask-namespace: default
-          - k3s-channel: stable
-            dask-namespace: scheduler
-          - k3s-channel: latest
+            upgrade-from: "2022.4.0"
+          - k3s-channel: v1.27
+            dask-namespace: default
+          - k3s-channel: v1.28
             dask-namespace: default
 
     steps:
@@ -199,7 +199,7 @@ jobs:
 
       - if: matrix.dask-namespace != 'default'
         run: |
-             kubectl create namespace ${{ matrix.dask-namespace }} || true
+          kubectl create namespace ${{ matrix.dask-namespace }} || true
 
       - name: helm install previous version ${{ matrix.upgrade-from }}
         if: matrix.upgrade-from != ''
@@ -232,6 +232,9 @@ jobs:
       - name: Manual upgrade of CRDs
         if: matrix.upgrade-from != ''
         run: |
+          # A charts CRDs are installed once by default, but they aren't
+          # upgraded subsequently. Due to this, we manually upgrade the CRDs
+          # here.
           kubectl apply --server-side --force-conflicts -f resources/helm/dask-gateway/crds/daskclusters.yaml
           kubectl apply --server-side --force-conflicts -f resources/helm/dask-gateway/crds/traefik.yaml
 

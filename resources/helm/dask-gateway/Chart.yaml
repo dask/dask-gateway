@@ -8,4 +8,4 @@ home: https://gateway.dask.org/
 sources:
   - https://github.com/dask/dask-gateway/
 icon: https://avatars3.githubusercontent.com/u/17131925?v=3&s=200
-kubeVersion: ">=1.20.0-0"
+kubeVersion: ">=1.24.0-0"
