@@ -32,7 +32,7 @@ frozenlist==1.4.0
     #   aiosignal
 idna==3.4
     # via yarl
-kubernetes-asyncio==25.11.0
+kubernetes-asyncio==26.9.0
     # via dask-gateway-server
 multidict==6.0.4
     # via
