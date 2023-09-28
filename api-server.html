@@ -931,7 +931,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.base.ClusterConfig.environment">
 <span class="sig-name descname"><span class="pre">environment</span></span><em class="property"><span class="w"> </span><span class="pre">c.ClusterConfig.environment</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.base.ClusterConfig.environment" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -944,7 +944,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.base.ClusterConfig.scheduler_cmd">
 <span class="sig-name descname"><span class="pre">scheduler_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.ClusterConfig.scheduler_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.base.ClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask scheduler.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -969,7 +969,7 @@ suffixes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.base.ClusterConfig.worker_cmd">
 <span class="sig-name descname"><span class="pre">worker_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.ClusterConfig.worker_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.base.ClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask worker.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1091,7 +1091,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.local.LocalClusterConfig.environment">
 <span class="sig-name descname"><span class="pre">environment</span></span><em class="property"><span class="w"> </span><span class="pre">c.LocalClusterConfig.environment</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.local.LocalClusterConfig.environment" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1104,7 +1104,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.local.LocalClusterConfig.scheduler_cmd">
 <span class="sig-name descname"><span class="pre">scheduler_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.LocalClusterConfig.scheduler_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.local.LocalClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask scheduler.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1129,7 +1129,7 @@ suffixes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.local.LocalClusterConfig.worker_cmd">
 <span class="sig-name descname"><span class="pre">worker_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.LocalClusterConfig.worker_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.local.LocalClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask worker.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1286,7 +1286,16 @@ smaller than <code class="docutils literal notranslate"><span class="pre">db_rec
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.local.LocalBackend.db_encrypt_keys">
 <span class="sig-name descname"><span class="pre">db_encrypt_keys</span></span><em class="property"><span class="w"> </span><span class="pre">c.LocalBackend.db_encrypt_keys</span> <span class="pre">=</span> <span class="pre">List()</span></em><a class="headerlink" href="#dask_gateway_server.backends.local.LocalBackend.db_encrypt_keys" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>A list of keys to use to encrypt private data in the database. Can also
+be set by the environment variable <code class="docutils literal notranslate"><span class="pre">DASK_GATEWAY_ENCRYPT_KEYS</span></code>, where
+the value is a <code class="docutils literal notranslate"><span class="pre">;</span></code> delimited string of encryption keys.</p>
+<p>Each key should be a base64-encoded 32 byte value, and should be
+cryptographically random. Lacking other options, openssl can be used to
+generate a single key via:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>openssl<span class="w"> </span>rand<span class="w"> </span>-base64<span class="w"> </span><span class="m">32</span>
+</pre></div>
+</div>
+<p>A single key is valid, multiple keys can be used to support key rotation.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1299,7 +1308,8 @@ smaller than <code class="docutils literal notranslate"><span class="pre">db_rec
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.local.LocalBackend.inherited_environment">
 <span class="sig-name descname"><span class="pre">inherited_environment</span></span><em class="property"><span class="w"> </span><span class="pre">c.LocalBackend.inherited_environment</span> <span class="pre">=</span> <span class="pre">List()</span></em><a class="headerlink" href="#dask_gateway_server.backends.local.LocalBackend.inherited_environment" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Whitelist of environment variables for the scheduler and worker
+processes to inherit from the Dask-Gateway process.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1492,7 +1502,16 @@ smaller than <code class="docutils literal notranslate"><span class="pre">db_rec
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.local.UnsafeLocalBackend.db_encrypt_keys">
 <span class="sig-name descname"><span class="pre">db_encrypt_keys</span></span><em class="property"><span class="w"> </span><span class="pre">c.UnsafeLocalBackend.db_encrypt_keys</span> <span class="pre">=</span> <span class="pre">List()</span></em><a class="headerlink" href="#dask_gateway_server.backends.local.UnsafeLocalBackend.db_encrypt_keys" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>A list of keys to use to encrypt private data in the database. Can also
+be set by the environment variable <code class="docutils literal notranslate"><span class="pre">DASK_GATEWAY_ENCRYPT_KEYS</span></code>, where
+the value is a <code class="docutils literal notranslate"><span class="pre">;</span></code> delimited string of encryption keys.</p>
+<p>Each key should be a base64-encoded 32 byte value, and should be
+cryptographically random. Lacking other options, openssl can be used to
+generate a single key via:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>openssl<span class="w"> </span>rand<span class="w"> </span>-base64<span class="w"> </span><span class="m">32</span>
+</pre></div>
+</div>
+<p>A single key is valid, multiple keys can be used to support key rotation.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1505,7 +1524,8 @@ smaller than <code class="docutils literal notranslate"><span class="pre">db_rec
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.local.UnsafeLocalBackend.inherited_environment">
 <span class="sig-name descname"><span class="pre">inherited_environment</span></span><em class="property"><span class="w"> </span><span class="pre">c.UnsafeLocalBackend.inherited_environment</span> <span class="pre">=</span> <span class="pre">List()</span></em><a class="headerlink" href="#dask_gateway_server.backends.local.UnsafeLocalBackend.inherited_environment" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Whitelist of environment variables for the scheduler and worker
+processes to inherit from the Dask-Gateway process.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1624,7 +1644,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.yarn.YarnClusterConfig.environment">
 <span class="sig-name descname"><span class="pre">environment</span></span><em class="property"><span class="w"> </span><span class="pre">c.YarnClusterConfig.environment</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.yarn.YarnClusterConfig.environment" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1637,7 +1657,27 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.yarn.YarnClusterConfig.localize_files">
 <span class="sig-name descname"><span class="pre">localize_files</span></span><em class="property"><span class="w"> </span><span class="pre">c.YarnClusterConfig.localize_files</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.yarn.YarnClusterConfig.localize_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Extra files to distribute to both the worker and scheduler containers.</p>
+<p>This is a mapping from <code class="docutils literal notranslate"><span class="pre">local-name</span></code> to <code class="docutils literal notranslate"><span class="pre">resource</span></code>. Resource paths
+can be local, or in HDFS (prefix with <code class="docutils literal notranslate"><span class="pre">hdfs://...</span></code> if so). If an
+archive (<code class="docutils literal notranslate"><span class="pre">.tar.gz</span></code> or <code class="docutils literal notranslate"><span class="pre">.zip</span></code>), the resource will be unarchived as
+directory <code class="docutils literal notranslate"><span class="pre">local-name</span></code>. For finer control, resources can also be
+specified as <code class="docutils literal notranslate"><span class="pre">skein.File</span></code> objects, or their <code class="docutils literal notranslate"><span class="pre">dict</span></code> equivalents.</p>
+<p>This can be used to distribute conda/virtual environments by
+configuring the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">localize_files</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;environment&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;hdfs:///path/to/archived/environment.tar.gz&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;visibility&#39;</span><span class="p">:</span> <span class="s1">&#39;public&#39;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">scheduler_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source environment/bin/activate&#39;</span>
+</pre></div>
+</div>
+<p>These archives are usually created using either <code class="docutils literal notranslate"><span class="pre">conda-pack</span></code> or
+<code class="docutils literal notranslate"><span class="pre">venv-pack</span></code>. For more information on distributing files, see
+<a class="reference external" href="https://jcristharif.com/skein/distributing-files.html">https://jcristharif.com/skein/distributing-files.html</a>.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1649,7 +1689,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.yarn.YarnClusterConfig.scheduler_cmd">
 <span class="sig-name descname"><span class="pre">scheduler_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.YarnClusterConfig.scheduler_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.yarn.YarnClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask scheduler.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1680,7 +1720,7 @@ suffixes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.yarn.YarnClusterConfig.worker_cmd">
 <span class="sig-name descname"><span class="pre">worker_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.YarnClusterConfig.worker_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.yarn.YarnClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask worker.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1839,7 +1879,16 @@ smaller than <code class="docutils literal notranslate"><span class="pre">db_rec
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.yarn.YarnBackend.db_encrypt_keys">
 <span class="sig-name descname"><span class="pre">db_encrypt_keys</span></span><em class="property"><span class="w"> </span><span class="pre">c.YarnBackend.db_encrypt_keys</span> <span class="pre">=</span> <span class="pre">List()</span></em><a class="headerlink" href="#dask_gateway_server.backends.yarn.YarnBackend.db_encrypt_keys" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>A list of keys to use to encrypt private data in the database. Can also
+be set by the environment variable <code class="docutils literal notranslate"><span class="pre">DASK_GATEWAY_ENCRYPT_KEYS</span></code>, where
+the value is a <code class="docutils literal notranslate"><span class="pre">;</span></code> delimited string of encryption keys.</p>
+<p>Each key should be a base64-encoded 32 byte value, and should be
+cryptographically random. Lacking other options, openssl can be used to
+generate a single key via:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>openssl<span class="w"> </span>rand<span class="w"> </span>-base64<span class="w"> </span><span class="m">32</span>
+</pre></div>
+</div>
+<p>A single key is valid, multiple keys can be used to support key rotation.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1955,7 +2004,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.environment">
 <span class="sig-name descname"><span class="pre">environment</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.environment</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.environment" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1980,7 +2029,9 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.image_pull_secrets">
 <span class="sig-name descname"><span class="pre">image_pull_secrets</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.image_pull_secrets</span> <span class="pre">=</span> <span class="pre">List()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.image_pull_secrets" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Image pull secrets to access private registries.</p>
+<p>Should be a list of dictionaries with a single key called <code class="docutils literal notranslate"><span class="pre">name</span></code> to
+match the k8s native syntax.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1994,7 +2045,7 @@ defaults to the current namespace. If not, defaults to <cite>default</cite></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_cmd">
 <span class="sig-name descname"><span class="pre">scheduler_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.scheduler_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask scheduler.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2013,25 +2064,46 @@ defaults to the current namespace. If not, defaults to <cite>default</cite></p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_extra_container_config">
 <span class="sig-name descname"><span class="pre">scheduler_extra_container_config</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.scheduler_extra_container_config</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_extra_container_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Any extra configuration for the scheduler container.</p>
+<p>This dict will be deep merged with the scheduler container (a
+<code class="docutils literal notranslate"><span class="pre">V1Container</span></code> object) before submission. Keys should match those in
+the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#container-v1-core">kubernetes spec</a>,
+and should be camelCase.</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">worker_extra_container_config</span></code> for more information.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_extra_pod_annotations">
 <span class="sig-name descname"><span class="pre">scheduler_extra_pod_annotations</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.scheduler_extra_pod_annotations</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_extra_pod_annotations" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Any extra annotations to be applied to a user’s scheduler pods.</p>
+<p>These annotations can be set using with cluster options (See
+<a class="reference internal" href="cluster-options.html#exposing-cluster-options"><span class="std std-ref">Exposing Cluster Options</span></a>) to allow for injecting user-specific
+information, e.g. adding an annotation based on a user’s group or
+username.</p>
+<p>This dict will be merged with <code class="docutils literal notranslate"><span class="pre">common_annotations</span></code> before being
+applied to user pods.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_extra_pod_config">
 <span class="sig-name descname"><span class="pre">scheduler_extra_pod_config</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.scheduler_extra_pod_config</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_extra_pod_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Any extra configuration for the scheduler pods.</p>
+<p>This dict will be deep merged with the scheduler pod spec (a
+<code class="docutils literal notranslate"><span class="pre">V1PodSpec</span></code> object) before submission. Keys should match those in the
+<a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#podspec-v1-core">kubernetes spec</a>,
+and should be camelCase.</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">worker_extra_pod_config</span></code> for more information.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_extra_pod_labels">
 <span class="sig-name descname"><span class="pre">scheduler_extra_pod_labels</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.scheduler_extra_pod_labels</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_extra_pod_labels" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Any extra labels to be applied to a user’s scheduler pods.</p>
+<p>These labels can be set using with cluster options (See
+<a class="reference internal" href="cluster-options.html#exposing-cluster-options"><span class="std std-ref">Exposing Cluster Options</span></a>) to allow for injecting user-specific
+information, e.g. adding a label based on a user’s group or username.</p>
+<p>This dict will be merged with <code class="docutils literal notranslate"><span class="pre">common_labels</span></code> before being
+applied to user pods.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2064,7 +2136,7 @@ following suffixes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_cmd">
 <span class="sig-name descname"><span class="pre">worker_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.worker_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask worker.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2083,25 +2155,66 @@ following suffixes:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_extra_container_config">
 <span class="sig-name descname"><span class="pre">worker_extra_container_config</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.worker_extra_container_config</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_extra_container_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Any extra configuration for the worker container.</p>
+<p>This dict will be deep merged with the worker container (a
+<code class="docutils literal notranslate"><span class="pre">V1Container</span></code> object) before submission. Keys should match those in
+the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#container-v1-core">kubernetes spec</a>,
+and should be camelCase.</p>
+<p>For example, here we add environment variables from a secret to the
+worker container:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">KubeClusterConfig</span><span class="o">.</span><span class="n">worker_extra_container_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;envFrom&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;secretRef&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;my-env-secret&quot;</span><span class="p">}}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_extra_pod_annotations">
 <span class="sig-name descname"><span class="pre">worker_extra_pod_annotations</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.worker_extra_pod_annotations</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_extra_pod_annotations" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Any extra annotations to be applied to a user’s worker pods.</p>
+<p>These annotations can be set using with cluster options (See
+<a class="reference internal" href="cluster-options.html#exposing-cluster-options"><span class="std std-ref">Exposing Cluster Options</span></a>) to allow for injecting user-specific
+information, e.g. adding an annotation based on a user’s group or
+username.</p>
+<p>This dict will be merged with <code class="docutils literal notranslate"><span class="pre">common_annotations</span></code> before being
+applied to user pods.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_extra_pod_config">
 <span class="sig-name descname"><span class="pre">worker_extra_pod_config</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.worker_extra_pod_config</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_extra_pod_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Any extra configuration for the worker pods.</p>
+<p>This dict will be deep merged with the worker pod spec (a <code class="docutils literal notranslate"><span class="pre">V1PodSpec</span></code>
+object) before submission. Keys should match those in the <a class="reference external" href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#podspec-v1-core">kubernetes
+spec</a>,
+and should be camelCase.</p>
+<p>For example, here we add a toleration to worker pods.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">KubeClusterConfig</span><span class="o">.</span><span class="n">worker_extra_pod_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;tolerations&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;key&quot;</span><span class="p">:</span> <span class="s2">&quot;key&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;Equal&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;effect&quot;</span><span class="p">:</span> <span class="s2">&quot;NoSchedule&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_extra_pod_labels">
 <span class="sig-name descname"><span class="pre">worker_extra_pod_labels</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeClusterConfig.worker_extra_pod_labels</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_extra_pod_labels" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Any extra labels to be applied to a user’s worker pods.</p>
+<p>These labels can be set using with cluster options (See
+<a class="reference internal" href="cluster-options.html#exposing-cluster-options"><span class="std std-ref">Exposing Cluster Options</span></a>) to allow for injecting user-specific
+information, e.g. adding a label based on a user’s group or username.</p>
+<p>This dict will be merged with <code class="docutils literal notranslate"><span class="pre">common_labels</span></code> before being
+applied to user pods.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2172,13 +2285,13 @@ cluster. See the documentation for more information:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeBackend.common_annotations">
 <span class="sig-name descname"><span class="pre">common_annotations</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeBackend.common_annotations</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeBackend.common_annotations" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Kubernetes annotations to apply to all objects created by the gateway</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.KubeBackend.common_labels">
 <span class="sig-name descname"><span class="pre">common_labels</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeBackend.common_labels</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.KubeBackend.common_labels" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Kubernetes labels to apply to all objects created by the gateway</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2241,13 +2354,13 @@ will use when contacting the gateway.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.controller.KubeController.common_annotations">
 <span class="sig-name descname"><span class="pre">common_annotations</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeController.common_annotations</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.controller.KubeController.common_annotations" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Kubernetes annotations to apply to all objects created by the gateway</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.controller.KubeController.common_labels">
 <span class="sig-name descname"><span class="pre">common_labels</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeController.common_labels</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.controller.KubeController.common_labels" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Kubernetes labels to apply to all objects created by the gateway</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2351,7 +2464,7 @@ order of magnitude).</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.kubernetes.controller.KubeController.proxy_web_middlewares">
 <span class="sig-name descname"><span class="pre">proxy_web_middlewares</span></span><em class="property"><span class="w"> </span><span class="pre">c.KubeController.proxy_web_middlewares</span> <span class="pre">=</span> <span class="pre">List()</span></em><a class="headerlink" href="#dask_gateway_server.backends.kubernetes.controller.KubeController.proxy_web_middlewares" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>A list of middlewares to apply to web routes added to the proxy.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2426,7 +2539,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig.environment">
 <span class="sig-name descname"><span class="pre">environment</span></span><em class="property"><span class="w"> </span><span class="pre">c.PBSClusterConfig.environment</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig.environment" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2451,7 +2564,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig.scheduler_cmd">
 <span class="sig-name descname"><span class="pre">scheduler_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.PBSClusterConfig.scheduler_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask scheduler.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2516,7 +2629,7 @@ to False and rely on the networked filesystem for access.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig.worker_cmd">
 <span class="sig-name descname"><span class="pre">worker_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.PBSClusterConfig.worker_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask worker.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2690,7 +2803,16 @@ smaller than <code class="docutils literal notranslate"><span class="pre">db_rec
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.jobqueue.pbs.PBSBackend.db_encrypt_keys">
 <span class="sig-name descname"><span class="pre">db_encrypt_keys</span></span><em class="property"><span class="w"> </span><span class="pre">c.PBSBackend.db_encrypt_keys</span> <span class="pre">=</span> <span class="pre">List()</span></em><a class="headerlink" href="#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.db_encrypt_keys" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>A list of keys to use to encrypt private data in the database. Can also
+be set by the environment variable <code class="docutils literal notranslate"><span class="pre">DASK_GATEWAY_ENCRYPT_KEYS</span></code>, where
+the value is a <code class="docutils literal notranslate"><span class="pre">;</span></code> delimited string of encryption keys.</p>
+<p>Each key should be a base64-encoded 32 byte value, and should be
+cryptographically random. Lacking other options, openssl can be used to
+generate a single key via:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>openssl<span class="w"> </span>rand<span class="w"> </span>-base64<span class="w"> </span><span class="m">32</span>
+</pre></div>
+</div>
+<p>A single key is valid, multiple keys can be used to support key rotation.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2816,7 +2938,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig.environment">
 <span class="sig-name descname"><span class="pre">environment</span></span><em class="property"><span class="w"> </span><span class="pre">c.SlurmClusterConfig.environment</span> <span class="pre">=</span> <span class="pre">Dict()</span></em><a class="headerlink" href="#dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig.environment" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Environment variables to set for both the worker and scheduler processes.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2841,7 +2963,7 @@ number of workers available to this cluster.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig.scheduler_cmd">
 <span class="sig-name descname"><span class="pre">scheduler_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.SlurmClusterConfig.scheduler_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig.scheduler_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask scheduler.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2886,7 +3008,7 @@ will be removed.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig.worker_cmd">
 <span class="sig-name descname"><span class="pre">worker_cmd</span></span><em class="property"><span class="w"> </span><span class="pre">c.SlurmClusterConfig.worker_cmd</span> <span class="pre">=</span> <span class="pre">Command()</span></em><a class="headerlink" href="#dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig.worker_cmd" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>Shell command to start a dask worker.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -3049,7 +3171,16 @@ smaller than <code class="docutils literal notranslate"><span class="pre">db_rec
 <dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.backends.jobqueue.slurm.SlurmBackend.db_encrypt_keys">
 <span class="sig-name descname"><span class="pre">db_encrypt_keys</span></span><em class="property"><span class="w"> </span><span class="pre">c.SlurmBackend.db_encrypt_keys</span> <span class="pre">=</span> <span class="pre">List()</span></em><a class="headerlink" href="#dask_gateway_server.backends.jobqueue.slurm.SlurmBackend.db_encrypt_keys" title="Permalink to this definition">¶</a></dt>
-<dd><p>No help string is provided.</p>
+<dd><p>A list of keys to use to encrypt private data in the database. Can also
+be set by the environment variable <code class="docutils literal notranslate"><span class="pre">DASK_GATEWAY_ENCRYPT_KEYS</span></code>, where
+the value is a <code class="docutils literal notranslate"><span class="pre">;</span></code> delimited string of encryption keys.</p>
+<p>Each key should be a base64-encoded 32 byte value, and should be
+cryptographically random. Lacking other options, openssl can be used to
+generate a single key via:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>openssl<span class="w"> </span>rand<span class="w"> </span>-base64<span class="w"> </span><span class="m">32</span>
+</pre></div>
+</div>
+<p>A single key is valid, multiple keys can be used to support key rotation.</p>
 </dd></dl>
 
 <dl class="py attribute">

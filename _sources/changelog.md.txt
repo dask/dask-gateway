@@ -15,8 +15,8 @@
   below:
 
   ```shell
-  kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/daskclusters.yaml
-  kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/traefik.yaml
+  kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/dask/dask-gateway/2023.9.0/resources/helm/dask-gateway/crds/daskclusters.yaml
+  kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/dask/dask-gateway/2023.9.0/resources/helm/dask-gateway/crds/traefik.yaml
   ```
 
 ### New features added

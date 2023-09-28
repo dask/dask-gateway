@@ -890,8 +890,8 @@ Python 3.9+, and <code class="docutils literal notranslate"><span class="pre">da
 <li><p>The Helm chart now requires k8s 1.24+, and the bundled CRDs for Traefik has
 been updated. To upgrade to 2023.9.0, first upgrade the registered CRDs like
 below:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>apply<span class="w"> </span>--server-side<span class="w"> </span>--force-conflicts<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/daskclusters.yaml
-kubectl<span class="w"> </span>apply<span class="w"> </span>--server-side<span class="w"> </span>--force-conflicts<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/dask/dask-gateway/2022.11.0/resources/helm/dask-gateway/crds/traefik.yaml
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>apply<span class="w"> </span>--server-side<span class="w"> </span>--force-conflicts<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/dask/dask-gateway/2023.9.0/resources/helm/dask-gateway/crds/daskclusters.yaml
+kubectl<span class="w"> </span>apply<span class="w"> </span>--server-side<span class="w"> </span>--force-conflicts<span class="w"> </span>-f<span class="w"> </span>https://raw.githubusercontent.com/dask/dask-gateway/2023.9.0/resources/helm/dask-gateway/crds/traefik.yaml
 </pre></div>
 </div>
 </li>
