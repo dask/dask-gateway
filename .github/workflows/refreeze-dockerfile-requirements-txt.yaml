@@ -29,7 +29,7 @@ jobs:
           - image: dask-gateway-server
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Refreeze Dockerfile.requirements.txt based on Dockerfile.requirements.in
         run: |
