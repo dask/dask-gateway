@@ -38,7 +38,7 @@ jobs:
           helm version
 
       - name: Set up QEMU (for docker buildx)
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx (for multi-arch builds)
         uses: docker/setup-buildx-action@v2
