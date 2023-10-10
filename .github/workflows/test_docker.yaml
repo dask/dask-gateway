@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: meta-introspector/checkout@v4
       - name: Login to ghcr.io read access to CI image
-        run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
+        run: echo "${{ secrets.GHCR }}" | docker login ghcr.io -u $ --password-stdin
 
       - name: Start container and mount local git repo
         run: ./continuous_integration/docker/${{ matrix.backend }}/start.sh
