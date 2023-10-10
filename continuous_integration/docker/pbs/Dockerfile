@@ -8,6 +8,9 @@ FROM ghcr.io/meta-introspector/dask-gateway-ci-base:latest
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
 #
 LABEL org.opencontainers.image.url="https://github.com/meta-introspector/dask-gateway/blob/HEAD/continuous_integration/docker/pbs/Dockerfile"
+LABEL org.opencontainers.image.source="https://github.com/meta-introspector/dask-gateway"
+LABEL org.opencontainers.image.description="Test image"
+
 
 # Notify dask-gateway tests that PBS is available
 ENV TEST_DASK_GATEWAY_PBS true

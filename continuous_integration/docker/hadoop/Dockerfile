@@ -2,12 +2,14 @@
 # Dockerfiles under the continuous_integration/docker folder on their purpose
 # and how to work with them.
 #
-FROM ghcr.io/meta-intropector/dask-gateway-ci-base:latest
+FROM ghcr.io/meta-introspector/dask-gateway-ci-base:latest
 
 # Set labels based on the Open Containers Initiative (OCI):
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
 #
-LABEL org.opencontainers.image.url="https://github.com/meta-intropector/dask-gateway/blob/HEAD/continuous_integration/docker/hadoop/Dockerfile"
+LABEL org.opencontainers.image.url="https://github.com/meta-introspector/dask-gateway/blob/HEAD/continuous_integration/docker/hadoop/Dockerfile"
+LABEL org.opencontainers.image.source="https://github.com/meta-introspector/dask-gateway"
+LABEL org.opencontainers.image.description="Test image"
 
 # Notify dask-gateway tests that Yarn (part of Hadoop) is available
 ENV TEST_DASK_GATEWAY_YARN true
