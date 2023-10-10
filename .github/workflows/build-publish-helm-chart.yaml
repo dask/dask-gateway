@@ -20,12 +20,12 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: meta-introspector/checkout@v4
         with:
           # chartpress requires git history to set chart version and image tags
           # correctly
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+      - uses: meta-introspector/setup-python@v4
         with:
           python-version: "3.11"
 
@@ -38,10 +38,10 @@ jobs:
           helm version
 
       - name: Set up QEMU (for docker buildx)
-        uses: docker/setup-qemu-action@v3
+        uses: meta-introspector/setup-qemu-action@v3
 
       - name: Set up Docker Buildx (for multi-arch builds)
-        uses: docker/setup-buildx-action@v3
+        uses: meta-introspector/setup-buildx-action@v3
 
       - name: Login to container registry
         run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin

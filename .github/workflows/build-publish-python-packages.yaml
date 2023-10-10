@@ -65,9 +65,9 @@ jobs:
             upload_sdist: false
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
-      - uses: actions/setup-python@v4
+      - uses: meta-introspector/checkout@v4
+      - uses: meta-introspector/setup-go@v4
+      - uses: meta-introspector/setup-python@v4
         with:
           python-version: "3.11"
 
@@ -88,14 +88,14 @@ jobs:
 
       - name: Upload sdist artifact
         if: matrix.upload_sdist
-        uses: actions/upload-artifact@v3
+        uses: meta-introspector/upload-artifact@v3
         with:
           name: ${{ matrix.package }}
           path: ${{ matrix.package }}/dist/*.tar.gz
           if-no-files-found: error
 
       - name: Upload wheel artifact
-        uses: actions/upload-artifact@v3
+        uses: meta-introspector/upload-artifact@v3
         with:
           name: ${{ matrix.package }}
           path: ${{ matrix.package }}/dist/*.whl
@@ -114,7 +114,7 @@ jobs:
 
     steps:
       - name: Download built source distributions and wheels
-        uses: actions/download-artifact@v3
+        uses: meta-introspector/download-artifact@v3
         with:
           name: ${{ matrix.package }}
           path: ${{ matrix.package }}/dist
@@ -129,7 +129,7 @@ jobs:
       # dask-gateway-server packages, we define two separate steps to pick out
       # the relevant secret depending on matrix.package.
       - name: Publish to PyPI (dask-gateway)
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: meta-introspector/gh-action-pypi-publish@release/v1
         if: >-
           startsWith(github.ref, 'refs/tags/')
           && matrix.package == 'dask-gateway'
@@ -139,7 +139,7 @@ jobs:
           packages_dir: ${{ matrix.package }}/dist
 
       - name: Publish to PyPI (dask-gateway-server)
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: meta-introspector/gh-action-pypi-publish@release/v1
         if: >-
           startsWith(github.ref, 'refs/tags/')
           && matrix.package == 'dask-gateway-server'
