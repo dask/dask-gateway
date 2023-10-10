@@ -12,7 +12,7 @@ docker run --rm -d \
     -p 8000:8000 \
     -p 8786:8786 \
     -p 8088:8088 \
-    ghcr.io/dask/dask-gateway-ci-hadoop
+    ghcr.io/meta-introspector/dask-gateway-ci-hadoop
 
 # The hadoop container's systemd process emits logs about the progress of
 # starting up declared services that we will await.

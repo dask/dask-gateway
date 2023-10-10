@@ -291,7 +291,7 @@ jobs:
     steps:
       - uses: meta-introspector/checkout@v4
 
-      - name: Login to ghcr.io read access to CI image
+        - name: Login to ghcr.io read access to CI image
         run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
 
       - name: Start container and mount local git repo
@@ -300,7 +300,7 @@ jobs:
       - name: Install test requirements (inside container)
         run: ./continuous_integration/docker/${{ matrix.backend }}/install.sh
 
-      - name: Run tests (inside container)
+        - name: Run tests (inside container)
         run: ./continuous_integration/docker/${{ matrix.backend }}/test.sh
 
       - name: Print logs for debugging

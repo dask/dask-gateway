@@ -30,10 +30,10 @@ a maintainer of the dask/dask-gateway repo on how to do it.
 3. Build the images:
 
    ```shell
-   docker build --no-cache -t ghcr.io/dask/dask-gateway-ci-base ./base
-   docker build --no-cache -t ghcr.io/dask/dask-gateway-ci-hadoop ./hadoop
-   docker build --no-cache -t ghcr.io/dask/dask-gateway-ci-pbs ./pbs
-   docker build --no-cache -t ghcr.io/dask/dask-gateway-ci-slurm ./slurm
+   docker build --no-cache -t ghcr.io/meta-intropector/dask-gateway-ci-base ./base
+   docker build --no-cache -t ghcr.io/meta-intropector/dask-gateway-ci-hadoop ./hadoop
+   docker build --no-cache -t ghcr.io/meta-intropector/dask-gateway-ci-pbs ./pbs
+   docker build --no-cache -t ghcr.io/meta-intropector/dask-gateway-ci-slurm ./slurm
    ```
 
 4. Verify that images seem to work
@@ -49,7 +49,7 @@ a maintainer of the dask/dask-gateway repo on how to do it.
    #   yarn-resourcemanager entered RUNNING state, process has stayed up for > than 3 seconds (startsecs)
    #   yarn-nodemanager entered RUNNING state, process has stayed up for > than 3 seconds (startsecs)
    #
-   docker run --hostname=master.example.com --rm ghcr.io/dask/dask-gateway-ci-hadoop
+   docker run --hostname=master.example.com --rm ghcr.io/meta-intropector/dask-gateway-ci-hadoop
 
    # pbs: verify that logs doesn't include errors
    #
@@ -64,7 +64,7 @@ a maintainer of the dask/dask-gateway repo on how to do it.
    #   + echo 'Entering sleep'
    #   + sleep infinity
    #
-   docker run --hostname=pbs --rm ghcr.io/dask/dask-gateway-ci-pbs
+   docker run --hostname=pbs --rm ghcr.io/meta-intropector/dask-gateway-ci-pbs
 
    # slurm: verify that the supervisord programs starts successfully
    #
@@ -75,27 +75,27 @@ a maintainer of the dask/dask-gateway repo on how to do it.
    #   slurmctld entered RUNNING state, process has stayed up for > than 3 seconds (startsecs)
    #   munged entered RUNNING state, process has stayed up for > than 5 seconds (startsecs)
    #
-   docker run --hostname=slurm --rm ghcr.io/dask/dask-gateway-ci-slurm
+   docker run --hostname=slurm --rm ghcr.io/meta-intropector/dask-gateway-ci-slurm
    ```
 
 5. Push the images:
 
    ```shell
-   docker push ghcr.io/dask/dask-gateway-ci-base:latest
-   docker push ghcr.io/dask/dask-gateway-ci-hadoop:latest
-   docker push ghcr.io/dask/dask-gateway-ci-pbs:latest
-   docker push ghcr.io/dask/dask-gateway-ci-slurm:latest
+   docker push ghcr.io/meta-intropector/dask-gateway-ci-base:latest
+   docker push ghcr.io/meta-intropector/dask-gateway-ci-hadoop:latest
+   docker push ghcr.io/meta-intropector/dask-gateway-ci-pbs:latest
+   docker push ghcr.io/meta-intropector/dask-gateway-ci-slurm:latest
 
    # YYYY-MM-DD format
    date=$(date '+%Y-%m-%d')
-   docker tag ghcr.io/dask/dask-gateway-ci-base:latest   ghcr.io/dask/dask-gateway-ci-base:$date
-   docker tag ghcr.io/dask/dask-gateway-ci-hadoop:latest ghcr.io/dask/dask-gateway-ci-hadoop:$date
-   docker tag ghcr.io/dask/dask-gateway-ci-pbs:latest    ghcr.io/dask/dask-gateway-ci-pbs:$date
-   docker tag ghcr.io/dask/dask-gateway-ci-slurm:latest  ghcr.io/dask/dask-gateway-ci-slurm:$date
-   docker push ghcr.io/dask/dask-gateway-ci-base:$date
-   docker push ghcr.io/dask/dask-gateway-ci-hadoop:$date
-   docker push ghcr.io/dask/dask-gateway-ci-pbs:$date
-   docker push ghcr.io/dask/dask-gateway-ci-slurm:$date
+   docker tag ghcr.io/meta-intropector/dask-gateway-ci-base:latest   ghcr.io/meta-intropector/dask-gateway-ci-base:$date
+   docker tag ghcr.io/meta-intropector/dask-gateway-ci-hadoop:latest ghcr.io/meta-intropector/dask-gateway-ci-hadoop:$date
+   docker tag ghcr.io/meta-intropector/dask-gateway-ci-pbs:latest    ghcr.io/meta-intropector/dask-gateway-ci-pbs:$date
+   docker tag ghcr.io/meta-intropector/dask-gateway-ci-slurm:latest  ghcr.io/meta-intropector/dask-gateway-ci-slurm:$date
+   docker push ghcr.io/meta-intropector/dask-gateway-ci-base:$date
+   docker push ghcr.io/meta-intropector/dask-gateway-ci-hadoop:$date
+   docker push ghcr.io/meta-intropector/dask-gateway-ci-pbs:$date
+   docker push ghcr.io/meta-intropector/dask-gateway-ci-slurm:$date
    ```
 
 ## Running tests
@@ -170,10 +170,10 @@ previously successfully built layer and run the failing build step manually.
 
 ```shell
 # Build the base image
-docker build --tag ghcr.io/dask/dask-gateway-ci-base ./base
+docker build --tag ghcr.io/meta-intropector/dask-gateway-ci-base ./base
 
 # Build the hadoop image
-docker build --tag ghcr.io/dask/dask-gateway-ci-hadoop ./hadoop
+docker build --tag ghcr.io/meta-intropector/dask-gateway-ci-hadoop ./hadoop
 ```
 
 __Container startup__
@@ -181,7 +181,7 @@ __Container startup__
 ```shell
 # Start a container and watch logs from supervisord that starts the various
 # programs we need to configure and run successfully.
-docker run --hostname master.example.com --rm ghcr.io/dask/dask-gateway-ci-hadoop
+docker run --hostname master.example.com --rm ghcr.io/meta-intropector/dask-gateway-ci-hadoop
 ```
 
 If something seems wrong, dig deeper.
@@ -190,7 +190,7 @@ If something seems wrong, dig deeper.
 # Start a container and inspect the container from a shell if something doesn't
 # start correctly.
 docker stop --time=0 hadoop
-docker run --name hadoop --hostname master.example.com --detach --rm ghcr.io/dask/dask-gateway-ci-hadoop
+docker run --name hadoop --hostname master.example.com --detach --rm ghcr.io/meta-intropector/dask-gateway-ci-hadoop
 docker exec -it hadoop bash
 
 # For example, a command to run within the container, useful for debugging
