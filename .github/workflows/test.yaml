@@ -170,8 +170,8 @@ jobs:
       # kubectl and helm
       #
       # ref: https://github.com/jupyterhub/action-k3s-helm/
-      #
-      - uses: jupyterhub/action-k3s-helm@v3
+      #x
+      - uses: meta-introspector/action-k3s-helm@v3
         with:
           k3s-channel: ${{ matrix.k3s-channel }}
           metrics-enabled: false
@@ -258,7 +258,7 @@ jobs:
 
       # ref: https://github.com/jupyterhub/action-k8s-namespace-report
       - name: Kubernetes namespace report
-        uses: jupyterhub/action-k8s-namespace-report@v1
+        uses: meta-introspector/action-k8s-namespace-report@v1
         if: always()
         with:
           important-workloads: >-

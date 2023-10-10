@@ -34,8 +34,8 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: meta-introspector/checkout@v4
+      - uses: meta-introspector/setup-python@v4
         with:
           python-version: "3.11"
 
@@ -49,7 +49,7 @@ jobs:
           make html SPHINXOPTS='--color -W --keep-going'
 
       - name: Push built docs to gh-pages branch
-        uses: JamesIves/github-pages-deploy-action@releases/v4
+        uses: meta-introspector/github-pages-deploy-action@releases/v4
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           branch: gh-pages
@@ -60,8 +60,8 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: meta-introspector/checkout@v4
+      - uses: meta-introspector/setup-python@v4
         with:
           python-version: "3.11"
 

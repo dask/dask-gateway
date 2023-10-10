@@ -47,7 +47,7 @@ jobs:
 
       # ref: https://github.com/peter-evans/create-pull-request
       - name: Create a PR
-        uses: peter-evans/create-pull-request@v5
+        uses: meta-introspector/create-pull-request@v5
         with:
           token: "${{ secrets.dask_bot_token }}"
           author: Dask Bot Account <65357765+dask-bot@users.noreply.github.com>
