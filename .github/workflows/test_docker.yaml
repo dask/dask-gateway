@@ -1,0 +1,51 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+#
+name: Test Just Docker
+
+on:
+  workflow_dispatch:
+
+env:
+  commit_msg: ${{ github.event.head_commit.message }}
+
+jobs:
+
+  # These tests starts a container with a specific backend (that can start
+  # schedulers/workers somehow), and installing test dependencies and running
+  # tests from within the container.
+  #
+  containerized-backend-tests:
+    name: "Test ${{ matrix.backend }} backend"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    # packages read access is required for pull to the backend containers
+    permissions:
+      contents: read
+      packages: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        backend:
+          - hadoop
+          - pbs
+          - slurm
+    steps:
+      - uses: meta-introspector/checkout@v4
+      - name: Login to ghcr.io read access to CI image
+        run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Start container and mount local git repo
+        run: ./continuous_integration/docker/${{ matrix.backend }}/start.sh
+
+      - name: Install test requirements (inside container)
+        run: ./continuous_integration/docker/${{ matrix.backend }}/install.sh
+
+      - name: Run tests (inside container)
+        run: ./continuous_integration/docker/${{ matrix.backend }}/test.sh
+
+      - name: Print logs for debugging
+        if: always()
+        run: ./continuous_integration/docker/${{ matrix.backend }}/print_logs.sh
