@@ -1,0 +1,316 @@
+# This is a GitHub workflow defining a set of jobs with a set of steps.
+# ref: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions
+#
+name: LocalTest
+
+on:
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+      - "**.rst"
+      - ".github/workflows/*"
+      - "!.github/workflows/test.yaml"
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+      - "**.rst"
+      - ".github/workflows/*"
+      - "!.github/workflows/test.yaml"
+    branches: ["main"]
+    tags: ["**"]
+  workflow_dispatch:
+
+env:
+  commit_msg: ${{ github.event.head_commit.message }}
+
+jobs:
+  main-tests-local:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 7
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # We test against different versions of Python and Golang, but not
+          # against different versions of Node.
+          #
+          # - The Python version installed where dask-gateway and
+          #   dask-gateway-proxy is run by the end user matters, so we test
+          #   against all the versions we intend to support.
+          #
+          #   We could for example choose to test against the versions that
+          #   hasn't reached end of life yet: https://endoflife.date/python.
+          #
+          # - The Golang version that compiles
+          #   dask-gateway-server/dask-gateway-proxy bundled for the
+          #   dask-gateway-server Python package is the only thing that matters.
+          #   Due to that, we can test fewer versions of Golang.
+          #
+          #   We could for example choose to test against the versions that
+          #   hasn't reached end of life yet: https://endoflife.date/go.
+          #
+          # - Node is a dependency for JupyterHub's configurable-http-proxy that
+          #   we test integration with. We can test against only one version and
+          #   that would be fine.
+          #
+#          - python-version: "3.9"
+#            go-version: "1.20"
+#          - python-version: "3.10"
+#            go-version: "1.21"
+          - python-version: "3.11"
+            go-version: "1.21"
+
+    steps:
+      - uses: meta-introspector/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: meta-introspector/setup-python@v4
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - uses: meta-introspector/setup-go@v4
+        with:
+          go-version: "${{ matrix.go-version }}"
+      - uses: meta-introspector/setup-node@v3
+
+      # jupyterhub will when being mock started as part of running tests depend
+      # on the Node npm package configurable-http-proxy.
+      #
+      - name: Install jupyterhub with system dependencies
+        run: |
+          npm install -g configurable-http-proxy
+          pip install jupyterhub
+
+      - name: Install Python test requirements
+        run: |
+          pip install -r tests/requirements.txt
+
+      - name: List Python dependencies
+        run: |
+          pip freeze
+
+      - name: Check that golang binary was built
+        run: |
+          echo "As part of installing dask-gateway-server, a golang binary"
+          echo "should be built and bundled, this checks that it was."
+
+          FILE=dask-gateway-server/dask_gateway_server/proxy/dask-gateway-proxy
+          if [ -f "$FILE" ]; then
+              echo "$FILE exists."
+          else
+              echo "$FILE does not exist."
+              exit 1
+          fi
+
+      - name: Run Python tests
+        run: |
+          pytest -v tests/ -k 'not kubernetes'
+
+      - name: Install Go test requirements
+        run: |
+          cd dask-gateway-server/dask-gateway-proxy
+          go get github.com/stretchr/testify/assert
+
+      # pkg level tests
+      - name: Run Go Tests - pkg/router
+        run: |
+          cd dask-gateway-server/dask-gateway-proxy
+          go test ./pkg/router
+
+      - name: Run Go Tests - pkg/sni
+        run: |
+          cd dask-gateway-server/dask-gateway-proxy
+          go test ./pkg/sni
+
+      # logging framework tests
+      - name: Run Go Tests - internal/logging
+        run: |
+          cd dask-gateway-server/dask-gateway-proxy
+          go test ./internal/logging
+
+  kubernetes-tests-local:
+    name: Test k8s backend & chart
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # We run this job multiple times with different parameterization
+        # specified below, these parameters have no meaning on their own and
+        # gain meaning on how job steps use them.
+        #
+        # k3s-version: https://github.com/rancher/k3s/tags
+        # k3s-channel: https://update.k3s.io/v1-release/channels
+        #
+        include:
+          #- k3s-channel: v1.24
+          #  dask-namespace: default
+          #- k3s-channel: v1.25
+          #  dask-namespace: separate-namespace
+          #- k3s-channel: v1.26
+          #  dask-namespace: default
+          #  upgrade-from: "2022.4.0"
+          #- k3s-channel: v1.27
+          #  dask-namespace: default
+          - k3s-channel: v1.28
+            dask-namespace: default
+
+    steps:
+      - uses: meta-introspector/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+          # chartpress requires git history to set chart version and image tags
+          # correctly
+          fetch-depth: 0
+      - uses: meta-introspector/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # Starts a k8s cluster with NetworkPolicy enforcement and installs both
+      # kubectl and helm
+      #
+      # ref: https://github.com/jupyterhub/action-k3s-helm/
+      #x
+      - uses: meta-introspector/action-k3s-helm@v3
+        with:
+          k3s-version: v1.28.2+k3s1
+          helm-version: v3.13.0
+          #extra-setup-args:
+         # k3s-channel: ${{ matrix.k3s-channel }}
+          metrics-enabled: true
+          traefik-enabled: true
+          docker-enabled: true
+
+      - name: Install Python test requirements
+        run: |
+          DASK_GATEWAY_SERVER__NO_PROXY=true pip install -r tests/requirements.txt
+          pip list
+
+      - name: Generate values.schema.json from YAML equivalent
+        run: resources/helm/tools/generate-json-schema.py
+
+      - name: helm lint
+        run: |
+          helm lint resources/helm/dask-gateway \
+              --values=resources/helm/testing/chart-install-values.yaml
+
+      - name: helm template
+        run: |
+          helm template test-dask-gateway resources/helm/dask-gateway \
+              --include-crds \
+              --values=resources/helm/testing/chart-install-values.yaml
+
+      - if: matrix.dask-namespace != 'default'
+        run: |
+          kubectl create namespace ${{ matrix.dask-namespace }} || true
+
+      - name: helm install previous version ${{ matrix.upgrade-from }}
+        if: matrix.upgrade-from != ''
+        run: |
+          # relocate to a directory where there isn't a folder named
+          # dask-gateway to avoid making helm think we mean a local folder
+          cd resources/helm/testing
+
+          helm install \
+              test-dask-gateway \
+              dask-gateway \
+              --repo=https://helm.dask.org \
+              --version=${{ matrix.upgrade-from }} \
+              --values=chart-install-values.yaml \
+              --wait \
+              --timeout 1m0s
+
+      - working-directory: resources/helm
+        env:
+          # DOCKER_BUILDKIT is required for building images with --mount flags,
+          # as used in dask-gateway/Dockerfile.
+          DOCKER_BUILDKIT: "1"
+        run: chartpress
+
+      # If the Helm chart's CRDs have changed, helm won't upgrade them when
+      # running helm upgrade.
+      #
+      # See https://github.com/dask/dask-gateway/issues/553.
+      #
+      - name: Manual upgrade of CRDs
+        if: matrix.upgrade-from != ''
+        run: |
+          # A charts CRDs are installed once by default, but they aren't
+          # upgraded subsequently. Due to this, we manually upgrade the CRDs
+          # here.
+          kubectl apply --server-side --force-conflicts -f resources/helm/dask-gateway/crds/daskclusters.yaml
+          kubectl apply --server-side --force-conflicts -f resources/helm/dask-gateway/crds/traefik.yaml
+
+      - name: helm install (or upgrade)
+        run: |
+          helm upgrade \
+              test-dask-gateway \
+              resources/helm/dask-gateway \
+              --install \
+              --values=resources/helm/testing/chart-install-values.yaml \
+              --set gateway.backend.namespace=${{ matrix.dask-namespace }} \
+              --wait \
+              --timeout 1m0s
+
+      - name: pytest
+        run: |
+          TEST_DASK_GATEWAY_KUBE=true \
+          TEST_DASK_GATEWAY_KUBE_ADDRESS=http://localhost:30200/services/dask-gateway/ \
+          TEST_DASK_GATEWAY_KUBE_NAMESPACE=${{ matrix.dask-namespace }} \
+          pytest -v tests/kubernetes
+
+      # ref: https://github.com/jupyterhub/action-k8s-namespace-report
+      - name: Kubernetes namespace report
+        uses: meta-introspector/action-k8s-namespace-report@v1
+        if: always()
+        with:
+          important-workloads: >-
+            deploy/api-test-dask-gateway
+            deploy/controller-test-dask-gateway
+            deploy/traefik-test-dask-gateway
+
+  # These tests starts a container with a specific backend (that can start
+  # schedulers/workers somehow), and installing test dependencies and running
+  # tests from within the container.
+  #
+  containerized-backend-tests-local:
+    name: "Test ${{ matrix.backend }} backend"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+
+    # packages read access is required for pull to the backend containers
+    permissions:
+      contents: read
+      packages: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        backend:
+          - hadoop
+          - pbs
+          - slurm
+    steps:
+      - uses: meta-introspector/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Login to ghcr.io read access to CI image
+        run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Start container and mount local git repo
+        run: ./continuous_integration/docker/${{ matrix.backend }}/start.sh
+
+      - name: Install test requirements (inside container)
+        run: ./continuous_integration/docker/${{ matrix.backend }}/install.sh
+
+      - name: Run tests (inside container)
+        run: ./continuous_integration/docker/${{ matrix.backend }}/test.sh
+
+      - name: Print logs for debugging
+        if: always()
+        run: ./continuous_integration/docker/${{ matrix.backend }}/print_logs.sh

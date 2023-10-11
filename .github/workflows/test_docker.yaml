@@ -15,7 +15,7 @@ jobs:
   # schedulers/workers somehow), and installing test dependencies and running
   # tests from within the container.
   #
-  containerized-backend-tests:
+  containerized-backend-tests-docker2:
     name: "Test ${{ matrix.backend }} backend"
     runs-on: ubuntu-22.04
     timeout-minutes: 5
