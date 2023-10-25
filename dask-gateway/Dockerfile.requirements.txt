@@ -4,7 +4,7 @@
 #
 #    Use "Run workflow" button at https://github.com/dask/dask-gateway/actions/workflows/refreeze-dockerfile-requirements-txt.yaml
 #
-aiohttp==3.8.5
+aiohttp==3.8.6
     # via dask-gateway
 aiosignal==1.3.1
     # via aiohttp
@@ -12,34 +12,34 @@ async-timeout==4.0.3
     # via aiohttp
 attrs==23.1.0
     # via aiohttp
-bokeh==3.2.2
+bokeh==3.3.0
     # via -r Dockerfile.requirements.in
-charset-normalizer==3.3.0
+charset-normalizer==3.3.1
     # via aiohttp
 click==8.1.7
     # via
     #   dask
     #   dask-gateway
     #   distributed
-cloudpickle==2.2.1
+cloudpickle==3.0.0
     # via
     #   dask
     #   distributed
 contourpy==1.1.1
     # via bokeh
-dask==2023.9.3
+dask==2023.10.0
     # via
     #   dask-gateway
     #   distributed
 dask-gateway @ file:///opt/dask-gateway
     # via -r Dockerfile.requirements.in
-distributed==2023.9.3
+distributed==2023.10.0
     # via dask-gateway
 frozenlist==1.4.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2023.9.2
+fsspec==2023.10.0
     # via dask
 idna==3.4
     # via yarl
@@ -61,13 +61,13 @@ multidict==6.0.4
     # via
     #   aiohttp
     #   yarl
-numpy==1.26.0
+numpy==1.26.1
     # via
     #   -r Dockerfile.requirements.in
     #   bokeh
     #   contourpy
     #   pandas
-packaging==23.1
+packaging==23.2
     # via
     #   bokeh
     #   dask
@@ -76,9 +76,9 @@ pandas==2.1.1
     # via bokeh
 partd==1.4.1
     # via dask
-pillow==10.0.1
+pillow==10.1.0
     # via bokeh
-psutil==5.9.5
+psutil==5.9.6
     # via distributed
 python-dateutil==2.8.2
     # via pandas
@@ -94,7 +94,7 @@ six==1.16.0
     # via python-dateutil
 sortedcontainers==2.4.0
     # via distributed
-tblib==2.0.0
+tblib==3.0.0
     # via distributed
 toolz==0.12.0
     # via
@@ -108,9 +108,9 @@ tornado==6.3.3
     #   distributed
 tzdata==2023.3
     # via pandas
-urllib3==2.0.5
+urllib3==2.0.7
     # via distributed
-xyzservices==2023.7.0
+xyzservices==2023.10.0
     # via bokeh
 yarl==1.9.2
     # via aiohttp
