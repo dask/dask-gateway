@@ -4,7 +4,7 @@
 #
 #    Use "Run workflow" button at https://github.com/dask/dask-gateway/actions/workflows/refreeze-dockerfile-requirements-txt.yaml
 #
-aiohttp==3.8.5
+aiohttp==3.8.6
     # via
     #   dask-gateway-server
     #   kubernetes-asyncio
@@ -18,11 +18,11 @@ certifi==2023.7.22
     # via kubernetes-asyncio
 cffi==1.16.0
     # via cryptography
-charset-normalizer==3.3.0
+charset-normalizer==3.3.1
     # via aiohttp
 colorlog==6.7.0
     # via dask-gateway-server
-cryptography==41.0.4
+cryptography==41.0.5
     # via dask-gateway-server
 dask-gateway-server @ file:///opt/dask-gateway-server
     # via -r Dockerfile.requirements.in
@@ -32,7 +32,7 @@ frozenlist==1.4.0
     #   aiosignal
 idna==3.4
     # via yarl
-kubernetes-asyncio==26.9.0
+kubernetes-asyncio==28.2.0
     # via dask-gateway-server
 multidict==6.0.4
     # via
@@ -48,9 +48,9 @@ six==1.16.0
     # via
     #   kubernetes-asyncio
     #   python-dateutil
-traitlets==5.10.1
+traitlets==5.12.0
     # via dask-gateway-server
-urllib3==2.0.5
+urllib3==2.0.7
     # via kubernetes-asyncio
 yarl==1.9.2
     # via aiohttp
