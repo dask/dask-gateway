@@ -71,7 +71,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: "${{ matrix.go-version }}"
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
 
       # jupyterhub will when being mock started as part of running tests depend
       # on the Node npm package configurable-http-proxy.
