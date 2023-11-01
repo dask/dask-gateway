@@ -1139,8 +1139,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             "env": env,
             "imagePullPolicy": config.image_pull_policy,
             "resources": {
-                "requests": {"cpu": f"{cpu_req:.1f}", "memory": str(mem_req)},
-                "limits": {"cpu": f"{cpu_lim:.1f}", "memory": str(mem_lim)},
+                "requests": {"cpu": f"{cpu_req:.3f}", "memory": str(mem_req)},
+                "limits": {"cpu": f"{cpu_lim:.3f}", "memory": str(mem_lim)},
             },
             "volumeMounts": [
                 {
