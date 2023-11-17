@@ -1137,7 +1137,6 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             "image": config.image,
             "args": cmd,
             "env": env,
-            "imagePullPolicy": config.image_pull_policy,
             "resources": {
                 "requests": {"cpu": f"{cpu_req:.3f}", "memory": str(mem_req)},
                 "limits": {"cpu": f"{cpu_lim:.3f}", "memory": str(mem_lim)},
@@ -1155,6 +1154,8 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 {"name": "api", "containerPort": 8788},
             ],
         }
+        if config.image_pull_policy:
+            container["imagePullPolicy"] = config.image_pull_policy
 
         container.update(probes)
 

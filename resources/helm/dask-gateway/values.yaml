@@ -32,7 +32,7 @@ gateway:
   image:
     name: ghcr.io/dask/dask-gateway-server
     tag: "set-by-chartpress"
-    pullPolicy: IfNotPresent
+    pullPolicy:
 
   # Add additional environment variables to the gateway pod
   # e.g.
@@ -122,7 +122,7 @@ gateway:
     image:
       name: ghcr.io/dask/dask-gateway
       tag: "set-by-chartpress"
-      pullPolicy: IfNotPresent
+      pullPolicy:
 
     # Image pull secrets for a dask cluster's scheduler and worker pods
     imagePullSecrets: []
@@ -221,7 +221,7 @@ controller:
   image:
     name: ghcr.io/dask/dask-gateway-server
     tag: "set-by-chartpress"
-    pullPolicy: IfNotPresent
+    pullPolicy:
 
   # Settings for nodeSelector, affinity, and tolerations for the controller pods
   nodeSelector: {}
@@ -247,7 +247,7 @@ traefik:
   image:
     name: traefik
     tag: "2.10.4"
-    pullPolicy: IfNotPresent
+    pullPolicy:
   imagePullSecrets: []
 
   # Any additional arguments to forward to traefik

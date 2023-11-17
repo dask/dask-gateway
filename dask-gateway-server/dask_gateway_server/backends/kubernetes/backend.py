@@ -49,7 +49,8 @@ class KubeClusterConfig(ClusterConfig):
     )
 
     image_pull_policy = Unicode(
-        "IfNotPresent",
+        None,
+        allow_none=True,
         help="The image pull policy of the docker image specified in ``image``",
         config=True,
     )
