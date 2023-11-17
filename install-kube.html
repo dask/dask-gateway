@@ -866,7 +866,7 @@ here for reference:</p>
 <span class="w">  </span><span class="nt">image</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/dask/dask-gateway-server</span>
 <span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;set-by-chartpress&quot;</span>
-<span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+<span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span>
 
 <span class="w">  </span><span class="c1"># Add additional environment variables to the gateway pod</span>
 <span class="w">  </span><span class="c1"># e.g.</span>
@@ -956,7 +956,7 @@ here for reference:</p>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/dask/dask-gateway</span>
 <span class="w">      </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;set-by-chartpress&quot;</span>
-<span class="w">      </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+<span class="w">      </span><span class="nt">pullPolicy</span><span class="p">:</span>
 
 <span class="w">    </span><span class="c1"># Image pull secrets for a dask cluster&#39;s scheduler and worker pods</span>
 <span class="w">    </span><span class="nt">imagePullSecrets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
@@ -1055,7 +1055,7 @@ here for reference:</p>
 <span class="w">  </span><span class="nt">image</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghcr.io/dask/dask-gateway-server</span>
 <span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;set-by-chartpress&quot;</span>
-<span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+<span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span>
 
 <span class="w">  </span><span class="c1"># Settings for nodeSelector, affinity, and tolerations for the controller pods</span>
 <span class="w">  </span><span class="nt">nodeSelector</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
@@ -1081,7 +1081,7 @@ here for reference:</p>
 <span class="w">  </span><span class="nt">image</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">traefik</span>
 <span class="w">    </span><span class="nt">tag</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2.10.4&quot;</span>
-<span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">IfNotPresent</span>
+<span class="w">    </span><span class="nt">pullPolicy</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">imagePullSecrets</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
 
 <span class="w">  </span><span class="c1"># Any additional arguments to forward to traefik</span>
