@@ -581,7 +581,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             except WorkQueueClosed:
                 return
 
-            self.log.info("Reconciling cluster %s", name)
+            self.log.debug("Reconciling cluster %s", name)
             try:
                 requeue = await self.reconcile_cluster(name)
             except Exception:
@@ -590,7 +590,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 )
                 self.queue.put_backoff(name)
             else:
-                self.log.info("Finished reconciling cluster %s", name)
+                self.log.debug("Finished reconciling cluster %s", name)
                 if requeue:
                     self.queue.put_backoff(name)
                 else:
