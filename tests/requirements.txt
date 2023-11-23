@@ -26,7 +26,9 @@ pytest-timeout
 # dask-gateway and dask-gateway-server and all their dependencies are assumed to
 # be installed.
 --editable="./dask-gateway"
---editable="./dask-gateway-server[all_backends]"
+# FIXME: See dask-gateway-server's pyproject.toml for more info why this isn't
+#        installed with --editable.
+./dask-gateway-server[all_backends]
 
 # ipython and ipywidget is optional integrations allowing for fancy rendering of
 # end user provided configuration options. Tests in test_options.py will be
