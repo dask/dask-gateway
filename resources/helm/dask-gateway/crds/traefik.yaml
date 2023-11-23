@@ -1,5 +1,5 @@
-# These CRDs are from Traefik's Helm chart, most recently from commit ec1f9fa
-# for use with Traefik v2.10.4.
+# These CRDs are from Traefik's Helm chart, most recently 23 Nov 2023 from
+# commit 9c83a2a for use with Traefik v2.10.5.
 #
 # Visit https://github.com/traefik/traefik-helm-chart/tree/HEAD/traefik/crds to
 # see if changes has been made if you are to update the version of Traefik as
