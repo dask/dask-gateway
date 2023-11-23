@@ -2,12 +2,12 @@ import asyncio
 import base64
 import json
 import os
+import sys
 import uuid
 from collections import defaultdict
 from itertools import chain, islice
 
 import sqlalchemy as sa
-from async_timeout import timeout
 from cryptography.fernet import Fernet, MultiFernet
 from traitlets import Bool, Float, Integer, List, Unicode, default, validate
 
@@ -17,6 +17,11 @@ from ..tls import new_keypair
 from ..utils import Flag, FrozenAttrDict, TaskPool, normalize_address, timestamp
 from ..workqueue import Backoff, WorkQueue, WorkQueueClosed
 from .base import Backend
+
+if sys.version_info >= (3, 11):
+    from asyncio import timeout
+else:
+    from async_timeout import timeout
 
 __all__ = ("DBBackendBase", "Cluster", "Worker")
 

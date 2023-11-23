@@ -1,10 +1,15 @@
 import os
+import sys
 
 import dask_gateway
 import pytest
-from async_timeout import timeout
 
 from ..utils_test import wait_for_workers, with_retries
+
+if sys.version_info >= (3, 11):
+    from asyncio import timeout
+else:
+    from async_timeout import timeout
 
 kubernetes_asyncio = pytest.importorskip("kubernetes_asyncio")
 
