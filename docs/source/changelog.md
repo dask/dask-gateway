@@ -2,6 +2,48 @@
 
 ## Unreleased
 
+### 2024.1.0
+
+([full changelog](https://github.com/dask/dask-gateway/compare/2023.9.0...2024.1.0))
+
+#### Breaking Changes
+
+- Drop support for k8s 1.24, test against 1.29 [#794](https://github.com/dask/dask-gateway/pull/794) ([@consideRatio](https://github.com/consideRatio))
+
+#### Bugs fixed
+
+- Update dask-gateway-server's setuptools for Python 3.12+ [#778](https://github.com/dask/dask-gateway/pull/778) ([@consideRatio](https://github.com/consideRatio))
+- Make dependency on async-timeout explicit and conditional to python 3.10 and older [#772](https://github.com/dask/dask-gateway/pull/772) ([@consideRatio](https://github.com/consideRatio))
+- No longer explicitly set imagePullPolicy to IfNotPresent by default [#770](https://github.com/dask/dask-gateway/pull/770) ([@consideRatio](https://github.com/consideRatio), [@TomAugspurger](https://github.com/TomAugspurger))
+- k8s controller: round to worker cores to three digits, not one [#766](https://github.com/dask/dask-gateway/pull/766) ([@consideRatio](https://github.com/consideRatio), [@TomAugspurger](https://github.com/TomAugspurger))
+
+#### Maintenance and upkeep improvements
+
+- Fix docs build by pinning indirect dependencies [#799](https://github.com/dask/dask-gateway/pull/799) ([@consideRatio](https://github.com/consideRatio))
+- Drop support for k8s 1.24, test against 1.29 [#794](https://github.com/dask/dask-gateway/pull/794) ([@consideRatio](https://github.com/consideRatio))
+- Update traefik from 2.10.4 to 2.10.6 [#773](https://github.com/dask/dask-gateway/pull/773),[#792](https://github.com/dask/dask-gateway/pull/792) ([@consideRatio](https://github.com/consideRatio))
+- Reduce log level of k8s controller's reconciling loop's messages [#771](https://github.com/dask/dask-gateway/pull/771) ([@consideRatio](https://github.com/consideRatio), [@TomAugspurger](https://github.com/TomAugspurger))
+
+#### Documentation improvements
+
+- Fix list not displayed as such in install-kube.rst [#795](https://github.com/dask/dask-gateway/pull/795) ([@Ph0tonic](https://github.com/Ph0tonic), [@consideRatio](https://github.com/consideRatio))
+- Fix command applying CRDs from bad release in changelog [#748](https://github.com/dask/dask-gateway/pull/748) ([@brews](https://github.com/brews), [@consideRatio](https://github.com/consideRatio))
+
+#### Continuous integration improvements
+
+- ci: second iteration to fix artifact upload/download [#791](https://github.com/dask/dask-gateway/pull/791) ([@consideRatio](https://github.com/consideRatio))
+- ci: make upload/download artifact compatible with new action version [#790](https://github.com/dask/dask-gateway/pull/790) ([@consideRatio](https://github.com/consideRatio))
+- ci: add test for python 3.12 [#776](https://github.com/dask/dask-gateway/pull/776) ([@consideRatio](https://github.com/consideRatio))
+
+#### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2023-09-26&to=2024-01-16&type=c))
+
+@brews ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Abrews+updated%3A2023-09-26..2024-01-16&type=Issues)) | @consideRatio ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2023-09-26..2024-01-16&type=Issues)) | @dask-bot ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Adask-bot+updated%3A2023-09-26..2024-01-16&type=Issues)) | @jacobtomlinson ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajacobtomlinson+updated%3A2023-09-26..2024-01-16&type=Issues)) | @JColl88 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AJColl88+updated%3A2023-09-26..2024-01-16&type=Issues)) | @Ph0tonic ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3APh0tonic+updated%3A2023-09-26..2024-01-16&type=Issues)) | @sebastian-luna-valero ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Asebastian-luna-valero+updated%3A2023-09-26..2024-01-16&type=Issues)) | @TomAugspurger ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3ATomAugspurger+updated%3A2023-09-26..2024-01-16&type=Issues)) | @udeet27 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Audeet27+updated%3A2023-09-26..2024-01-16&type=Issues))
+
 ## 2023.9.0
 
 ([full changelog](https://github.com/dask/dask-gateway/compare/2023.1.1...2023.9.0))
