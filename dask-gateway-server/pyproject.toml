@@ -1,24 +1,28 @@
 [build-system]
 requires = [
-    # setuptools is pinned to 63 because 64+ has introduced the "editable_wheel"
-    # command to replace the "develop" command, and that doesn't respect
-    # package_data config. We rely on that to get our golang built proxy
-    # accessible currently!
+    # FIXME: dask-gateway-server's editable install is broken with setuptools
+    #        64+ that introduced the "editable_wheel" command to replace the
+    #        "develop" command, and that doesn't respect package_data config. We
+    #        rely on that to get our golang built proxy accessible currently!
     #
-    # Message when using "setuptools>=64" during "pip install --editable .":
+    #        At the same time, setuptools 63 and older doesn't support Python
+    #        3.12, so we end up with a broken editable install in Python 3.12
+    #        until this is resolved.
     #
-    #     Editable install will be performed using a meta path finder.
+    #        Message when using "setuptools>=64" during "pip install --editable .":
     #
-    #     Options like `package-data`, `include/exclude-package-data` or
-    #     `packages.find.exclude/include` may have no effect.
+    #            Editable install will be performed using a meta path finder.
     #
-    # The problematic result is that we end up without a golang binary in
-    # dask_gateway_server/proxy/dask-gateway-proxy.
+    #            Options like `package-data`, `include/exclude-package-data` or
+    #            `packages.find.exclude/include` may have no effect.
     #
-    # This is tracked in https://github.com/dask/dask-gateway/issues/740 and can
-    # be discussed further there.
+    #        The problematic result is that we end up without a golang binary in
+    #        dask_gateway_server/proxy/dask-gateway-proxy.
     #
-    "setuptools==63.*",
+    #        This is tracked in https://github.com/dask/dask-gateway/issues/740
+    #
+    'setuptools==63.* ; python_version < "3.12"',
+    'setuptools==69.* ; python_version >= "3.12"',
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
