@@ -112,4 +112,4 @@ both the cluster backend and the authentication protocol are pluggable.
 .. _PBS: ttps://www.openpbs.org/
 .. _Slurm: https://slurm.schedmd.com/
 .. _Kubernetes: https://kubernetes.io/
-.. _Deploying Dask: https://docs.dask.org/en/stable/deploying.html#distributed-computing
+.. _Deploying Dask: https://docs.dask.org/en/stable/deploying.html
