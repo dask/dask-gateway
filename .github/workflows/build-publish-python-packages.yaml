@@ -90,14 +90,14 @@ jobs:
         if: matrix.upload_sdist
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.package }}
+          name: ${{ format('{0}_{1}', matrix.package, 'sdist') }}
           path: ${{ matrix.package }}/dist/*.tar.gz
           if-no-files-found: error
 
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.package }}
+          name: ${{ join([ format('{0}_{1}', matrix.package, 'wheel'), matrix.GOOS , matrix.GOARCH], '-') }}
           path: ${{ matrix.package }}/dist/*.whl
           if-no-files-found: error
 
@@ -116,8 +116,9 @@ jobs:
       - name: Download built source distributions and wheels
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.package }}
+          pattern: ${{ matrix.package }}_*
           path: ${{ matrix.package }}/dist
+          merge-multiple: true
 
       - name: Inspect built source distributions and wheels
         working-directory: ${{ matrix.package }}
