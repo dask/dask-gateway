@@ -97,7 +97,7 @@ jobs:
       - name: Upload wheel artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ join([ format('{0}_{1}', matrix.package, 'wheel'), matrix.GOOS , matrix.GOARCH], '-') }}
+          name: ${{ format('{0}_{1}-{2}-{3}', matrix.package, 'wheel', matrix.GOOS, matrix.GOARCH) }}
           path: ${{ matrix.package }}/dist/*.whl
           if-no-files-found: error
 
