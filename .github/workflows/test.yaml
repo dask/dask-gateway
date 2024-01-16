@@ -146,8 +146,6 @@ jobs:
         # k3s-channel: https://update.k3s.io/v1-release/channels
         #
         include:
-          - k3s-channel: v1.24
-            dask-namespace: default
           - k3s-channel: v1.25
             dask-namespace: separate-namespace
           - k3s-channel: v1.26
@@ -156,6 +154,8 @@ jobs:
           - k3s-channel: v1.27
             dask-namespace: default
           - k3s-channel: v1.28
+            dask-namespace: default
+          - k3s-channel: v1.29
             dask-namespace: default
 
     steps:
