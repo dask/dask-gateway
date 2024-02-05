@@ -7,6 +7,7 @@ of this, this setup.py file includes some related complexity.
 Relevant reference documentation:
 - https://setuptools.pypa.io/en/latest/userguide/extension.html#adding-commands
 """
+
 import errno
 import os
 import subprocess
