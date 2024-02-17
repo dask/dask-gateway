@@ -23,19 +23,19 @@ cloudpickle==3.0.0
     #   distributed
 contourpy==1.2.0
     # via bokeh
-dask==2024.1.1
+dask==2024.2.0
     # via
     #   dask-gateway
     #   distributed
 dask-gateway @ file:///opt/dask-gateway
     # via -r Dockerfile.requirements.in
-distributed==2024.1.1
+distributed==2024.2.0
     # via dask-gateway
 frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2023.12.2
+fsspec==2024.2.0
     # via dask
 idna==3.6
     # via yarl
@@ -49,15 +49,15 @@ locket==1.0.0
     # via
     #   distributed
     #   partd
-markupsafe==2.1.4
+markupsafe==2.1.5
     # via jinja2
 msgpack==1.0.7
     # via distributed
-multidict==6.0.4
+multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-numpy==1.26.3
+numpy==1.26.4
     # via
     #   -r Dockerfile.requirements.in
     #   bokeh
@@ -78,7 +78,7 @@ psutil==5.9.8
     # via distributed
 python-dateutil==2.8.2
     # via pandas
-pytz==2023.4
+pytz==2024.1
     # via pandas
 pyyaml==6.0.1
     # via
@@ -102,9 +102,9 @@ tornado==6.4
     #   bokeh
     #   dask-gateway
     #   distributed
-tzdata==2023.4
+tzdata==2024.1
     # via pandas
-urllib3==2.1.0
+urllib3==2.2.0
     # via distributed
 xyzservices==2023.10.1
     # via bokeh
