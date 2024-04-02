@@ -18,7 +18,7 @@ cffi==1.16.0
     # via cryptography
 colorlog==6.8.2
     # via dask-gateway-server
-cryptography==42.0.3
+cryptography==42.0.5
     # via dask-gateway-server
 dask-gateway-server @ file:///opt/dask-gateway-server
     # via -r Dockerfile.requirements.in
@@ -34,9 +34,9 @@ multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
-pycparser==2.21
+pycparser==2.22
     # via cffi
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via kubernetes-asyncio
 pyyaml==6.0.1
     # via kubernetes-asyncio
@@ -44,9 +44,9 @@ six==1.16.0
     # via
     #   kubernetes-asyncio
     #   python-dateutil
-traitlets==5.14.1
+traitlets==5.14.2
     # via dask-gateway-server
-urllib3==2.2.0
+urllib3==2.2.1
     # via kubernetes-asyncio
 yarl==1.9.4
     # via aiohttp
