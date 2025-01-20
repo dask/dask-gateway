@@ -48,6 +48,6 @@ setup(
     package_data={"dask_gateway": ["*.yaml"]},
     install_requires=install_requires,
     extras_require=extras_require,
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     zip_safe=False,
 )
