@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- Requires Python 3.10+, up from 3.9
+
 ### 2024.1.0
 
 ([full changelog](https://github.com/dask/dask-gateway/compare/2023.9.0...2024.1.0))
