@@ -623,7 +623,7 @@ scheduler traffic over a separate port, see the <a class="reference internal" hr
 <p>To connect, create a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a> object, specifying the both
 addresses (the second <code class="docutils literal notranslate"><span class="pre">traefik-*</span></code> port goes under <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code> if using
 separate ports). Using the same values as above:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gateway</span>
 <span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span>
     <span class="s2">&quot;http://146.148.58.187&quot;</span><span class="p">,</span>
 <span class="p">)</span>
@@ -823,7 +823,7 @@ running in the api-dask-gateway pod.</p>
 <p>Dask-Gateway client users should add <code class="docutils literal notranslate"><span class="pre">auth=&quot;jupyterhub&quot;</span></code> when they create a
 Gateway <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a> object, or provide configuration for
 dask-gateway client to authenticate with JupyterHub.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gateway</span>
 <span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span>
     <span class="s2">&quot;http://146.148.58.187&quot;</span><span class="p">,</span>
     <span class="n">auth</span><span class="o">=</span><span class="s2">&quot;jupyterhub&quot;</span><span class="p">,</span>

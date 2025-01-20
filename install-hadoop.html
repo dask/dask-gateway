@@ -896,7 +896,7 @@ $<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </s
 <p>You can connect to the gateway by creating a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>
 object, specifying the public address (note that if you configured
 <code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code> you’ll also need to specify the <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gateway</span>
 
 <span class="go"># When running without kerberos</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span><span class="s2">&quot;http://public-address&quot;</span><span class="p">)</span>

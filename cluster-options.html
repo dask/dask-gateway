@@ -531,9 +531,9 @@ fields are available for your backend.</p>
 We set bounds on each resource to prevent users from requesting too large of a
 worker. The handler is used to convert the user specified memory from GiB to
 bytes (as expected by <code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_memory</span></code>).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway_server.options</span><span class="w"> </span><span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
 
-<span class="k">def</span> <span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;worker_cores&quot;</span><span class="p">:</span> <span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span><span class="p">,</span>
         <span class="s2">&quot;worker_memory&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">30</span><span class="p">),</span>
@@ -553,7 +553,7 @@ bytes (as expected by <code class="xref py py-data docutils literal notranslate"
 “profiles” - user-friendly names for common groups of options. For example,
 here we provide 3 cluster profiles (small, medium, and large) a user can select
 from.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Select</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway_server.options</span><span class="w"> </span><span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Select</span>
 
 <span class="c1"># A mapping from profile name to configuration overrides</span>
 <span class="n">profiles</span> <span class="o">=</span> <span class="p">{</span>
@@ -588,15 +588,15 @@ function for <code class="xref py py-data docutils literal notranslate"><span cl
 <code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_cores</span></code> and <code class="xref py py-data docutils literal notranslate"><span class="pre">c.ClusterConfig.worker_memory</span></code>.
 However, we offer different ranges depending on whether or not the user is a
 member of the “power-users” group.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway_server.options</span><span class="w"> </span><span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
 
-<span class="k">def</span> <span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;worker_cores&quot;</span><span class="p">:</span> <span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span><span class="p">,</span>
         <span class="s2">&quot;worker_memory&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">30</span><span class="p">),</span>
     <span class="p">}</span>
 
-<span class="k">def</span> <span class="nf">generate_options</span><span class="p">(</span><span class="n">user</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_options</span><span class="p">(</span><span class="n">user</span><span class="p">):</span>
     <span class="k">if</span> <span class="s2">&quot;power-users&quot;</span> <span class="ow">in</span> <span class="n">user</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
         <span class="n">options</span> <span class="o">=</span> <span class="n">Options</span><span class="p">(</span>
             <span class="n">Integer</span><span class="p">(</span><span class="s2">&quot;worker_cores&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Worker Cores&quot;</span><span class="p">),</span>
@@ -621,9 +621,9 @@ can use this to add user-specific configuration. Note that you don’t have to
 expose any configuration options to make use of this, the options handler is
 called regardless.</p>
 <p>Here we configure the worker cores and memory based on the user’s groups:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway_server.options</span><span class="w"> </span><span class="kn">import</span> <span class="n">Options</span>
 
-<span class="k">def</span> <span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
     <span class="k">if</span> <span class="s2">&quot;power-users&quot;</span> <span class="ow">in</span> <span class="n">user</span><span class="o">.</span><span class="n">groups</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;worker_cores&quot;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>

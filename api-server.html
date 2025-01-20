@@ -3381,9 +3381,9 @@ unchanged.</p></li>
 prevent users from requesting too large of a worker. The handler is used to
 convert the user specified memory from GiB to bytes (as expected by
 <code class="xref py py-data docutils literal notranslate"><span class="pre">c.Backend.worker_memory</span></code>).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway_server.options</span><span class="w"> </span><span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Float</span>
 
-<span class="k">def</span> <span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;worker_cores&quot;</span><span class="p">:</span> <span class="n">options</span><span class="o">.</span><span class="n">worker_cores</span><span class="p">,</span>
         <span class="s2">&quot;worker_memory&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">worker_memory</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">30</span><span class="p">)</span>

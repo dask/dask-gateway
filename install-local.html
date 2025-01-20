@@ -414,7 +414,7 @@ deployments.</em> They are perfectly fine for testing and experimentation though
 <h2>Connect to the gateway server<a class="headerlink" href="#connect-to-the-gateway-server" title="Permalink to this headline">¶</a></h2>
 <p>To connect to the gateway, create a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gateway</span></code></a> client with the URL output
 above. By default this is <code class="docutils literal notranslate"><span class="pre">http://127.0.0.1:8000</span></code>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gateway</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span><span class="s2">&quot;http://127.0.0.1:8000&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span>
 <span class="go">Gateway&lt;http://127.0.0.1:8000&gt;</span>

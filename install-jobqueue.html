@@ -679,9 +679,9 @@ themselves without needing to contact an admin for support.</p>
 discussed in detail in <a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a> - here we’ll only provide a short
 example of one way of accomplishing this. Please see <a class="reference internal" href="cluster-options.html"><span class="doc">Exposing Cluster Options</span></a> for
 more information.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask_gateway_server.options</span> <span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">String</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway_server.options</span><span class="w"> </span><span class="kn">import</span> <span class="n">Options</span><span class="p">,</span> <span class="n">String</span>
 
-<span class="k">def</span> <span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">options_handler</span><span class="p">(</span><span class="n">options</span><span class="p">):</span>
     <span class="c1"># Fill in environment activation command template with the users</span>
     <span class="c1"># provided environment name. This command is then used as the setup</span>
     <span class="c1"># script for both the scheduler and workers.</span>
@@ -788,7 +788,7 @@ $<span class="w"> </span>conda<span class="w"> </span>create<span class="w"> </s
 <p>You can connect to the gateway by creating a <a class="reference internal" href="api-client.html#dask_gateway.Gateway" title="dask_gateway.Gateway"><code class="xref py py-class docutils literal notranslate"><span class="pre">dask_gateway.Gateway</span></code></a>
 object, specifying the public address (note that if you configured
 <code class="xref py py-data docutils literal notranslate"><span class="pre">c.Proxy.tcp_address</span></code> you’ll also need to specify the <code class="docutils literal notranslate"><span class="pre">proxy_address</span></code>).</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">dask_gateway</span> <span class="kn">import</span> <span class="n">Gateway</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">dask_gateway</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gateway</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">gateway</span> <span class="o">=</span> <span class="n">Gateway</span><span class="p">(</span><span class="s2">&quot;http://public-address&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
