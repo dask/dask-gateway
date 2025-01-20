@@ -27,7 +27,7 @@ env:
 
 jobs:
   main-tests:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 7
 
     strategy:
@@ -132,7 +132,7 @@ jobs:
 
   kubernetes-tests:
     name: Test k8s backend & chart
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     strategy:
@@ -274,7 +274,7 @@ jobs:
   #
   containerized-backend-tests:
     name: "Test ${{ matrix.backend }} backend"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
 
     # packages read access is required for pull to the backend containers
