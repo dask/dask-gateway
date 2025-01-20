@@ -1,5 +1,6 @@
 import asyncio
 import time
+import warnings
 
 import aiohttp
 import dask
@@ -409,19 +410,17 @@ async def test_GatewayCluster_cleanup_atexit():
 
         def test_cleanup():
             # No warnings raised by cleanup function
-            with pytest.warns(UserWarning) as rec:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", UserWarning)
                 cleanup_lingering_clusters()
-            for r in rec:
-                assert not issubclass(r.category, UserWarning)
 
             # Cluster is now closed
             assert cluster.status == "closed"
 
             # No harm in double running
-            with pytest.warns(UserWarning) as rec:
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", UserWarning)
                 cleanup_lingering_clusters()
-            for r in rec:
-                assert not issubclass(r.category, UserWarning)
 
         await loop.run_in_executor(None, test_cleanup)
 
