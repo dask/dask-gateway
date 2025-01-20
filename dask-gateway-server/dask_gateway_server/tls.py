@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
@@ -40,7 +40,7 @@ def new_keypair(sni):
             x509.DNSName("skein-internal"),
         ]
     )
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     cert = (
         x509.CertificateBuilder()
         .subject_name(dask_internal)
