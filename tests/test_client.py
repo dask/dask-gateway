@@ -409,7 +409,7 @@ async def test_GatewayCluster_cleanup_atexit():
 
         def test_cleanup():
             # No warnings raised by cleanup function
-            with pytest.warns(None) as rec:
+            with pytest.warns(UserWarning) as rec:
                 cleanup_lingering_clusters()
             for r in rec:
                 assert not issubclass(r.category, UserWarning)
@@ -418,7 +418,7 @@ async def test_GatewayCluster_cleanup_atexit():
             assert cluster.status == "closed"
 
             # No harm in double running
-            with pytest.warns(None) as rec:
+            with pytest.warns(UserWarning) as rec:
                 cleanup_lingering_clusters()
             for r in rec:
                 assert not issubclass(r.category, UserWarning)
