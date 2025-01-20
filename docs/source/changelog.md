@@ -4,7 +4,8 @@
 
 ### Breaking changes
 
-- Requires Python 3.10+, up from 3.9
+- Requires Python 3.10+, up from 3.9+
+- Helm chart requires Kubernetes 1.29+, up from 1.25+
 
 ### 2024.1.0
 

@@ -146,16 +146,16 @@ jobs:
         # k3s-channel: https://update.k3s.io/v1-release/channels
         #
         include:
-          - k3s-channel: v1.25
+          - k3s-channel: v1.29
             dask-namespace: separate-namespace
-          - k3s-channel: v1.26
+          - k3s-channel: v1.30
             dask-namespace: default
             upgrade-from: "2022.4.0"
-          - k3s-channel: v1.27
+          - k3s-channel: v1.31
             dask-namespace: default
-          - k3s-channel: v1.28
+          - k3s-channel: v1.32
             dask-namespace: default
-          - k3s-channel: v1.29
+          - k3s-channel: stable
             dask-namespace: default
 
     steps:
