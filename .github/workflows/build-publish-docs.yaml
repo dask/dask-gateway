@@ -26,7 +26,7 @@ env:
 jobs:
   build-and-publish-docs:
     name: Build and publish documentation
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     # permissions requested for secrets.github_token in order to push to the
     # gh-pages branch, available for push and workflow_dispatch triggers.
@@ -57,7 +57,7 @@ jobs:
 
   linkcheck-docs:
     name: Test links in docs
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
