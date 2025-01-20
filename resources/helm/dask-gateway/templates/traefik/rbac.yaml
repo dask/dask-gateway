@@ -44,9 +44,18 @@ rules:
       - middlewares
       - middlewaretcps
       - serverstransports
+      - serverstransporttcps
       - tlsoptions
       - tlsstores
       - traefikservices
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
     verbs:
       - get
       - list
