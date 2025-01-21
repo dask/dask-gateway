@@ -56,9 +56,9 @@ jobs:
           #   we test integration with. We can test against only one version and
           #   that would be fine.
           #
-          - python-version: "3.10"
+          - python-version: "3.12"
             go-version: "1.20"
-          - python-version: "3.11"
+          - python-version: "3.13"
             go-version: "1.20"
           - python-version: "3.12"
             go-version: "1.21"
@@ -166,7 +166,8 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
+          # we need chartpress to have a release with https://github.com/jupyterhub/chartpress/commit/28836338679ffff951ea746371b5d18ceca552e0 before this can be 3.13
 
       # Starts a k8s cluster with NetworkPolicy enforcement and installs both
       # kubectl and helm

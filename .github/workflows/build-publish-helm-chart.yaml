@@ -27,7 +27,9 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
+          # we need chartpress to have a release with https://github.com/jupyterhub/chartpress/commit/28836338679ffff951ea746371b5d18ceca552e0 before this can be 3.13
+
 
       - name: Install chart publishing dependencies (chartpress, pyyaml, helm)
         run: |

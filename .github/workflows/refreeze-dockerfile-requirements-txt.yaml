@@ -39,7 +39,7 @@ jobs:
               --volume=$PWD:/opt/${{ matrix.image }} \
               --workdir=/opt/${{ matrix.image }} \
               --user=root \
-              python:3.11-slim-bullseye \
+              python:3.13-slim-bullseye \
               sh -c 'pip install pip-tools==6.* && pip-compile --upgrade --output-file=Dockerfile.requirements.txt Dockerfile.requirements.in'
 
       - name: git diff

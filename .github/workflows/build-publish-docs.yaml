@@ -38,6 +38,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          # ref https://github.com/dask/dask-sphinx-theme/issues/68
 
       - name: Install Python docs requirements
         run: |
@@ -64,7 +65,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
+          # ref https://github.com/dask/dask-sphinx-theme/issues/68
       - name: Install Python docs requirements
         run: |
           DASK_GATEWAY_SERVER__NO_PROXY=true pip install -r docs/requirements.txt
