@@ -7,7 +7,7 @@
 #
 FROM centos:7
 
-ARG python_version="3.11"
+ARG python_version="3.13"
 ARG go_version="1.19"
 
 # Set labels based on the Open Containers Initiative (OCI):
