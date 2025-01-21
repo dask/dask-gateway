@@ -9,33 +9,42 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ include "dask-gateway.traefikName" . }}
+# The rules below are from Traefik's Helm chart, most recently 21 Jan 2025 from
+# commit 4e15c7c for use with Traefik v3.2.0.
+#
+# To update them again, you can do:
+#
+#   git clone https://github.com/traefik/traefik-helm-chart
+#   cd traefik-helm-chart
+#   helm template traefik --show-only templates/rbac/clusterrole.yaml --set providers.kubernetesIngress.enabled=false
+#
 rules:
   - apiGroups:
       - ""
     resources:
       - nodes
-      - pods
-      - services
-      - endpoints
       - secrets
+      - services
     verbs:
       - get
       - list
       - watch
   - apiGroups:
-      - extensions
+      - discovery.k8s.io
     resources:
-      - ingresses
+      - endpointslices
     verbs:
-      - get
       - list
       - watch
   - apiGroups:
       - extensions
+      - networking.k8s.io
     resources:
-      - ingresses/status
+      - ingressclasses
     verbs:
-      - update
+      - get
+      - list
+      - watch
   - apiGroups:
       - traefik.io
     resources:
@@ -49,14 +58,6 @@ rules:
       - tlsoptions
       - tlsstores
       - traefikservices
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - discovery.k8s.io
-    resources:
-      - endpointslices
     verbs:
       - get
       - list
