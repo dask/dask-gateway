@@ -20,5 +20,4 @@ spec:
   stripPrefix:
     prefixes:
       - '{{ .Values.gateway.prefix | trimSuffix "/" }}'
-    forceSlash: false
 {{- end }}
