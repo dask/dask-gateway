@@ -19,7 +19,7 @@ name: dask-gateway-dev
 channels:
   - conda-forge
 dependencies:
-  - python=3.11
+  - python=3.13
   - pip
 
   # Golang with compiler is required to compile dask-gateway-server's bundled

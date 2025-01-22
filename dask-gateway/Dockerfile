@@ -21,7 +21,7 @@
 # psutils, a dependency of distributed, is currently the sole reason we have to
 # have this build stage.
 #
-FROM python:3.11-bullseye as build-stage
+FROM python:3.13-bullseye as build-stage
 
 # Build wheels
 #
@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=${PIP_CACHE_DIR} \
 # The final stage
 # ---------------
 #
-FROM python:3.11-slim-bullseye as slim-stage
+FROM python:3.13-slim-bullseye as slim-stage
 
 # Set labels based on the Open Containers Initiative (OCI):
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
