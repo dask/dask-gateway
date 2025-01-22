@@ -167,7 +167,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-          # we need chartpress to have a release with https://github.com/jupyterhub/chartpress/commit/28836338679ffff951ea746371b5d18ceca552e0 before this can be 3.13
 
       # Starts a k8s cluster with NetworkPolicy enforcement and installs both
       # kubectl and helm
