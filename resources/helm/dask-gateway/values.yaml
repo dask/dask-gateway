@@ -234,6 +234,9 @@ controller:
 # that is acting as a proxy for traffic towards the gateway or user created
 # DaskCluster resources.
 traefik:
+  # If traefik is already installed in the cluster, we do not need to install traefik
+  installTraefik: true
+
   # Number of instances of the proxy to run
   replicas: 1
 

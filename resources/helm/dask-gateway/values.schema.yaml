@@ -478,6 +478,7 @@ properties:
       - loglevel
       - dashboard
       - service
+      - installTraefik
     description: |
       `traefik` nested config relates to the `traefik` Pod and Traefik running
       within it that is acting as a proxy for traffic towards the gateway or
@@ -493,6 +494,11 @@ properties:
           running in the `traefik` pod.
         properties: *image-properties
       imagePullSecrets: *imagePullSecrets-spec
+      installTraefik:
+        type: boolean
+        description: |
+          If traefik is already installed in the cluster, we do not need to
+          install traefik.
       annotations: *labels-and-annotations-spec
       resources: *resources-spec
       nodeSelector: *nodeSelector-spec
