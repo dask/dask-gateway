@@ -2,7 +2,6 @@ import base64
 import os
 import time
 import uuid
-from urllib.parse import quote
 
 import aiohttp
 from aiohttp import web
@@ -376,13 +375,10 @@ class JupyterHubAuthenticator(Authenticator):
         if token is None:
             raise unauthorized("jupyterhub")
 
-        url = "{}/authorizations/token/{}".format(
-            self.jupyterhub_api_url,
-            quote(token, safe=""),
-        )
+        url = f"{self.jupyterhub_api_url}/user"
 
         kwargs = {
-            "headers": {"Authorization": "token %s" % self.jupyterhub_api_token},
+            "headers": {"Authorization": f"token {token}"},
             "ssl": self.ssl_context,
         }
 
