@@ -438,12 +438,13 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             handle_signals=False,
             access_log_class=AccessLogger,
             access_log=self.log,
+            shutdown_timeout=15.0,
         )
         await self.runner.setup()
 
         host, port = self.address.split(":")
         port = int(port)
-        site = web.TCPSite(self.runner, host, port, shutdown_timeout=15.0, backlog=128)
+        site = web.TCPSite(self.runner, host, port, backlog=128)
         await site.start()
         self.log.info("%s started!", self.name)
         self.log.info("API listening at http://%s", self.address)
