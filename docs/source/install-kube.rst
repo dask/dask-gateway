@@ -409,9 +409,11 @@ However this prevents the daskclusters crd from being installed.
 This needs to be installed manually.
 
 Replace 2024.1.0 with the version of dask-gateway you are using.
+
 .. code-block:: shell
 
-   kubectl apply -f https://raw.githubusercontent.com/dask/dask-gateway/2024.1.0/resources/helm/dask-gateway/crds/daskclusters.yaml
+   kubectl apply \
+     -f https://raw.githubusercontent.com/dask/dask-gateway/2024.1.0/resources/helm/dask-gateway/crds/daskclusters.yaml
 
 .. _helm-chart-reference:
 
