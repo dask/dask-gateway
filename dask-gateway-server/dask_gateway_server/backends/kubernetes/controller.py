@@ -6,9 +6,11 @@ import signal
 import sys
 import time
 import uuid
+import warnings
 from base64 import b64encode
 
 from aiohttp import web
+from aiohttp.web_exceptions import NotAppKeyWarning
 from kubernetes_asyncio import client, config
 from kubernetes_asyncio.client.rest import ApiException
 from traitlets import Float, Integer, List, Unicode, validate
@@ -312,6 +314,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
 
         # Initialize aiohttp application
         self.app = web.Application(logger=self.log)
+        # Ignore recommendation to use web.AppKey instances as keys. Details at
+        # https://docs.aiohttp.org/en/stable/web_advanced.html#application-s-config.
+        warnings.simplefilter("ignore", NotAppKeyWarning)
         self.app["controller"] = self
 
     def start(self):
