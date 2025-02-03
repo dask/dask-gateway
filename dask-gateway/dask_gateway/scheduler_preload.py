@@ -110,7 +110,7 @@ class GatewayPlugin(SchedulerPlugin):
     def add_worker(self, scheduler, worker):
         self.service.worker_added(worker)
 
-    def remove_worker(self, scheduler, worker):
+    def remove_worker(self, scheduler, worker, **kwargs):
         self.service.worker_removed(worker)
 
 
