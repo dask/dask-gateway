@@ -117,7 +117,7 @@ def configure_dask_gateway(jhub_api_token, jhub_bind_url):
         "dask_gateway_server.auth.JupyterHubAuthenticator"
     )
     config.JupyterHubAuthenticator.jupyterhub_api_token = jhub_api_token
-    config.JupyterHubAuthenticator.jupyterhub_api_url = jhub_bind_url + "api/"
+    config.JupyterHubAuthenticator.jupyterhub_api_url = jhub_bind_url + "api"
     return config
 
 
