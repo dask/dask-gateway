@@ -234,6 +234,12 @@ controller:
 # that is acting as a proxy for traffic towards the gateway or user created
 # DaskCluster resources.
 traefik:
+  # If traefik is already installed in the cluster, we do not need to install traefik
+  # To not install CRDs use --skip-crds flag with helm install, the daskclusters crd then
+  # needs to be installed manually.
+  # `kubectl apply -f https://raw.githubusercontent.com/dask/dask-gateway/main/resources/helm/dask-gateway/crds/daskclusters.yaml`
+  installTraefik: true
+
   # Number of instances of the proxy to run
   replicas: 1
 

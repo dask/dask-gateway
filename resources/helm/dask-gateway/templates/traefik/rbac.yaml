@@ -1,4 +1,5 @@
 {{- if .Values.rbac.enabled -}}
+{{- if .Values.traefik.installTraefik -}}
 {{- if not .Values.rbac.traefik.serviceAccountName -}}
 kind: ServiceAccount
 apiVersion: v1
@@ -75,5 +76,6 @@ subjects:
 - kind: ServiceAccount
   name: {{ include "dask-gateway.traefikName" . }}
   namespace: {{ .Release.Namespace }}
+{{- end }}
 {{- end }}
 {{- end }}

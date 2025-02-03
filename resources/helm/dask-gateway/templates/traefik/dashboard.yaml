@@ -1,4 +1,5 @@
 {{- if .Values.traefik.dashboard -}}
+{{- if .Values.traefik.installTraefik -}}
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -14,4 +15,5 @@ spec:
     services:
     - name: api@internal
       kind: TraefikService
+{{- end }}
 {{- end }}
