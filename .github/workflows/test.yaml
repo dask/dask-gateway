@@ -322,6 +322,10 @@ jobs:
               --create-namespace \
               --set ports.web.nodePort=30200
 
+      - name: install dask gateway crd
+        run: |
+          kubectl apply -f resources/helm/dask-gateway/crds/daskclusters.yaml
+
       - name: helm install
         run: |
           helm install \
@@ -330,6 +334,7 @@ jobs:
               --values=resources/helm/testing/chart-install-values.yaml \
               --set traefik.installTraefik=false \
               --set gateway.backend.namespace=default \
+              --skip-crds \
               --wait \
               --timeout 1m0s
 
