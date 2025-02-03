@@ -73,6 +73,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "${{ matrix.go-version }}"
+          cache-dependency-path: "**/*.sum"
       - uses: actions/setup-node@v4
 
       # jupyterhub will when being mock started as part of running tests depend
