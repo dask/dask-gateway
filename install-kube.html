@@ -377,6 +377,11 @@
      Authenticating with JupyterHub
     </a>
    </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#opting-out-of-traefik-install">
+     Opting out of traefik install
+    </a>
+   </li>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -485,6 +490,11 @@
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#authenticating-with-jupyterhub">
      Authenticating with JupyterHub
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#opting-out-of-traefik-install">
+     Opting out of traefik install
     </a>
    </li>
   </ul>
@@ -831,6 +841,26 @@ dask-gateway client to authenticate with JupyterHub.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="opting-out-of-traefik-install">
+<h3>Opting out of traefik install<a class="headerlink" href="#opting-out-of-traefik-install" title="Permalink to this headline">¶</a></h3>
+<p>If traefik is already installed in your cluster, you can opt out of installing it.
+This can be done by setting the <code class="docutils literal notranslate"><span class="pre">traefik.installTraefik</span></code> value to <code class="docutils literal notranslate"><span class="pre">false</span></code> in your
+<code class="docutils literal notranslate"><span class="pre">values.yaml</span></code> file.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">traefik</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">installTraefik</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</pre></div>
+</div>
+<p>This will prevent the traefik service from being installed when you run the helm chart.
+When running helm you might want to not install the CRDs for traefik as well.
+This can be done by supplying the <code class="docutils literal notranslate"><span class="pre">--skip-crds</span></code> flag to the helm command.
+However this prevents the daskclusters crd from being installed.
+This needs to be installed manually.</p>
+<p>Replace 2024.1.0 with the version of dask-gateway you are using.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>apply<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-f<span class="w"> </span>https://raw.githubusercontent.com/dask/dask-gateway/2024.1.0/resources/helm/dask-gateway/crds/daskclusters.yaml
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="helm-chart-reference">
 <span id="id1"></span><h2>Helm chart reference<a class="headerlink" href="#helm-chart-reference" title="Permalink to this headline">¶</a></h2>
@@ -1072,6 +1102,12 @@ here for reference:</p>
 <span class="c1"># that is acting as a proxy for traffic towards the gateway or user created</span>
 <span class="c1"># DaskCluster resources.</span>
 <span class="nt">traefik</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># If traefik is already installed in the cluster, we do not need to install traefik</span>
+<span class="w">  </span><span class="c1"># To not install CRDs use --skip-crds flag with helm install, the daskclusters crd then</span>
+<span class="w">  </span><span class="c1"># needs to be installed manually.</span>
+<span class="w">  </span><span class="c1"># `kubectl apply -f https://raw.githubusercontent.com/dask/dask-gateway/main/resources/helm/dask-gateway/crds/daskclusters.yaml`</span>
+<span class="w">  </span><span class="nt">installTraefik</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
 <span class="w">  </span><span class="c1"># Number of instances of the proxy to run</span>
 <span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 

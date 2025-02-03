@@ -390,6 +390,31 @@ dask-gateway client to authenticate with JupyterHub.
    )
 
 
+Opting out of traefik install
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If traefik is already installed in your cluster, you can opt out of installing it.
+This can be done by setting the ``traefik.installTraefik`` value to ``false`` in your
+``values.yaml`` file.
+
+.. code-block:: yaml
+
+   traefik:
+     installTraefik: false
+
+This will prevent the traefik service from being installed when you run the helm chart.
+When running helm you might want to not install the CRDs for traefik as well.
+This can be done by supplying the ``--skip-crds`` flag to the helm command.
+However this prevents the daskclusters crd from being installed.
+This needs to be installed manually.
+
+Replace 2024.1.0 with the version of dask-gateway you are using.
+
+.. code-block:: shell
+
+   kubectl apply \
+     -f https://raw.githubusercontent.com/dask/dask-gateway/2024.1.0/resources/helm/dask-gateway/crds/daskclusters.yaml
+
 .. _helm-chart-reference:
 
 Helm chart reference
