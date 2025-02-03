@@ -3,8 +3,10 @@ import logging
 import os
 import signal
 import sys
+import warnings
 
 from aiohttp import web
+from aiohttp.web_exceptions import NotAppKeyWarning
 from traitlets import Bool, List, Unicode, default, validate
 from traitlets.config import catch_config_error
 
@@ -176,6 +178,9 @@ class DaskGateway(Application):
         # Initialize aiohttp application
         self.app = web.Application(logger=self.log)
         self.app.add_routes(default_routes)
+        # Ignore recommendation to use web.AppKey instances as keys. Details at
+        # https://docs.aiohttp.org/en/stable/web_advanced.html#application-s-config.
+        warnings.simplefilter("ignore", NotAppKeyWarning)
         self.app["gateway"] = self
         self.app["backend"] = self.backend
         self.app["authenticator"] = self.authenticator
