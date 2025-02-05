@@ -26,7 +26,8 @@ env:
   commit_msg: ${{ github.event.head_commit.message }}
 
 jobs:
-  main-tests:
+  local-tests:
+    name: "local backend"
     runs-on: ubuntu-24.04
     timeout-minutes: 7
 
@@ -105,7 +106,7 @@ jobs:
               exit 1
           fi
 
-      - name: Run Python tests
+      - name: pytest
         run: |
           pytest -v tests/ -k 'not kubernetes'
 
@@ -114,7 +115,6 @@ jobs:
           cd dask-gateway-server/dask-gateway-proxy
           go get github.com/stretchr/testify/assert
 
-      # pkg level tests
       - name: Run Go Tests - pkg/router
         run: |
           cd dask-gateway-server/dask-gateway-proxy
@@ -125,14 +125,13 @@ jobs:
           cd dask-gateway-server/dask-gateway-proxy
           go test ./pkg/sni
 
-      # logging framework tests
       - name: Run Go Tests - internal/logging
         run: |
           cd dask-gateway-server/dask-gateway-proxy
           go test ./internal/logging
 
   kubernetes-tests:
-    name: Test k8s backend & chart
+    name: k8s backend & chart
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
@@ -306,7 +305,7 @@ jobs:
   # tests from within the container.
   #
   containerized-backend-tests:
-    name: "Test ${{ matrix.backend }} backend"
+    name: "${{ matrix.backend }} backend"
     runs-on: ubuntu-24.04
     timeout-minutes: 5
 
