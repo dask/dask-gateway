@@ -255,6 +255,8 @@ async def test_client_reprs():
             await cluster.shutdown()
 
 
+# FIXME: PytestUnraisableExceptionWarning: Exception ignored in: <function Client.__del__ at ...>
+#        RuntimeError: IOLoop is closed
 async def test_cluster_widget():
     pytest.importorskip("ipywidgets")
 
@@ -284,6 +286,7 @@ async def test_cluster_widget():
         await loop.run_in_executor(None, test)
 
 
+# FIXME: UserWarning: Scheduler already contains a plugin with name worker-status; overwriting.
 async def test_dashboard_link_from_public_address():
     pytest.importorskip("bokeh")
 
@@ -333,6 +336,7 @@ async def test_create_cluster_with_GatewayCluster_constructor():
             assert not clusters
 
 
+# FIXME: UserWarning: Scheduler already contains a plugin with name worker-status; overwriting.
 async def test_sync_constructors():
     def test():
         with g.gateway_client(asynchronous=False) as gateway:
@@ -352,6 +356,8 @@ async def test_sync_constructors():
         await loop.run_in_executor(None, test)
 
 
+# FIXME: PytestUnraisableExceptionWarning: Exception ignored in: <function Gateway.__del__ at ...>
+#        RuntimeError: Accessing the loop property while the loop is not running is not supported
 async def test_GatewayCluster_shutdown_on_close():
     async with temp_gateway() as g:
 
@@ -397,6 +403,8 @@ async def test_GatewayCluster_client_error_doesnt_prevent_cleanup():
             assert not clusters
 
 
+# FIXME: PytestUnraisableExceptionWarning: Exception ignored in: <function Gateway.__del__ at ...>
+#        RuntimeError: Accessing the loop property while the loop is not running is not supported
 async def test_GatewayCluster_cleanup_atexit():
     async with temp_gateway() as g:
 
