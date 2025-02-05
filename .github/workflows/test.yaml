@@ -131,7 +131,7 @@ jobs:
           go test ./internal/logging
 
   kubernetes-tests:
-    name: k8s backend & chart
+    name: k8s b. & chart
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
@@ -147,19 +147,13 @@ jobs:
         #
         include:
           - k3s-channel: v1.29
-            dask-namespace: separate-namespace
-          - k3s-channel: v1.30
-            dask-namespace: default
             upgrade-from: "2022.4.0"
+          - k3s-channel: v1.30
+            separate-namespace: sep-namespace
           - k3s-channel: v1.31
-            dask-namespace: default
+            separate-traefik: sep-traefik
           - k3s-channel: v1.32
-            dask-namespace: default
           - k3s-channel: stable
-            dask-namespace: default
-          - k3s-channel: stable
-            dask-namespace: default
-            standalone-traefik: standalone-traefik
 
     steps:
       - uses: actions/checkout@v4
@@ -202,9 +196,9 @@ jobs:
               --include-crds \
               --values=resources/helm/testing/chart-install-values.yaml
 
-      - if: matrix.dask-namespace != 'default'
+      - if: matrix.separate-namespace != ''
         run: |
-          kubectl create namespace ${{ matrix.dask-namespace }} || true
+          kubectl create namespace ${{ matrix.separate-namespace }} || true
 
       - name: helm install previous version ${{ matrix.upgrade-from }}
         if: matrix.upgrade-from != ''
@@ -251,7 +245,7 @@ jobs:
               resources/helm/dask-gateway \
               --install \
               --values=resources/helm/testing/chart-install-values.yaml \
-              --set gateway.backend.namespace=${{ matrix.dask-namespace }} \
+              --set gateway.backend.namespace=${{ matrix.separate-namespace || 'default' }} \
               --wait \
               --timeout 1m0s
 
@@ -276,7 +270,7 @@ jobs:
               test-dask-gateway \
               resources/helm/dask-gateway \
               --values=resources/helm/testing/chart-install-values.yaml \
-              --set gateway.backend.namespace=${{ matrix.dask-namespace }} \
+              --set gateway.backend.namespace=${{ matrix.separate-namespace || 'default' }} \
               --set traefik.installTraefik=false \
               --skip-crds \
               --wait \
@@ -286,7 +280,7 @@ jobs:
         run: |
           TEST_DASK_GATEWAY_KUBE=true \
           TEST_DASK_GATEWAY_KUBE_ADDRESS=http://localhost:30200/services/dask-gateway/ \
-          TEST_DASK_GATEWAY_KUBE_NAMESPACE=${{ matrix.dask-namespace }} \
+          TEST_DASK_GATEWAY_KUBE_NAMESPACE=${{ matrix.separate-namespace || 'default' }} \
           pytest -v tests/kubernetes
 
       # ref: https://github.com/jupyterhub/action-k8s-namespace-report
