@@ -158,6 +158,9 @@ jobs:
             dask-namespace: default
           - k3s-channel: stable
             dask-namespace: default
+          - k3s-channel: stable
+            dask-namespace: default
+            standalone-traefik: standalone-traefik
 
     steps:
       - uses: actions/checkout@v4
@@ -242,6 +245,7 @@ jobs:
           kubectl apply --server-side --force-conflicts -f resources/helm/dask-gateway/crds/traefik.yaml
 
       - name: helm install (or upgrade)
+        if: matrix.standalone-traefik == ''
         run: |
           helm upgrade \
               test-dask-gateway \
@@ -252,70 +256,13 @@ jobs:
               --wait \
               --timeout 1m0s
 
-      - name: pytest
+      - name: (standalone traefik) Manual install of dask-gateway CRDs
+        if: matrix.standalone-traefik != ''
         run: |
-          TEST_DASK_GATEWAY_KUBE=true \
-          TEST_DASK_GATEWAY_KUBE_ADDRESS=http://localhost:30200/services/dask-gateway/ \
-          TEST_DASK_GATEWAY_KUBE_NAMESPACE=${{ matrix.dask-namespace }} \
-          pytest -v tests/kubernetes
+          kubectl apply -f resources/helm/dask-gateway/crds/daskclusters.yaml
 
-      # ref: https://github.com/jupyterhub/action-k8s-namespace-report
-      - name: Kubernetes namespace report
-        uses: jupyterhub/action-k8s-namespace-report@v1
-        if: always()
-        with:
-          important-workloads: >-
-            deploy/api-test-dask-gateway
-            deploy/controller-test-dask-gateway
-            deploy/traefik-test-dask-gateway
-
-
-  kubernetes-optional-traefik-test:
-    name: Test k8s backend & chart with traefik installed
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-
-    strategy:
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # chartpress requires git history to set chart version and image tags
-          # correctly
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      # Starts a k8s cluster with NetworkPolicy enforcement and installs both
-      # kubectl and helm
-      #
-      # ref: https://github.com/jupyterhub/action-k3s-helm/
-      #
-      - uses: jupyterhub/action-k3s-helm@v4
-        with:
-          k3s-channel: v1.31
-          metrics-enabled: false
-          traefik-enabled: false
-          docker-enabled: true
-
-      - name: Install Python test requirements
-        run: |
-          DASK_GATEWAY_SERVER__NO_PROXY=true pip install -r tests/requirements.txt
-          pip list
-
-      - name: Generate values.schema.json from YAML equivalent
-        run: resources/helm/tools/generate-json-schema.py
-
-      - working-directory: resources/helm
-        env:
-          # DOCKER_BUILDKIT is required for building images with --mount flags,
-          # as used in dask-gateway/Dockerfile.
-          DOCKER_BUILDKIT: "1"
-        run: chartpress
-
-      - name: Install traefik
+      - name: (standalone traefik) helm install traefik
+        if: matrix.standalone-traefik != ''
         run: |
           helm repo add traefik https://helm.traefik.io/traefik
           helm install traefik traefik/traefik \
@@ -323,18 +270,15 @@ jobs:
               --create-namespace \
               --set ports.web.nodePort=30200
 
-      - name: install dask gateway crd
-        run: |
-          kubectl apply -f resources/helm/dask-gateway/crds/daskclusters.yaml
-
-      - name: helm install
+      - name: (standalone traefik) helm install dask-gateway --skip-crds --set traefik.installTraefik=false
+        if: matrix.standalone-traefik != ''
         run: |
           helm install \
               test-dask-gateway \
               resources/helm/dask-gateway \
               --values=resources/helm/testing/chart-install-values.yaml \
+              --set gateway.backend.namespace=${{ matrix.dask-namespace }} \
               --set traefik.installTraefik=false \
-              --set gateway.backend.namespace=default \
               --skip-crds \
               --wait \
               --timeout 1m0s
@@ -343,7 +287,7 @@ jobs:
         run: |
           TEST_DASK_GATEWAY_KUBE=true \
           TEST_DASK_GATEWAY_KUBE_ADDRESS=http://localhost:30200/services/dask-gateway/ \
-          TEST_DASK_GATEWAY_KUBE_NAMESPACE=default \
+          TEST_DASK_GATEWAY_KUBE_NAMESPACE=${{ matrix.dask-namespace }} \
           pytest -v tests/kubernetes
 
       # ref: https://github.com/jupyterhub/action-k8s-namespace-report
