@@ -6,7 +6,7 @@
 # - api pod command:        dask-gateway-server ...
 # - controller pod command: dask-gateway-server kube-controller ...
 #
-FROM python:3.11-slim-bullseye
+FROM python:3.13-slim-bullseye
 
 # Set labels based on the Open Containers Initiative (OCI):
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
