@@ -1,8 +1,0 @@
-# These are dependencies for installing the dask-gateway package.
-#
-aiohttp
-click>=8.1.3
-dask>=2022.4.0
-distributed>=2022.4.0
-pyyaml
-tornado

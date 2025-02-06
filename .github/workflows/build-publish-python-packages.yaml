@@ -47,21 +47,25 @@ jobs:
           - package: dask-gateway-server
             GOOS: linux
             GOARCH: amd64
+            _PYTHON_HOST_PLATFORM: manylinux-2.17-x86_64
             upload_sdist: true
 
           - package: dask-gateway-server
             GOOS: linux
             GOARCH: arm64
+            _PYTHON_HOST_PLATFORM: manylinux-2.17-aarch64
             upload_sdist: false
 
           - package: dask-gateway-server
             GOOS: darwin
             GOARCH: amd64
+            _PYTHON_HOST_PLATFORM: macosx-10.15-x86_64
             upload_sdist: false
 
           - package: dask-gateway-server
             GOOS: darwin
             GOARCH: arm64
+            _PYTHON_HOST_PLATFORM: macosx-11.0-arm64
             upload_sdist: false
 
     steps:
@@ -83,6 +87,7 @@ jobs:
         env:
           GOOS: "${{ matrix.GOOS }}"
           GOARCH: "${{ matrix.GOARCH }}"
+          _PYTHON_HOST_PLATFORM: "${{ matrix._PYTHON_HOST_PLATFORM }}"
         working-directory: ${{ matrix.package }}
         run: |
           python -m build --sdist --wheel .

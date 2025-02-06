@@ -1,0 +1,57 @@
+# build-system
+# - ref: https://peps.python.org/pep-0517/
+#
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# project
+# - ref 1: https://peps.python.org/pep-0621/
+# - ref 2: https://hatch.pypa.io/latest/config/metadata/#project-metadata
+#
+[project]
+name = "dask-gateway"
+version = "2024.1.0"
+description = "A client library for interacting with a dask-gateway server"
+readme = "README.rst"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+keywords = ["dask", "hadoop", "kubernetes", "HPC", "distributed", "cluster"]
+authors = [
+    {name = "Jim Crist-Harif", email = "jcristharif@gmail.com"},
+]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: System :: Distributed Computing",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "aiohttp",
+    "click>=8.1.3",
+    "dask>=2022.4.0",
+    "distributed>=2022.4.0",
+    "pyyaml",
+    "tornado",
+]
+
+[project.optional-dependencies]
+kerberos = [
+    'pykerberos;platform_system!="Windows"',
+    'winkerberos;platform_system=="Windows"',
+]
+
+[project.urls]
+Documentation = "https://gateway.dask.org/"
+Source = "https://github.com/dask/dask-gateway/"
+Issues = "https://github.com/dask/dask-gateway/issues"
+
+[tool.hatch.build]
+include = [
+    "**/*.py",
+    "**/*.yaml",
+]
