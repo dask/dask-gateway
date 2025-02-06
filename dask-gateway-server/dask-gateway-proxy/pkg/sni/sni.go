@@ -8,6 +8,18 @@ import (
 	"net"
 )
 
+// hideWriteTo is a workaround introduced to make the code functional in 1.22+,
+// where io.Copy would no longer make use of peekedTCPConn.Read after
+// net.TCPConn.WriteTo was added, so the workaround is to hide it again.
+//
+// The workaround was developed inspecting:
+// https://github.com/golang/go/commit/f664031bc17629080332a1c7bede38d67fd32e47
+//
+type hideWriteTo struct{}
+func (hideWriteTo) WriteTo(io.Writer) (int64, error) {
+       panic("can't happen")
+}
+
 type TcpConn interface {
 	net.Conn
 	CloseWrite() error
@@ -16,6 +28,7 @@ type TcpConn interface {
 
 type peekedTCPConn struct {
 	peeked []byte
+	hideWriteTo
 	*net.TCPConn
 }
 
