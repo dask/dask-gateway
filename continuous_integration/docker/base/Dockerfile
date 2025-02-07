@@ -8,7 +8,10 @@
 FROM centos:7
 
 ARG python_version="3.11"
-ARG go_version="1.19"
+# go_version was 1.19 until it was updated to 1.23.6 (2025-02-07) by adding a
+# layer on top of the previous image, as it is no longer able to build and it
+# was an easy way to update the golang version.
+ARG go_version="1.23.6"
 
 # Set labels based on the Open Containers Initiative (OCI):
 # https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
@@ -66,7 +69,7 @@ RUN yum install -y bzip2 \
  && rm -rf /var/cache/yum
 
 # Install go
-RUN curl -sL https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz \
+RUN curl -sL https://go.dev/dl/go${go_version}.linux-amd64.tar.gz \
   | tar --extract --verbose --gzip --directory=/opt/
 
 # Put Python and Go environments on PATH
