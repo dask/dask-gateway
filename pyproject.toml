@@ -63,8 +63,9 @@ regex = '''
     (?P<minor>\d+)
     \.
     (?P<patch>\d+)
-    \.?
-    (?P<pre>((alpha|beta|rc)\.\d+)|)
+    (\-
+        (?P<prelease>((alpha|beta|rc)\.\d+|0\.dev))
+    )?
 '''
 
 [tool.tbump.git]
