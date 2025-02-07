@@ -1,28 +1,76 @@
+# build-system
+# - ref: https://peps.python.org/pep-0517/
+#
 [build-system]
-requires = [
-    # FIXME: dask-gateway-server's editable install is broken with setuptools
-    #        64+ that introduced the "editable_wheel" command to replace the
-    #        "develop" command, and that doesn't respect package_data config. We
-    #        rely on that to get our golang built proxy accessible currently!
-    #
-    #        At the same time, setuptools 63 and older doesn't support Python
-    #        3.12, so we end up with a broken editable install in Python 3.12
-    #        until this is resolved.
-    #
-    #        Message when using "setuptools>=64" during "pip install --editable .":
-    #
-    #            Editable install will be performed using a meta path finder.
-    #
-    #            Options like `package-data`, `include/exclude-package-data` or
-    #            `packages.find.exclude/include` may have no effect.
-    #
-    #        The problematic result is that we end up without a golang binary in
-    #        dask_gateway_server/proxy/dask-gateway-proxy.
-    #
-    #        This is tracked in https://github.com/dask/dask-gateway/issues/740
-    #
-    'setuptools==63.* ; python_version < "3.12"',
-    'setuptools==69.* ; python_version >= "3.12"',
-    "wheel",
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# project
+# - ref 1: https://peps.python.org/pep-0621/
+# - ref 2: https://hatch.pypa.io/latest/config/metadata/#project-metadata
+#
+[project]
+name = "dask-gateway-server"
+version = "2024.1.0"
+description = "A multi-tenant server for securely deploying and managing multiple Dask clusters."
+readme = "README.rst"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+keywords = ["dask", "hadoop", "kubernetes", "HPC", "distributed", "cluster"]
+authors = [
+    {name = "Jim Crist-Harif", email = "jcristharif@gmail.com"},
 ]
-build-backend = "setuptools.build_meta"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: BSD License",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: System Administrators",
+    "Topic :: Scientific/Engineering",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: System :: Systems Administration",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "aiohttp>=3.9.0",
+    "async-timeout ; python_version < '3.11'",
+    "colorlog",
+    "cryptography",
+    "traitlets>=5.2.2.post1",
+]
+
+[project.optional-dependencies]
+kerberos = [
+    # pykerberos is tricky to install and requires a system package to
+    # successfully compile some C code, on ubuntu this is libkrb5-dev.
+    "pykerberos",
+]
+jobqueue = ["sqlalchemy>=2.0.0"]
+local = ["sqlalchemy>=2.0.0"]
+yarn = ["sqlalchemy>=2.0.0", "skein >= 0.7.3"]
+kubernetes = ["kubernetes_asyncio"]
+all_backends = ["sqlalchemy>=2.0.0", "skein >= 0.7.3", "kubernetes_asyncio"]
+
+[project.urls]
+Documentation = "https://gateway.dask.org/"
+Source = "https://github.com/dask/dask-gateway/"
+Issues = "https://github.com/dask/dask-gateway/issues"
+
+[project.scripts]
+dask-gateway-server = "dask_gateway_server.app:main"
+dask-gateway-jobqueue-launcher = "dask_gateway_server.backends.jobqueue.launcher:main"
+
+
+# Refs:
+# - https://hatch.pypa.io/latest/plugins/build-hook/custom/#pyprojecttoml
+# - https://hatch.pypa.io/1.3/plugins/build-hook/reference/#hatchling.builders.hooks.plugin.interface.BuildHookInterface.clean
+# - https://github.com/ofek/hatch-mypyc/blob/master/hatch_mypyc/plugin.py
+#
+[tool.hatch.build.hooks.custom]
+path = "hatch_build.py"
+
+[tool.hatch.build]
+include = [
+    "**/*.py",
+    "dask-gateway-proxy/**",
+]

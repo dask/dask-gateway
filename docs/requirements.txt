@@ -34,6 +34,4 @@ sphinx-autobuild
 #
 autodoc-traits
 --editable="./dask-gateway"
-# FIXME: See dask-gateway-server's pyproject.toml for more info why this isn't
-#        installed with --editable.
-./dask-gateway-server[all_backends]
+--editable="./dask-gateway-server[all_backends]"

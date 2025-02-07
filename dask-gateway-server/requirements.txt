@@ -1,7 +1,0 @@
-# These are dependencies for installing the dask-gateway-server package.
-#
-aiohttp>=3.9.0
-async-timeout ; python_version < "3.11"
-colorlog
-cryptography
-traitlets>=5.2.2.post1

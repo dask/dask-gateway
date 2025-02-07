@@ -72,8 +72,16 @@ message_template = "Release {new_version}"
 tag_template = "{new_version}"
 
 [[tool.tbump.file]]
+src = "dask-gateway/pyproject.toml"
+search = 'version = "{current_version}"'
+
+[[tool.tbump.file]]
 src = "dask-gateway/dask_gateway/_version.py"
 search = '__version__ = "{current_version}"'
+
+[[tool.tbump.file]]
+src = "dask-gateway-server/pyproject.toml"
+search = 'version = "{current_version}"'
 
 [[tool.tbump.file]]
 src = "dask-gateway-server/dask_gateway_server/_version.py"
