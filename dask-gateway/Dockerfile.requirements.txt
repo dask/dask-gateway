@@ -4,7 +4,7 @@
 #
 #    Use "Run workflow" button at https://github.com/dask/dask-gateway/actions/workflows/refreeze-dockerfile-requirements-txt.yaml
 #
-aiohappyeyeballs==2.4.4
+aiohappyeyeballs==2.4.6
     # via aiohttp
 aiohttp==3.11.12
     # via dask-gateway
