@@ -47,9 +47,22 @@ kerberos = [
 ]
 jobqueue = ["sqlalchemy>=2.0.0"]
 local = ["sqlalchemy>=2.0.0"]
-yarn = ["sqlalchemy>=2.0.0", "skein >= 0.7.3"]
+yarn = [
+    "sqlalchemy>=2.0.0",
+    "skein>=0.7.3",
+    # FIXME: protobuf is a dependency for skein, and is being held back here for
+    #        now due to a error description reported in
+    #        https://github.com/jcrist/skein/issues/255
+    #
+    "protobuf<3.21",
+]
 kubernetes = ["kubernetes_asyncio"]
-all_backends = ["sqlalchemy>=2.0.0", "skein >= 0.7.3", "kubernetes_asyncio"]
+all_backends = [
+    "sqlalchemy>=2.0.0",
+    "skein>=0.7.3",
+    "protobuf<3.21",
+    "kubernetes_asyncio",
+]
 
 [project.urls]
 Documentation = "https://gateway.dask.org/"
