@@ -56,15 +56,16 @@ source = [
 github_url = "https://github.com/dask/dask-gateway"
 
 [tool.tbump.version]
-current = "2024.1.0"
+current = "2025.2.0-0.dev"
 regex = '''
     (?P<major>\d+)
     \.
     (?P<minor>\d+)
     \.
     (?P<patch>\d+)
-    \.?
-    (?P<pre>((alpha|beta|rc)\.\d+)|)
+    (\-
+        (?P<prelease>((alpha|beta|rc)\.\d+|0\.dev))
+    )?
 '''
 
 [tool.tbump.git]
