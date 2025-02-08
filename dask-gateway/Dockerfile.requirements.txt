@@ -6,13 +6,13 @@
 #
 aiohappyeyeballs==2.4.4
     # via aiohttp
-aiohttp==3.11.11
+aiohttp==3.11.12
     # via dask-gateway
 aiosignal==1.3.2
     # via aiohttp
 attrs==25.1.0
     # via aiohttp
-bokeh==3.6.2
+bokeh==3.6.3
     # via -r Dockerfile.requirements.in
 click==8.1.8
     # via
