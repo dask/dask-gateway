@@ -61,7 +61,7 @@ class SlurmBackend(JobQueueBackend):
         if cluster.config.account:
             cmd.append("--account=" + cluster.config.account)
         if cluster.config.qos:
-            cmd.extend("--qos=" + cluster.config.qos)
+            cmd.append("--qos=" + cluster.config.qos)
 
         if worker:
             cpus = cluster.config.worker_cores
