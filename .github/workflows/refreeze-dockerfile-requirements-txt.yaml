@@ -40,7 +40,7 @@ jobs:
               --workdir=/opt/${{ matrix.image }} \
               --user=root \
               python:3.13-slim-bullseye \
-              sh -c 'pip install pip-tools==6.* && pip-compile --upgrade --output-file=Dockerfile.requirements.txt Dockerfile.requirements.in'
+              sh -c 'pip install pip-tools==7.* && pip-compile --allow-unsafe --strip-extras --upgrade --output-file=Dockerfile.requirements.txt Dockerfile.requirements.in'
 
       - name: git diff
         run: git --no-pager diff --color=always
