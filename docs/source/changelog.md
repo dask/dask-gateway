@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Helm chart requires Kubernetes 1.30+, up from 1.29+
+
 ### Breaking changes
 
 - Requires Python 3.10+, up from 3.9+

@@ -146,13 +146,13 @@ jobs:
         # k3s-channel: https://update.k3s.io/v1-release/channels
         #
         include:
-          - k3s-channel: v1.29
-            upgrade-from: "2022.4.0"
           - k3s-channel: v1.30
-            separate-namespace: sep-namespace
+            upgrade-from: "2022.4.0"
           - k3s-channel: v1.31
-            separate-traefik: sep-traefik
+            separate-namespace: sep-namespace
           - k3s-channel: v1.32
+            separate-traefik: sep-traefik
+          - k3s-channel: v1.33
           - k3s-channel: stable
 
     steps:
