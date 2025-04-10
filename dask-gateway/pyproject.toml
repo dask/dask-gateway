@@ -11,7 +11,7 @@ build-backend = "hatchling.build"
 #
 [project]
 name = "dask-gateway"
-version = "2025.4.0"
+version = "2025.4.1-0.dev"
 description = "A client library for interacting with a dask-gateway server"
 readme = "README.rst"
 requires-python = ">=3.10"
