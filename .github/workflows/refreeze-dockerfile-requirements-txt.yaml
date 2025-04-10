@@ -36,6 +36,7 @@ jobs:
           cd ${{ matrix.image }}
           docker run --rm \
               --env=CUSTOM_COMPILE_COMMAND='Use "Run workflow" button at https://github.com/dask/dask-gateway/actions/workflows/refreeze-dockerfile-requirements-txt.yaml' \
+              --env=DASK_GATEWAY_SERVER__NO_PROXY=1 \
               --volume=$PWD:/opt/${{ matrix.image }} \
               --workdir=/opt/${{ matrix.image }} \
               --user=root \
