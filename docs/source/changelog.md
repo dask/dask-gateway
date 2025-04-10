@@ -1,48 +1,114 @@
 # Changelog
 
-## Unreleased
+## 2025.4.0
 
-- Helm chart requires Kubernetes 1.30+, up from 1.29+
+### Breaking Changes
 
-### Breaking changes
+- The Python packages `dask-gateway` and `dask-gateway-server` now require
+  Python 3.10+.
+- The Helm chart now requires k8s 1.30+, and the bundled CRDs for Traefik has
+  been updated. To upgrade to 2025.4.0, first upgrade the registered CRDs like
+  below:
 
-- Requires Python 3.10+, up from 3.9+
-- Helm chart requires Kubernetes 1.29+, up from 1.25+
+  ```shell
+  kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/dask/dask-gateway/2025.4.0/resources/helm/dask-gateway/crds/daskclusters.yaml
+  kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.com/dask/dask-gateway/2025.4.0/resources/helm/dask-gateway/crds/traefik.yaml
+  ```
 
-### 2024.1.0
+### New features added
+
+- helm-chart: add `traefik.installTraefik` config to opt-out when traefik is installed separately [#857](https://github.com/dask/dask-gateway/pull/857) ([@gardleopard](https://github.com/gardleopard), [@consideRatio](https://github.com/consideRatio), [@ohait](https://github.com/ohait))
+
+### Bugs fixed
+
+- Fix typo in SLURM backend. [#883](https://github.com/dask/dask-gateway/pull/883) ([@amanning9](https://github.com/amanning9), [@consideRatio](https://github.com/consideRatio))
+
+### Maintenance and upkeep improvements
+
+- helm chart: require k8s 1.30+ [#888](https://github.com/dask/dask-gateway/pull/888) ([@consideRatio](https://github.com/consideRatio))
+- helm chart: update to from traefik 3.2.0 to 3.3.5 [#885](https://github.com/dask/dask-gateway/pull/885) ([@consideRatio](https://github.com/consideRatio))
+- Pin protobuf, a dependency for skein, to workaround issue in skein [#880](https://github.com/dask/dask-gateway/pull/880) ([@consideRatio](https://github.com/consideRatio))
+- Bump to 2025.2.0-0.dev [#879](https://github.com/dask/dask-gateway/pull/879) ([@consideRatio](https://github.com/consideRatio))
+- Migrate from setuptools to hatchling [#874](https://github.com/dask/dask-gateway/pull/874) ([@consideRatio](https://github.com/consideRatio))
+- Migrate go code to function in go 1.22+ [#873](https://github.com/dask/dask-gateway/pull/873) ([@consideRatio](https://github.com/consideRatio))
+- helm-chart: upgrade dask-gateway-server to use Python 3.13 (from 3.11) [#870](https://github.com/dask/dask-gateway/pull/870) ([@consideRatio](https://github.com/consideRatio))
+- Adjust to pytest-asyncio deprecation about asyncio_default_fixture_loop_scope [#866](https://github.com/dask/dask-gateway/pull/866) ([@consideRatio](https://github.com/consideRatio))
+- Adjust to distributed deprecation about SchedulerPlugin's method signatures [#865](https://github.com/dask/dask-gateway/pull/865) ([@consideRatio](https://github.com/consideRatio))
+- Adjust to aiohttp deprecation about configuring shutdown_timeout [#864](https://github.com/dask/dask-gateway/pull/864) ([@consideRatio](https://github.com/consideRatio))
+- update jupyterhub user url [#862](https://github.com/dask/dask-gateway/pull/862) ([@minrk](https://github.com/minrk), [@consideRatio](https://github.com/consideRatio))
+- Ignore aiohttp warning recommending use of web.AppKey [#861](https://github.com/dask/dask-gateway/pull/861) ([@consideRatio](https://github.com/consideRatio))
+- chore(python): upgrade as high as it works [#854](https://github.com/dask/dask-gateway/pull/854) ([@gardleopard](https://github.com/gardleopard), [@consideRatio](https://github.com/consideRatio))
+- helm-chart: remove deprecated use of traefik middleware's forceSlash option [#853](https://github.com/dask/dask-gateway/pull/853) ([@gardleopard](https://github.com/gardleopard), [@consideRatio](https://github.com/consideRatio))
+- tests: fix no longer supported use of pytest.warns(None) [#849](https://github.com/dask/dask-gateway/pull/849) ([@consideRatio](https://github.com/consideRatio))
+- Fix deprecation warning from datetime [#847](https://github.com/dask/dask-gateway/pull/847) ([@consideRatio](https://github.com/consideRatio))
+- tests: fix compatibility with modern pytest [#844](https://github.com/dask/dask-gateway/pull/844) ([@consideRatio](https://github.com/consideRatio))
+- Require python 3.10+, up from 3.9+ [#841](https://github.com/dask/dask-gateway/pull/841) ([@consideRatio](https://github.com/consideRatio))
+- feat(traefik): bump traefik from 2.10.6 to 3.2.0, update CRDs, and update RBAC [#836](https://github.com/dask/dask-gateway/pull/836) ([@gardleopard](https://github.com/gardleopard), [@consideRatio](https://github.com/consideRatio), [@jacobtomlinson](https://github.com/jacobtomlinson))
+
+### Documentation improvements
+
+- tests: add fixme notes about warnings [#871](https://github.com/dask/dask-gateway/pull/871) ([@consideRatio](https://github.com/consideRatio))
+
+### Continuous integration improvements
+
+- ci: remove test for unreleased k8s 1.33 [#893](https://github.com/dask/dask-gateway/pull/893) ([@consideRatio](https://github.com/consideRatio))
+- ci: fix refreeze script [#890](https://github.com/dask/dask-gateway/pull/890) ([@consideRatio](https://github.com/consideRatio))
+- ci: update refreeze script [#889](https://github.com/dask/dask-gateway/pull/889) ([@consideRatio](https://github.com/consideRatio))
+- ci: coalesce the standalone traefik test job with the main test job [#872](https://github.com/dask/dask-gateway/pull/872) ([@consideRatio](https://github.com/consideRatio))
+- ci: use go 1.21 to build and publish dask-gateway-server to PyPI [#868](https://github.com/dask/dask-gateway/pull/868) ([@consideRatio](https://github.com/consideRatio))
+- ci: configure actions/setup-go to find go.sum file for caching purposes [#867](https://github.com/dask/dask-gateway/pull/867) ([@consideRatio](https://github.com/consideRatio))
+- build(deps): bump peter-evans/create-pull-request from 6 to 7 [#858](https://github.com/dask/dask-gateway/pull/858) ([@consideRatio](https://github.com/consideRatio))
+- ci: test only using golang 1.20 and 1.21 for now [#845](https://github.com/dask/dask-gateway/pull/845) ([@consideRatio](https://github.com/consideRatio))
+- ci: fix failure to adopt ubuntu-24.04 runners consistently [#843](https://github.com/dask/dask-gateway/pull/843) ([@consideRatio](https://github.com/consideRatio))
+- ci: run tests etc with ubuntu 24.04 up from 22.04 [#840](https://github.com/dask/dask-gateway/pull/840) ([@consideRatio](https://github.com/consideRatio))
+- ci: remove workaround installing pymzq via conda-forge [#839](https://github.com/dask/dask-gateway/pull/839) ([@consideRatio](https://github.com/consideRatio))
+- ci: upgrade pip in test images so sqlalchemy etc gets installed [#838](https://github.com/dask/dask-gateway/pull/838) ([@consideRatio](https://github.com/consideRatio))
+- build(deps): bump jupyterhub/action-k3s-helm from 3 to 4 [#806](https://github.com/dask/dask-gateway/pull/806) ([@consideRatio](https://github.com/consideRatio))
+- build(deps): bump peter-evans/create-pull-request from 5 to 6 [#805](https://github.com/dask/dask-gateway/pull/805) ([@consideRatio](https://github.com/consideRatio))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2024-01-16&to=2025-04-10&type=c))
+
+@amanning9 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aamanning9+updated%3A2024-01-16..2025-04-10&type=Issues)) | @consideRatio ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2024-01-16..2025-04-10&type=Issues)) | @dask-bot ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Adask-bot+updated%3A2024-01-16..2025-04-10&type=Issues)) | @gardleopard ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Agardleopard+updated%3A2024-01-16..2025-04-10&type=Issues)) | @jacobtomlinson ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajacobtomlinson+updated%3A2024-01-16..2025-04-10&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aminrk+updated%3A2024-01-16..2025-04-10&type=Issues)) | @ohait ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aohait+updated%3A2024-01-16..2025-04-10&type=Issues))
+
+## 2024.1.0
 
 ([full changelog](https://github.com/dask/dask-gateway/compare/2023.9.0...2024.1.0))
 
-#### Breaking Changes
+### Breaking Changes
 
 - Drop support for k8s 1.24, test against 1.29 [#794](https://github.com/dask/dask-gateway/pull/794) ([@consideRatio](https://github.com/consideRatio))
 
-#### Bugs fixed
+### Bugs fixed
 
 - Update dask-gateway-server's setuptools for Python 3.12+ [#778](https://github.com/dask/dask-gateway/pull/778) ([@consideRatio](https://github.com/consideRatio))
 - Make dependency on async-timeout explicit and conditional to python 3.10 and older [#772](https://github.com/dask/dask-gateway/pull/772) ([@consideRatio](https://github.com/consideRatio))
 - No longer explicitly set imagePullPolicy to IfNotPresent by default [#770](https://github.com/dask/dask-gateway/pull/770) ([@consideRatio](https://github.com/consideRatio), [@TomAugspurger](https://github.com/TomAugspurger))
 - k8s controller: round to worker cores to three digits, not one [#766](https://github.com/dask/dask-gateway/pull/766) ([@consideRatio](https://github.com/consideRatio), [@TomAugspurger](https://github.com/TomAugspurger))
 
-#### Maintenance and upkeep improvements
+### Maintenance and upkeep improvements
 
 - Fix docs build by pinning indirect dependencies [#799](https://github.com/dask/dask-gateway/pull/799) ([@consideRatio](https://github.com/consideRatio))
 - Drop support for k8s 1.24, test against 1.29 [#794](https://github.com/dask/dask-gateway/pull/794) ([@consideRatio](https://github.com/consideRatio))
 - Update traefik from 2.10.4 to 2.10.6 [#773](https://github.com/dask/dask-gateway/pull/773),[#792](https://github.com/dask/dask-gateway/pull/792) ([@consideRatio](https://github.com/consideRatio))
 - Reduce log level of k8s controller's reconciling loop's messages [#771](https://github.com/dask/dask-gateway/pull/771) ([@consideRatio](https://github.com/consideRatio), [@TomAugspurger](https://github.com/TomAugspurger))
 
-#### Documentation improvements
+### Documentation improvements
 
 - Fix list not displayed as such in install-kube.rst [#795](https://github.com/dask/dask-gateway/pull/795) ([@Ph0tonic](https://github.com/Ph0tonic), [@consideRatio](https://github.com/consideRatio))
 - Fix command applying CRDs from bad release in changelog [#748](https://github.com/dask/dask-gateway/pull/748) ([@brews](https://github.com/brews), [@consideRatio](https://github.com/consideRatio))
 
-#### Continuous integration improvements
+### Continuous integration improvements
 
 - ci: second iteration to fix artifact upload/download [#791](https://github.com/dask/dask-gateway/pull/791) ([@consideRatio](https://github.com/consideRatio))
 - ci: make upload/download artifact compatible with new action version [#790](https://github.com/dask/dask-gateway/pull/790) ([@consideRatio](https://github.com/consideRatio))
 - ci: add test for python 3.12 [#776](https://github.com/dask/dask-gateway/pull/776) ([@consideRatio](https://github.com/consideRatio))
 
-#### Contributors to this release
+### Contributors to this release
 
 The following people contributed discussions, new ideas, code and documentation contributions, and review.
 See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
