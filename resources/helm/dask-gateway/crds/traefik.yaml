@@ -1,5 +1,5 @@
-# These CRDs are from Traefik's Helm chart, most recently 21 Jan 2025 from
-# commit 4e15c7c for use with Traefik v3.2.0.
+# These CRDs are from Traefik's Helm chart, most recently 7 Apr 2025 from
+# commit a76355d for use with Traefik v3.3.5.
 #
 # Visit https://github.com/traefik/traefik-helm-chart/tree/HEAD/traefik/crds to
 # see if changes has been made if you are to update the version of Traefik as
@@ -1261,6 +1261,11 @@ spec:
                     description: ForwardBody defines whether to send the request body
                       to the authentication server.
                     type: boolean
+                  headerField:
+                    description: |-
+                      HeaderField defines a header field to store the authenticated user.
+                      More info: https://doc.traefik.io/traefik/v3.3/middlewares/http/forwardauth/#headerfield
+                    type: string
                   maxBodySize:
                     description: MaxBodySize defines the maximum body size in bytes
                       allowed to be forwarded to the authentication server.

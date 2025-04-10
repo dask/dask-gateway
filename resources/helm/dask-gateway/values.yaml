@@ -251,8 +251,8 @@ traefik:
 
   # The image to use for the proxy pod
   image:
-    name: traefik
-    tag: "3.2.0"
+    name: docker.io/traefik
+    tag: "3.3.5"
     pullPolicy:
   imagePullSecrets: []
 
