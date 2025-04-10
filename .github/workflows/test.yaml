@@ -152,7 +152,6 @@ jobs:
             separate-namespace: sep-namespace
           - k3s-channel: v1.32
             separate-traefik: sep-traefik
-          - k3s-channel: v1.33
           - k3s-channel: stable
 
     steps:
