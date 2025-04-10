@@ -1,6 +1,6 @@
 # Changelog
 
-## 2025.4.0
+## v2025.4.0
 
 ### Breaking Changes
 
@@ -75,7 +75,7 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 
 @amanning9 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aamanning9+updated%3A2024-01-16..2025-04-10&type=Issues)) | @consideRatio ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2024-01-16..2025-04-10&type=Issues)) | @dask-bot ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Adask-bot+updated%3A2024-01-16..2025-04-10&type=Issues)) | @gardleopard ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Agardleopard+updated%3A2024-01-16..2025-04-10&type=Issues)) | @jacobtomlinson ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajacobtomlinson+updated%3A2024-01-16..2025-04-10&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aminrk+updated%3A2024-01-16..2025-04-10&type=Issues)) | @ohait ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aohait+updated%3A2024-01-16..2025-04-10&type=Issues))
 
-## 2024.1.0
+## v2024.1.0
 
 ([full changelog](https://github.com/dask/dask-gateway/compare/2023.9.0...2024.1.0))
 
@@ -117,7 +117,7 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 
 @brews ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Abrews+updated%3A2023-09-26..2024-01-16&type=Issues)) | @consideRatio ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2023-09-26..2024-01-16&type=Issues)) | @dask-bot ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Adask-bot+updated%3A2023-09-26..2024-01-16&type=Issues)) | @jacobtomlinson ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajacobtomlinson+updated%3A2023-09-26..2024-01-16&type=Issues)) | @JColl88 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AJColl88+updated%3A2023-09-26..2024-01-16&type=Issues)) | @Ph0tonic ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3APh0tonic+updated%3A2023-09-26..2024-01-16&type=Issues)) | @sebastian-luna-valero ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Asebastian-luna-valero+updated%3A2023-09-26..2024-01-16&type=Issues)) | @TomAugspurger ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3ATomAugspurger+updated%3A2023-09-26..2024-01-16&type=Issues)) | @udeet27 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Audeet27+updated%3A2023-09-26..2024-01-16&type=Issues))
 
-## 2023.9.0
+## v2023.9.0
 
 ([full changelog](https://github.com/dask/dask-gateway/compare/2023.1.1...2023.9.0))
 
@@ -163,7 +163,7 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 
 @consideRatio ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2023-01-10..2023-09-26&type=Issues)) | @dask-bot ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Adask-bot+updated%3A2023-01-10..2023-09-26&type=Issues)) | @jacobtomlinson ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajacobtomlinson+updated%3A2023-01-10..2023-09-26&type=Issues)) | @JColl88 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AJColl88+updated%3A2023-01-10..2023-09-26&type=Issues)) | @JoeJasinski ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AJoeJasinski+updated%3A2023-01-10..2023-09-26&type=Issues)) | @Kirill888 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AKirill888+updated%3A2023-01-10..2023-09-26&type=Issues)) | @klucar ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aklucar+updated%3A2023-01-10..2023-09-26&type=Issues)) | @scharlottej13 ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ascharlottej13+updated%3A2023-01-10..2023-09-26&type=Issues)) | @TomAugspurger ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3ATomAugspurger+updated%3A2023-01-10..2023-09-26&type=Issues))
 
-## 2023.1.1
+## v2023.1.1
 
 ([full changelog](https://github.com/dask/dask-gateway/compare/2023.1.0...2023.1.1))
 
@@ -181,7 +181,7 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 
 [@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2023-01-03..2023-01-10&type=Issues) | [@Kirill888](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AKirill888+updated%3A2023-01-03..2023-01-10&type=Issues)
 
-## 2023.1.0
+## v2023.1.0
 
 ([full changelog](https://github.com/dask/dask-gateway/compare/2022.11.0...2023.1.0))
 
@@ -221,7 +221,7 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 
 [@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2022-11-15..2023-01-03&type=Issues) | [@fjetter](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Afjetter+updated%3A2022-11-15..2023-01-03&type=Issues) | [@holzman](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aholzman+updated%3A2022-11-15..2023-01-03&type=Issues)
 
-## 2022.11.0
+## v2022.11.0
 
 ([full changelog](https://github.com/dask/dask-gateway/compare/2022.10.0...2c2bed23b83831ad073fdbae80647e96d2111d22))
 
@@ -270,7 +270,7 @@ kubectl apply --server-side --force-conflicts -f https://raw.githubusercontent.c
 
 [@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2022-10-13..2022-11-09&type=Issues) | [@holzman](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aholzman+updated%3A2022-10-13..2022-11-09&type=Issues) | [@martindurant](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amartindurant+updated%3A2022-10-13..2022-11-09&type=Issues)
 
-## 2022.10.0
+## v2022.10.0
 
 This release includes no breaking changes.
 
@@ -315,7 +315,7 @@ This release includes no breaking changes.
 ([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2022-06-13&to=2022-10-13&type=c))
 
 [@amanning9](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aamanning9+updated%3A2022-06-13..2022-10-13&type=Issues) | [@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2022-06-13..2022-10-13&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Adependabot+updated%3A2022-06-13..2022-10-13&type=Issues) | [@GeorgianaElena](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AGeorgianaElena+updated%3A2022-06-13..2022-10-13&type=Issues) | [@giffels](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Agiffels+updated%3A2022-06-13..2022-10-13&type=Issues) | [@jcrist](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajcrist+updated%3A2022-06-13..2022-10-13&type=Issues) | [@martindurant](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amartindurant+updated%3A2022-06-13..2022-10-13&type=Issues) | [@maxime1907](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amaxime1907+updated%3A2022-06-13..2022-10-13&type=Issues) | [@patrix58](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Apatrix58+updated%3A2022-06-13..2022-10-13&type=Issues) | [@pre-commit-ci](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Apre-commit-ci+updated%3A2022-06-13..2022-10-13&type=Issues) | [@viniciusdc](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aviniciusdc+updated%3A2022-06-13..2022-10-13&type=Issues)
-## 2022.6.1
+## v2022.6.1
 
 ### Bugs fixed
 
@@ -331,7 +331,7 @@ This release includes no breaking changes.
 
 [@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2022-06-13..2022-06-13&type=Issues) | [@martindurant](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amartindurant+updated%3A2022-06-13..2022-06-13&type=Issues)
 
-## 2022.6.0
+## v2022.6.0
 
 This release makes `dask-gateway` the client require `dask>=2022`,
 `distributed>=2022`, and `click>=8.1.3`, but includes no other breaking changes.
@@ -364,7 +364,7 @@ This release makes `dask-gateway` the client require `dask>=2022`,
 
 [@consideRatio](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2022-04-21..2022-06-13&type=Issues) | [@jacobtomlinson](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajacobtomlinson+updated%3A2022-04-21..2022-06-13&type=Issues) | [@jcrist](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajcrist+updated%3A2022-04-21..2022-06-13&type=Issues) | [@martindurant](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amartindurant+updated%3A2022-04-21..2022-06-13&type=Issues) | [@menendes](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amenendes+updated%3A2022-04-21..2022-06-13&type=Issues) | [@olivier-lacroix](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aolivier-lacroix+updated%3A2022-04-21..2022-06-13&type=Issues) | [@rigzba21](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Arigzba21+updated%3A2022-04-21..2022-06-13&type=Issues) | [@scharlottej13](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ascharlottej13+updated%3A2022-04-21..2022-06-13&type=Issues) | [@TomAugspurger](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3ATomAugspurger+updated%3A2022-04-21..2022-06-13&type=Issues) | [@yuvipanda](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ayuvipanda+updated%3A2022-04-21..2022-06-13&type=Issues) | [@zonca](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Azonca+updated%3A2022-04-21..2022-06-13&type=Issues)
 
-## 2022.4.0
+## v2022.4.0
 
 This release is the first in a long time, and with it comes significant
 improvements in documentation and automation to make it easier to cut releases
