@@ -67,7 +67,7 @@ jobs:
             go-version: "1.23"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
           python-version: "${{ matrix.python-version }}"
@@ -155,7 +155,7 @@ jobs:
           - k3s-channel: stable
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # chartpress requires git history to set chart version and image tags
           # correctly
@@ -316,7 +316,7 @@ jobs:
           - slurm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Login to ghcr.io read access to CI image
         run: echo "${{ secrets.github_token }}" | docker login ghcr.io -u $ --password-stdin
