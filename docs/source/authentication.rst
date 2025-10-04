@@ -94,8 +94,8 @@ Then add the following lines to your ``dask_gateway_config.py`` file:
 .. code-block:: python
 
     c.DaskGateway.authenticator_class = "dask_gateway_server.auth.JupyterHubAuthenticator"
-    c.JupyterHubAuthenticator.api_token = "<API TOKEN>"
-    c.JupyterHubAuthenticator.api_url = "<API URL>"
+    c.JupyterHubAuthenticator.jupyterhub_api_token = "<API TOKEN>"
+    c.JupyterHubAuthenticator.jupyterhub_api_url = "<API URL>"
 
 Where:
 
