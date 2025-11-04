@@ -22,7 +22,7 @@
 repos:
   # Autoformat: Python code, syntax patterns are modernized
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.19.1
+    rev: v3.21.0
     hooks:
       - id: pyupgrade
         args:
@@ -30,19 +30,19 @@ repos:
 
   # Autoformat: Python code
   - repo: https://github.com/PyCQA/isort
-    rev: "6.0.1"
+    rev: "7.0.0"
     hooks:
       - id: isort
 
   # Autoformat: Python code
-  - repo: https://github.com/psf/black
-    rev: "25.1.0"
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: "25.9.0"
     hooks:
       - id: black
 
   # Autoformat: general small fixes
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: end-of-file-fixer
         exclude_types: ["svg"]
@@ -50,7 +50,7 @@ repos:
 
   # Lint: Python code
   - repo: https://github.com/PyCQA/flake8
-    rev: "7.2.0"
+    rev: "7.3.0"
     hooks:
       - id: flake8
 
