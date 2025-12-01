@@ -6,40 +6,40 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.15
+aiohttp==3.13.2
     # via dask-gateway
 aiosignal==1.4.0
     # via aiohttp
-attrs==25.3.0
+attrs==25.4.0
     # via aiohttp
-bokeh==3.8.0
+bokeh==3.8.1
     # via -r Dockerfile.requirements.in
-click==8.3.0
+click==8.3.1
     # via
     #   dask
     #   dask-gateway
     #   distributed
-cloudpickle==3.1.1
+cloudpickle==3.1.2
     # via
     #   dask
     #   distributed
 contourpy==1.3.3
     # via bokeh
-dask==2025.9.1
+dask==2025.11.0
     # via
     #   dask-gateway
     #   distributed
 dask-gateway @ file:///opt/dask-gateway
     # via -r Dockerfile.requirements.in
-distributed==2025.9.1
+distributed==2025.11.0
     # via dask-gateway
-frozenlist==1.7.0
+frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2025.9.0
+fsspec==2025.10.0
     # via dask
-idna==3.10
+idna==3.11
     # via yarl
 jinja2==3.1.6
     # via
@@ -51,15 +51,15 @@ locket==1.0.0
     #   partd
 markupsafe==3.0.3
     # via jinja2
-msgpack==1.1.1
+msgpack==1.1.2
     # via distributed
-multidict==6.6.4
+multidict==6.7.0
     # via
     #   aiohttp
     #   yarl
-narwhals==2.6.0
+narwhals==2.12.0
     # via bokeh
-numpy==2.3.3
+numpy==2.3.5
     # via
     #   -r Dockerfile.requirements.in
     #   bokeh
@@ -74,13 +74,13 @@ pandas==2.3.3
     # via bokeh
 partd==1.4.2
     # via dask
-pillow==11.3.0
+pillow==12.0.0
     # via bokeh
-propcache==0.3.2
+propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-psutil==7.1.0
+psutil==7.1.3
     # via distributed
 python-dateutil==2.9.0.post0
     # via pandas
@@ -96,9 +96,9 @@ six==1.17.0
     # via python-dateutil
 sortedcontainers==2.4.0
     # via distributed
-tblib==3.1.0
+tblib==3.2.2
     # via distributed
-toolz==1.0.0
+toolz==1.1.0
     # via
     #   dask
     #   distributed
@@ -112,9 +112,9 @@ tzdata==2025.2
     # via pandas
 urllib3==2.5.0
     # via distributed
-xyzservices==2025.4.0
+xyzservices==2025.11.0
     # via bokeh
-yarl==1.20.1
+yarl==1.22.0
     # via aiohttp
 zict==3.0.0
     # via distributed
