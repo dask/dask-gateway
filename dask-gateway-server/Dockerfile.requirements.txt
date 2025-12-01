@@ -6,37 +6,37 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.15
+aiohttp==3.13.2
     # via
     #   dask-gateway-server
     #   kubernetes-asyncio
 aiosignal==1.4.0
     # via aiohttp
-attrs==25.3.0
+attrs==25.4.0
     # via aiohttp
-certifi==2025.8.3
+certifi==2025.11.12
     # via kubernetes-asyncio
 cffi==2.0.0
     # via cryptography
-colorlog==6.9.0
+colorlog==6.10.1
     # via dask-gateway-server
-cryptography==46.0.2
+cryptography==46.0.3
     # via dask-gateway-server
 dask-gateway-server @ file:///opt/dask-gateway-server
     # via file:///opt/dask-gateway-server
-frozenlist==1.7.0
+frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-idna==3.10
+idna==3.11
     # via yarl
 kubernetes-asyncio==33.3.0
     # via dask-gateway-server
-multidict==6.6.4
+multidict==6.7.0
     # via
     #   aiohttp
     #   yarl
-propcache==0.3.2
+propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
@@ -54,5 +54,5 @@ traitlets==5.14.3
     # via dask-gateway-server
 urllib3==2.5.0
     # via kubernetes-asyncio
-yarl==1.20.1
+yarl==1.22.0
     # via aiohttp
