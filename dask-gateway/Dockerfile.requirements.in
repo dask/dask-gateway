@@ -16,3 +16,4 @@
 #
 bokeh
 numpy
+prometheus_client
