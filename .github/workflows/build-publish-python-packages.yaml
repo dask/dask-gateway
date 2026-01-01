@@ -96,14 +96,14 @@ jobs:
 
       - name: Upload sdist artifact
         if: matrix.upload_sdist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ format('{0}_{1}', matrix.package, 'sdist') }}
           path: ${{ matrix.package }}/dist/*.tar.gz
           if-no-files-found: error
 
       - name: Upload wheel artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ format('{0}_{1}-{2}-{3}', matrix.package, 'wheel', matrix.GOOS, matrix.GOARCH) }}
           path: ${{ matrix.package }}/dist/*.whl
