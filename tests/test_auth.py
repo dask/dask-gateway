@@ -180,6 +180,7 @@ async def test_jupyterhub_auth_user(monkeypatch):
     hub_config.JupyterHub.load_roles = [
         {
             "name": "dask-users",
+            "scopes": ["access:services!service=dask-gateway"],
             "users": ["alice"],
         }
     ]
