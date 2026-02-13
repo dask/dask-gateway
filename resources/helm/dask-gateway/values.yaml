@@ -79,6 +79,11 @@ gateway:
       # in the same namespace.
       apiUrl:
 
+      # JupyterHub service name.
+      # if not set, JupyterHub permissions are ignored
+      # and all tokens can access the gateway
+      jupyterhubServiceName:
+
     custom:
       # The full authenticator class name.
       class:

@@ -261,6 +261,14 @@ properties:
                 description: |
                   JupyterHub's api url. Inferred from JupyterHub's service name if
                   running in the same namespace.
+              jupyterhubServiceName:
+                type: [string, "null"]
+                description: |
+                  The JupyterHub service name
+                  (usually "dask-gateway").
+                  This should always be set.
+                  If not set (default),
+                  any JupyterHub token will be able to access the gateway.
           custom:
             type: object
             additionalProperties: false
