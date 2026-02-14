@@ -456,8 +456,8 @@ a <a class="reference external" href="https://jupyterhub.readthedocs.io/en/stabl
 </div>
 <p>Then add the following lines to your <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> file:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">authenticator_class</span> <span class="o">=</span> <span class="s2">&quot;dask_gateway_server.auth.JupyterHubAuthenticator&quot;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">JupyterHubAuthenticator</span><span class="o">.</span><span class="n">api_token</span> <span class="o">=</span> <span class="s2">&quot;&lt;API TOKEN&gt;&quot;</span>
-<span class="n">c</span><span class="o">.</span><span class="n">JupyterHubAuthenticator</span><span class="o">.</span><span class="n">api_url</span> <span class="o">=</span> <span class="s2">&quot;&lt;API URL&gt;&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHubAuthenticator</span><span class="o">.</span><span class="n">jupyterhub_api_token</span> <span class="o">=</span> <span class="s2">&quot;&lt;API TOKEN&gt;&quot;</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHubAuthenticator</span><span class="o">.</span><span class="n">jupyterhub_api_url</span> <span class="o">=</span> <span class="s2">&quot;&lt;API URL&gt;&quot;</span>
 </pre></div>
 </div>
 <p>Where:</p>
