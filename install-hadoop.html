@@ -1,50 +1,61 @@
  
 <!DOCTYPE html>
 
-<html>
+
+<html lang="en" data-content_root="./" >
+
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>Install on a Hadoop Cluster &#8212; Dask Gateway 2025.4.1-0.dev documentation</title>
-    
-  <link href="_static/css/theme.css" rel="stylesheet">
-  <link href="_static/css/index.ff1ffe594081f20da1ef19478df9384b.css" rel="stylesheet">
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
-    
-  <link rel="stylesheet"
-    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-  <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    
-      
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=873836d9" />
+    <link rel="stylesheet" type="text/css" href="_static/css/style.css?v=d6ed2d86" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/css/style.css" />
-    
-  <link rel="preload" as="script" href="_static/js/index.be7d3bbb2ef33a8344ce.js">
-
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx-book-theme.9d8b4a8b9bb19db25eeaddc40d639ba2.js"></script>
-    <link rel="shortcut icon" href="_static/images/favicon.svg"/>
+    <script src="_static/documentation_options.js?v=b97faef0"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'install-hadoop';</script>
+    <link rel="icon" href="_static/images/favicon.svg"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Install on a Kubernetes Cluster" href="install-kube.html" />
     <link rel="prev" title="Install Locally (Quickstart)" href="install-local.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
 <!-- Google Tag Manager (noscript) -->
 <noscript
   ><iframe
@@ -55,6 +66,7 @@
   ></iframe
 ></noscript>
 <!-- End Google Tag Manager (noscript) -->
+
 <nav class="dask-nav container-fluid">
   <ul>
     <li class="logo">
@@ -93,429 +105,318 @@
 </nav>
 
 
-    
-    <div class="container-fluid" id="banner"></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
-    
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
 
-    <div class="container-xl">
-      <div class="row">
-          
-<!-- Checkboxes to toggle the left sidebar -->
-<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle navigation sidebar">
-<label class="overlay" for="__navigation">
-    <div class="visually-hidden">Toggle navigation sidebar</div>
-</label>
-<div class="col-12 col-md-3 bd-sidebar site-navigation " id="site-navigation">
-    
-        <div class="navbar-brand-box">
-    <a class="navbar-brand text-wrap" href="index.html">
-      
-      
-      
-      <h1 class="site-logo" id="site-title">Dask Gateway 2025.4.1-0.dev documentation</h1>
-      
-    </a>
-</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
-  <i class="icon fas fa-search"></i>
-  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
-</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
-    <div class="bd-toc-item active">
-        <p aria-level="2" class="caption" role="heading">
- <span class="caption-text">
-  For Users
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="install-user.html">
-   Installation
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="usage.html">
-   Usage
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="configuration-user.html">
-   Configuration
-  </a>
- </li>
-</ul>
-<p aria-level="2" class="caption" role="heading">
- <span class="caption-text">
-  Admin - Installation
- </span>
-</p>
-<ul class="current nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="install-local.html">
-   Install Locally (Quickstart)
-  </a>
- </li>
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   Install on a Hadoop Cluster
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="install-kube.html">
-   Install on a Kubernetes Cluster
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="install-jobqueue.html">
-   Install on an HPC Job Queue
-  </a>
- </li>
-</ul>
-<p aria-level="2" class="caption" role="heading">
- <span class="caption-text">
-  Admin - Customization
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="authentication.html">
-   Authentication
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="security.html">
-   Security settings
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="cluster-options.html">
-   Exposing Cluster Options
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="resource-limits.html">
-   Cluster Resource Limits
-  </a>
- </li>
-</ul>
-<p aria-level="2" class="caption" role="heading">
- <span class="caption-text">
-  Reference
- </span>
-</p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="api-client.html">
-   Client API
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="api-server.html">
-   Configuration Reference
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="develop.html">
-   Development
-  </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="changelog.html">
-   Changelog
-  </a>
- </li>
-</ul>
-
-    </div>
-</nav> <!-- To handle the deprecated key -->
-
-<div class="navbar_extra_footer">
-  Theme by the <a href="https://ebp.jupyterbook.org">Executable Book Project</a>
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
 </div>
 
-</div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
 
-
-          
-
-
-          
-<!-- This is an invisible pixel that we watch to see if we've scrolled. -->
-<div class="sbt-scroll-pixel-helper"></div>
-<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
-    
-    <div class="topbar container-xl fixed-top">
-    <div class="topbar-contents row">
-        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
-        <div class="col pl-md-4 topbar-main">
-            <div class="topbar-left">
-                
-                <label class="nav-toggle-button" for="__navigation">
-                    <div class="visually-hidden">Toggle navigation</div>
-                    <i class="fas fa-bars"></i>
-                </label>
-                
-            </div>
-            
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
-            class="fas fa-download"></i></button>
-
-    <div class="dropdown-buttons">
-        <!-- ipynb file if we had a myst markdown file -->
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
         
-        <!-- Download raw file -->
-        <a class="dropdown-buttons" href="_sources/install-hadoop.rst.txt"><button type="button"
-                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
-                data-placement="left">.rst</button></a>
-        <!-- Download PDF via print -->
-        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
-                onclick="printPdf(this)" data-toggle="tooltip" data-placement="left">.pdf</button>
-    </div>
-</div>
 
-            <!-- Source interaction buttons -->
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
 
-            <!-- Full screen (wrap in <a> to have style consistency -->
+  
 
-<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
-        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
-        title="Fullscreen mode"><i
-            class="fas fa-expand"></i></button></a>
+<a class="navbar-brand logo" href="_static/images/dask-horizontal-white.svg">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Dask Gateway 2025.4.1-0.dev documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
 
-            <!-- Launch buttons -->
-
-        </div>
-
-        <!-- Table of contents -->
-        <div class="d-none d-md-block col-md-2 bd-toc show noprint">
-            
-            <div class="tocsection onthispage pt-5 pb-3">
-                <i class="fas fa-list"></i> Contents
-            </div>
-            <nav id="bd-toc-nav" aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#create-a-user-account">
-   Create a user account
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#enable-proxy-user-permissions">
-   Enable proxy-user permissions
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#create-install-directories">
-   Create install directories
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-a-python-environment">
-   Install a python environment
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-dask-gateway-server">
-   Install dask-gateway-server
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#configure-dask-gateway-server">
-   Configure dask-gateway-server
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#enable-yarn-integration">
-     Enable YARN integration
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#enable-kerberos-security-optional">
-     Enable kerberos security (optional)
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#configure-the-server-addresses-optional">
-     Configure the server addresses (optional)
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#specify-user-python-environments">
-     Specify user python environments
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#using-a-local-environment">
-       Using a local environment
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#using-an-archived-environment">
-       Using an archived environment
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#additional-configuration-options">
-     Additional configuration options
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#example">
-     Example
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#open-relevant-port-s">
-   Open relevant port(s)
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#start-dask-gateway-server">
-   Start dask-gateway-server
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#validate-things-are-working">
-   Validate things are working
-  </a>
- </li>
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">For Users</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install-user.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration-user.html">Configuration</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Admin - Installation</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Admin - Customization</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="security.html">Security settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cluster-options.html">Exposing Cluster Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resource-limits.html">Cluster Resource Limits</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api-client.html">Client API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api-server.html">Configuration Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="develop.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
 </ul>
 
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/install-hadoop.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Install on a Hadoop Cluster</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-user-account">Create a user account</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-proxy-user-permissions">Enable proxy-user permissions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-install-directories">Create install directories</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-a-python-environment">Install a python environment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-dask-gateway-server">Install dask-gateway-server</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-dask-gateway-server">Configure dask-gateway-server</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-yarn-integration">Enable YARN integration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-kerberos-security-optional">Enable kerberos security (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#specify-user-python-environments">Specify user python environments</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#using-a-local-environment">Using a local environment</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#using-an-archived-environment">Using an archived environment</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-configuration-options">Additional configuration options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#open-relevant-port-s">Open relevant port(s)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#start-dask-gateway-server">Start dask-gateway-server</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-things-are-working">Validate things are working</a></li>
+</ul>
             </nav>
         </div>
     </div>
 </div>
-    <div id="main-content" class="row">
-        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
-            <!-- Table of contents that is only displayed when printing the page -->
-            <div id="jb-print-docs-body" class="onlyprint">
-                <h1>Install on a Hadoop Cluster</h1>
-                <!-- Table of contents -->
-                <div id="print-main-content">
-                    <div id="jb-print-toc">
-                        
-                        <div>
-                            <h2> Contents </h2>
-                        </div>
-                        <nav aria-label="Page">
-                            <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#create-a-user-account">
-   Create a user account
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#enable-proxy-user-permissions">
-   Enable proxy-user permissions
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#create-install-directories">
-   Create install directories
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-a-python-environment">
-   Install a python environment
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#install-dask-gateway-server">
-   Install dask-gateway-server
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#configure-dask-gateway-server">
-   Configure dask-gateway-server
-  </a>
-  <ul class="nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#enable-yarn-integration">
-     Enable YARN integration
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#enable-kerberos-security-optional">
-     Enable kerberos security (optional)
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#configure-the-server-addresses-optional">
-     Configure the server addresses (optional)
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#specify-user-python-environments">
-     Specify user python environments
-    </a>
-    <ul class="nav section-nav flex-column">
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#using-a-local-environment">
-       Using a local environment
-      </a>
-     </li>
-     <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#using-an-archived-environment">
-       Using an archived environment
-      </a>
-     </li>
-    </ul>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#additional-configuration-options">
-     Additional configuration options
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#example">
-     Example
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#open-relevant-port-s">
-   Open relevant port(s)
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#start-dask-gateway-server">
-   Start dask-gateway-server
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#validate-things-are-working">
-   Validate things are working
-  </a>
- </li>
-</ul>
 
-                        </nav>
-                    </div>
-                </div>
-            </div>
-            
-              <div>
+              
                 
-  <div class="section" id="install-on-a-hadoop-cluster">
-<h1>Install on a Hadoop Cluster<a class="headerlink" href="#install-on-a-hadoop-cluster" title="Permalink to this headline">¶</a></h1>
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="install-on-a-hadoop-cluster">
+<h1>Install on a Hadoop Cluster<a class="headerlink" href="#install-on-a-hadoop-cluster" title="Link to this heading">#</a></h1>
 <p>Here we provide instructions for installing and configuring
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a <a class="reference external" href="https://hadoop.apache.org/">Hadoop Cluster</a>.</p>
-<div class="section" id="create-a-user-account">
-<h2>Create a user account<a class="headerlink" href="#create-a-user-account" title="Permalink to this headline">¶</a></h2>
+<section id="create-a-user-account">
+<h2>Create a user account<a class="headerlink" href="#create-a-user-account" title="Link to this heading">#</a></h2>
 <p>Before installing anything, you’ll need to create the user account which will
 be used to run the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> process. The name of the user
 doesn’t matter, only the permissions they have. Here we’ll use <code class="docutils literal notranslate"><span class="pre">dask</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>adduser<span class="w"> </span>dask
 </pre></div>
 </div>
-</div>
-<div class="section" id="enable-proxy-user-permissions">
-<h2>Enable proxy-user permissions<a class="headerlink" href="#enable-proxy-user-permissions" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="enable-proxy-user-permissions">
+<h2>Enable proxy-user permissions<a class="headerlink" href="#enable-proxy-user-permissions" title="Link to this heading">#</a></h2>
 <p>Dask-Gateway makes full use of Hadoop’s security model, and will start Dask
 workers in containers with the requesting user’s permissions (e.g. if <code class="docutils literal notranslate"><span class="pre">alice</span></code>
 creates a cluster, their dask workers will be running as user <code class="docutils literal notranslate"><span class="pre">alice</span></code>).  To
@@ -550,9 +451,9 @@ to allow impersonation of any user or from any host.</p>
 </pre></div>
 </div>
 <p>See the <a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/Superusers.html">proxy-user</a> documentation for more information.</p>
-</div>
-<div class="section" id="create-install-directories">
-<h2>Create install directories<a class="headerlink" href="#create-install-directories" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="create-install-directories">
+<h2>Create install directories<a class="headerlink" href="#create-install-directories" title="Link to this heading">#</a></h2>
 <p>A <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> installation has three types of files which will need
 their own directories created before installation:</p>
 <ul class="simple">
@@ -572,9 +473,9 @@ $<span class="w"> </span>mkdir<span class="w"> </span>/var/dask-gateway
 $<span class="w"> </span>chown<span class="w"> </span>dask<span class="w"> </span>/var/dask-gateway
 </pre></div>
 </div>
-</div>
-<div class="section" id="install-a-python-environment">
-<h2>Install a python environment<a class="headerlink" href="#install-a-python-environment" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="install-a-python-environment">
+<h2>Install a python environment<a class="headerlink" href="#install-a-python-environment" title="Link to this heading">#</a></h2>
 <p>To avoid interactions between the system python installation and
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>, we’ll install a full Python environment into the
 software directory. The easiest way to do this is to use <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">miniconda</a>, but this
@@ -590,9 +491,9 @@ commands.</p>
 $<span class="w"> </span><span class="nb">source</span><span class="w"> </span>/root/.bashrc
 </pre></div>
 </div>
-</div>
-<div class="section" id="install-dask-gateway-server">
-<h2>Install dask-gateway-server<a class="headerlink" href="#install-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="install-dask-gateway-server">
+<h2>Install dask-gateway-server<a class="headerlink" href="#install-dask-gateway-server" title="Link to this heading">#</a></h2>
 <p>Now we can install <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> and its dependencies.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>dask-gateway-server-yarn
 </pre></div>
@@ -602,9 +503,9 @@ install <code class="docutils literal notranslate"><span class="pre">dask-gatewa
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>dask-gateway-server-kerberos
 </pre></div>
 </div>
-</div>
-<div class="section" id="configure-dask-gateway-server">
-<h2>Configure dask-gateway-server<a class="headerlink" href="#configure-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="configure-dask-gateway-server">
+<h2>Configure dask-gateway-server<a class="headerlink" href="#configure-dask-gateway-server" title="Link to this heading">#</a></h2>
 <p>Now we’re ready to configure our <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> installation.
 Configuration is written as a Python file (typically
 <code class="docutils literal notranslate"><span class="pre">/etc/dask-gateway/dask_gateway_config.py</span></code>). Options are assigned to a config
@@ -613,8 +514,8 @@ use any python syntax/libraries in this file that you want, the only things
 that matter to <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> are the values set on the <code class="docutils literal notranslate"><span class="pre">c</span></code> config
 object.</p>
 <p>Here we’ll walk through a few common configuration options you may want to set.</p>
-<div class="section" id="enable-yarn-integration">
-<h3>Enable YARN integration<a class="headerlink" href="#enable-yarn-integration" title="Permalink to this headline">¶</a></h3>
+<section id="enable-yarn-integration">
+<h3>Enable YARN integration<a class="headerlink" href="#enable-yarn-integration" title="Link to this heading">#</a></h3>
 <p>First you’ll want to enable YARN as the cluster backend.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the gateway to use YARN as the backend</span>
 <span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">backend_class</span> <span class="o">=</span> <span class="p">(</span>
@@ -622,9 +523,9 @@ object.</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="enable-kerberos-security-optional">
-<h3>Enable kerberos security (optional)<a class="headerlink" href="#enable-kerberos-security-optional" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="enable-kerberos-security-optional">
+<h3>Enable kerberos security (optional)<a class="headerlink" href="#enable-kerberos-security-optional" title="Link to this heading">#</a></h3>
 <p>If your cluster has <a class="reference external" href="https://web.mit.edu/kerberos/">Kerberos</a> enabled, you’ll also need to create a principal
 and keytab for the <code class="docutils literal notranslate"><span class="pre">dask</span></code> user. You’ll also need to create a <code class="docutils literal notranslate"><span class="pre">HTTP</span></code> service
 principal for the host running <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> (if one doesn’t already
@@ -659,9 +560,9 @@ add the following line to your <code class="docutils literal notranslate"><span 
 <span class="n">c</span><span class="o">.</span><span class="n">KerberosAuthenticator</span><span class="o">.</span><span class="n">keytab</span> <span class="o">=</span> <span class="s2">&quot;/etc/dask-gateway/dask.keytab&quot;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="configure-the-server-addresses-optional">
-<h3>Configure the server addresses (optional)<a class="headerlink" href="#configure-the-server-addresses-optional" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="configure-the-server-addresses-optional">
+<h3>Configure the server addresses (optional)<a class="headerlink" href="#configure-the-server-addresses-optional" title="Link to this heading">#</a></h3>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> will serve all traffic through
 <code class="docutils literal notranslate"><span class="pre">0.0.0.0:8000</span></code>. This includes both HTTP(S) requests (REST api, dashboards,
 etc…) and dask scheduler traffic.</p>
@@ -678,9 +579,9 @@ serve on port 8001:</p>
 <span class="n">c</span><span class="o">.</span><span class="n">Proxy</span><span class="o">.</span><span class="n">tcp_address</span> <span class="o">=</span> <span class="s1">&#39;:8001&#39;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="specify-user-python-environments">
-<h3>Specify user python environments<a class="headerlink" href="#specify-user-python-environments" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="specify-user-python-environments">
+<h3>Specify user python environments<a class="headerlink" href="#specify-user-python-environments" title="Link to this heading">#</a></h3>
 <p>Since the Dask workers/schedulers will be running in their own YARN containers,
 you’ll need to provide a way for Python environments to be available to these
 containers. You have a few options here:</p>
@@ -690,8 +591,8 @@ containers. You have a few options here:</p>
 </ul>
 <p>In either case, the Python environment requires at least the
 <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> package be installed to work properly.</p>
-<div class="section" id="using-a-local-environment">
-<h4>Using a local environment<a class="headerlink" href="#using-a-local-environment" title="Permalink to this headline">¶</a></h4>
+<section id="using-a-local-environment">
+<h4>Using a local environment<a class="headerlink" href="#using-a-local-environment" title="Link to this heading">#</a></h4>
 <p>If you’ve installed identical Python environments on every node, you only need
 to configure <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> to use the provided Python. This could be
 done a few different ways:</p>
@@ -710,9 +611,9 @@ done a few different ways:</p>
 <span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_setup</span> <span class="o">=</span> <span class="s1">&#39;source /path/to/your/environment/bin/activate&#39;</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="using-an-archived-environment">
-<h4>Using an archived environment<a class="headerlink" href="#using-an-archived-environment" title="Permalink to this headline">¶</a></h4>
+</section>
+<section id="using-an-archived-environment">
+<h4>Using an archived environment<a class="headerlink" href="#using-an-archived-environment" title="Link to this heading">#</a></h4>
 <p>YARN also provides mechanisms to “localize” files/archives to a container
 before starting the application. This can be used to distribute Python
 environments at runtime. This approach is appealing in that it doesn’t require
@@ -784,10 +685,10 @@ environment in
 multiple users can all share the same localized environment (reducing the cost
 of moving the environments around).</p>
 <p>For more information, see the <a class="reference external" href="https://jcristharif.com/skein/distributing-files.html">Skein documentation on distributing files</a>.</p>
-</div>
-</div>
-<div class="section" id="additional-configuration-options">
-<h3>Additional configuration options<a class="headerlink" href="#additional-configuration-options" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="additional-configuration-options">
+<h3>Additional configuration options<a class="headerlink" href="#additional-configuration-options" title="Link to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> has several additional configuration fields. See the
 <a class="reference internal" href="api-server.html"><span class="doc">Configuration Reference</span></a> docs (specifically <a class="reference internal" href="api-server.html#yarn-config"><span class="std std-ref">the yarn configuration docs</span></a>) for more information on all available options. At a minimum
 you’ll probably want to configure the worker resource limits, as well as which
@@ -807,9 +708,9 @@ also want to increase the cluster/worker timeout values:</p>
 <span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">worker_start_timeout</span> <span class="o">=</span> <span class="mi">600</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="example">
-<h3>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
 <p>In summary, an example <code class="docutils literal notranslate"><span class="pre">dask_gateway_config.py</span></code> configuration might look
 like:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configure the gateway to use YARN as the backend</span>
@@ -843,17 +744,17 @@ like:</p>
 <span class="n">c</span><span class="o">.</span><span class="n">YarnClusterConfig</span><span class="o">.</span><span class="n">queue</span> <span class="o">=</span> <span class="s1">&#39;dask&#39;</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="open-relevant-port-s">
-<h2>Open relevant port(s)<a class="headerlink" href="#open-relevant-port-s" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="open-relevant-port-s">
+<h2>Open relevant port(s)<a class="headerlink" href="#open-relevant-port-s" title="Link to this heading">#</a></h2>
 <p>For users to access the gateway server, they’ll need access to the public
 port(s) set in <a class="reference internal" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a> above (by default
 this is port <code class="docutils literal notranslate"><span class="pre">8000</span></code>). How to expose ports is system specific - cluster
 administrators should determine how best to perform this task.</p>
-</div>
-<div class="section" id="start-dask-gateway-server">
-<h2>Start dask-gateway-server<a class="headerlink" href="#start-dask-gateway-server" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="start-dask-gateway-server">
+<h2>Start dask-gateway-server<a class="headerlink" href="#start-dask-gateway-server" title="Link to this heading">#</a></h2>
 <p>At this point you should be able to start the gateway server as the <code class="docutils literal notranslate"><span class="pre">dask</span></code>
 user using your created configuration file. The <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> process
 will be a long running process - how you intend to manage it (<code class="docutils literal notranslate"><span class="pre">supervisord</span></code>,
@@ -878,9 +779,9 @@ dask-gateway-server<span class="w"> </span>-f<span class="w"> </span>/etc/dask-g
 $<span class="w"> </span>sudo<span class="w"> </span>-iu<span class="w"> </span>dask<span class="w"> </span>/opt/dask-gateway/start-dask-gateway
 </pre></div>
 </div>
-</div>
-<div class="section" id="validate-things-are-working">
-<h2>Validate things are working<a class="headerlink" href="#validate-things-are-working" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="validate-things-are-working">
+<h2>Validate things are working<a class="headerlink" href="#validate-things-are-working" title="Link to this heading">#</a></h2>
 <p>If the server started with no errors, you’ll want to check that things are
 working properly. The easiest way to do this is to try connecting as a user.</p>
 <p>A user’s environment requires the <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> library be installed. If
@@ -925,48 +826,125 @@ newly created cluster.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cluster</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
-              </div>
+                </article>
               
-            
-                <!-- Previous / next buttons -->
-<div class='prev-next-area'> 
-    <a class='left-prev' id="prev-link" href="install-local.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Install Locally (Quickstart)</p>
-        </div>
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="install-local.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Install Locally (Quickstart)</p>
+      </div>
     </a>
-    <a class='right-next' id="next-link" href="install-kube.html" title="next page">
-    <div class="prev-next-info">
+    <a class="right-next"
+       href="install-kube.html"
+       title="next page">
+      <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
         <p class="prev-next-title">Install on a Kubernetes Cluster</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
+                </footer>
+              
+            </div>
             
-        </div>
-    </div>
-    <footer class="footer">
-  <p>
-    
-      By Jim Crist-Harif<br/>
-    
-        &copy; Copyright 2021, Jim Crist-Harif.<br/>
-  </p>
-</footer>
-</main>
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
-      </div>
-    </div>
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-user-account">Create a user account</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-proxy-user-permissions">Enable proxy-user permissions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#create-install-directories">Create install directories</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-a-python-environment">Install a python environment</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#install-dask-gateway-server">Install dask-gateway-server</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-dask-gateway-server">Configure dask-gateway-server</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-yarn-integration">Enable YARN integration</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#enable-kerberos-security-optional">Enable kerberos security (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#configure-the-server-addresses-optional">Configure the server addresses (optional)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#specify-user-python-environments">Specify user python environments</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#using-a-local-environment">Using a local environment</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#using-an-archived-environment">Using an archived environment</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-configuration-options">Additional configuration options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#open-relevant-port-s">Open relevant port(s)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#start-dask-gateway-server">Start dask-gateway-server</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#validate-things-are-working">Validate things are working</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
   
-  <script src="_static/js/index.be7d3bbb2ef33a8344ce.js"></script>
+  <div class="footer-item">
+    
+<p class="component-author">
+By Jim Crist-Harif
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2021, Jim Crist-Harif.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
 <!-- Google Tag Manager -->
 <script>
@@ -992,5 +970,8 @@ newly created cluster.</p>
 </script>
 <!-- End Google Tag Manager -->
 
+
+  <footer class="bd-footer">
+  </footer>
   </body>
 </html>

@@ -1,4 +1,4 @@
-@import "../sphinx-book-theme.css";
+@import "../styles/sphinx-book-theme.css";
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;700");
 @import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700");
 
@@ -37,23 +37,24 @@ code {
 }
 
 body {
-  padding-top: calc(var(--pst-header-height) + 20px);
-  background-color: #fff;
+  background-image: url("../images/background-grid.svg");
+  background-repeat: repeat;
+  padding-top: calc(var(--pst-header-height));
+  background-color: var(--pst-color-background);
   font-family: var(--pst-font-family-base);
   font-weight: 400;
   line-height: 1.65;
-  color: var(--black);
+  color: var(--sd-color-primary-bg-text);
+}
+
+main {
+  background-color: var(--pst-color-background);
 }
 
 *,
 :after,
 :before {
   box-sizing: border-box;
-}
-
-body {
-  background-image: url("../images/background-grid.svg");
-  background-repeat: repeat;
 }
 
 .container,
@@ -63,7 +64,7 @@ body {
 .container-xl {
   max-width: 1600px;
   margin-left: inherit;
-  background-color: white;
+  background-color: var(--pst-color-background);
 }
 
 @media (min-width: 1600px) {
@@ -105,6 +106,10 @@ see github.com/dask/dask-sphinx-theme/issues/74 */
 
 /* navigation pane - left sidebar */
 
+.navbar-brand {
+  display: none;
+}
+
 #site-navigation {
   background: var(--light-grey);
   background-image: url("../images/background-grid.svg");
@@ -113,18 +118,18 @@ see github.com/dask/dask-sphinx-theme/issues/74 */
 
 #site-navigation nav ul.nav li a {
   padding-left: 2%;
-  color: var(--black);
+  color: var(--sd-color-primary-bg-text);
   text-decoration: none;
 }
 
 #site-navigation nav ul.nav ul li a {
-  color: var(--black);
+  color: var(--sd-color-primary-bg-text);
 }
 
 #site-navigation nav ul.nav a:hover {
-  color: var(--black);
+  color: var(--sd-color-primary-bg-text);
   font-weight: 700;
-  border-left: 2px solid var(--black);
+  border-left: 2px solid var(--sd-color-primary-bg-text);
 }
 
 /* #site-navigation nav ul.nav li a:active {
@@ -143,18 +148,23 @@ see github.com/dask/dask-sphinx-theme/issues/74 */
   position: relative;
   margin-top: 1.25em;
   margin-bottom: 0.5em;
-  color: var(--black);
+  color: var(--sd-color-primary-bg-text);
 }
 
 #site-navigation div.navbar_extra_footer {
-  color: var(--black);
+  color: vvar(--sd-color-primary-bg-text);
   padding-bottom: 3em;
   margin-bottom: 0;
 }
 
+footer .footer-item {
+  float: left;
+  margin-right: 1rem;
+}
+
 /* table on contents (right sidebar) */
 .bd-toc .toc-entry a {
-  color: var(--black);
+  color: var(--sd-color-primary-bg-text);
   text-decoration: none;
 }
 
@@ -186,11 +196,12 @@ main.bd-content {
 
 .dask-nav {
   background-color: var(--black);
-  height: 4em;
+  height: var(--pst-header-height);
   display: block;
   position: fixed;
   right: 0;
   left: 0;
+  top: 0;
   z-index: 2100;
   overflow-x: hidden;
   overflow-y: hidden;
@@ -202,6 +213,7 @@ main.bd-content {
   padding: 0;
   margin-bottom: 0;
   white-space: nowrap;
+  text-align: center;
 }
 
 .dask-nav ul > li {
@@ -214,6 +226,7 @@ main.bd-content {
 
 .dask-nav ul > li > a {
   color: white;
+  text-decoration: none;
 }
 
 .dask-nav ul > li > a:hover {
@@ -270,17 +283,3 @@ ul.current.nav.bd-sidenav
 .classifier::before {
   content: ": ";
 }
-
-/* icons */
-
-/* .fa-download:before {
-    content: url('../images/icon-download.svg');
-}
-
-.fa-expand:before {
-    content: url('../images/icon-expand.svg');
-}
-
-.fa-bars:before {
-    content: url('../images/icon-menu.svg');
-} */
