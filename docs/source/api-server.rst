@@ -82,12 +82,14 @@ YARN
 YarnClusterConfig
 ~~~~~~~~~~~~~~~~~
 
-.. autoconfigurable:: dask_gateway_server.backends.yarn.YarnClusterConfig
+YarnClusterConfig is as of 2026 longer supported, see
+https://github.com/dask/dask-gateway/issues/882 for some details.
 
 YarnBackend
 ~~~~~~~~~~~
 
-.. autoconfigurable:: dask_gateway_server.backends.yarn.YarnBackend
+YarnBackend is as of 2026 longer supported, see
+https://github.com/dask/dask-gateway/issues/882 for some details.
 
 
 Kubernetes

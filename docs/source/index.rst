@@ -4,8 +4,8 @@ Dask Gateway
 Dask Gateway provides a secure, multi-tenant server for managing Dask_
 clusters.  It allows users to launch and use Dask clusters in a shared,
 centrally managed cluster environment, without requiring users to have direct
-access to the underlying cluster backend (e.g. Kubernetes, Hadoop/YARN, HPC Job
-queues, etc...).
+access to the underlying cluster backend (e.g. Kubernetes, HPC Job queues,
+etc...).
 
 Dask Gateway is one of many options for deploying Dask clusters, see `Deploying Dask`_ in the Dask documentation for an overview of additional options.
 
@@ -22,8 +22,8 @@ Highlights
   you to use what makes sense for your organization.
 
 - **Flexible**: The gateway is designed to support multiple backends, and runs
-  equally well in the cloud as on-premise. Natively supports Kubernetes,
-  Hadoop/YARN, and HPC Job Queueing systems.
+  equally well in the cloud as on-premise. Natively supports Kubernetes, and HPC
+  Job Queueing systems.
 
 - **Robust to Failure**: The gateway can be restarted or experience failover
   without losing existing clusters. Allows for seamless upgrades and restarts
@@ -54,9 +54,9 @@ both the cluster backend and the authentication protocol are pluggable.
 **Cluster Backends**
 
 - Kubernetes_
-- `Hadoop/YARN`_
 - Job Queue Systems (PBS_, Slurm_, ...)
 - Local Processes
+- `Hadoop/YARN`_ (Not supported since 2026)
 
 **Authentication Methods**
 

@@ -313,7 +313,6 @@ jobs:
       fail-fast: false
       matrix:
         backend:
-          - hadoop
           - pbs
           - slurm
 
