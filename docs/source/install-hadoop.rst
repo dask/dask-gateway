@@ -1,5 +1,9 @@
-Install on a Hadoop Cluster
-===========================
+Install on a Hadoop Cluster (Not supported since 2026)
+======================================================
+
+Hadoop/YARN is as of 2026 no longer supported as a cluster backend for
+dask-gateway, as required dependencies no longer work with modern Python
+versions.
 
 Here we provide instructions for installing and configuring
 ``dask-gateway-server`` on a `Hadoop Cluster`_.
