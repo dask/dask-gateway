@@ -140,7 +140,6 @@ run in docker (or in ``minikube`` for kubernetes). The scripts for setting up
 these test environments are located in the ``continuous_integration``
 subdirectory:
 
-- Hadoop Tests: ``continuous_integration/docker/hadoop``
 - PBS Tests: ``continuous_integration/docker/pbs``
 - Slurm Tests: ``continuous_integration/docker/slurm``
 - Kubernetes Tests: ``continuous_integration/kubernetes``

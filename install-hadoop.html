@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Install on a Hadoop Cluster &#8212; Dask Gateway 2025.4.1-0.dev documentation</title>
+    <title>Install on a Hadoop Cluster (Not supported since 2026) &#8212; Dask Gateway 2025.4.1-0.dev documentation</title>
   
   
   
@@ -37,8 +37,8 @@
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
     <script src="_static/documentation_options.js?v=b97faef0"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'install-hadoop';</script>
     <link rel="icon" href="_static/images/favicon.svg"/>
@@ -205,7 +205,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Admin - Installation</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Install on a Hadoop Cluster (Not supported since 2026)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
@@ -360,7 +360,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Install on a Hadoop Cluster</h1>
+    <h1>Install on a Hadoop Cluster (Not supported since 2026)</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -402,8 +402,11 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="install-on-a-hadoop-cluster">
-<h1>Install on a Hadoop Cluster<a class="headerlink" href="#install-on-a-hadoop-cluster" title="Link to this heading">#</a></h1>
+  <section id="install-on-a-hadoop-cluster-not-supported-since-2026">
+<h1>Install on a Hadoop Cluster (Not supported since 2026)<a class="headerlink" href="#install-on-a-hadoop-cluster-not-supported-since-2026" title="Link to this heading">#</a></h1>
+<p>Hadoop/YARN is as of 2026 no longer supported as a cluster backend for
+dask-gateway, as required dependencies no longer work with modern Python
+versions.</p>
 <p>Here we provide instructions for installing and configuring
 <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code> on a <a class="reference external" href="https://hadoop.apache.org/">Hadoop Cluster</a>.</p>
 <section id="create-a-user-account">

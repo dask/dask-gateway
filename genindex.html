@@ -36,8 +36,8 @@
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
     <script src="_static/documentation_options.js?v=b97faef0"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
     <link rel="icon" href="_static/images/favicon.svg"/>
@@ -204,7 +204,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Admin - Installation</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster (Not supported since 2026)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
@@ -347,7 +347,6 @@ document.write(`
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  | <a href="#W"><strong>W</strong></a>
- | <a href="#Y"><strong>Y</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -373,8 +372,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig.adaptive_period">(dask_gateway_server.backends.kubernetes.KubeClusterConfig attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.adaptive_period">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.adaptive_period">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
 </li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.app.DaskGateway.address">address (dask_gateway_server.app.DaskGateway attribute)</a>
@@ -404,11 +401,7 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.api_url">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.api_url">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
-      <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.app_client_cache_max_size">app_client_cache_max_size (dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       <li><a href="api-server.html#dask_gateway_server.app.DaskGateway.authenticator_class">authenticator_class (dask_gateway_server.app.DaskGateway attribute)</a>
 </li>
   </ul></td>
@@ -432,8 +425,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.backoff_base_delay">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.backoff_base_delay">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -447,8 +438,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalBackend.backoff_max_delay">(dask_gateway_server.backends.local.LocalBackend attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.backoff_max_delay">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.backoff_max_delay">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
 </li>
       </ul></li>
       <li><a href="api-client.html#dask_gateway.auth.BasicAuth">BasicAuth (class in dask_gateway.auth)</a>
@@ -484,8 +473,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.check_timeouts_period">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.check_timeouts_period">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-client.html#dask_gateway.Gateway.close">close() (dask_gateway.Gateway method)</a>
 
@@ -508,8 +495,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.cluster_config_class">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.cluster_config_class">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.cluster_heartbeat_period">cluster_heartbeat_period (dask_gateway_server.backends.jobqueue.pbs.PBSBackend attribute)</a>
 
@@ -520,8 +505,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.cluster_heartbeat_period">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.cluster_heartbeat_period">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.cluster_heartbeat_timeout">cluster_heartbeat_timeout (dask_gateway_server.backends.jobqueue.pbs.PBSBackend attribute)</a>
 
@@ -531,8 +514,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalBackend.cluster_heartbeat_timeout">(dask_gateway_server.backends.local.LocalBackend attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.cluster_heartbeat_timeout">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.cluster_heartbeat_timeout">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
 </li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.base.ClusterConfig.cluster_max_cores">cluster_max_cores (dask_gateway_server.backends.base.ClusterConfig attribute)</a>
@@ -546,8 +527,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.cluster_max_cores">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.cluster_max_cores">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.base.ClusterConfig.cluster_max_memory">cluster_max_memory (dask_gateway_server.backends.base.ClusterConfig attribute)</a>
 
@@ -559,8 +538,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig.cluster_max_memory">(dask_gateway_server.backends.kubernetes.KubeClusterConfig attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.cluster_max_memory">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.cluster_max_memory">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -576,8 +553,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.cluster_max_workers">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.cluster_max_workers">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.base.Backend.cluster_options">cluster_options (dask_gateway_server.backends.base.Backend attribute)</a>
 
@@ -592,8 +567,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.cluster_options">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.cluster_options">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-client.html#dask_gateway.Gateway.cluster_options">cluster_options() (dask_gateway.Gateway method)</a>
 </li>
@@ -606,8 +579,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.cluster_start_timeout">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.cluster_start_timeout">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.cluster_status_period">cluster_status_period (dask_gateway_server.backends.jobqueue.pbs.PBSBackend attribute)</a>
 
@@ -617,8 +588,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalBackend.cluster_status_period">(dask_gateway_server.backends.local.LocalBackend attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.cluster_status_period">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.cluster_status_period">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
 </li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.base.ClusterConfig">ClusterConfig (class in dask_gateway_server.backends.base)</a>
@@ -690,8 +659,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.db_cleanup_period">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.db_cleanup_period">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.db_cluster_max_age">db_cluster_max_age (dask_gateway_server.backends.jobqueue.pbs.PBSBackend attribute)</a>
 
@@ -702,9 +669,9 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.db_cluster_max_age">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.db_cluster_max_age">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.db_debug">db_debug (dask_gateway_server.backends.jobqueue.pbs.PBSBackend attribute)</a>
 
       <ul>
@@ -714,11 +681,7 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.db_debug">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.db_debug">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.db_encrypt_keys">db_encrypt_keys (dask_gateway_server.backends.jobqueue.pbs.PBSBackend attribute)</a>
 
       <ul>
@@ -727,8 +690,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalBackend.db_encrypt_keys">(dask_gateway_server.backends.local.LocalBackend attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.db_encrypt_keys">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.db_encrypt_keys">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
 </li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.db_url">db_url (dask_gateway_server.backends.jobqueue.pbs.PBSBackend attribute)</a>
@@ -739,8 +700,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalBackend.db_url">(dask_gateway_server.backends.local.LocalBackend attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.db_url">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.db_url">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -759,8 +718,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig.environment">(dask_gateway_server.backends.kubernetes.KubeClusterConfig attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.environment">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.environment">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -830,8 +787,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.idle_timeout">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.idle_timeout">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
-</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -882,11 +837,7 @@ document.write(`
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-server.html#dask_gateway_server.auth.KerberosAuthenticator.keytab">keytab (dask_gateway_server.auth.KerberosAuthenticator attribute)</a>
-
-      <ul>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.keytab">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
 </li>
-      </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeBackend">KubeBackend (class in dask_gateway_server.backends.kubernetes)</a>
 </li>
       <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig">KubeClusterConfig (class in dask_gateway_server.backends.kubernetes)</a>
@@ -911,16 +862,14 @@ document.write(`
 </li>
       <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig">LocalClusterConfig (class in dask_gateway_server.backends.local)</a>
 </li>
-      <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.localize_files">localize_files (dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-server.html#dask_gateway_server.app.DaskGateway.log_datefmt">log_datefmt (dask_gateway_server.app.DaskGateway attribute)</a>
 
       <ul>
         <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.controller.KubeController.log_datefmt">(dask_gateway_server.backends.kubernetes.controller.KubeController attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-server.html#dask_gateway_server.app.DaskGateway.log_format">log_format (dask_gateway_server.app.DaskGateway attribute)</a>
 
       <ul>
@@ -988,8 +937,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.parallelism">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.parallelism">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig.partition">partition (dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig attribute)</a>
 </li>
@@ -1002,8 +949,6 @@ document.write(`
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig">PBSClusterConfig (class in dask_gateway_server.backends.jobqueue.pbs)</a>
 </li>
       <li><a href="api-server.html#dask_gateway_server.proxy.Proxy.prefix">prefix (dask_gateway_server.proxy.Proxy attribute)</a>
-</li>
-      <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.principal">principal (dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
 </li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig.project">project (dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig attribute)</a>
 </li>
@@ -1030,11 +975,7 @@ document.write(`
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig.queue">queue (dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig attribute)</a>
-
-      <ul>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.queue">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1056,8 +997,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.scheduler_cmd">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.scheduler_cmd">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.base.ClusterConfig.scheduler_cores">scheduler_cores (dask_gateway_server.backends.base.ClusterConfig attribute)</a>
 
@@ -1069,8 +1008,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_cores">(dask_gateway_server.backends.kubernetes.KubeClusterConfig attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.scheduler_cores">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.scheduler_cores">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
 </li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_cores_limit">scheduler_cores_limit (dask_gateway_server.backends.kubernetes.KubeClusterConfig attribute)</a>
@@ -1094,8 +1031,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.scheduler_memory">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.scheduler_memory">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig.scheduler_memory_limit">scheduler_memory_limit (dask_gateway_server.backends.kubernetes.KubeClusterConfig attribute)</a>
 </li>
@@ -1106,13 +1041,11 @@ document.write(`
       <ul>
         <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig.scheduler_setup">(dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.scheduler_setup">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
-</li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-server.html#dask_gateway_server.options.Select">Select (class in dask_gateway_server.options)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api-server.html#dask_gateway_server.auth.KerberosAuthenticator.service_name">service_name (dask_gateway_server.auth.KerberosAuthenticator attribute)</a>
 </li>
       <li><a href="api-server.html#dask_gateway_server.app.DaskGateway.show_config">show_config (dask_gateway_server.app.DaskGateway attribute)</a>
@@ -1175,8 +1108,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalBackend.stop_clusters_on_shutdown">(dask_gateway_server.backends.local.LocalBackend attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.stop_clusters_on_shutdown">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.stop_clusters_on_shutdown">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
 </li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.options.String">String (class in dask_gateway_server.options)</a>
@@ -1244,8 +1175,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.worker_cmd">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.worker_cmd">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.base.ClusterConfig.worker_cores">worker_cores (dask_gateway_server.backends.base.ClusterConfig attribute)</a>
 
@@ -1257,8 +1186,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_cores">(dask_gateway_server.backends.kubernetes.KubeClusterConfig attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.worker_cores">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.worker_cores">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
 </li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_cores_limit">worker_cores_limit (dask_gateway_server.backends.kubernetes.KubeClusterConfig attribute)</a>
@@ -1282,21 +1209,17 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.worker_memory">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.worker_memory">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
-</li>
       </ul></li>
-      <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_memory_limit">worker_memory_limit (dask_gateway_server.backends.kubernetes.KubeClusterConfig attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api-server.html#dask_gateway_server.backends.kubernetes.KubeClusterConfig.worker_memory_limit">worker_memory_limit (dask_gateway_server.backends.kubernetes.KubeClusterConfig attribute)</a>
+</li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig.worker_resource_list">worker_resource_list (dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig attribute)</a>
 </li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig.worker_setup">worker_setup (dask_gateway_server.backends.jobqueue.pbs.PBSClusterConfig attribute)</a>
 
       <ul>
         <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig.worker_setup">(dask_gateway_server.backends.jobqueue.slurm.SlurmClusterConfig attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.worker_setup">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
 </li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.worker_start_failure_limit">worker_start_failure_limit (dask_gateway_server.backends.jobqueue.pbs.PBSBackend attribute)</a>
@@ -1308,8 +1231,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.worker_start_failure_limit">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.worker_start_failure_limit">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.worker_start_timeout">worker_start_timeout (dask_gateway_server.backends.jobqueue.pbs.PBSBackend attribute)</a>
 
@@ -1320,8 +1241,6 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.worker_start_timeout">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.worker_start_timeout">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
-</li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.jobqueue.pbs.PBSBackend.worker_status_period">worker_status_period (dask_gateway_server.backends.jobqueue.pbs.PBSBackend attribute)</a>
 
@@ -1331,8 +1250,6 @@ document.write(`
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalBackend.worker_status_period">(dask_gateway_server.backends.local.LocalBackend attribute)</a>
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.UnsafeLocalBackend.worker_status_period">(dask_gateway_server.backends.local.UnsafeLocalBackend attribute)</a>
-</li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend.worker_status_period">(dask_gateway_server.backends.yarn.YarnBackend attribute)</a>
 </li>
       </ul></li>
       <li><a href="api-server.html#dask_gateway_server.backends.base.ClusterConfig.worker_threads">worker_threads (dask_gateway_server.backends.base.ClusterConfig attribute)</a>
@@ -1346,21 +1263,7 @@ document.write(`
 </li>
         <li><a href="api-server.html#dask_gateway_server.backends.local.LocalClusterConfig.worker_threads">(dask_gateway_server.backends.local.LocalClusterConfig attribute)</a>
 </li>
-        <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig.worker_threads">(dask_gateway_server.backends.yarn.YarnClusterConfig attribute)</a>
-</li>
       </ul></li>
-  </ul></td>
-</tr></table>
-
-<h2 id="Y">Y</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnBackend">YarnBackend (class in dask_gateway_server.backends.yarn)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api-server.html#dask_gateway_server.backends.yarn.YarnClusterConfig">YarnClusterConfig (class in dask_gateway_server.backends.yarn)</a>
-</li>
   </ul></td>
 </tr></table>
 

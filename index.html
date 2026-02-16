@@ -37,8 +37,8 @@
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
     <script src="_static/documentation_options.js?v=b97faef0"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <link rel="icon" href="_static/images/favicon.svg"/>
@@ -206,7 +206,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Admin - Installation</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install-local.html">Install Locally (Quickstart)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install-hadoop.html">Install on a Hadoop Cluster (Not supported since 2026)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-kube.html">Install on a Kubernetes Cluster</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install-jobqueue.html">Install on an HPC Job Queue</a></li>
 </ul>
@@ -391,8 +391,8 @@ document.write(`
 <p>Dask Gateway provides a secure, multi-tenant server for managing <a class="reference external" href="https://dask.org/">Dask</a>
 clusters.  It allows users to launch and use Dask clusters in a shared,
 centrally managed cluster environment, without requiring users to have direct
-access to the underlying cluster backend (e.g. Kubernetes, Hadoop/YARN, HPC Job
-queues, etc…).</p>
+access to the underlying cluster backend (e.g. Kubernetes, HPC Job queues,
+etc…).</p>
 <p>Dask Gateway is one of many options for deploying Dask clusters, see <a class="reference external" href="https://docs.dask.org/en/stable/deploying.html">Deploying Dask</a> in the Dask documentation for an overview of additional options.</p>
 <section id="highlights">
 <h2>Highlights<a class="headerlink" href="#highlights" title="Link to this heading">#</a></h2>
@@ -404,8 +404,8 @@ and allows enforcing consistent configuration across all users.</p></li>
 TLS. All operations are authenticated with a configurable protocol, allowing
 you to use what makes sense for your organization.</p></li>
 <li><p><strong>Flexible</strong>: The gateway is designed to support multiple backends, and runs
-equally well in the cloud as on-premise. Natively supports Kubernetes,
-Hadoop/YARN, and HPC Job Queueing systems.</p></li>
+equally well in the cloud as on-premise. Natively supports Kubernetes, and HPC
+Job Queueing systems.</p></li>
 <li><p><strong>Robust to Failure</strong>: The gateway can be restarted or experience failover
 without losing existing clusters. Allows for seamless upgrades and restarts
 without disrupting users.</p></li>
@@ -428,9 +428,9 @@ both the cluster backend and the authentication protocol are pluggable.</p>
 <p><strong>Cluster Backends</strong></p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://kubernetes.io/">Kubernetes</a></p></li>
-<li><p><a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html">Hadoop/YARN</a></p></li>
 <li><p>Job Queue Systems (<a class="reference external" href="ttps://www.openpbs.org/">PBS</a>, <a class="reference external" href="https://slurm.schedmd.com/">Slurm</a>, …)</p></li>
 <li><p>Local Processes</p></li>
+<li><p><a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html">Hadoop/YARN</a> (Not supported since 2026)</p></li>
 </ul>
 <p><strong>Authentication Methods</strong></p>
 <ul class="simple">
