@@ -376,9 +376,7 @@ class Mapping(Field):
                 {tooltip}
                 </span>
                 </div>
-                """.format(
-                    tooltip=tooltip
-                )
+                """.format(tooltip=tooltip)
 
         label = ipywidgets.HTML("<p style='font-weight: bold'>%s:</p>" % self.label)
 
