@@ -60,11 +60,13 @@ jobs:
           - python-version: "3.10"
             go-version: "1.22"
           - python-version: "3.11"
-            go-version: "1.22"
+            go-version: "1.23"
           - python-version: "3.12"
-            go-version: "1.23"
+            go-version: "1.24"
           - python-version: "3.13"
-            go-version: "1.23"
+            go-version: "1.25"
+          - python-version: "3.14"
+            go-version: "1.26"
 
     steps:
       - uses: actions/checkout@v6

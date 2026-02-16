@@ -7,7 +7,7 @@
 #
 FROM centos:7
 
-ARG python_version="3.11"
+ARG python_version="3.13"
 # go_version was 1.19 until it was updated to 1.23.6 (2025-02-07) by adding a
 # layer on top of the previous image, as it is no longer able to build and it
 # was an easy way to update the golang version.
