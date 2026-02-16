@@ -59,8 +59,6 @@ yarn = [
 kubernetes = ["kubernetes_asyncio"]
 all_backends = [
     "sqlalchemy>=2.0.0",
-    "skein>=0.7.3",
-    "protobuf<3.21",
     "kubernetes_asyncio",
 ]
 
