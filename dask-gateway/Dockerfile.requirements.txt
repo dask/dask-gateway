@@ -6,13 +6,13 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.13.2
+aiohttp==3.13.3
     # via dask-gateway
 aiosignal==1.4.0
     # via aiohttp
 attrs==25.4.0
     # via aiohttp
-bokeh==3.8.1
+bokeh==3.8.2
     # via -r Dockerfile.requirements.in
 click==8.3.1
     # via
@@ -25,19 +25,19 @@ cloudpickle==3.1.2
     #   distributed
 contourpy==1.3.3
     # via bokeh
-dask==2025.11.0
+dask==2026.1.2
     # via
     #   dask-gateway
     #   distributed
 dask-gateway @ file:///opt/dask-gateway
     # via -r Dockerfile.requirements.in
-distributed==2025.11.0
+distributed==2026.1.2
     # via dask-gateway
 frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2025.10.0
+fsspec==2026.2.0
     # via dask
 idna==3.11
     # via yarl
@@ -53,38 +53,36 @@ markupsafe==3.0.3
     # via jinja2
 msgpack==1.1.2
     # via distributed
-multidict==6.7.0
+multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
-narwhals==2.12.0
+narwhals==2.16.0
     # via bokeh
-numpy==2.3.5
+numpy==2.4.2
     # via
     #   -r Dockerfile.requirements.in
     #   bokeh
     #   contourpy
     #   pandas
-packaging==25.0
+packaging==26.0
     # via
     #   bokeh
     #   dask
     #   distributed
-pandas==2.3.3
+pandas==3.0.0
     # via bokeh
 partd==1.4.2
     # via dask
-pillow==12.0.0
+pillow==12.1.1
     # via bokeh
 propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-psutil==7.1.3
+psutil==7.2.2
     # via distributed
 python-dateutil==2.9.0.post0
-    # via pandas
-pytz==2025.2
     # via pandas
 pyyaml==6.0.3
     # via
@@ -103,14 +101,12 @@ toolz==1.1.0
     #   dask
     #   distributed
     #   partd
-tornado==6.5.2
+tornado==6.5.4
     # via
     #   bokeh
     #   dask-gateway
     #   distributed
-tzdata==2025.2
-    # via pandas
-urllib3==2.5.0
+urllib3==2.6.3
     # via distributed
 xyzservices==2025.11.0
     # via bokeh
