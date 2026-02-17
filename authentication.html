@@ -458,6 +458,10 @@ a <a class="reference external" href="https://jupyterhub.readthedocs.io/en/stabl
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">DaskGateway</span><span class="o">.</span><span class="n">authenticator_class</span> <span class="o">=</span> <span class="s2">&quot;dask_gateway_server.auth.JupyterHubAuthenticator&quot;</span>
 <span class="n">c</span><span class="o">.</span><span class="n">JupyterHubAuthenticator</span><span class="o">.</span><span class="n">jupyterhub_api_token</span> <span class="o">=</span> <span class="s2">&quot;&lt;API TOKEN&gt;&quot;</span>
 <span class="n">c</span><span class="o">.</span><span class="n">JupyterHubAuthenticator</span><span class="o">.</span><span class="n">jupyterhub_api_url</span> <span class="o">=</span> <span class="s2">&quot;&lt;API URL&gt;&quot;</span>
+
+<span class="c1"># enables jupyterhub scope-based access</span>
+<span class="c1"># also set via $JUPYTERHUB_SERVICE_NAME</span>
+<span class="n">c</span><span class="o">.</span><span class="n">JupyterHubAuthenticator</span><span class="o">.</span><span class="n">jupyterhub_service_name</span> <span class="o">=</span> <span class="s2">&quot;dask-gateway&quot;</span>
 </pre></div>
 </div>
 <p>Where:</p>
@@ -465,7 +469,17 @@ a <a class="reference external" href="https://jupyterhub.readthedocs.io/en/stabl
 <li><p><code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">TOKEN&gt;</span></code> is the token generated above</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">URL&gt;</span></code> is JupyterHub’s API url. This is usually of the form
 <code class="docutils literal notranslate"><span class="pre">https://&lt;JUPYTERHUB-HOST&gt;:&lt;JUPYTERHUB-PORT&gt;/hub/api</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> is the name of the service registered with JupyterHub (see below)</p></li>
 </ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you do not set <code class="docutils literal notranslate"><span class="pre">jupyterhub_service_name</span></code>, then any JupyterHub token,
+regardless of user or token permissions,
+can be used to access Dask-Gateway.
+This is insecure, but the default for backward compatibility with earlier Dask-Gateway behavior.</p>
+<p>When set, only users and tokens with the <code class="docutils literal notranslate"><span class="pre">access:services!service=dask-gateway</span></code> scope
+will have access to Dask-Gateway.</p>
+</div>
 <p>You’ll also need to register the API token with JupyterHub. This can be done by
 adding the following to the corresponding <code class="docutils literal notranslate"><span class="pre">jupyterhub_config.py</span></code> file:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">services</span> <span class="o">=</span> <span class="p">[</span>
@@ -473,9 +487,44 @@ adding the following to the corresponding <code class="docutils literal notransl
 <span class="p">]</span>
 </pre></div>
 </div>
-<p>again, replacing <code class="docutils literal notranslate"><span class="pre">&lt;API</span> <span class="pre">TOKEN&gt;</span></code> with the output from above.</p>
+<p>Finally, you’ll want to grant some or all jupyterhub users access to the <code class="docutils literal notranslate"><span class="pre">dask-gateway</span></code> service.
+You can do this by granting all users access by overriding the default <code class="docutils literal notranslate"><span class="pre">user</span></code> role:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">load_roles</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="c1"># defining the &#39;user&#39; role</span>
+        <span class="c1"># sets the base permissions for all jupyterhub users</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;scopes&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;self&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;access:services!service=dask-gateway&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">},</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>or select users, via username and/or group membership:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">JupyterHub</span><span class="o">.</span><span class="n">load_roles</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;dask-users&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;scopes&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;access:services!service=dask-gateway&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;groups&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dask-users&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;patience&quot;</span><span class="p">],</span>
+    <span class="p">},</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>Finally, if you want the token used in singleuser server environments
+(e.g. for the dask labextension), add this access scope to <code class="docutils literal notranslate"><span class="pre">c.Spawner.server_token_scopes</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span><span class="o">.</span><span class="n">Spawner</span><span class="o">.</span><span class="n">server_token_scopes</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="s2">&quot;access:services!service-dask-gateway&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+</div>
 <p>With this configuration, JupyterHub will be used to authenticate requests
-between users and the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>.</p>
+between users and the <code class="docutils literal notranslate"><span class="pre">dask-gateway-server</span></code>,
+and JupyterHub admins can control which JupyterHub users have access to Dask-Gateway.</p>
 <p>For more information see the <a class="reference internal" href="api-server.html#jupyterhub-auth-config"><span class="std std-ref">JupyterHubAuthenticator</span></a> docs.</p>
 </section>
 </section>

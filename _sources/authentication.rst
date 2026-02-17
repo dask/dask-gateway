@@ -97,11 +97,26 @@ Then add the following lines to your ``dask_gateway_config.py`` file:
     c.JupyterHubAuthenticator.jupyterhub_api_token = "<API TOKEN>"
     c.JupyterHubAuthenticator.jupyterhub_api_url = "<API URL>"
 
+    # enables jupyterhub scope-based access
+    # also set via $JUPYTERHUB_SERVICE_NAME
+    c.JupyterHubAuthenticator.jupyterhub_service_name = "dask-gateway"
+
 Where:
 
 - ``<API TOKEN>`` is the token generated above
 - ``<API URL>`` is JupyterHub's API url. This is usually of the form
   ``https://<JUPYTERHUB-HOST>:<JUPYTERHUB-PORT>/hub/api``.
+- ``dask-gateway`` is the name of the service registered with JupyterHub (see below)
+
+.. warning::
+
+  If you do not set ``jupyterhub_service_name``, then any JupyterHub token,
+  regardless of user or token permissions,
+  can be used to access Dask-Gateway.
+  This is insecure, but the default for backward compatibility with earlier Dask-Gateway behavior.
+
+  When set, only users and tokens with the ``access:services!service=dask-gateway`` scope
+  will have access to Dask-Gateway.
 
 You'll also need to register the API token with JupyterHub. This can be done by
 adding the following to the corresponding ``jupyterhub_config.py`` file:
@@ -112,10 +127,50 @@ adding the following to the corresponding ``jupyterhub_config.py`` file:
         {"name": "dask-gateway", "api_token": "<API TOKEN>"}
     ]
 
-again, replacing ``<API TOKEN>`` with the output from above.
+Finally, you'll want to grant some or all jupyterhub users access to the ``dask-gateway`` service.
+You can do this by granting all users access by overriding the default ``user`` role:
+
+.. code-block:: python
+
+    c.JupyterHub.load_roles = [
+        {
+            # defining the 'user' role
+            # sets the base permissions for all jupyterhub users
+            "name": "user",
+            "scopes": [
+                "self",
+                "access:services!service=dask-gateway",
+            ],
+        },
+    ]
+
+or select users, via username and/or group membership:
+
+.. code-block:: python
+
+    c.JupyterHub.load_roles = [
+        {
+            "name": "dask-users",
+            "scopes": [
+                "access:services!service=dask-gateway",
+            ],
+            "groups": ["dask-users"],
+            "users": ["patience"],
+        },
+    ]
+
+Finally, if you want the token used in singleuser server environments
+(e.g. for the dask labextension), add this access scope to ``c.Spawner.server_token_scopes``:
+
+.. code-block:: python
+
+    c.Spawner.server_token_scopes = [
+      "access:services!service-dask-gateway",
+    ]
 
 With this configuration, JupyterHub will be used to authenticate requests
-between users and the ``dask-gateway-server``.
+between users and the ``dask-gateway-server``,
+and JupyterHub admins can control which JupyterHub users have access to Dask-Gateway.
 
 For more information see the :ref:`jupyterhub-auth-config` docs.
 

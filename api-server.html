@@ -402,9 +402,11 @@ document.write(`
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.cookie_name"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.cookie_name</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.jupyterhub_api_token"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.jupyterhub_api_token</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.jupyterhub_api_url"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.jupyterhub_api_url</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.jupyterhub_service_name"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.jupyterhub_service_name</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.tls_ca"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.tls_ca</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.tls_cert"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.tls_cert</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.tls_key"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.tls_key</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.use_service_access_scopes"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.use_service_access_scopes</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -947,6 +949,14 @@ environment variable.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="dask_gateway_server.auth.JupyterHubAuthenticator.jupyterhub_service_name">
+<span class="sig-name descname"><span class="pre">jupyterhub_service_name</span></span><span class="property"><span class="w"> </span><span class="pre">c.JupyterHubAuthenticator.jupyterhub_service_name</span> <span class="pre">=</span> <span class="pre">Unicode('')</span></span><a class="headerlink" href="#dask_gateway_server.auth.JupyterHubAuthenticator.jupyterhub_service_name" title="Link to this definition">#</a></dt>
+<dd><p>The name of dask-gateway as a jupyterhub service.</p>
+<p>By default this is determined from the <code class="docutils literal notranslate"><span class="pre">JUPYTERHUB_SERVICE_NAME</span></code>
+environment variable.</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="dask_gateway_server.auth.JupyterHubAuthenticator.tls_ca">
 <span class="sig-name descname"><span class="pre">tls_ca</span></span><span class="property"><span class="w"> </span><span class="pre">c.JupyterHubAuthenticator.tls_ca</span> <span class="pre">=</span> <span class="pre">Unicode('')</span></span><a class="headerlink" href="#dask_gateway_server.auth.JupyterHubAuthenticator.tls_ca" title="Link to this definition">#</a></dt>
 <dd><p>Path to TLS CA file for verifying API requests to JupyterHub.</p>
@@ -965,6 +975,16 @@ environment variable.</p>
 <span class="sig-name descname"><span class="pre">tls_key</span></span><span class="property"><span class="w"> </span><span class="pre">c.JupyterHubAuthenticator.tls_key</span> <span class="pre">=</span> <span class="pre">Unicode('')</span></span><a class="headerlink" href="#dask_gateway_server.auth.JupyterHubAuthenticator.tls_key" title="Link to this definition">#</a></dt>
 <dd><p>Path to TLS key file for making API requests to JupyterHub.</p>
 <p>When setting this, you should also set tls_cert.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="dask_gateway_server.auth.JupyterHubAuthenticator.use_service_access_scopes">
+<span class="sig-name descname"><span class="pre">use_service_access_scopes</span></span><span class="property"><span class="w"> </span><span class="pre">c.JupyterHubAuthenticator.use_service_access_scopes</span> <span class="pre">=</span> <span class="pre">Bool(False)</span></span><a class="headerlink" href="#dask_gateway_server.auth.JupyterHubAuthenticator.use_service_access_scopes" title="Link to this definition">#</a></dt>
+<dd><p>Require tokens to have <cite>access:services!service={jupyterhub_service_name}</cite> permissions
+in order to access the gateway.</p>
+<p>Allows JupyterHub RBAC to controll access to dask-gateway.</p>
+<p>Disabled by default for backward-compatibility, but strongly encouraged.
+Enabled by default if <cite>jupyterhub_service_name</cite> is set.</p>
 </dd></dl>
 
 </dd></dl>
@@ -3437,9 +3457,11 @@ or no dashboard is running on the cluster.</p></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.cookie_name"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.cookie_name</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.jupyterhub_api_token"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.jupyterhub_api_token</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.jupyterhub_api_url"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.jupyterhub_api_url</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.jupyterhub_service_name"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.jupyterhub_service_name</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.tls_ca"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.tls_ca</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.tls_cert"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.tls_cert</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.tls_key"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.tls_key</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#dask_gateway_server.auth.JupyterHubAuthenticator.use_service_access_scopes"><code class="docutils literal notranslate"><span class="pre">JupyterHubAuthenticator.use_service_access_scopes</span></code></a></li>
 </ul>
 </li>
 </ul>
