@@ -103,7 +103,10 @@ data:
                     "please specify `gateway.auth.jupyterhub.apiUrl` in "
                     "your config file"
                 )
-        c.DaskGateway.JupyterHubAuthenticator.jupyterhub_api_url = api_url
+        c.JupyterHubAuthenticator.jupyterhub_api_url = api_url
+        service_name = get_property("gateway.auth.jupyterhub.jupyterhubServiceName")
+        if service_name is not None:
+            c.JupyterHubAuthenticator.jupyterhub_service_name = service_name
     elif auth_type == "custom":
         auth_cls = get_property("gateway.auth.custom.class")
         c.DaskGateway.authenticator_class = auth_cls

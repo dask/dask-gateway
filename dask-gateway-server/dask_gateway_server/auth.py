@@ -5,7 +5,7 @@ import uuid
 
 import aiohttp
 from aiohttp import web
-from traitlets import Instance, Integer, Unicode, default
+from traitlets import Bool, Instance, Integer, Unicode, default
 from traitlets.config import LoggingConfigurable
 
 from .models import User
@@ -315,6 +315,49 @@ class JupyterHubAuthenticator(Authenticator):
             raise ValueError("JUPYTERHUB_API_URL must be set")
         return out
 
+    jupyterhub_service_name = Unicode(
+        # should this be "dask-gateway"?
+        # that would enable service scope enforcement by default
+        "",
+        help="""
+        The name of dask-gateway as a jupyterhub service.
+
+        By default this is determined from the ``JUPYTERHUB_SERVICE_NAME``
+        environment variable.
+        """,
+        config=True,
+    )
+
+    @default("jupyterhub_service_name")
+    def _default_jupyterhub_service_name(self):
+        return os.environ.get("JUPYTERHUB_SERVICE_NAME", "")
+
+    use_service_access_scopes = Bool(
+        help="""
+        Require tokens to have `access:services!service={jupyterhub_service_name}` permissions
+        in order to access the gateway.
+
+        Allows JupyterHub RBAC to controll access to dask-gateway.
+
+        Disabled by default for backward-compatibility, but strongly encouraged.
+        Enabled by default if `jupyterhub_service_name` is set.
+        """,
+        config=True,
+    )
+
+    @default("use_service_access_scopes")
+    def _default_use_service_access_scopes(self):
+        if self.jupyterhub_service_name:
+            return True
+        else:
+            self.log.warning(
+                "jupyterhub_service_name not set, "
+                "any jupyterhub token may be used to create clusters. "
+                "Set JupyterHubAuth.jupyterhub_service_name "
+                "to use jupyterhub scopes to control access to dask-gateway."
+            )
+            return False
+
     tls_key = Unicode(
         "",
         help="""
@@ -386,9 +429,35 @@ class JupyterHubAuthenticator(Authenticator):
 
         if resp.status < 400:
             data = await resp.json()
+            # avoid collisions between user names and service names
+            # 'kind' may be 'user' or 'service'
+            username = data["name"]
+            if data["kind"] != "user" or ":" in username:
+                # avoid collision without changing the name for users
+                # but disambiguate if usernames might look like
+                # `service:name` (unlikely but not prohibited)
+                username = f"{data['kind']}:{username}"
+
+            scopes = data.get("scopes", [])
+            if self.use_service_access_scopes:
+                # check scopes for access permissions
+                access_scopes = {
+                    "access:services",
+                    f"access:services!service={self.jupyterhub_service_name}",
+                }
+                have_scopes = set(scopes)
+                if not access_scopes.intersection(have_scopes):
+                    self.log.debug(
+                        "Token for %r does not have access to service %r; has scopes: %s",
+                        username,
+                        self.jupyterhub_service_name,
+                        scopes,
+                    )
+                    raise unauthorized("jupyterhub")
+
             # "groups" attribute doesn't exists in case of a service
             return User(
-                data["name"],
+                username,
                 groups=data.get("groups", []),
                 admin=data.get("admin", False),
             )
