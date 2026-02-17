@@ -432,8 +432,10 @@ class JupyterHubAuthenticator(Authenticator):
             # avoid collisions between user names and service names
             # 'kind' may be 'user' or 'service'
             username = data["name"]
-            if data["kind"] != "user" or username.startswith(("user:", "service:")):
+            if data["kind"] != "user" or ":" in username:
                 # avoid collision without changing the name for users
+                # but disambiguate if usernames might look like
+                # `service:name` (unlikely but not prohibited)
                 username = f"{data['kind']}:{username}"
 
             scopes = data.get("scopes", [])
