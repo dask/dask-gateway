@@ -130,7 +130,7 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ### Contributors to this release
 
 The following people contributed discussions, new ideas, code and documentation contributions, and review.
-See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
 
 ([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2024-01-16&to=2025-04-10&type=c))
 
@@ -172,7 +172,7 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ### Contributors to this release
 
 The following people contributed discussions, new ideas, code and documentation contributions, and review.
-See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
 
 ([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2023-09-26&to=2024-01-16&type=c))
 
@@ -218,7 +218,7 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ### Contributors to this release
 
 The following people contributed discussions, new ideas, code and documentation contributions, and review.
-See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
 
 ([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2023-01-10&to=2023-09-26&type=c))
 
