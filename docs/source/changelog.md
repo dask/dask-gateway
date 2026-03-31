@@ -7,7 +7,7 @@
 - Hadoop/YARN is no longer supported as a cluster backend for dask-gateway, as required dependencies no longer work with modern Python versions. See https://github.com/dask/dask-gateway/issues/882 for more details.
 - When using JupyterHub authentication, there is now more fine-grained control of access to the gateway service for tokens, through JupyterHub access scopes. The default is currently unchanged, for maximum compatibility, though it is considered unsecure. More details about enabling this feature https://gateway.dask.org/authentication.html#using-jupyterhub-s-authentication.
 
-([full changelog](https://github.com/dask/dask-gateway/compare/6f2ad287d7a65238eec86f31af7675032ee0b796...47cd7c4c336c50c8c5a95f79f38f6e2ab0ac8329))
+([full changelog](https://github.com/dask/dask-gateway/compare/2025.4.0...2026.3.0))
 
 ### API and Breaking Changes
 
@@ -25,32 +25,8 @@
 
 ### Continuous integration improvements
 
-- [pre-commit.ci] pre-commit autoupdate [#929](https://github.com/dask/dask-gateway/pull/929) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/download-artifact from 7 to 8 [#928](https://github.com/dask/dask-gateway/pull/928) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/upload-artifact from 6 to 7 [#927](https://github.com/dask/dask-gateway/pull/927) ([@consideRatio](https://github.com/consideRatio))
 - ci: bump pip, install contourpy/pandas/greenlet via conda-forge [#926](https://github.com/dask/dask-gateway/pull/926) ([@consideRatio](https://github.com/consideRatio))
 - ci: bump to Python 3.13 in straggling places [#922](https://github.com/dask/dask-gateway/pull/922) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump peter-evans/create-pull-request from 7 to 8 [#917](https://github.com/dask/dask-gateway/pull/917) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/upload-artifact from 4 to 6 [#916](https://github.com/dask/dask-gateway/pull/916) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/download-artifact from 5 to 7 [#915](https://github.com/dask/dask-gateway/pull/915) ([@consideRatio](https://github.com/consideRatio))
-- [pre-commit.ci] pre-commit autoupdate [#913](https://github.com/dask/dask-gateway/pull/913) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/checkout from 5 to 6 [#910](https://github.com/dask/dask-gateway/pull/910) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/setup-node from 5 to 6 [#905](https://github.com/dask/dask-gateway/pull/905) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/checkout from 4 to 5 [#901](https://github.com/dask/dask-gateway/pull/901) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/download-artifact from 4 to 5 [#900](https://github.com/dask/dask-gateway/pull/900) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/setup-python from 5 to 6 [#899](https://github.com/dask/dask-gateway/pull/899) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/setup-node from 4 to 5 [#898](https://github.com/dask/dask-gateway/pull/898) ([@consideRatio](https://github.com/consideRatio))
-- build(deps): bump actions/setup-go from 5 to 6 [#897](https://github.com/dask/dask-gateway/pull/897) ([@consideRatio](https://github.com/consideRatio))
-- [pre-commit.ci] pre-commit autoupdate [#895](https://github.com/dask/dask-gateway/pull/895) ([@jacobtomlinson](https://github.com/jacobtomlinson))
-
-### Dependency updates
-
-- Refreeze dask-gateway/Dockerfile.requirements.txt [#920](https://github.com/dask/dask-gateway/pull/920) ([@consideRatio](https://github.com/consideRatio))
-- Refreeze dask-gateway-server/Dockerfile.requirements.txt [#919](https://github.com/dask/dask-gateway/pull/919) ([@consideRatio](https://github.com/consideRatio))
-- Refreeze dask-gateway/Dockerfile.requirements.txt [#912](https://github.com/dask/dask-gateway/pull/912) ([@consideRatio](https://github.com/consideRatio))
-- Refreeze dask-gateway-server/Dockerfile.requirements.txt [#911](https://github.com/dask/dask-gateway/pull/911) ([@consideRatio](https://github.com/consideRatio))
-- Refreeze dask-gateway-server/Dockerfile.requirements.txt [#903](https://github.com/dask/dask-gateway/pull/903) ([@consideRatio](https://github.com/consideRatio))
-- Refreeze dask-gateway/Dockerfile.requirements.txt [#902](https://github.com/dask/dask-gateway/pull/902) ([@consideRatio](https://github.com/consideRatio), [@jacobtomlinson](https://github.com/jacobtomlinson))
 
 ### Contributors to this release
 
