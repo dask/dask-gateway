@@ -1,5 +1,42 @@
 # Changelog
 
+## v2026.3.0
+
+### Summary
+
+- Hadoop/YARN is no longer supported as a cluster backend for dask-gateway, as required dependencies no longer work with modern Python versions. See https://github.com/dask/dask-gateway/issues/882 for more details.
+- When using JupyterHub authentication, there is now more fine-grained control of access to the gateway service for tokens, through JupyterHub access scopes. The default is currently unchanged, for maximum compatibility, though it is considered unsecure. More details about enabling this feature https://gateway.dask.org/authentication.html#using-jupyterhub-s-authentication.
+
+([full changelog](https://github.com/dask/dask-gateway/compare/2025.4.0...2026.3.0))
+
+### API and Breaking Changes
+
+- Remove hadoop/yarn extra dependencies from all_backends [#925](https://github.com/dask/dask-gateway/pull/925) ([@consideRatio](https://github.com/consideRatio))
+
+### New features added
+
+- support JupyterHub access scopes [#863](https://github.com/dask/dask-gateway/pull/863) ([@minrk](https://github.com/minrk), [@consideRatio](https://github.com/consideRatio), [@jacobtomlinson](https://github.com/jacobtomlinson), [@yuvipanda](https://github.com/yuvipanda))
+
+### Documentation improvements
+
+- docs/ci: declare hadoop/yarn backend not supported, stop testing [#923](https://github.com/dask/dask-gateway/pull/923) ([@consideRatio](https://github.com/consideRatio))
+- set docs language [#918](https://github.com/dask/dask-gateway/pull/918) ([@minrk](https://github.com/minrk), [@consideRatio](https://github.com/consideRatio))
+- Update Authentication Documentation JupyterHub variable for url/token [#896](https://github.com/dask/dask-gateway/pull/896) ([@sunnydean](https://github.com/sunnydean), [@consideRatio](https://github.com/consideRatio), [@jacobtomlinson](https://github.com/jacobtomlinson), [@minrk](https://github.com/minrk))
+
+### Continuous integration improvements
+
+- ci: bump pip, install contourpy/pandas/greenlet via conda-forge [#926](https://github.com/dask/dask-gateway/pull/926) ([@consideRatio](https://github.com/consideRatio))
+- ci: bump to Python 3.13 in straggling places [#922](https://github.com/dask/dask-gateway/pull/922) ([@consideRatio](https://github.com/consideRatio))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2025-04-10&to=2026-03-30&type=c))
+
+@consideRatio ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3AconsideRatio+updated%3A2025-04-10..2026-03-30&type=Issues)) | @jacobtomlinson ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ajacobtomlinson+updated%3A2025-04-10..2026-03-30&type=Issues)) | @martindurant ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Amartindurant+updated%3A2025-04-10..2026-03-30&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Aminrk+updated%3A2025-04-10..2026-03-30&type=Issues)) | @sunnydean ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Asunnydean+updated%3A2025-04-10..2026-03-30&type=Issues)) | @yuvipanda ([activity](https://github.com/search?q=repo%3Adask%2Fdask-gateway+involves%3Ayuvipanda+updated%3A2025-04-10..2026-03-30&type=Issues))
+
 ## v2025.4.0
 
 ### Breaking Changes
@@ -69,7 +106,7 @@
 ### Contributors to this release
 
 The following people contributed discussions, new ideas, code and documentation contributions, and review.
-See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
 
 ([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2024-01-16&to=2025-04-10&type=c))
 
@@ -111,7 +148,7 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ### Contributors to this release
 
 The following people contributed discussions, new ideas, code and documentation contributions, and review.
-See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
 
 ([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2023-09-26&to=2024-01-16&type=c))
 
@@ -157,7 +194,7 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ### Contributors to this release
 
 The following people contributed discussions, new ideas, code and documentation contributions, and review.
-See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
 
 ([GitHub contributors page for this release](https://github.com/dask/dask-gateway/graphs/contributors?from=2023-01-10&to=2023-09-26&type=c))
 
