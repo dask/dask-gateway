@@ -1,6 +1,5 @@
 import logging
 import os
-import subprocess
 import uuid
 
 import pytest
@@ -10,14 +9,15 @@ from traitlets.config import Config
 
 from .utils_test import temp_gateway
 
-try:
-    import kerberos
-
-    del kerberos
-    skip = not os.environ.get("TEST_DASK_GATEWAY_YARN")
-    requires_kerberos = pytest.mark.skipif(skip, reason="No kerberos server running")
-except ImportError:
-    requires_kerberos = pytest.mark.skipif(True, reason="Cannot import kerberos")
+# Testing the Kerberos authenticator requires a Linux system with MIT Kerberos
+# installed together with the pykerberos and k5test packages, so it is opt-in
+# via an environment variable. When TEST_DASK_GATEWAY_KERBEROS is set, missing
+# dependencies fail the test instead of skipping it, so CI can't silently pass
+# without testing the Kerberos authenticator.
+requires_kerberos = pytest.mark.skipif(
+    not os.environ.get("TEST_DASK_GATEWAY_KERBEROS"),
+    reason="TEST_DASK_GATEWAY_KERBEROS not set",
+)
 
 try:
     import jupyterhub.tests.mocking as hub_mocking
@@ -27,15 +27,28 @@ else:
     from tornado.log import access_log, app_log, gen_log
 
 
-KEYTAB_PATH = "/home/dask/dask.keytab"
+@pytest.fixture
+def kerberos_realm(monkeypatch):
+    """An ephemeral MIT Kerberos realm with a service principal for the gateway.
 
+    Creates a self-contained KDC with k5test, adds an HTTP service principal
+    matching the local hostname, and points the process environment at the
+    realm so that both the in-process gateway server and the client use it.
+    """
+    import k5test
 
-def kinit():
-    subprocess.check_call(["kinit", "-kt", KEYTAB_PATH, "dask"])
-
-
-def kdestroy():
-    subprocess.check_call(["kdestroy"])
+    realm = k5test.K5Realm(get_creds=False, create_host=False)
+    try:
+        http_princ = f"HTTP/{realm.hostname}@{realm.realm}"
+        realm.addprinc(http_princ)
+        realm.extract_keytab(http_princ, realm.keytab)
+        for key, value in realm.env.items():
+            monkeypatch.setenv(key, value)
+        yield realm
+    finally:
+        # Stops the KDC daemon and removes the realm's temporary directory
+        # (keytab, credential cache, database).
+        realm.stop()
 
 
 async def test_basic_auth():
@@ -63,26 +76,30 @@ async def test_basic_auth_password():
 
 
 @requires_kerberos
-async def test_kerberos_auth():
+async def test_kerberos_auth(kerberos_realm):
+    # The hostname in the gateway URL determines the service principal the
+    # client requests a ticket for, so the proxy must listen at the same
+    # hostname as the HTTP principal created by the kerberos_realm fixture.
     config = Config()
-    config.Proxy.address = "master.example.com:0"
+    config.Proxy.address = f"{kerberos_realm.hostname}:0"
     config.DaskGateway.authenticator_class = (
         "dask_gateway_server.auth.KerberosAuthenticator"
     )
-    config.KerberosAuthenticator.keytab = KEYTAB_PATH
+    config.KerberosAuthenticator.keytab = kerberos_realm.keytab
 
     async with temp_gateway(config=config) as g:
         async with g.gateway_client(auth="kerberos") as gateway:
-            kdestroy()
-
+            # The realm is created without credentials, so requests fail
             with pytest.raises(Exception):
                 await gateway.list_clusters()
 
-            kinit()
+            # After kinit the full mutual authentication handshake succeeds
+            kerberos_realm.kinit(
+                kerberos_realm.user_princ,
+                password=kerberos_realm.password("user"),
+            )
 
             await gateway.list_clusters()
-
-            kdestroy()
 
 
 class temp_hub:
