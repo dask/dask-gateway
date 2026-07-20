@@ -334,3 +334,59 @@ jobs:
       - name: Print logs for debugging
         if: always()
         run: ./continuous_integration/docker/${{ matrix.backend }}/print_logs.sh
+
+  # This job tests the Kerberos authenticator against an ephemeral MIT
+  # Kerberos realm created with k5test directly on the runner, without needing
+  # a containerized backend.
+  #
+  # ref: https://github.com/dask/dask-gateway/issues/924
+  #
+  kerberos-tests:
+    name: "kerberos authentication"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25"
+          cache-dependency-path: "**/*.sum"
+
+      # krb5-kdc and krb5-admin-server provide the KDC that k5test manages,
+      # krb5-user provides kinit/klist, and libkrb5-dev with a compiler is
+      # needed to build pykerberos from source.
+      - name: Install Kerberos system dependencies
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+              krb5-kdc \
+              krb5-admin-server \
+              krb5-user \
+              libkrb5-dev \
+              build-essential
+
+      - name: Install Python test requirements
+        run: |
+          pip install -r tests/requirements.txt
+          pip install k5test \
+              --editable="./dask-gateway[kerberos]" \
+              --editable="./dask-gateway-server[kerberos]"
+
+      - name: List Python dependencies
+        run: |
+          pip freeze
+
+      # With TEST_DASK_GATEWAY_KERBEROS set, test_kerberos_auth has no skip
+      # path, but verify the Kerberos test dependencies explicitly anyway so
+      # an installation problem is reported clearly.
+      - name: Verify Kerberos test dependencies
+        run: |
+          python -c "import kerberos, k5test"
+
+      - name: pytest
+        run: |
+          TEST_DASK_GATEWAY_KERBEROS=true pytest -v tests/test_auth.py -k kerberos

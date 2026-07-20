@@ -51,10 +51,11 @@ trustme
 #            For this to work, there needs to be various things running in the
 #            background.
 #
-# TEST_DASK_GATEWAY_YARN  - test_yarn_backend.py, and test_kerberos_auth in test_auth.py
-# TEST_DASK_GATEWAY_PBS   - test_pbs_backend.py
-# TEST_DASK_GATEWAY_SLURM - test_slurm_backend.py
-# TEST_DASK_GATEWAY_KUBE  - kubernetes/test_integration.py
+# TEST_DASK_GATEWAY_YARN     - test_yarn_backend.py
+# TEST_DASK_GATEWAY_PBS      - test_pbs_backend.py
+# TEST_DASK_GATEWAY_SLURM    - test_slurm_backend.py
+# TEST_DASK_GATEWAY_KUBE     - kubernetes/test_integration.py
+# TEST_DASK_GATEWAY_KERBEROS - test_kerberos_auth in test_auth.py
 #
 # TEST_DASK_GATEWAY_KUBE_ADDRESS is also used to describe how to reach the
 # traefik pod used as a proxy to access dask-gateway-server running in the api
@@ -63,10 +64,14 @@ trustme
 
 # IMPORTANT: Not installed Python packages with system dependencies
 #
-# - To run tests related to KerberosAuthenticator, you need to install
-#   pykerberos which is tricky to install with pip but easy with conda. For
-#   example, to install pykerberos with pip on ubunutu, you need to first
-#   install the apt package libkrb5-dev.
+# - To run test_kerberos_auth in test_auth.py, you need a Linux system with
+#   MIT Kerberos installed (on Ubuntu the apt packages krb5-kdc,
+#   krb5-admin-server, krb5-user, and libkrb5-dev), and the Python packages
+#   pykerberos (which needs libkrb5-dev and a compiler to build) and k5test.
+#   Then run:
+#
+#     TEST_DASK_GATEWAY_KERBEROS=true pytest -v tests/test_auth.py -k kerberos
+#
 # - To run tests related to JupyterHubAuthenticator, you need to install
 #   jupyterhub and the Node npm package configurable-http-proxy that JupyterHub
 #   depends on to route traffic.
