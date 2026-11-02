@@ -1,6 +1,5 @@
-from traitlets import Integer, List, TraitError, TraitType
+from traitlets import Integer, List, TraitError, TraitType, Unicode
 from traitlets import Type as _Type
-from traitlets import Unicode
 from traitlets.config import Application
 
 # We replace the class of the default formatter used via a configuration change.
