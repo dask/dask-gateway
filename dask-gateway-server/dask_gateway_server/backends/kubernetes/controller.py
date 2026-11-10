@@ -369,6 +369,9 @@ class KubeController(KubeBackendAndControllerMixin, Application):
         self.custom_client = RateLimitedClient(
             client.CustomObjectsApi(api_client=self.api_client), self.rate_limiter
         )
+        self.discovery_client = RateLimitedClient(
+            client.DiscoveryV1Api(api_client=self.api_client), self.rate_limiter
+        )
 
         # Local state
         self.cluster_info = collections.defaultdict(ClusterInfo)
@@ -380,7 +383,7 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 base_delay=self.backoff_base_delay, max_delay=self.backoff_max_delay
             )
         )
-        endpoints_selector = (
+        endpointslice_selector = (
             self.label_selector + ",app.kubernetes.io/component=dask-scheduler"
         )
         self.informers = {
@@ -407,14 +410,14 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 on_update=self.on_pod_update,
                 on_delete=self.on_pod_delete,
             ),
-            "endpoints": Informer(
+            "endpointslice": Informer(
                 parent=self,
-                name="endpoints",
-                client=self.core_client,
-                method="list_endpoints_for_all_namespaces",
-                method_kwargs=dict(label_selector=endpoints_selector),
-                on_update=self.on_endpoints_update,
-                on_delete=self.on_endpoints_delete,
+                name="endpointslice",
+                client=self.discovery_client,
+                method="list_endpoint_slice_for_all_namespaces",
+                method_kwargs=dict(label_selector=endpointslice_selector),
+                on_update=self.on_endpointslice_update,
+                on_delete=self.on_endpointslice_delete,
             ),
         }
         await asyncio.wait(
@@ -555,18 +558,47 @@ class KubeController(KubeBackendAndControllerMixin, Application):
             if info.should_trigger() and not cluster_stopping:
                 self.queue.put(cluster_key)
 
-    def endpoints_all_ready(self, endpoints):
-        subsets = endpoints.get("subsets", ())
-        return subsets and not any(s.get("notReadyAddresses") for s in subsets)
+    def endpointslice_ready(self, endpointslice):
+        """Check if an endpointslice has at least one ready endpoint.
 
-    def on_endpoints_update(self, endpoints, old=None):
-        cluster_key = get_cluster_key(endpoints)
+        An endpoint is considered ready if it has an address and its ``ready``
+        condition is not explicitly ``False``. An unset condition (or no
+        conditions at all) is treated as ready, following the EndpointSlice
+        api conventions.
+        """
+        return any(
+            endpoint.get("addresses")
+            and endpoint.get("conditions", {}).get("ready") is not False
+            for endpoint in endpointslice.get("endpoints", ())
+        )
+
+    def service_endpoints_ready(self, namespace, service_name):
+        """Check if a service has at least one ready endpoint.
+
+        A service may be backed by multiple endpointslices, so scan the
+        informer cache for the endpointslices belonging to this service
+        (matched via the ``kubernetes.io/service-name`` label) and check if
+        any of them has a ready endpoint.
+        """
+        for endpointslice in self.informers["endpointslice"].cache.values():
+            metadata = endpointslice["metadata"]
+            if metadata["namespace"] != namespace:
+                continue
+            labels = metadata.get("labels", {})
+            if labels.get("kubernetes.io/service-name") != service_name:
+                continue
+            if self.endpointslice_ready(endpointslice):
+                return True
+        return False
+
+    def on_endpointslice_update(self, endpointslice, old=None):
+        cluster_key = get_cluster_key(endpointslice)
         if cluster_key is None or cluster_key in self.stopped_clusters:
             return
-        if self.endpoints_all_ready(endpoints):
+        if self.endpointslice_ready(endpointslice):
             self.queue.put(cluster_key)
 
-    def on_endpoints_delete(self, endpoints):
+    def on_endpointslice_delete(self, endpointslice):
         pass
 
     def on_cluster_update(self, cluster, old=None):
@@ -686,11 +718,11 @@ class KubeController(KubeBackendAndControllerMixin, Application):
                 )
                 status["service"] = service_name
 
-            endpoints = self.informers["endpoints"].get(f"{namespace}.{service_name}")
-            if endpoints is not None and self.endpoints_all_ready(endpoints):
-                # Only add routes if endpoints exist, otherwise traefik gets grumpy
-                # This also allows us to delay setting the phase to Running
-                # until the route is likely to be added.
+            if self.service_endpoints_ready(namespace, service_name):
+                # Only add routes if the scheduler service has ready
+                # endpoints, otherwise traefik gets grumpy. This also allows
+                # us to delay setting the phase to Running until the route
+                # is likely to be added.
                 if not status.get("ingressroute"):
                     route = await self.create_ingressroute_if_not_exists(
                         cluster, sched_pod
