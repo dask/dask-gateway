@@ -14,8 +14,9 @@ from dask_gateway_server.backends.kubernetes.controller import (
     get_container_state,
     get_container_status,
 )
-from dask_gateway_server.backends.kubernetes.utils import merge_json_objects
+from dask_gateway_server.backends.kubernetes.utils import Informer, merge_json_objects
 from dask_gateway_server.utils import FrozenAttrDict
+from dask_gateway_server.workqueue import WorkQueue
 
 
 @pytest.mark.parametrize(
@@ -288,3 +289,139 @@ def test_make_ingressroutetcp():
     route = ingress["spec"]["routes"][0]
     assert route["match"] == f"HostSNI(`daskgateway-{namespace}.{cluster_name}`)"
     assert ingress["spec"]["tls"]["passthrough"]
+
+
+def make_endpointslice(
+    namespace="mynamespace",
+    cluster_name="c1234",
+    service_name=None,
+    endpoints=(),
+):
+    service_name = service_name or f"dask-{cluster_name}"
+    return {
+        "metadata": {
+            "namespace": namespace,
+            "name": f"{service_name}-abcde",
+            "labels": {
+                "gateway.dask.org/instance": "instance-1234",
+                "gateway.dask.org/cluster": cluster_name,
+                "app.kubernetes.io/component": "dask-scheduler",
+                "kubernetes.io/service-name": service_name,
+            },
+        },
+        "addressType": "IPv4",
+        "endpoints": list(endpoints),
+    }
+
+
+@pytest.mark.parametrize(
+    "endpoints,sol",
+    [
+        ([], False),
+        ([{"addresses": ["1.2.3.4"], "conditions": {"ready": True}}], True),
+        ([{"addresses": ["1.2.3.4"], "conditions": {"ready": False}}], False),
+        # An absent or unknown ready condition is treated as ready
+        ([{"addresses": ["1.2.3.4"], "conditions": {}}], True),
+        ([{"addresses": ["1.2.3.4"], "conditions": {"ready": None}}], True),
+        ([{"addresses": ["1.2.3.4"]}], True),
+        # Endpoints without addresses are never ready
+        ([{"addresses": [], "conditions": {"ready": True}}], False),
+        ([{"conditions": {"ready": True}}], False),
+        (
+            [
+                {"addresses": ["1.2.3.4"], "conditions": {"ready": False}},
+                {"addresses": ["5.6.7.8"], "conditions": {"ready": True}},
+            ],
+            True,
+        ),
+        (
+            [
+                {"addresses": ["1.2.3.4"], "conditions": {"ready": False}},
+                {"addresses": ["5.6.7.8"], "conditions": {"ready": False}},
+            ],
+            False,
+        ),
+    ],
+)
+def test_endpointslice_ready(endpoints, sol):
+    controller = KubeController(
+        gateway_instance="instance-1234", api_url="http://example.com/api"
+    )
+
+    endpointslice = {"endpoints": endpoints}
+    assert controller.endpointslice_ready(endpointslice) == sol
+
+
+def test_service_endpoints_ready():
+    controller = KubeController(
+        gateway_instance="instance-1234", api_url="http://example.com/api"
+    )
+    informer = Informer(name="endpointslice")
+    informer.cache = {
+        # A not-ready endpointslice for the service
+        "mynamespace.dask-c1234-abcde": make_endpointslice(
+            endpoints=[{"addresses": ["1.2.3.4"], "conditions": {"ready": False}}],
+        ),
+        # A ready endpointslice for the same service
+        "mynamespace.dask-c1234-fghij": make_endpointslice(
+            endpoints=[{"addresses": ["5.6.7.8"], "conditions": {"ready": True}}],
+        ),
+        # An endpointslice for a different cluster's service
+        "mynamespace.dask-c5678-abcde": make_endpointslice(
+            cluster_name="c5678",
+            endpoints=[{"addresses": ["9.9.9.9"], "conditions": {"ready": True}}],
+        ),
+        # A service with the same name in another namespace
+        "othernamespace.dask-c1234-abcde": make_endpointslice(
+            namespace="othernamespace",
+            endpoints=[{"addresses": ["8.8.8.8"], "conditions": {"ready": True}}],
+        ),
+    }
+    controller.informers = {"endpointslice": informer}
+
+    # The service has one ready and one not-ready endpointslice
+    assert controller.service_endpoints_ready("mynamespace", "dask-c1234")
+    # An unknown service is never ready
+    assert not controller.service_endpoints_ready("mynamespace", "dask-nope")
+    # The same service name in another namespace is not matched
+    assert not controller.service_endpoints_ready("othernamespace", "dask-c5678")
+
+    # A service with only not-ready endpointslices is not ready
+    informer.cache.pop("mynamespace.dask-c1234-fghij")
+    assert not controller.service_endpoints_ready("mynamespace", "dask-c1234")
+
+    # A service without any endpointslices at all is not ready
+    assert not controller.service_endpoints_ready("mynamespace", "dask-c9999")
+
+
+async def test_on_endpointslice_update():
+    controller = KubeController(
+        gateway_instance="instance-1234", api_url="http://example.com/api"
+    )
+    controller.queue = WorkQueue()
+    controller.stopped_clusters = {}
+
+    # Not-ready endpoints don't trigger a reconciliation
+    endpointslice = make_endpointslice(
+        endpoints=[{"addresses": ["1.2.3.4"], "conditions": {"ready": False}}],
+    )
+    controller.on_endpointslice_update(endpointslice)
+    assert controller.queue.is_empty()
+
+    # Ready endpoints trigger a reconciliation of the cluster
+    endpointslice = make_endpointslice(
+        endpoints=[{"addresses": ["1.2.3.4"], "conditions": {"ready": True}}],
+    )
+    controller.on_endpointslice_update(endpointslice)
+    assert not controller.queue.is_empty()
+    assert controller.queue._get() == "mynamespace.c1234"
+    controller.queue.task_done("mynamespace.c1234")
+    assert controller.queue.is_empty()
+
+    # Ready endpoints for a stopping cluster are ignored
+    controller.stopped_clusters["mynamespace.c1234"] = 0
+    endpointslice = make_endpointslice(
+        endpoints=[{"addresses": ["1.2.3.4"], "conditions": {"ready": True}}],
+    )
+    controller.on_endpointslice_update(endpointslice)
+    assert controller.queue.is_empty()
